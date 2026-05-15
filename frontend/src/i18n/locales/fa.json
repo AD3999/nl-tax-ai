@@ -1,0 +1,29 @@
+{
+  "app_name": "TaxWijs",
+  "tagline": "دستیار هوشمند مالیاتی شما",
+  "nav": {
+    "chat": "پرسیدن سوال",
+    "calculator": "محاسبه مالیات",
+    "profile": "پروفایل",
+    "login": "ورود",
+    "logout": "خروج"
+  },
+  "chat": {
+    "placeholder": "سوال مالیاتی خود را بپرسید...",
+    "send": "ارسال",
+    "new_conversation": "گفتگوی جدید"
+  },
+  "auth": {
+    "email": "آدرس ایمیل",
+    "password": "رمز عبور",
+    "login": "ورود",
+    "register": "ثبت‌نام",
+    "user_type": "من یک..."
+  },
+  "user_types": {
+    "zzp": "فریلنسر / ZZP",
+    "employee": "کارمند",
+    "expat": "اکسپت",
+    "dga": "مدیر / DGA"
+  }
+}

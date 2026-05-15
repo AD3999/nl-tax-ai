@@ -1,0 +1,20 @@
+# Phase 1 — Knowledge Base
+# Core scraping + parsing
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+tqdm>=4.66.0
+
+# Reddit forum scraping (optional — only for scrape_forums.py --reddit)
+praw>=7.7.0
+
+# Schema validation
+jsonschema>=4.21.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# For future Phase 2 — vector DB + embeddings (install separately)
+# openai>=1.0.0
+# chromadb>=0.4.0
+# tiktoken>=0.5.0

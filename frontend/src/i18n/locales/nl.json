@@ -1,0 +1,29 @@
+{
+  "app_name": "TaxWijs",
+  "tagline": "Uw slimme belastingassistent",
+  "nav": {
+    "chat": "Vraag stellen",
+    "calculator": "Belasting berekenen",
+    "profile": "Profiel",
+    "login": "Inloggen",
+    "logout": "Uitloggen"
+  },
+  "chat": {
+    "placeholder": "Stel uw belastingvraag...",
+    "send": "Versturen",
+    "new_conversation": "Nieuw gesprek"
+  },
+  "auth": {
+    "email": "E-mailadres",
+    "password": "Wachtwoord",
+    "login": "Inloggen",
+    "register": "Registreren",
+    "user_type": "Ik ben een..."
+  },
+  "user_types": {
+    "zzp": "ZZP'er / Freelancer",
+    "employee": "Werknemer",
+    "expat": "Expat",
+    "dga": "DGA / Directeur"
+  }
+}

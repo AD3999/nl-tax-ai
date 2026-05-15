@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nltaxai.example/schemas/scenario",
+  "title": "TaxScenario",
+  "description": "An anonymized tax scenario for a specific user type, with full calculation and insights",
+  "type": "object",
+  "required": ["id", "user_type", "year", "profile", "calculation", "result"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^SCN-(EMP|ZZP|EXP|DGA|STU)-\\d{3}$" },
+    "user_type": { "type": "string", "enum": ["employee", "zzp", "expat", "dga", "student"] },
+    "year": { "type": "integer" },
+    "title": { "type": "string", "description": "Short human-readable title" },
+    "profile": {
+      "type": "object",
+      "description": "Anonymized user profile inputs",
+      "properties": {
+        "annual_revenue_zzp": { "type": ["number", "null"] },
+        "business_expenses": { "type": ["number", "null"] },
+        "employment_income": { "type": ["number", "null"] },
+        "hours_per_year": { "type": ["number", "null"] },
+        "years_as_entrepreneur": { "type": ["number", "null"] },
+        "is_starter": { "type": "boolean" },
+        "has_partner": { "type": "boolean" },
+        "partner_income": { "type": ["number", "null"] },
+        "children": { "type": "integer" },
+        "children_under_12": { "type": "integer" },
+        "rent_per_month": { "type": ["number", "null"] },
+        "net_assets_box3": { "type": ["number", "null"] },
+        "has_company_bv": { "type": "boolean" },
+        "uses_30pct_ruling": { "type": "boolean" },
+        "pension_contribution": { "type": ["number", "null"] },
+        "kia_investments": { "type": ["number", "null"] },
+        "single_client_percentage": { "type": ["number", "null"], "description": "% of revenue from one client (Wet DBA risk)" }
+      }
+    },
+    "calculation": {
+      "type": "object",
+      "description": "Step-by-step tax calculation with all intermediate values",
+      "properties": {
+        "gross_revenue": { "type": "number" },
+        "business_expenses": { "type": "number" },
+        "gross_profit": { "type": "number" },
+        "zelfstandigenaftrek": { "type": "number" },
+        "startersaftrek": { "type": "number" },
+        "kia_deduction": { "type": "number" },
+        "pension_deduction": { "type": "number" },
+        "ondernemersaftrek_total": { "type": "number" },
+        "profit_after_ondernemers": { "type": "number" },
+        "mkb_winstvrijstelling": { "type": "number" },
+        "taxable_income_box1": { "type": "number" },
+        "box1_tax_bracket1": { "type": "number" },
+        "box1_tax_bracket3": { "type": "number" },
+        "box1_tax_raw": { "type": "number" },
+        "algemene_heffingskorting": { "type": "number" },
+        "arbeidskorting": { "type": "number" },
+        "iack": { "type": "number" },
+        "income_tax_after_credits": { "type": "number" },
+        "zvw_contribution": { "type": "number" },
+        "box2_tax": { "type": "number" },
+        "box3_tax": { "type": "number" },
+        "total_tax_due": { "type": "number" },
+        "effective_rate": { "type": "number" }
+      }
+    },
+    "result": {
+      "type": "object",
+      "required": ["total_tax_due", "effective_rate", "monthly_reserve_needed"],
+      "properties": {
+        "total_tax_due": { "type": "number" },
+        "effective_rate": { "type": "number" },
+        "monthly_reserve_needed": { "type": "number" },
+        "eligible_toeslagen": { "type": "array", "items": { "type": "string" } },
+        "toeslagen_value": { "type": "number" },
+        "optimization_opportunities": { "type": "array", "items": { "type": "string" } },
+        "wet_dba_risk": { "type": "string", "enum": ["low", "medium", "high", "n/a"] },
+        "key_insights": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "rule_ids_applied": { "type": "array", "items": { "type": "string" } },
+    "tags": { "type": "array", "items": { "type": "string" } }
+  }
+}

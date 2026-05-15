@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nltaxai.example/schemas/qa_pair",
+  "title": "QAPair",
+  "description": "A tax Q&A pair for training the RAG pipeline and testing accuracy",
+  "type": "object",
+  "required": ["id", "year", "question_nl", "answer", "rule_ids", "user_types", "tags", "source_type"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^QA-\\d{4}-\\d{3}[A-Z]?$" },
+    "year": { "type": "integer" },
+    "question_nl": { "type": "string", "description": "Question in Dutch" },
+    "question_en": { "type": "string", "description": "Question in English" },
+    "question_fa": { "type": "string", "description": "Question in Persian" },
+    "question_variants": {
+      "type": "array",
+      "description": "Alternative phrasings of the same question (for training)",
+      "items": { "type": "string" }
+    },
+    "answer": {
+      "type": "object",
+      "required": ["short_nl", "detailed_nl"],
+      "properties": {
+        "short_nl": { "type": "string", "description": "One-sentence answer in Dutch" },
+        "short_en": { "type": "string" },
+        "short_fa": { "type": "string" },
+        "detailed_nl": { "type": "string", "description": "Full explanation in Dutch" },
+        "detailed_en": { "type": "string" },
+        "detailed_fa": { "type": "string" },
+        "numeric_answer": { "description": "If there is a single numeric answer (for accuracy testing)" },
+        "conditions_that_change_answer": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "rule_ids": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "source_url": { "type": "string", "format": "uri" },
+    "source_type": {
+      "type": "string",
+      "enum": ["belastingdienst_official", "synthetic", "reddit_r_dutchtaxes", "reddit_r_netherlands", "expatforum", "forum_other", "advisor_reviewed"]
+    },
+    "original_thread_url": { "type": ["string", "null"], "description": "For forum-sourced questions" },
+    "user_types": { "type": "array", "items": { "type": "string" } },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "difficulty": { "type": "string", "enum": ["beginner", "intermediate", "advanced"] },
+    "verification_status": { "type": "string", "enum": ["verified", "pending", "flagged"] },
+    "expected_ai_behavior": {
+      "type": "string",
+      "enum": ["answer_directly", "ask_clarifying_question", "refer_to_advisor", "answer_with_caveat"],
+      "description": "What the AI should do when this question type is asked"
+    }
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nltaxai.example/schemas/tax_rule",
+  "title": "TaxRule",
+  "description": "A single Dutch tax rule for 2026, structured as condition → result → source",
+  "type": "object",
+  "required": ["id", "year", "topic", "category", "user_types", "condition", "result", "plain_nl", "source_url", "tags"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z]{2,6}-\\d{4}-\\d{3}$",
+      "description": "Rule ID: TOPIC-YEAR-SEQ, e.g. ZA-2026-001"
+    },
+    "year": { "type": "integer", "enum": [2024, 2025, 2026, 2027] },
+    "topic": {
+      "type": "string",
+      "enum": [
+        "box1_brackets", "box2_rates", "box3_rates",
+        "zelfstandigenaftrek", "startersaftrek", "mkb_winstvrijstelling",
+        "kia", "zakelijke_kosten", "lijfrente_jaarruimte",
+        "algemene_heffingskorting", "arbeidskorting", "iack",
+        "zvw", "btw", "kor",
+        "zorgtoeslag", "huurtoeslag", "kinderopvangtoeslag", "kindgebonden_budget",
+        "wet_dba", "record_keeping", "deadlines",
+        "box_detection", "expat_30pct", "dga_salary"
+      ]
+    },
+    "category": {
+      "type": "string",
+      "enum": ["income_classification", "tax_rates", "deductions", "credits", "social_insurance", "vat", "benefits", "compliance", "expat"]
+    },
+    "user_types": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["all", "employee", "zzp", "expat", "dga", "student"] },
+      "minItems": 1
+    },
+    "condition": {
+      "type": "object",
+      "description": "Preconditions that must be true for this rule to apply",
+      "properties": {
+        "required": { "type": "object", "description": "All these conditions must be true" },
+        "optional": { "type": "object", "description": "Additional conditions that modify the result" },
+        "exclusions": { "type": "object", "description": "Conditions that disqualify this rule" }
+      }
+    },
+    "result": {
+      "type": "object",
+      "description": "What the rule produces",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string", "enum": ["amount", "rate", "deadline", "requirement", "threshold", "formula"] },
+        "value": { "description": "The primary value (amount, rate, date, etc.)" },
+        "unit": { "type": "string", "enum": ["EUR", "percent", "date", "hours", "days", "string"] },
+        "formula": { "type": "string", "description": "If type=formula, the calculation expression" },
+        "ceiling": { "description": "Maximum value if applicable" },
+        "floor": { "description": "Minimum value if applicable" },
+        "phase_out": {
+          "type": "object",
+          "properties": {
+            "starts_at": { "type": "number" },
+            "rate_per_euro": { "type": "number" },
+            "ends_at": { "type": "number" }
+          }
+        }
+      }
+    },
+    "plain_nl": { "type": "string", "description": "Plain Dutch explanation for non-experts" },
+    "plain_en": { "type": "string", "description": "Plain English explanation" },
+    "plain_fa": { "type": "string", "description": "Persian explanation" },
+    "source_url": { "type": "string", "format": "uri" },
+    "source_urls": { "type": "array", "items": { "type": "string", "format": "uri" } },
+    "tags": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "effective_from": { "type": "string", "format": "date" },
+    "effective_until": { "type": ["string", "null"], "format": "date" },
+    "supersedes": { "type": ["string", "null"], "description": "ID of the rule this replaces" },
+    "notes": { "type": "string" },
+    "ai_prompt_hint": { "type": "string", "description": "Hint for the AI on when to surface this rule" },
+    "verification_status": { "type": "string", "enum": ["verified", "pending_review", "draft"] },
+    "last_checked": { "type": "string", "format": "date" }
+  }
+}

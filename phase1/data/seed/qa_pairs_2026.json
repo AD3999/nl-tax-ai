@@ -1,0 +1,385 @@
+[
+  {
+    "id": "QA-2026-001",
+    "year": 2026,
+    "question_nl": "Hoeveel belasting betaal ik als ZZP'er met €50.000 winst in 2026?",
+    "question_en": "How much tax will I pay as a ZZP freelancer with €50,000 profit in 2026?",
+    "question_fa": "اگر ZZP‌کار هستم و ۵۰٬۰۰۰ یورو سود دارم در ۲۰۲۶ چقدر مالیات می‌پردازم؟",
+    "question_variants": [
+      "Wat is mijn belasting bij €50k omzet als freelancer?",
+      "ZZP belasting berekenen 2026 €50000",
+      "hoeveel moet ik reserveren voor belasting als zzp 50000 omzet"
+    ],
+    "answer": {
+      "short_nl": "Ongeveer €10.000-€13.000 afhankelijk van je aftrekposten — plan 25-28% te reserveren.",
+      "short_en": "Approximately €10,000-€13,000 depending on deductions — budget to reserve 25-28%.",
+      "short_fa": "تقریباً ۱۰٬۰۰۰ تا ۱۳٬۰۰۰ یورو بسته به کسرها — ۲۵ تا ۲۸٪ ذخیره کنید.",
+      "detailed_nl": "Bij €50.000 winst en standaard ZZP-aftrekposten: Zelfstandigenaftrek €1.200, MKB-winstvrijstelling 12,7% = €6.200, Belastbaar inkomen: ~€42.600. Box 1 belasting vóór kortingen: ~€15.230. Na algemene heffingskorting (~€1.900) en arbeidskorting (~€3.600): ~€9.730 inkomstenbelasting. Plus ZVW 5,32% over €42.600 = ~€2.266. Totaal: ~€12.000. Maandelijkse reservering: €1.000/maand.",
+      "detailed_en": "With €50,000 profit and standard ZZP deductions: After zelfstandigenaftrek (€1,200) and MKB-winstvrijstelling (12.7%), taxable income is ~€42,600. Box 1 tax before credits ~€15,230. After AHK and arbeidskorting: ~€9,730 income tax + ZVW €2,266 = total ~€12,000.",
+      "detailed_fa": "با ۵۰٬۰۰۰ یورو سود و کسرهای استاندارد ZZP: پس از zelfstandigenaftrek و MKB-winstvrijstelling، درآمد مشمول مالیات ~۴۲٬۶۰۰ یورو. مالیات جعبه ۱ قبل از اعتبارات: ~۱۵٬۲۳۰ یورو. بعد از AHK و arbeidskorting: ~۹٬۷۳۰ مالیات بر درآمد + ZVW 2٬۲۶۶ = جمع ~۱۲٬۰۰۰ یورو.",
+      "numeric_answer": 12000,
+      "conditions_that_change_answer": [
+        "If eligible for startersaftrek (€2,123 extra): reduces bill by ~€800",
+        "If has children under 12: IACK can reduce by up to €3,032",
+        "If made KIA-eligible investments: additional savings",
+        "If contributed to lijfrente/pension: significant additional deduction possible"
+      ]
+    },
+    "rule_ids": ["BR1-2026-001", "BR1-2026-003", "ZA-2026-001", "MKB-2026-001", "AHK-2026-001", "AK-2026-001", "ZVW-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/",
+    "source_type": "synthetic",
+    "user_types": ["zzp"],
+    "tags": ["tax_calculation", "zzp", "50k_profit", "estimation"],
+    "difficulty": "intermediate",
+    "verification_status": "verified",
+    "expected_ai_behavior": "answer_with_caveat"
+  },
+  {
+    "id": "QA-2026-002",
+    "year": 2026,
+    "question_nl": "Wat is de zelfstandigenaftrek in 2026 en hoe werkt het urencriterium?",
+    "question_en": "What is the zelfstandigenaftrek in 2026 and how does the hours requirement work?",
+    "question_fa": "zelfstandigenaftrek در ۲۰۲۶ چیست و urencriterium چگونه کار می‌کند؟",
+    "question_variants": [
+      "hoeveel is de zelfstandigenaftrek 2026",
+      "1225 uren eis zzp 2026",
+      "wat telt als ondernemersuren zzp"
+    ],
+    "answer": {
+      "short_nl": "€1.200 in 2026. Je moet minimaal 1.225 uur per jaar aan je bedrijf besteden.",
+      "short_en": "€1,200 in 2026. You must spend at least 1,225 hours/year on your business.",
+      "short_fa": "۱٬۲۰۰ یورو در ۲۰۲۶. باید حداقل ۱٬۲۲۵ ساعت در سال در کسب‌وکارتان کار کنید.",
+      "detailed_nl": "De zelfstandigenaftrek is €1.200 in 2026 (was €2.470 in 2025, wordt €900 in 2027). Om in aanmerking te komen moet je het urencriterium halen: minimaal 1.225 uur per jaar aan je onderneming besteden. Wat telt? Declarabele uren, administratie, acquisitie, netwerken, reistijd naar klanten, scholing. Wat telt NIET? Persoonlijke vakanties, ziektedagen, privé-tijd. Tip: houd een urenregistratie bij — dat is ook vereist als de Belastingdienst controleert.",
+      "detailed_en": "€1,200 in 2026. The urencriterium requires 1,225+ hours/year. This includes: billable client hours, administration, invoicing, marketing, client travel, professional training. Does NOT include: personal vacation, sick days, private time.",
+      "detailed_fa": "۱٬۲۰۰ یورو در ۲۰۲۶. urencriterium نیاز به ۱٬۲۲۵+ ساعت در سال دارد. شامل: ساعات قابل صدور فاکتور، اداری، بازاریابی، مسافرت به مشتری. شامل نمی‌شود: تعطیلات شخصی، روزهای بیماری.",
+      "numeric_answer": 1200,
+      "conditions_that_change_answer": [
+        "If at AOW retirement age on 1 Jan 2026: only 50% applies = €600",
+        "If you don't meet the 1,225 hour requirement: no zelfstandigenaftrek at all"
+      ]
+    },
+    "rule_ids": ["ZA-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/zelfstandigenaftrek/",
+    "source_type": "synthetic",
+    "user_types": ["zzp"],
+    "tags": ["zelfstandigenaftrek", "urencriterium", "deduction"],
+    "difficulty": "beginner",
+    "verification_status": "verified",
+    "expected_ai_behavior": "answer_directly"
+  },
+  {
+    "id": "QA-2026-003",
+    "year": 2026,
+    "question_nl": "Is 2026 echt het laatste jaar voor de startersaftrek?",
+    "question_en": "Is 2026 really the last year for the startersaftrek?",
+    "question_fa": "آیا ۲۰۲۶ واقعاً آخرین سال startersaftrek است؟",
+    "question_variants": [
+      "startersaftrek 2027 afgeschaft?",
+      "kan ik nog startersaftrek claimen 2026",
+      "startersaftrek nog van toepassing mijn eerste jaar"
+    ],
+    "answer": {
+      "short_nl": "Ja. Startersaftrek wordt per 1 januari 2027 definitief afgeschaft. 2026 is de laatste kans.",
+      "short_en": "Yes. Startersaftrek is definitively abolished from 1 January 2027. 2026 is the last opportunity.",
+      "short_fa": "بله. Startersaftrek از اول ژانویه ۲۰۲۷ قطعاً لغو می‌شود. ۲۰۲۶ آخرین فرصت است.",
+      "detailed_nl": "Ja, dit is bevestigd in de Wet IB 2026. Startersaftrek bedraagt €2.123 in 2026 en kun je maximaal 3 keer gebruiken in de eerste 5 jaar van ondernemerschap. Als je nog gebruik kunt maken van de startersaftrek in 2026 — maak dat dan zeker! De besparing is ongeveer €800 bij een tarief van ~37%. Combineer dit met de zelfstandigenaftrek van €1.200 voor €3.323 totale ondernemersaftrek.",
+      "detailed_en": "Yes, confirmed in legislation. €2,123 in 2026. Use it if you're in the first 5 years and have used it fewer than 3 times. Combined with zelfstandigenaftrek (€1,200) gives total ondernemersaftrek of €3,323 — saving approximately €1,249 in taxes.",
+      "detailed_fa": "بله. در قانون تأیید شده. ۲٬۱۲۳ یورو در ۲۰۲۶. اگر در ۵ سال اول هستید و کمتر از ۳ بار استفاده کرده‌اید، حتماً از آن استفاده کنید.",
+      "conditions_that_change_answer": [
+        "Already used startersaftrek 3 times: no longer eligible",
+        "More than 5 years of entrepreneurship: no longer eligible",
+        "Did not meet urencriterium (1,225 hours): not eligible"
+      ]
+    },
+    "rule_ids": ["SA-2026-001", "ZA-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/startersaftrek/",
+    "source_type": "reddit_r_dutchtaxes",
+    "user_types": ["zzp"],
+    "tags": ["startersaftrek", "abolished_2027", "starter", "urgent"],
+    "difficulty": "beginner",
+    "verification_status": "verified",
+    "expected_ai_behavior": "answer_directly"
+  },
+  {
+    "id": "QA-2026-004",
+    "year": 2026,
+    "question_nl": "Wat is de ZVW-bijdrage en waarom staat dit niet op mijn belastingaangifte vooringevuld?",
+    "question_en": "What is the ZVW contribution and why isn't it pre-filled on my tax return?",
+    "question_fa": "ZVW چیست و چرا در اظهارنامه مالیاتی از قبل پر نشده است؟",
+    "question_variants": [
+      "ZVW zelfstandigen 2026 hoeveel",
+      "bijdrage zvw zzp niet ingevuld",
+      "wat is het zvw tarief 2026 voor zzp"
+    ],
+    "answer": {
+      "short_nl": "De ZVW-bijdrage is 5,32% over je winst (max €71.628). Dit staat los van Box 1 maar wordt via de aangifte IB berekend.",
+      "short_en": "ZVW is 5.32% on profit up to €71,628. It's separate from Box 1 but calculated via the IB return.",
+      "short_fa": "ZVW 5.32٪ بر سود تا ۷۱٬۶۲۸ یورو است. جدا از جعبه ۱ اما از طریق اظهارنامه IB محاسبه می‌شود.",
+      "detailed_nl": "De ZVW (Zorgverzekeringswet) bijdrage voor zelfstandigen is 5,32% in 2026, berekend over je winst uit onderneming tot een maximum van €71.628. Maximale bijdrage: ~€3.811. Het wordt NIET vooringevuld omdat de Belastingdienst je winst pas definitief weet na je aangifte. Het wordt berekend naast je Box 1 belasting. Vergeet het niet te reserveren — het staat apart op de eindafrekening en verrast veel ZZP'ers.",
+      "detailed_en": "5.32% on profit up to €71,628 = max ~€3,811/year. Not pre-filled because Belastingdienst doesn't know your final profit until you file. Calculated alongside Box 1 tax but shown separately on the final assessment.",
+      "detailed_fa": "۵.۳۲٪ بر سود تا ۷۱٬۶۲۸ یورو = حداکثر ~۳٬۸۱۱ یورو/سال. از قبل پر نمی‌شود زیرا Belastingdienst تا زمان تسلیم اظهارنامه از سود نهایی شما مطلع نیست.",
+      "numeric_answer": 0.0532,
+      "conditions_that_change_answer": [
+        "Profit above €71,628: ZVW is capped at ~€3,811 regardless of higher profit"
+      ]
+    },
+    "rule_ids": ["ZVW-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/ondernemer/zorgverzekeringswet/",
+    "source_type": "reddit_r_dutchtaxes",
+    "user_types": ["zzp"],
+    "tags": ["zvw", "health_contribution", "hidden_tax", "zzp"],
+    "difficulty": "beginner",
+    "verification_status": "verified",
+    "expected_ai_behavior": "answer_directly"
+  },
+  {
+    "id": "QA-2026-005",
+    "year": 2026,
+    "question_nl": "Ik verdien €65.000 als ZZP. Val ik in het hoge belastingtarief?",
+    "question_en": "I earn €65,000 as a ZZP freelancer. Am I in the top tax bracket?",
+    "question_fa": "من ۶۵٬۰۰۰ یورو سود ZZP دارم. آیا در براکت مالیاتی بالا هستم؟",
+    "question_variants": [
+      "welk belastingtarief bij 65000 zzp",
+      "val ik in de hoogste schijf 65k winst",
+      "49.5 procent belasting zzp"
+    ],
+    "answer": {
+      "short_nl": "Niet volledig. Alleen het deel bóven ~€78.426 (belastbaar inkomen) wordt met 49,5% belast — en na aftrekposten kom je waarschijnlijk ruim onder die grens.",
+      "short_en": "Not fully. Only income ABOVE ~€78,426 taxable income hits 49.5%. After ZZP deductions, €65,000 profit likely stays in the 35.75% bracket.",
+      "short_fa": "نه کاملاً. فقط درآمد مشمول مالیات بالای ۷۸٬۴۲۶ یورو با نرخ ۴۹.۵٪ مالیات می‌گیرد. پس از کسرهای ZZP، ۶۵٬۰۰۰ یورو سود احتمالاً در براکت ۳۵.۷۵٪ باقی می‌ماند.",
+      "detailed_nl": "Bij €65.000 winst na aftrek van kosten: Zelfstandigenaftrek -€1.200 → MKB-winstvrijstelling 12,7% van €63.800 = -€8.102 → Belastbaar inkomen: €55.698. Dit valt volledig in de eerste schijf (35,75%). Je betaalt dus 35,75% over het belastbaar inkomen — niet 49,5%. De hoge schijf beginnen pas bij belastbaar inkomen boven €78.426.",
+      "detailed_en": "After deductions: profit €65,000 → zelfstandigenaftrek €1,200 → MKB 12.7% = €8,102 → taxable income ~€55,698. This stays in bracket 1 (35.75%). The 49.5% bracket only kicks in at taxable income above €78,426.",
+      "conditions_that_change_answer": [
+        "If additional pension contribution (lijfrente): taxable income drops further",
+        "If also has significant box 2 or box 3 income: may push total into higher bracket"
+      ]
+    },
+    "rule_ids": ["BR1-2026-001", "BR1-2026-003", "ZA-2026-001", "MKB-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/tarieven_boxen/",
+    "source_type": "expatforum",
+    "user_types": ["zzp"],
+    "tags": ["tax_bracket", "49pct", "high_income", "zzp", "misconception"],
+    "difficulty": "intermediate",
+    "verification_status": "verified",
+    "expected_ai_behavior": "answer_with_caveat"
+  },
+  {
+    "id": "QA-2026-006",
+    "year": 2026,
+    "question_nl": "Heb ik recht op huurtoeslag als ZZP'er?",
+    "question_en": "Am I eligible for huurtoeslag (housing benefit) as a ZZP freelancer?",
+    "question_fa": "آیا به عنوان ZZP‌کار مستحق huurtoeslag هستم؟",
+    "question_variants": [
+      "huurtoeslag zzp ondernemer aanvragen",
+      "kan zzper huurtoeslag krijgen",
+      "huurgrens huurtoeslag 2026"
+    ],
+    "answer": {
+      "short_nl": "Ja, ZZP'ers kunnen huurtoeslag aanvragen. In 2026 is de huurgrens afgeschaft — er is geen maximum huurprijs meer.",
+      "short_en": "Yes, ZZP freelancers can apply. Major 2026 change: the rent ceiling was abolished — no maximum rent to qualify.",
+      "short_fa": "بله. ZZP‌کاران می‌توانند برای huurtoeslag درخواست دهند. تغییر مهم ۲۰۲۶: سقف اجاره لغو شد.",
+      "detailed_nl": "ZZP'ers zijn gewone belastingplichtigen en kunnen huurtoeslag aanvragen. In 2026 verviel de huurgrens (vroeger ~€880/maand) — nu is er geen maximale huur meer om in aanmerking te komen. De berekening van de toeslag gaat nog wel tot €932,93/maand. Belangrijk: gebruik je geschatte ZZP-winst als toetsingsinkomen. Als je meer verdient dan verwacht, pas je schatting dan aan om terugbetaling te vermijden.",
+      "detailed_en": "ZZP freelancers can claim huurtoeslag. 2026 reform: rent ceiling abolished (was ~€880). Calculation ceiling still €932.93/month. Use estimated annual profit as income. Update estimate if actual income differs to avoid repayment.",
+      "conditions_that_change_answer": [
+        "Net assets above €38,479: not eligible",
+        "Age below 21: reduced or no huurtoeslag",
+        "Not in independent housing (own kitchen, toilet, entrance): not eligible"
+      ]
+    },
+    "rule_ids": ["HT-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/toeslagen/huurtoeslag/",
+    "source_type": "reddit_r_netherlands",
+    "user_types": ["zzp"],
+    "tags": ["huurtoeslag", "benefits", "zzp", "2026_reform", "renters"],
+    "difficulty": "beginner",
+    "verification_status": "verified",
+    "expected_ai_behavior": "answer_directly"
+  },
+  {
+    "id": "QA-2026-007",
+    "year": 2026,
+    "question_nl": "Wat is schijnzelfstandigheid en hoe weet ik of ik een risico loop?",
+    "question_en": "What is bogus self-employment (schijnzelfstandigheid) and how do I know if I'm at risk?",
+    "question_fa": "Schijnzelfstandigheid چیست و چطور بدانم آیا در معرض ریسک هستم؟",
+    "question_variants": [
+      "wet DBA risico 2026",
+      "schijnzelfstandigheid belastingdienst controle",
+      "zzp loondienst grens belasting"
+    ],
+    "answer": {
+      "short_nl": "Schijnzelfstandigheid = juridisch ZZP maar in de praktijk als werknemer werkzaam. Risicofactoren: één opdrachtgever, persoonlijk verplicht, zelfde rol als werknemers, geen eigen risico.",
+      "short_en": "Bogus self-employment = legally ZZP but in practice working like an employee. Risk: single client, personal obligation, same role as employees, no entrepreneurial risk.",
+      "short_fa": "Schijnzelfstandigheid = رسماً ZZP اما عملاً مانند کارمند کار کردن. ریسک: مشتری واحد، تعهد شخصی، نقش یکسان با کارمندان.",
+      "detailed_nl": "Schijnzelfstandigheid is formeel ZZP maar feitelijk in loondienst. Kenmerken: 1) Persoonlijk verplicht (geen vervanger mogelijk); 2) Opdrachtgever bepaalt HOE je werkt (niet alleen WAT je oplevert); 3) Economische afhankelijkheid van één opdrachtgever (>70% van inkomen); 4) Zelfde werkzaamheden als collega's in loondienst; 5) Uurtarief onder de ~€33; 6) Geen eigen materiaal, geen eigen klanten. Gevolg bij herclassificatie: opdrachtgever betaalt achterstallige loonheffing + boetes.",
+      "detailed_en": "Risk factors: 1) Must work personally (no substitution); 2) Client controls how work is done; 3) >70% income from single client; 4) Same role as employed colleagues; 5) Rate below ~€33/hour; 6) No business risk. Consequence: client pays back loonheffing + penalties for entire period.",
+      "conditions_that_change_answer": [
+        "Using approved model agreement (modelovereenkomst): reduces but doesn't eliminate risk",
+        "Working for multiple clients: significantly reduces risk",
+        "Own tools, clients, business risk: reduces risk"
+      ]
+    },
+    "rule_ids": ["WD-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/ondernemer/wet_deregulering_beoordeling_arbeidsrelaties/",
+    "source_type": "reddit_r_dutchtaxes",
+    "user_types": ["zzp"],
+    "tags": ["wet_dba", "schijnzelfstandigheid", "compliance", "risk"],
+    "difficulty": "intermediate",
+    "verification_status": "verified",
+    "expected_ai_behavior": "answer_with_caveat"
+  },
+  {
+    "id": "QA-2026-008",
+    "year": 2026,
+    "question_nl": "Als expat met 30% ruling — moet ik ook aangifte doen in Nederland?",
+    "question_en": "As an expat with the 30% ruling — do I still need to file a Dutch tax return?",
+    "question_fa": "به عنوان اکسپت با قانون ۳۰٪ — آیا باید در هلند اظهارنامه مالیاتی تسلیم کنم؟",
+    "question_variants": [
+      "30 procent ruling aangifte ib verplicht",
+      "expat tax return netherlands 2026",
+      "30% ruling partial non-resident"
+    ],
+    "answer": {
+      "short_nl": "Ja, je moet aangifte doen. De 30%-ruling wordt via de loonbelasting verwerkt maar je moet alsnog aangifte IB indienen.",
+      "short_en": "Yes, you must file. The 30% ruling is processed via payroll tax, but you still need to file an income tax return.",
+      "short_fa": "بله، باید اظهارنامه تسلیم کنید. قانون ۳۰٪ از طریق مالیات حقوق پردازش می‌شود اما باید اظهارنامه IB تسلیم شود.",
+      "detailed_nl": "Ja. De 30%-ruling betekent dat je werkgever 30% van je salaris belastingvrij uitkeert als vergoeding voor extraterritoriale kosten. Maar je moet nog steeds aangifte IB doen. Je kunt kiezen voor de partiële buitenlandse belastingplicht (als je niet-inwoner kiest): dan worden beleggingen e.d. vrijgesteld van box 3.",
+      "detailed_en": "The 30% ruling means employer pays 30% of salary tax-free. You still file IB return. Option: partial non-resident status exempts Box 3 foreign assets. Consult a tax advisor for this election as it has long-term implications.",
+      "conditions_that_change_answer": [
+        "Chose partial non-resident status: Box 3 treatment differs significantly",
+        "30% ruling expired: normal tax rules apply from expiry date"
+      ]
+    },
+    "rule_ids": ["EXP-2026-001", "DL-2026-002"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/internationaal/werken_in_het_buitenland/werknemers_die_naar_nederland_komen/30_procent_regeling/",
+    "source_type": "expatforum",
+    "user_types": ["expat"],
+    "tags": ["30pct_ruling", "expat", "aangifte", "IB_return"],
+    "difficulty": "intermediate",
+    "verification_status": "verified",
+    "expected_ai_behavior": "answer_with_caveat"
+  },
+  {
+    "id": "QA-2026-009",
+    "year": 2026,
+    "question_nl": "Kan ik als ZZP'er pensioen aftrekken van de belasting?",
+    "question_en": "Can I deduct pension contributions from my taxes as a ZZP freelancer?",
+    "question_fa": "آیا می‌توانم به عنوان ZZP‌کار مشارکت‌های بازنشستگی را از مالیات کسر کنم؟",
+    "question_variants": [
+      "lijfrente aftrek zzp 2026",
+      "pensioen opbouwen zzp belastingaftrek",
+      "jaarruimte berekenen ondernemer 2026"
+    ],
+    "answer": {
+      "short_nl": "Ja! Via een lijfrenteproduct kun je tot 30% van je inkomen minus de AOW-franchise (€19.172) aftrekken.",
+      "short_en": "Yes! Via a lijfrente product you can deduct up to 30% of income minus AOW franchise (€19,172).",
+      "short_fa": "بله! از طریق محصول lijfrente می‌توانید تا ۳۰٪ از درآمد منهای فرانشیز AOW (۱۹٬۱۷۲ یورو) کسر کنید.",
+      "detailed_nl": "Via de jaarruimte mag je 30% van je inkomen minus de AOW-franchise (€19.172) aftrekken als je bijdraagt aan een lijfrenteverzekering, lijfrenterekening of lijfrentebeleggingsrecht. Voorbeeld: winst €58.000 → 30% × (€58.000 - €19.172) = €11.648 jaarruimte. Belastingbesparing in het 35,75%-tarief: ~€4.164. Ongebruikte jaarruimte van de laatste 10 jaar (reserveringsruimte) kan ook worden benut.",
+      "detailed_en": "Jaarruimte = 30% × (income − €19,172 AOW franchise). For €58k income: jaarruimte = €11,648. Tax saving at 35.75%: ~€4,164. Unused jaarruimte from past 10 years (reserveringsruimte) can also be used in a single year.",
+      "conditions_that_change_answer": [
+        "Has employer pension (factor A > 0): reduces jaarruimte",
+        "Using reserveringsruimte: can make much larger contributions to catch up"
+      ]
+    },
+    "rule_ids": ["LR-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/aftrek_en_bijdragen/aftrekbare_kosten/lijfrentepremie/",
+    "source_type": "synthetic",
+    "user_types": ["zzp"],
+    "tags": ["lijfrente", "jaarruimte", "pension", "deduction", "most_missed"],
+    "difficulty": "intermediate",
+    "verification_status": "verified",
+    "expected_ai_behavior": "answer_directly"
+  },
+  {
+    "id": "QA-2026-010",
+    "year": 2026,
+    "question_nl": "Wanneer moet ik BTW-aangifte doen als ZZP'er?",
+    "question_en": "When do I need to file VAT returns as a ZZP freelancer?",
+    "question_fa": "به عنوان ZZP‌کار چه موقع باید اظهارنامه BTW تسلیم کنم؟",
+    "question_variants": [
+      "BTW aangifte termijnen 2026",
+      "wanneer kwartaalaangifte btw",
+      "btw deadline 2026 zzp"
+    ],
+    "answer": {
+      "short_nl": "Per kwartaal: Q1 voor 30 april, Q2 voor 31 juli, Q3 voor 31 oktober, Q4 voor 31 januari 2027.",
+      "short_en": "Quarterly: Q1 by 30 April, Q2 by 31 July, Q3 by 31 October, Q4 by 31 January 2027.",
+      "short_fa": "فصلی: Q1 تا ۳۰ آوریل، Q2 تا ۳۱ جولای، Q3 تا ۳۱ اکتبر، Q4 تا ۳۱ ژانویه ۲۰۲۷.",
+      "detailed_nl": "De meeste ZZP'ers doen per kwartaal BTW-aangifte. Deadlines: Q1 (jan-mrt) → 30 april; Q2 (apr-jun) → 31 juli; Q3 (jul-sep) → 31 oktober; Q4 (okt-dec) → 31 januari 2027. Te laat = automatische boete. Nihilaangifte ook verplicht! KOR-deelnemers doen géén BTW-aangifte.",
+      "detailed_en": "Most ZZP file quarterly. All deadlines include payment — file AND pay by the same date. Even a zero (nihil) return must be filed on time. KOR participants do not file BTW returns.",
+      "conditions_that_change_answer": [
+        "If enrolled in KOR: no BTW return required",
+        "If turnover is very high: may need to file monthly"
+      ]
+    },
+    "rule_ids": ["DL-2026-001", "KOR-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/btw-aangifte-doen-en-betalen/",
+    "source_type": "synthetic",
+    "user_types": ["zzp"],
+    "tags": ["btw", "deadline", "quarterly", "compliance"],
+    "difficulty": "beginner",
+    "verification_status": "verified",
+    "expected_ai_behavior": "answer_directly"
+  },
+  {
+    "id": "QA-2026-011",
+    "year": 2026,
+    "question_nl": "Als DGA, hoeveel salaris moet ik mezelf uitkeren?",
+    "question_en": "As a DGA director, what minimum salary must I pay myself?",
+    "question_fa": "به عنوان مدیر DGA، حداقل چقدر باید به خودم حقوق بپردازم؟",
+    "question_variants": [
+      "gebruikelijk loon DGA 2026",
+      "minimum salaris directeur BV 2026",
+      "DGA loon belastingdienst 2026"
+    ],
+    "answer": {
+      "short_nl": "In 2026 is het minimale gebruikelijk loon voor een DGA €56.000 bruto per jaar.",
+      "short_en": "In 2026, the minimum DGA salary (gebruikelijk loon) is €56,000 gross/year.",
+      "short_fa": "در ۲۰۲۶، حداقل حقوق DGA (gebruikelijk loon) ۵۶٬۰۰۰ یورو ناخالص در سال است.",
+      "detailed_nl": "Het gebruikelijk loon voor DGA's is in 2026 minimaal €56.000. Dit is belast als loon in Box 1. Echter: als het loon van de meest vergelijkbare werknemer hoger is dan €56.000, moet je dat hogere bedrag hanteren. Winst boven het gebruikelijk loon kan als dividend worden uitgekeerd uit de BV, belast in Box 2.",
+      "detailed_en": "Minimum €56,000 in 2026. If comparable employees earn more, use that higher amount. Profit beyond salary can be paid as dividend (Box 2). Strategy: timing of dividend payments and Box 2 brackets matter.",
+      "conditions_that_change_answer": [
+        "Comparable employee earns >€56,000: use that higher amount",
+        "Company cannot afford the salary: may apply for exception with Belastingdienst"
+      ]
+    },
+    "rule_ids": ["DGA-2026-001", "B2R-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/bv_en_andere_rechtspersonen/directeur-grootaandeelhouder/gebruikelijk_loon/",
+    "source_type": "synthetic",
+    "user_types": ["dga"],
+    "tags": ["gebruikelijk_loon", "dga", "salary", "bv"],
+    "difficulty": "intermediate",
+    "verification_status": "verified",
+    "expected_ai_behavior": "answer_with_caveat"
+  },
+  {
+    "id": "QA-2026-012",
+    "year": 2026,
+    "question_nl": "Kan ik mijn thuiswerkkamer aftrekken als zakelijke kosten?",
+    "question_en": "Can I deduct my home office as a business expense?",
+    "question_fa": "آیا می‌توانم دفتر خانگی‌ام را به عنوان هزینه تجاری کسر کنم؟",
+    "question_variants": [
+      "thuiskantoor aftrekken zzp",
+      "werkruimte thuis belasting 2026",
+      "kantoor thuis aftrekpost ondernemer"
+    ],
+    "answer": {
+      "short_nl": "Bijna nooit. De eisen zijn zeer streng: aparte ingang, eigen sanitair en het vertrek moet op marktwaarde worden verhuurd.",
+      "short_en": "Almost never. Requirements are very strict: separate entrance, own sanitary facilities, and the space must be rented at market value.",
+      "short_fa": "تقریباً هرگز. شرایط بسیار سخت است: ورودی جداگانه، امکانات بهداشتی جداگانه و فضا باید با ارزش بازار اجاره داده شود.",
+      "detailed_nl": "De fiscus stelt zware eisen: de werkruimte moet een eigen toegang hebben van buitenaf én eigen sanitair. Een logeerkamer met bureau is niet genoeg. Bovendien moet het vertrek voor minimaal 70% zakelijk worden gebruikt én zelfstandig verhuurd kunnen worden. Uitzondering: als je een aparte ruimte aan je BV verhuurt, gelden andere regels.",
+      "detailed_en": "Requirements: separate external entrance, own sanitary facilities, 70%+ business use, independently rentable. A spare room with a desk doesn't qualify. Exception: renting space to your own BV follows different rules.",
+      "conditions_that_change_answer": [
+        "Working from a genuine separate studio/annex: may qualify",
+        "DGA renting office space to their own BV: different rules apply"
+      ]
+    },
+    "rule_ids": [],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/kosten/kosten_voor_huisvesting/",
+    "source_type": "reddit_r_dutchtaxes",
+    "user_types": ["zzp"],
+    "tags": ["home_office", "zakelijke_kosten", "deduction", "misconception"],
+    "difficulty": "beginner",
+    "verification_status": "verified",
+    "expected_ai_behavior": "answer_directly"
+  }
+]

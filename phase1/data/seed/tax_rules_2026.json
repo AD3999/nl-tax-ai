@@ -1,0 +1,1196 @@
+[
+  {
+    "id": "BOX-2026-001",
+    "year": 2026,
+    "topic": "box_detection",
+    "category": "income_classification",
+    "user_types": [
+      "all"
+    ],
+    "condition": {
+      "required": {
+        "has_zzp_profit_or_employment_income": true
+      },
+      "exclusions": {}
+    },
+    "result": {
+      "type": "requirement",
+      "value": "Box 1 always applies to residents with work or business income",
+      "unit": "string"
+    },
+    "plain_nl": "Iedereen met inkomen uit werk of eigen bedrijf betaalt belasting in Box 1.",
+    "plain_en": "Everyone with income from employment or a business pays tax in Box 1.",
+    "plain_fa": "هر کسی با درآمد از کار یا کسب‌وکار مشمول مالیات جعبه ۱ است.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/aangifte_doen/aangifte_ib/",
+    "tags": [
+      "box1",
+      "income_classification",
+      "basics"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "BOX-2026-002",
+    "year": 2026,
+    "topic": "box_detection",
+    "category": "income_classification",
+    "user_types": [
+      "all"
+    ],
+    "condition": {
+      "required": {
+        "shareholder_percentage_gte": 5
+      },
+      "optional": {
+        "company_type": "BV"
+      }
+    },
+    "result": {
+      "type": "requirement",
+      "value": "Box 2 applies",
+      "unit": "string"
+    },
+    "plain_nl": "Box 2 geldt als je 5% of meer van de aandelen van een vennootschap hebt.",
+    "plain_en": "Box 2 applies if you own 5% or more of a company's shares.",
+    "plain_fa": "جعبه ۲ زمانی اعمال می‌شود که ۵٪ یا بیشتر سهام شرکتی را داشته باشید.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/aanmerkelijk_belang/",
+    "tags": [
+      "box2",
+      "aanmerkelijk_belang",
+      "income_classification"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "BOX-2026-003",
+    "year": 2026,
+    "topic": "box_detection",
+    "category": "income_classification",
+    "user_types": [
+      "all"
+    ],
+    "condition": {
+      "required": {
+        "net_assets_above_exemption": true
+      },
+      "optional": {
+        "asset_types": [
+          "savings",
+          "investments",
+          "second_property",
+          "crypto"
+        ]
+      }
+    },
+    "result": {
+      "type": "threshold",
+      "value": 59357,
+      "unit": "EUR"
+    },
+    "plain_nl": "Box 3 geldt als je vermogen (spaargeld + beleggingen − schulden) meer is dan €59.357 per persoon.",
+    "plain_en": "Box 3 applies if your net assets exceed €59,357 per person (doubled for tax partners).",
+    "plain_fa": "جعبه ۳ زمانی اعمال می‌شود که دارایی خالص شما (پس‌انداز + سرمایه‌گذاری منهای بدهی) بیش از ۵۹٬۳۵۷ یورو باشد.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/vermogen/",
+    "tags": [
+      "box3",
+      "savings",
+      "investments",
+      "income_classification"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "BR1-2026-001",
+    "year": 2026,
+    "topic": "box1_brackets",
+    "category": "tax_rates",
+    "user_types": [
+      "all"
+    ],
+    "condition": {
+      "required": {
+        "taxable_income_box1_range": [
+          0,
+          38883
+        ],
+        "below_aow_age": true
+      }
+    },
+    "result": {
+      "type": "rate",
+      "value": 35.75,
+      "unit": "percent",
+      "formula": "taxable_income * 0.3575",
+      "breakdown": {
+        "income_tax": 8.1,
+        "aow_premium": 17.9,
+        "wlz_premium": 9.65,
+        "anw_premium": 0.1
+      }
+    },
+    "plain_nl": "Over de eerste €38.883 van je belastbaar inkomen betaal je 35,75% belasting + premies. Dit is inclusief AOW (17,90%), WLZ (9,65%) en ANW (0,10%).",
+    "plain_en": "The first €38,883 of taxable income is taxed at 35.75%, which includes social insurance premiums.",
+    "plain_fa": "اولین ۳۸٬۸۸۳ یورو درآمد مشمول مالیات با نرخ ۳۵.۷۵٪ مالیات می‌گیرد. این نرخ شامل حق بیمه اجتماعی (AOW 17.90٪ + WLZ 9.65٪ + ANW 0.10٪) است.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/tarieven_boxen/",
+    "tags": [
+      "box1",
+      "bracket1",
+      "tax_rate",
+      "social_insurance"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "ai_prompt_hint": "Surface this when user asks about tax rate or to calculate taxes on income under €38,883",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "BR1-2026-002",
+    "year": 2026,
+    "topic": "box1_brackets",
+    "category": "tax_rates",
+    "user_types": [
+      "all"
+    ],
+    "condition": {
+      "required": {
+        "taxable_income_box1_range": [
+          38883,
+          78426
+        ],
+        "at_or_above_aow_age": true
+      }
+    },
+    "result": {
+      "type": "rate",
+      "value": 37.56,
+      "unit": "percent",
+      "formula": "(taxable_income - 38883) * 0.3756"
+    },
+    "plain_nl": "Voor belastingplichtigen die de AOW-leeftijd hebben bereikt geldt een tweede schijf van 37,56% over €38.884 tot €78.426.",
+    "plain_en": "Taxpayers who have reached AOW retirement age have a second bracket of 37.56%.",
+    "plain_fa": "برای مالیات‌دهندگانی که به سن بازنشستگی AOW رسیده‌اند، براکت دوم ۳۷.۵۶٪ اعمال می‌شود.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/tarieven_boxen/",
+    "tags": [
+      "box1",
+      "bracket2",
+      "aow_age",
+      "tax_rate"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "ai_prompt_hint": "Only surface for users who confirm they have reached AOW age",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "BR1-2026-003",
+    "year": 2026,
+    "topic": "box1_brackets",
+    "category": "tax_rates",
+    "user_types": [
+      "all"
+    ],
+    "condition": {
+      "required": {
+        "taxable_income_box1_above": 78426
+      }
+    },
+    "result": {
+      "type": "rate",
+      "value": 49.5,
+      "unit": "percent",
+      "formula": "(taxable_income - 78426) * 0.495"
+    },
+    "plain_nl": "Over het deel van je belastbaar inkomen boven €78.426 betaal je 49,50% inkomstenbelasting.",
+    "plain_en": "Income above €78,426 is taxed at 49.50% — income tax only (no social premiums at this level).",
+    "plain_fa": "درآمد مشمول مالیات بالای ۷۸٬۴۲۶ یورو با نرخ ۴۹.۵۰٪ مالیات می‌گیرد.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/tarieven_boxen/",
+    "tags": [
+      "box1",
+      "bracket3",
+      "high_income",
+      "tax_rate"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "notes": "Social insurance premiums (volksverzekeringen) do not apply above bracket 1 ceiling for people below AOW age.",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "ZA-2026-001",
+    "year": 2026,
+    "topic": "zelfstandigenaftrek",
+    "category": "deductions",
+    "user_types": [
+      "zzp"
+    ],
+    "condition": {
+      "required": {
+        "is_entrepreneur_for_tax": true,
+        "hours_worked_in_business_gte": 1225,
+        "has_profit": true
+      },
+      "optional": {
+        "at_aow_age": false
+      },
+      "exclusions": {
+        "below_profit_threshold": false
+      }
+    },
+    "result": {
+      "type": "amount",
+      "value": 1200,
+      "unit": "EUR",
+      "ceiling": 1200,
+      "formula": "min(1200, profit_before_deductions)",
+      "note_aow_age": "If taxpayer reached AOW age on 1 Jan 2026: deduction is 50% = €600"
+    },
+    "plain_nl": "Als ondernemer met 1.225+ uur per jaar mag je €1.200 aftrekken van je winst (niet van je belasting). Bedrag daalt jaarlijks.",
+    "plain_en": "Self-employed entrepreneurs working 1,225+ hours/year may deduct €1,200 from their profit.",
+    "plain_fa": "کارآفرینانی که ۱٬۲۲۵ ساعت یا بیشتر در سال کار می‌کنند می‌توانند ۱٬۲۰۰ یورو از سود خود کسر کنند.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/zelfstandigenaftrek/",
+    "tags": [
+      "zelfstandigenaftrek",
+      "ondernemersaftrek",
+      "zzp",
+      "deduction",
+      "urencriterium"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "supersedes": "ZA-2025-001",
+    "notes": "Phase-out: €6,670 (2021) → €4,806 (2022) → €3,943 (2023) → €3,141 (2024) → €2,470 (2025) → €1,200 (2026) → €900 (2027)",
+    "ai_prompt_hint": "Always check urencriterium (1225 hrs) before applying this deduction",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "SA-2026-001",
+    "year": 2026,
+    "topic": "startersaftrek",
+    "category": "deductions",
+    "user_types": [
+      "zzp"
+    ],
+    "condition": {
+      "required": {
+        "is_entrepreneur_for_tax": true,
+        "hours_worked_in_business_gte": 1225,
+        "not_entrepreneur_in_at_least_1_of_last_5_years": true,
+        "used_startersaftrek_fewer_than_3_times": true
+      }
+    },
+    "result": {
+      "type": "amount",
+      "value": 2123,
+      "unit": "EUR",
+      "formula": "min(2123, profit - zelfstandigenaftrek)"
+    },
+    "plain_nl": "Starters mogen bovenop de zelfstandigenaftrek nog €2.123 extra aftrekken. Let op: 2026 is het LAATSTE jaar van de startersaftrek — wordt in 2027 afgeschaft.",
+    "plain_en": "New entrepreneurs get an additional €2,123 deduction on top of zelfstandigenaftrek. 2026 is the LAST year — abolished from 2027.",
+    "plain_fa": "کارآفرینان جدید می‌توانند ۲٬۱۲۳ یورو اضافی علاوه بر zelfstandigenaftrek کسر کنند. توجه: ۲۰۲۶ آخرین سال این کسر است — از ۲۰۲۷ لغو می‌شود.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/startersaftrek/",
+    "tags": [
+      "startersaftrek",
+      "starter",
+      "zzp",
+      "deduction",
+      "last_year_2026"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": "2026-12-31",
+    "notes": "Abolished from 2027. Can be used max 3 times in first 5 years as entrepreneur.",
+    "ai_prompt_hint": "Proactively alert ZZP users in first 5 years that 2026 is the last year for startersaftrek",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "MKB-2026-001",
+    "year": 2026,
+    "topic": "mkb_winstvrijstelling",
+    "category": "deductions",
+    "user_types": [
+      "zzp"
+    ],
+    "condition": {
+      "required": {
+        "is_entrepreneur_for_tax": true,
+        "has_profit": true
+      },
+      "optional": {
+        "hours_worked": "no minimum required"
+      }
+    },
+    "result": {
+      "type": "rate",
+      "value": 12.7,
+      "unit": "percent",
+      "formula": "(profit - ondernemersaftrek) * 0.127",
+      "note": "Applied AFTER zelfstandigenaftrek and startersaftrek, BEFORE tax brackets"
+    },
+    "plain_nl": "Iedere ondernemer met winst mag 12,7% van zijn winst (na ondernemersaftrek) belastingvrij houden. Geen ureneis.",
+    "plain_en": "Every entrepreneur with profit exempts 12.7% of profit (after ondernemersaftrek) from tax. No hours requirement.",
+    "plain_fa": "هر کارآفرینی با سود می‌تواند ۱۲.۷٪ از سود (پس از ondernemersaftrek) را از مالیات معاف کند. بدون نیاز به ساعت کار.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/mkb-winstvrijstelling/",
+    "tags": [
+      "mkb_winstvrijstelling",
+      "zzp",
+      "deduction",
+      "profit_exemption"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "supersedes": "MKB-2025-001",
+    "notes": "Was 13.31% in 2024, 12.70% from 2025 onwards (as announced in Prinsjesdag 2023).",
+    "ai_prompt_hint": "Always apply this AFTER ondernemersaftrek in the calculation chain",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "KIA-2026-001",
+    "year": 2026,
+    "topic": "kia",
+    "category": "deductions",
+    "user_types": [
+      "zzp"
+    ],
+    "condition": {
+      "required": {
+        "is_entrepreneur_for_tax": true,
+        "total_investments_in_year_range": [
+          2901,
+          398236
+        ]
+      },
+      "exclusions": {
+        "asset_types_excluded": [
+          "passenger_cars_personal_use",
+          "land",
+          "goodwill",
+          "investments_already_used_for_KIA_in_partnership"
+        ]
+      }
+    },
+    "result": {
+      "type": "formula",
+      "value": null,
+      "unit": "EUR",
+      "formula": "investments <= 70602 ? investments * 0.28 : investments <= 132746 ? 20072 : investments <= 398236 ? max(0, 20072 - ((investments - 132746) / (398236 - 132746)) * 20072) : 0",
+      "brackets": [
+        {
+          "from": 0,
+          "to": 2900,
+          "deduction": 0
+        },
+        {
+          "from": 2901,
+          "to": 70602,
+          "rate": 0.28
+        },
+        {
+          "from": 70603,
+          "to": 132746,
+          "fixed": 20072
+        },
+        {
+          "from": 132747,
+          "to": 398236,
+          "sliding": "decreasing from 20072 to 0"
+        },
+        {
+          "from": 398237,
+          "to": null,
+          "deduction": 0
+        }
+      ]
+    },
+    "plain_nl": "Als je meer dan €2.900 investeert in bedrijfsmiddelen, mag je 28% van het totale investeerbedrag extra aftrekken (naast afschrijving).",
+    "plain_en": "Entrepreneurs investing more than €2,900 in business assets get an extra 28% deduction (on top of normal depreciation).",
+    "plain_fa": "کارآفرینانی که بیش از ۲٬۹۰۰ یورو در دارایی‌های تجاری سرمایه‌گذاری می‌کنند، ۲۸٪ اضافی می‌توانند کسر کنند (علاوه بر استهلاک عادی).",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/investeringsaftrek/kleinschaligheidsinvesteringsaftrek/",
+    "tags": [
+      "kia",
+      "investment",
+      "deduction",
+      "zzp"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "notes": "KIA rate scheduled to decrease from 2027. 2026 is one of the last years at 28%. Investments must be in business assets used for the company.",
+    "ai_prompt_hint": "Check if user made equipment purchases >€2,900 total this year — often missed",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "LR-2026-001",
+    "year": 2026,
+    "topic": "lijfrente_jaarruimte",
+    "category": "deductions",
+    "user_types": [
+      "zzp",
+      "employee"
+    ],
+    "condition": {
+      "required": {
+        "has_income": true,
+        "income_above_aow_franchise": true
+      },
+      "optional": {
+        "employer_pension_factor_a": 0
+      }
+    },
+    "result": {
+      "type": "formula",
+      "value": null,
+      "unit": "EUR",
+      "formula": "max(0, 0.30 * (previous_year_income - 19172) - (6.27 * factor_a))",
+      "aow_franchise_2025": 19172,
+      "multiplication_factor_a": 6.27,
+      "note": "Calculated on PREVIOUS year income. Unused jaarruimte from last 10 years = reserveringsruimte"
+    },
+    "plain_nl": "Je mag 30% van je inkomen minus de AOW-franchise (€19.172) aftrekken als je bijdraagt aan een lijfrenteproduct. Voor ZZP met factor A=0 is dit 30% x (inkomen - €19.172).",
+    "plain_en": "You can deduct 30% of income minus AOW franchise (€19,172) for pension contributions. For ZZP with no employer pension (factor A=0), this is simply 30% × (income − €19,172).",
+    "plain_fa": "می‌توانید ۳۰٪ از درآمد منهای فرانشیز AOW (۱۹٬۱۷۲ یورو) را برای مشارکت‌های بازنشستگی کسر کنید.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/aftrek_en_bijdragen/aftrekbare_kosten/lijfrentepremie/",
+    "tags": [
+      "lijfrente",
+      "jaarruimte",
+      "pension",
+      "deduction",
+      "zzp"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "notes": "Rate increased from 13.3% to 30% as part of Wet Toekomst Pensioenen (2023). Reserveringsruimte: carry forward of unused jaarruimte from past 10 years.",
+    "ai_prompt_hint": "Most-missed deduction for ZZP. Always ask if they made pension contributions.",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "ZVW-2026-001",
+    "year": 2026,
+    "topic": "zvw",
+    "category": "social_insurance",
+    "user_types": [
+      "zzp"
+    ],
+    "condition": {
+      "required": {
+        "is_self_employed": true,
+        "has_profit": true
+      }
+    },
+    "result": {
+      "type": "rate",
+      "value": 5.32,
+      "unit": "percent",
+      "formula": "min(taxable_zzp_profit, 71628) * 0.0532",
+      "ceiling_income": 71628,
+      "max_amount": 3810.61
+    },
+    "plain_nl": "ZZP'ers betalen 5,32% ZVW-bijdrage over hun winst, met een maximum van €71.628 winst. Maximale bijdrage: ~€3.811 per jaar. Wordt via de aangifte IB betaald.",
+    "plain_en": "Self-employed pay 5.32% ZVW health contribution on their profit, capped at €71,628. Max ~€3,811/year. Paid via annual tax return.",
+    "plain_fa": "ZZP‌کاران ۵.۳۲٪ مشارکت ZVW بر سود خود تا سقف ۷۱٬۶۲۸ یورو می‌پردازند. حداکثر ۳٬۸۱۱ یورو/سال. از طریق اظهارنامه سالانه پرداخت می‌شود.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/ondernemer/zorgverzekeringswet/",
+    "tags": [
+      "zvw",
+      "health_contribution",
+      "zzp",
+      "social_insurance",
+      "hidden_tax"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "notes": "ZVW is separate from Box 1 income tax AND from the monthly health insurance premium. Most missed tax item by new ZZP workers.",
+    "ai_prompt_hint": "ALWAYS include ZVW in ZZP tax estimates. Most common cause of unexpected tax bills.",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "AHK-2026-001",
+    "year": 2026,
+    "topic": "algemene_heffingskorting",
+    "category": "credits",
+    "user_types": [
+      "all"
+    ],
+    "condition": {
+      "required": {
+        "has_taxable_income": true
+      }
+    },
+    "result": {
+      "type": "formula",
+      "value": null,
+      "unit": "EUR",
+      "formula": "aggregate_income <= 29736 ? 3115 : aggregate_income >= 78426 ? 0 : max(0, 3115 - ((aggregate_income - 29736) * 0.06398))",
+      "max_amount": 3115,
+      "phase_out": {
+        "starts_at": 29736,
+        "rate_per_euro": 0.06398,
+        "ends_at": 78426
+      },
+      "note_2026_change": "From 2025 onwards, ALL box incomes (box1+box2+box3) are used in aggregate income — not just box 1"
+    },
+    "plain_nl": "Iedereen krijgt een algemene heffingskorting van maximaal €3.115 die direct van de te betalen belasting afgaat. Daalt naarmate je meer verdient.",
+    "plain_en": "Everyone gets up to €3,115 directly off their tax bill. Phases out to zero at €78,426 total income across all boxes.",
+    "plain_fa": "همه مالیات‌دهندگان اعتبار مستقیم تا ۳٬۱۱۵ یورو دریافت می‌کنند که مستقیماً از قبض مالیاتی کم می‌شود.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/heffingskortingen/algemene-heffingskorting/",
+    "tags": [
+      "ahk",
+      "heffingskorting",
+      "tax_credit",
+      "all_users"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "supersedes": "AHK-2025-001",
+    "ai_prompt_hint": "Always apply after calculating box 1 tax. Remember to use aggregate income from ALL boxes for phase-out.",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "AK-2026-001",
+    "year": 2026,
+    "topic": "arbeidskorting",
+    "category": "credits",
+    "user_types": [
+      "employee",
+      "zzp"
+    ],
+    "condition": {
+      "required": {
+        "has_work_income_or_zzp_profit": true,
+        "work_income_above": 11490
+      }
+    },
+    "result": {
+      "type": "formula",
+      "value": null,
+      "unit": "EUR",
+      "formula": "work_income <= 11490 ? 0 : work_income <= 37697 ? ((work_income - 11490) / (37697 - 11490)) * 5685 : work_income <= 45592 ? 5685 : work_income <= 132920 ? max(0, 5685 - ((work_income - 45592) * 0.0651)) : 0",
+      "max_amount": 5685,
+      "phase_out": {
+        "starts_at": 45592,
+        "rate_per_euro": 0.0651,
+        "ends_at": 132920
+      }
+    },
+    "plain_nl": "Werkenden (ook ZZP) krijgen een extra korting van maximaal €5.685 op hun belasting. Bij hogere inkomens daalt dit bedrag.",
+    "plain_en": "Workers (including ZZP) receive up to €5,685 off their tax bill. Phases out for higher incomes above €45,592.",
+    "plain_fa": "کارگران (از جمله ZZP) تا ۵٬۶۸۵ یورو اعتبار مالیاتی اضافی دریافت می‌کنند. برای ZZP بر اساس سود کسب‌وکار محاسبه می‌شود.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/heffingskortingen/arbeidskorting/",
+    "tags": [
+      "arbeidskorting",
+      "heffingskorting",
+      "tax_credit",
+      "zzp",
+      "employee"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "IACK-2026-001",
+    "year": 2026,
+    "topic": "iack",
+    "category": "credits",
+    "user_types": [
+      "employee",
+      "zzp"
+    ],
+    "condition": {
+      "required": {
+        "has_work_income_or_zzp_profit": true,
+        "work_income_above": 6239,
+        "child_under_12_registered_at_home": true
+      },
+      "optional": {
+        "lower_earning_partner": "credit goes to lower earner"
+      }
+    },
+    "result": {
+      "type": "formula",
+      "value": null,
+      "unit": "EUR",
+      "formula": "work_income <= 6239 ? 0 : min(3032, (work_income - 6239) * 0.1145)",
+      "max_amount": 3032,
+      "note": "For couples: credit goes to the parent with the LOWER work income. For single parents: full credit."
+    },
+    "plain_nl": "Werkende ouders met een kind jonger dan 12 jaar kunnen maximaal €3.032 extra heffingskorting krijgen. Bij koppels gaat dit naar de minst verdienende partner.",
+    "plain_en": "Working parents with a child under 12 get up to €3,032 extra tax credit. For couples, it goes to the lower-earning partner.",
+    "plain_fa": "والدین شاغل با فرزند زیر ۱۲ سال تا ۳٬۰۳۲ یورو اعتبار مالیاتی اضافی دریافت می‌کنند.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/heffingskortingen/inkomensafhankelijke-combinatiekorting/",
+    "tags": [
+      "iack",
+      "heffingskorting",
+      "tax_credit",
+      "working_parents",
+      "children"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "ai_prompt_hint": "Ask about children and their ages when collecting user profile data",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "B2R-2026-001",
+    "year": 2026,
+    "topic": "box2_rates",
+    "category": "tax_rates",
+    "user_types": [
+      "dga"
+    ],
+    "condition": {
+      "required": {
+        "box2_income_range": [
+          0,
+          68843
+        ]
+      }
+    },
+    "result": {
+      "type": "rate",
+      "value": 24.5,
+      "unit": "percent",
+      "formula": "box2_income * 0.245",
+      "note_partners": "Each partner can independently benefit from the lower bracket"
+    },
+    "plain_nl": "Box 2 inkomen tot €68.843 wordt belast tegen 24,5%. Fiscaal partners kunnen elk van hun eigen lage tarief schijf gebruiken.",
+    "plain_en": "Box 2 income up to €68,843 per person is taxed at 24.5%. Tax partners each benefit from their own lower bracket.",
+    "plain_fa": "درآمد جعبه ۲ تا ۶۸٬۸۴۳ یورو با نرخ ۲۴.۵٪ مالیات می‌گیرد. شرکای مالی هر کدام مستقلاً از این براکت استفاده می‌کنند.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/aanmerkelijk_belang/tarief_box_2/",
+    "tags": [
+      "box2",
+      "aanmerkelijk_belang",
+      "dga",
+      "tax_rate"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "B2R-2026-002",
+    "year": 2026,
+    "topic": "box2_rates",
+    "category": "tax_rates",
+    "user_types": [
+      "dga"
+    ],
+    "condition": {
+      "required": {
+        "box2_income_above": 68843
+      }
+    },
+    "result": {
+      "type": "rate",
+      "value": 31.0,
+      "unit": "percent",
+      "formula": "(box2_income - 68843) * 0.31"
+    },
+    "plain_nl": "Box 2 inkomen boven €68.843 wordt belast tegen 31%.",
+    "plain_en": "Box 2 income above €68,843 is taxed at 31%.",
+    "plain_fa": "درآمد جعبه ۲ بالای ۶۸٬۸۴۳ یورو با نرخ ۳۱٪ مالیات می‌گیرد.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/aanmerkelijk_belang/tarief_box_2/",
+    "tags": [
+      "box2",
+      "aanmerkelijk_belang",
+      "dga",
+      "tax_rate"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "B3R-2026-001",
+    "year": 2026,
+    "topic": "box3_rates",
+    "category": "tax_rates",
+    "user_types": [
+      "all"
+    ],
+    "condition": {
+      "required": {
+        "net_assets_above_exemption": true
+      },
+      "exemption_per_person": 59357
+    },
+    "result": {
+      "type": "rate",
+      "value": 36.0,
+      "unit": "percent",
+      "formula": "max(0, net_assets - 59357) * weighted_fictitious_return * 0.36",
+      "fictitious_returns": {
+        "savings_accounts": 0.0128,
+        "investments_shares_bonds_crypto_property": 0.06
+      },
+      "note": "Effective tax on total assets is much lower than 36% (applies only to fictitious return portion)"
+    },
+    "plain_nl": "Box 3 belast het fictief rendement op vermogen boven €59.357 (vrijstelling per persoon) met 36%. Spaarrekeningen: 1,28% fictief; beleggingen: 6% fictief.",
+    "plain_en": "Box 3 taxes fictitious return on wealth above €59,357 at 36%. Savings assumed 1.28% return; investments assumed 6%.",
+    "plain_fa": "جعبه ۳ بازده فرضی بر ثروت بالای ۵۹٬۳۵۷ یورو را با نرخ ۳۶٪ مالیات می‌گیرد. پس‌انداز: ۱.۲۸٪ فرضی؛ سرمایه‌گذاری: ۶٪ فرضی.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/vermogen/belasting-betalen-over-uw-vermogen/",
+    "tags": [
+      "box3",
+      "savings",
+      "investments",
+      "wealth_tax",
+      "fictitious_return"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "notes": "Reference date: 1 January each year. Box 3 to be reformed to tax actual returns from 2028.",
+    "ai_prompt_hint": "Ask about savings balance and investment portfolio value as of 1 January",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "BTW-2026-001",
+    "year": 2026,
+    "topic": "btw",
+    "category": "vat",
+    "user_types": [
+      "zzp",
+      "dga"
+    ],
+    "condition": {
+      "required": {
+        "supplies_taxable_goods_or_services": true,
+        "not_in_kor": true
+      }
+    },
+    "result": {
+      "type": "rate",
+      "value": 21,
+      "unit": "percent",
+      "applies_to": "Most professional services: consulting, IT, design, marketing, photography, coaching, legal"
+    },
+    "plain_nl": "Het standaard BTW-tarief is 21% op de meeste zakelijke diensten. Je berekent dit bovenop je factuurprijs en betaalt het door aan de Belastingdienst.",
+    "plain_en": "Standard VAT rate is 21% on most professional services. You collect it on invoices and remit quarterly.",
+    "plain_fa": "نرخ استاندارد BTW برای اکثر خدمات حرفه‌ای ۲۱٪ است. این مبلغ را در فاکتورها دریافت و فصلی به Belastingdienst انتقال می‌دهید.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/hoe_werkt_de_btw/btw-tarieven/",
+    "tags": [
+      "btw",
+      "vat",
+      "21pct",
+      "standard_rate"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "BTW-2026-002",
+    "year": 2026,
+    "topic": "btw",
+    "category": "vat",
+    "user_types": [
+      "zzp",
+      "dga"
+    ],
+    "condition": {
+      "required": {
+        "supplies_reduced_rate_goods_services": true
+      }
+    },
+    "result": {
+      "type": "rate",
+      "value": 9,
+      "unit": "percent",
+      "applies_to": [
+        "food_drinks",
+        "medicines",
+        "books_newspapers",
+        "public_transport",
+        "agricultural_products"
+      ],
+      "no_longer_applies_to": [
+        "short_term_accommodation_2026_change"
+      ]
+    },
+    "plain_nl": "Het verlaagde BTW-tarief van 9% geldt voor o.a. voedsel, medicijnen, boeken en openbaar vervoer. Tijdelijke verblijfsaccommodatie ging in 2026 van 9% naar 21%.",
+    "plain_en": "Reduced 9% VAT rate applies to food, medicines, books, public transport. NOTE: Short-term accommodation moved from 9% to 21% in 2026.",
+    "plain_fa": "نرخ کاهش‌یافته ۹٪ برای مواد غذایی، داروها، کتاب‌ها و حمل‌ونقل عمومی اعمال می‌شود. توجه: اقامت کوتاه‌مدت از ۲۰۲۶ از ۹٪ به ۲۱٪ تغییر یافت.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/hoe_werkt_de_btw/btw-tarieven/",
+    "tags": [
+      "btw",
+      "vat",
+      "9pct",
+      "reduced_rate",
+      "accommodation_2026_change"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "notes": "Major 2026 change: short-stay accommodation (hotels, B&B, Airbnb, holiday parks) moved from 9% to 21%.",
+    "ai_prompt_hint": "Alert ZZP in accommodation sector about the 9%→21% BTW change for 2026",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "KOR-2026-001",
+    "year": 2026,
+    "topic": "kor",
+    "category": "vat",
+    "user_types": [
+      "zzp"
+    ],
+    "condition": {
+      "required": {
+        "annual_turnover_below": 20000,
+        "is_registered_in_netherlands": true
+      },
+      "optional": {
+        "opted_in_to_kor": true
+      }
+    },
+    "result": {
+      "type": "requirement",
+      "value": "VAT exemption — no BTW charged on invoices, no BTW reclaimed on expenses, no quarterly BTW return",
+      "unit": "string",
+      "commitment_period": "Until end of following calendar year (shortened from 3 years in 2026)"
+    },
+    "plain_nl": "Als je minder dan €20.000 per jaar omzet maakt, kun je kiezen voor de KOR: geen BTW berekenen, geen BTW-aangifte. Voordeel: minder administratie. Nadeel: geen BTW terugvragen op kosten.",
+    "plain_en": "If annual turnover is under €20,000, you can opt into KOR: no VAT on invoices, no quarterly VAT returns. Trade-off: no input VAT recovery on expenses.",
+    "plain_fa": "اگر گردش مالی سالانه زیر ۲۰٬۰۰۰ یورو است، می‌توانید KOR انتخاب کنید: بدون BTW در فاکتورها، بدون اظهارنامه BTW فصلی.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/hoe_werkt_de_btw/kleine-ondernemersregeling/",
+    "tags": [
+      "kor",
+      "btw",
+      "vat_exemption",
+      "zzp",
+      "small_business"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "notes": "2026 change: commitment period reduced to end of following calendar year (was 3 years).",
+    "ai_prompt_hint": "Suggest KOR assessment for ZZP with <€20k expected turnover — but check client profile (B2C vs B2B)",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "ZT-2026-001",
+    "year": 2026,
+    "topic": "zorgtoeslag",
+    "category": "benefits",
+    "user_types": [
+      "all"
+    ],
+    "condition": {
+      "required": {
+        "income_below_for_single": 40857,
+        "income_below_for_partners": 51142,
+        "mandatory_dutch_health_insurance": true,
+        "net_assets_below_single": 146011,
+        "net_assets_below_partners": 185000
+      }
+    },
+    "result": {
+      "type": "amount",
+      "value": 129,
+      "unit": "EUR",
+      "frequency": "per_month",
+      "max_annual_single": 1548,
+      "max_annual_partners": 2952,
+      "note": "Hard cutoff — €1 above income threshold = €0 zorgtoeslag. No gradual phase-out."
+    },
+    "plain_nl": "Als je minder verdient dan €40.857 (alleenstaand) of €51.142 (met partner) en een Nederlandse zorgverzekering hebt, kun je tot €129/maand zorgtoeslag ontvangen.",
+    "plain_en": "Income below €40,857 (single) or €51,142 (partners) qualifies for up to €129/month healthcare allowance. Hard cutoff — no gradual phase-out.",
+    "plain_fa": "اگر درآمد شما زیر ۴۰٬۸۵۷ یورو (مجرد) یا ۵۱٬۱۴۲ یورو (زوج) باشد، تا ۱۲۹ یورو در ماه zorgtoeslag دریافت می‌کنید.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/toeslagen/zorgtoeslag/",
+    "tags": [
+      "zorgtoeslag",
+      "healthcare_allowance",
+      "benefits",
+      "income_threshold"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "ai_prompt_hint": "Alert ZZP near the €40,857 threshold. Hard cutoff means income estimate matters a lot.",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "HT-2026-001",
+    "year": 2026,
+    "topic": "huurtoeslag",
+    "category": "benefits",
+    "user_types": [
+      "all"
+    ],
+    "condition": {
+      "required": {
+        "is_renter_of_independent_housing": true,
+        "age_minimum": 21,
+        "income_below_threshold": true,
+        "net_assets_below_single": 38479
+      },
+      "note_2026_change": "Rent ceiling ABOLISHED in 2026 — no maximum rent to qualify"
+    },
+    "result": {
+      "type": "formula",
+      "value": null,
+      "unit": "EUR",
+      "formula": "Complex sliding scale based on income and rent up to calculation ceiling of €932.93/month",
+      "calculation_ceiling_rent": 932.93,
+      "note": "No maximum rent anymore — calculation ceiling is €932.93/month but higher rents are allowed"
+    },
+    "plain_nl": "Huurders die voldoen aan de inkomenseis kunnen huurtoeslag ontvangen. In 2026 verviel de huurgrens: je kan nu ook aanvragen als je meer betaalt dan €932. De berekening gaat tot €932,93/maand.",
+    "plain_en": "Renters can receive housing allowance in 2026. Major 2026 reform: the rent ceiling was abolished. Calculation ceiling is now €932.93/month.",
+    "plain_fa": "مستاجران در ۲۰۲۶ می‌توانند huurtoeslag دریافت کنند. اصلاح مهم ۲۰۲۶: سقف اجاره لغو شد — دیگر حد اجاره برای واجد شرایط بودن وجود ندارد.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/toeslagen/huurtoeslag/",
+    "tags": [
+      "huurtoeslag",
+      "housing_allowance",
+      "benefits",
+      "renters",
+      "2026_reform"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "notes": "2026 reform: rent ceiling abolished. Age lowered to 21 (was 23). ~170,000 new households eligible.",
+    "ai_prompt_hint": "Ask renters about rent amount — many ZZP assume they don't qualify but 2026 reform changed rules",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "WD-2026-001",
+    "year": 2026,
+    "topic": "wet_dba",
+    "category": "compliance",
+    "user_types": [
+      "zzp"
+    ],
+    "condition": {
+      "required": {
+        "working_as_zzp": true
+      }
+    },
+    "result": {
+      "type": "requirement",
+      "value": "Active enforcement of Wet DBA since 1 January 2025. Risk of reclassification as employment.",
+      "unit": "string",
+      "risk_factors": [
+        "Personal obligation to perform work (no substitution possible)",
+        "Client controls how work is done (not just what is delivered)",
+        "Economic dependency on single client (>70% revenue from one client)",
+        "Same role as employed colleagues",
+        "Hourly rate below €33 (indicative threshold)",
+        "Working more than 3 months for same client in same role"
+      ]
+    },
+    "plain_nl": "Sinds 2025 handhaaft de Belastingdienst actief op schijnzelfstandigheid. Als jouw werkrelatie op loondienst lijkt, kan je opdrachtgever loonheffing over alle voorgaande betalingen verschuldigd zijn.",
+    "plain_en": "Since 2025, Belastingdienst actively enforces rules against bogus self-employment. Reclassification can result in massive back-tax payments for clients.",
+    "plain_fa": "از ۲۰۲۵، Belastingdienst به طور فعال خوداشتغالی کاذب را بررسی می‌کند. طبقه‌بندی مجدد می‌تواند منجر به پرداخت‌های عقب‌افتاده بزرگ شود.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/ondernemer/wet_deregulering_beoordeling_arbeidsrelaties/",
+    "tags": [
+      "wet_dba",
+      "schijnzelfstandigheid",
+      "compliance",
+      "enforcement",
+      "zzp"
+    ],
+    "effective_from": "2025-01-01",
+    "effective_until": null,
+    "ai_prompt_hint": "Always run Wet DBA risk assessment for ZZP users. Flag high-risk situations prominently.",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "DL-2026-001",
+    "year": 2026,
+    "topic": "deadlines",
+    "category": "compliance",
+    "user_types": [
+      "zzp"
+    ],
+    "condition": {
+      "required": {
+        "is_registered_for_btw": true
+      }
+    },
+    "result": {
+      "type": "deadline",
+      "value": "Quarterly BTW returns",
+      "unit": "date",
+      "schedule": [
+        {
+          "period": "Q1 2026 (Jan-Mar)",
+          "deadline": "2026-04-30"
+        },
+        {
+          "period": "Q2 2026 (Apr-Jun)",
+          "deadline": "2026-07-31"
+        },
+        {
+          "period": "Q3 2026 (Jul-Sep)",
+          "deadline": "2026-10-31"
+        },
+        {
+          "period": "Q4 2026 (Oct-Dec)",
+          "deadline": "2027-01-31"
+        }
+      ]
+    },
+    "plain_nl": "BTW-aangifte en -betaling per kwartaal. Te laat indienen kost automatisch een boete, ook bij nihilaangifte.",
+    "plain_en": "Quarterly BTW return and payment deadlines. Late filing = automatic penalty, even for zero returns.",
+    "plain_fa": "اظهارنامه‌های BTW فصلی. تأخیر در تسلیم = جریمه خودکار، حتی برای اظهارنامه‌های صفر.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/btw-aangifte-doen-en-betalen/",
+    "tags": [
+      "btw",
+      "deadline",
+      "compliance",
+      "quarterly",
+      "zzp"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": "2026-12-31",
+    "ai_prompt_hint": "Send reminders 14 days before each BTW deadline",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "DL-2026-002",
+    "year": 2026,
+    "topic": "deadlines",
+    "category": "compliance",
+    "user_types": [
+      "all"
+    ],
+    "condition": {
+      "required": {
+        "must_file_ib_return": true
+      }
+    },
+    "result": {
+      "type": "deadline",
+      "value": "2026-05-01",
+      "unit": "date",
+      "extension_possible": true,
+      "extension_contact": "Belastingdienst or via tax advisor (becon-regeling)",
+      "note": "Opening of IB 2025 return: March 2026"
+    },
+    "plain_nl": "De aangifte inkomstenbelasting 2025 moet uiterlijk 1 mei 2026 worden ingediend. Je kunt uitstel aanvragen.",
+    "plain_en": "The 2025 income tax return (IB) must be filed by 1 May 2026. Extension can be requested.",
+    "plain_fa": "اظهارنامه مالیات بر درآمد ۲۰۲۵ باید تا اول مه ۲۰۲۶ تسلیم شود. تمدید قابل درخواست است.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/aangifte_doen/wanneer-aangifte-doen/",
+    "tags": [
+      "aangifte",
+      "ib",
+      "deadline",
+      "income_tax",
+      "all_users"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": "2026-12-31",
+    "ai_prompt_hint": "Remind users in March/April that IB return deadline is 1 May",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "EXP-2026-001",
+    "year": 2026,
+    "topic": "expat_30pct",
+    "category": "expat",
+    "user_types": [
+      "expat",
+      "employee"
+    ],
+    "condition": {
+      "required": {
+        "recruited_from_abroad": true,
+        "distance_from_netherlands_border_gte_150km": true,
+        "specific_expertise_not_available_in_nl": true,
+        "employer_applied_for_ruling": true
+      },
+      "note_2026": "Duration limited to 5 years for new applications from 2024. Partial non-resident option applies."
+    },
+    "result": {
+      "type": "rate",
+      "value": 30,
+      "unit": "percent",
+      "applies_to": "Tax-free allowance of 30% of salary (covers extraterritorial costs)",
+      "phase_in_schedule": [
+        {
+          "years_1_to_3": "30% tax-free allowance"
+        },
+        {
+          "years_4_to_4": "20% tax-free allowance"
+        },
+        {
+          "years_5_to_5": "10% tax-free allowance"
+        }
+      ]
+    },
+    "plain_nl": "Expats met een 30%-ruling ontvangen 30% van hun salaris belastingvrij als vergoeding van extraterritoriale kosten. Geldig voor max 5 jaar, daarna afbouw.",
+    "plain_en": "The 30% ruling allows eligible expats to receive 30% of their salary tax-free. Valid for max 5 years with phase-down in years 4-5.",
+    "plain_fa": "قانون ۳۰٪ به اکسپت‌های واجد شرایط امکان می‌دهد ۳۰٪ از حقوق خود را بدون مالیات دریافت کنند. حداکثر ۵ سال.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/internationaal/werken_in_het_buitenland/werknemers_die_naar_nederland_komen/30_procent_regeling/",
+    "tags": [
+      "30pct_ruling",
+      "expat",
+      "tax_free",
+      "international"
+    ],
+    "effective_from": "2024-01-01",
+    "effective_until": null,
+    "notes": "New entrants from 2024: 5-year duration with phase-down. Those already enrolled before 2024 may have different terms.",
+    "ai_prompt_hint": "Ask expat users if they have or had a 30% ruling and when it started",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  },
+  {
+    "id": "DGA-2026-001",
+    "year": 2026,
+    "topic": "dga_salary",
+    "category": "compliance",
+    "user_types": [
+      "dga"
+    ],
+    "condition": {
+      "required": {
+        "is_dga_of_bv": true
+      }
+    },
+    "result": {
+      "type": "amount",
+      "value": 56000,
+      "unit": "EUR",
+      "note": "Minimum DGA salary (gebruikelijk loon) for 2026. Belastingdienst requires DGA to pay themselves at least this amount (or the salary of most comparable employee, whichever is higher)."
+    },
+    "plain_nl": "Als DGA moet je jezelf minstens €56.000 salaris uitkeren (gebruikelijk loon 2026). Dit is belast als gewoon arbeidsinkomen in Box 1.",
+    "plain_en": "DGA directors must pay themselves at least €56,000 salary (gebruikelijk loon) in 2026. Taxed as employment income in Box 1.",
+    "plain_fa": "مدیران DGA باید حداقل ۵۶٬۰۰۰ یورو به عنوان حقوق به خود بپردازند (gebruikelijk loon 2026). این به عنوان درآمد کار در جعبه ۱ مالیات می‌گیرد.",
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/bv_en_andere_rechtspersonen/directeur-grootaandeelhouder/gebruikelijk_loon/",
+    "tags": [
+      "dga",
+      "gebruikelijk_loon",
+      "bv",
+      "salary",
+      "compliance"
+    ],
+    "effective_from": "2026-01-01",
+    "effective_until": null,
+    "notes": "Amount indexed annually. The actual required salary may be higher if the market rate for comparable work is higher than €56,000.",
+    "verification_status": "verified",
+    "last_checked": "2026-01-01"
+  }
+]

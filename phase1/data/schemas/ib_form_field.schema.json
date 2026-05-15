@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nltaxai.example/schemas/ib_form_field",
+  "title": "IBFormField",
+  "description": "Mapping of official Dutch IB (aangifte inkomstenbelasting) form fields to plain-language questions",
+  "type": "object",
+  "required": ["field_code", "box", "section_nl", "official_label_nl", "plain_question_nl", "input_type", "user_types"],
+  "properties": {
+    "field_code": { "type": "string", "description": "Official field code from the IB form, e.g. '1a', '3b', 'B1'" },
+    "box": { "type": ["integer", "null"], "enum": [1, 2, 3, null] },
+    "section_nl": { "type": "string", "description": "Section heading on the official form" },
+    "section_en": { "type": "string" },
+    "official_label_nl": { "type": "string", "description": "Exact label as it appears on the official form" },
+    "plain_question_nl": { "type": "string", "description": "Rewritten as a conversational question" },
+    "plain_question_en": { "type": "string" },
+    "plain_question_fa": { "type": "string" },
+    "help_text_nl": { "type": "string", "description": "Contextual help for users" },
+    "help_text_en": { "type": "string" },
+    "help_text_fa": { "type": "string" },
+    "input_type": {
+      "type": "string",
+      "enum": ["currency_amount", "percentage", "boolean", "date", "text", "selection"]
+    },
+    "required_for": { "type": "array", "items": { "type": "string" } },
+    "user_types": { "type": "array", "items": { "type": "string" } },
+    "rule_ids": { "type": "array", "items": { "type": "string" } },
+    "source_url": { "type": "string", "format": "uri" },
+    "common_mistakes": { "type": "array", "items": { "type": "string" } },
+    "ai_follow_up_questions": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Questions the AI should ask if this field is non-zero"
+    }
+  }
+}

@@ -1,0 +1,246 @@
+[
+  {
+    "field_code": "1a",
+    "box": 1,
+    "section_nl": "Inkomen uit werk en woning",
+    "section_en": "Income from work and home",
+    "official_label_nl": "Winst uit onderneming",
+    "plain_question_nl": "Hoeveel was uw netto winst uit uw bedrijf dit jaar (omzet minus alle zakelijke kosten)?",
+    "plain_question_en": "What was your net profit from your business this year (revenue minus all business expenses)?",
+    "plain_question_fa": "سود خالص کسب‌وکار شما در این سال چقدر بود (درآمد منهای همه هزینه‌های تجاری)؟",
+    "help_text_nl": "Dit is uw omzet minus alle zakelijke kosten, vóór de ondernemersaftrek. Geen kosten? Gebruik dan uw bruto-omzet.",
+    "help_text_en": "This is revenue minus business costs, BEFORE ZZP deductions (zelfstandigenaftrek etc.).",
+    "help_text_fa": "این درآمد منهای هزینه‌های تجاری است، قبل از کسرهای ZZP (مانند zelfstandigenaftrek).",
+    "input_type": "currency_amount",
+    "required_for": ["zzp"],
+    "user_types": ["zzp"],
+    "rule_ids": ["ZA-2026-001", "MKB-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/aangifte_doen/",
+    "common_mistakes": [
+      "Using revenue (omzet) instead of profit (winst) — costs must be subtracted first",
+      "Forgetting to include all income sources (multiple clients, platforms)",
+      "Confusing this with BTW-turnover — these are different amounts"
+    ],
+    "ai_follow_up_questions": [
+      "Did you track all business expenses? (laptop, software, travel, training)",
+      "Did you receive any other income from business activities?",
+      "Do you have invoices outstanding that were issued but not yet paid?"
+    ]
+  },
+  {
+    "field_code": "1b",
+    "box": 1,
+    "section_nl": "Inkomen uit werk en woning",
+    "section_en": "Income from work and home",
+    "official_label_nl": "Loon en uitkeringen",
+    "plain_question_nl": "Hoeveel loon of uitkeringen ontving u dit jaar (bruto, uit uw jaaropgaaf)?",
+    "plain_question_en": "What was your total employment income this year (gross, from your jaaropgaaf)?",
+    "plain_question_fa": "کل درآمد کارمندی شما در این سال چقدر بود (ناخالص، از jaaropgaaf)؟",
+    "help_text_nl": "U vindt dit op uw jaaropgaaf van uw werkgever. Heeft u meerdere jaaropgaven? Tel ze bij elkaar op.",
+    "help_text_en": "Found on your jaaropgaaf from employer. Multiple jobs: add all jaaropgaven together.",
+    "help_text_fa": "این مبلغ را در jaaropgaaf از کارفرمایتان می‌یابید. چندین کار: همه آنها را جمع کنید.",
+    "input_type": "currency_amount",
+    "required_for": ["employee", "zzp_with_side_employment"],
+    "user_types": ["employee", "zzp"],
+    "rule_ids": ["BR1-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/aangifte_doen/",
+    "common_mistakes": [
+      "Using net salary instead of gross salary from jaaropgaaf",
+      "Forgetting holiday pay or bonuses (these are on the jaaropgaaf)",
+      "Missing income from second job or part-time work"
+    ],
+    "ai_follow_up_questions": [
+      "Do you have a jaaropgaaf from your employer?",
+      "Did you receive any bonuses or holiday allowance (vakantiegeld)?",
+      "Did you work for multiple employers this year?"
+    ]
+  },
+  {
+    "field_code": "1c",
+    "box": 1,
+    "section_nl": "Inkomen uit werk en woning",
+    "section_en": "Income from work and home",
+    "official_label_nl": "Zelfstandigenaftrek",
+    "plain_question_nl": "Heeft u in 2026 minimaal 1.225 uur aan uw onderneming besteed?",
+    "plain_question_en": "Did you spend at least 1,225 hours on your business in 2026?",
+    "plain_question_fa": "آیا در ۲۰۲۶ حداقل ۱٬۲۲۵ ساعت در کسب‌وکار خود کار کردید؟",
+    "help_text_nl": "Als u het urencriterium haalt (1.225+ uur), heeft u recht op €1.200 zelfstandigenaftrek. Houd een urenregistratie bij!",
+    "help_text_en": "If you meet the hours requirement (1,225+), you qualify for €1,200 deduction. Keep a time log!",
+    "help_text_fa": "اگر معیار ساعتی (۱٬۲۲۵+) را رعایت کردید، ۱٬۲۰۰ یورو کسر دریافت می‌کنید. ثبت ساعات کاری داشته باشید!",
+    "input_type": "boolean",
+    "required_for": ["zzp"],
+    "user_types": ["zzp"],
+    "rule_ids": ["ZA-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/zelfstandigenaftrek/",
+    "common_mistakes": [
+      "Only counting billable hours — admin, networking, training all count too",
+      "Not keeping a time log — Belastingdienst can ask for proof",
+      "Applying zelfstandigenaftrek when hours were under 1,225"
+    ],
+    "ai_follow_up_questions": [
+      "Do you have a time registration to prove the 1,225 hours if asked?",
+      "Roughly how many hours per week did you work on your business?",
+      "Did you include administrative hours, networking, and training in your count?"
+    ]
+  },
+  {
+    "field_code": "1d",
+    "box": 1,
+    "section_nl": "Inkomen uit werk en woning",
+    "section_en": "Income from work and home",
+    "official_label_nl": "Startersaftrek",
+    "plain_question_nl": "Bent u in de eerste 5 jaar van uw ondernemerschap en heeft u de startersaftrek nog geen 3 keer gebruikt?",
+    "plain_question_en": "Are you in the first 5 years of entrepreneurship and have you used startersaftrek fewer than 3 times?",
+    "plain_question_fa": "آیا در ۵ سال اول کارآفرینی هستید و startersaftrek را کمتر از ۳ بار استفاده کرده‌اید؟",
+    "help_text_nl": "LAATSTE JAAR! Startersaftrek (€2.123) wordt in 2027 afgeschaft. Gebruik het nu als u in aanmerking komt.",
+    "help_text_en": "LAST YEAR! Startersaftrek (€2,123) is abolished from 2027. Claim it now if eligible.",
+    "help_text_fa": "آخرین سال! Startersaftrek (۲٬۱۲۳ یورو) از ۲۰۲۷ لغو می‌شود. اگر واجد شرایط هستید، همین الان استفاده کنید.",
+    "input_type": "boolean",
+    "required_for": ["zzp_starter"],
+    "user_types": ["zzp"],
+    "rule_ids": ["SA-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/startersaftrek/",
+    "common_mistakes": [
+      "Not knowing how many times they've already used it",
+      "Thinking 5-year window is from registration date (it's from first entrepreneurial year)",
+      "Missing the last chance in 2026 — many eligible starters don't realize it's being abolished"
+    ],
+    "ai_follow_up_questions": [
+      "In which year did you first work as an entrepreneur?",
+      "Have you used the startersaftrek in previous years? How many times?"
+    ]
+  },
+  {
+    "field_code": "1e",
+    "box": 1,
+    "section_nl": "Inkomen uit werk en woning",
+    "section_en": "Income from work and home",
+    "official_label_nl": "MKB-winstvrijstelling",
+    "plain_question_nl": "De MKB-winstvrijstelling (12,7%) wordt automatisch berekend. Heeft u winst uit onderneming?",
+    "plain_question_en": "The MKB-winstvrijstelling (12.7%) is calculated automatically on your profit. Do you have business profit?",
+    "plain_question_fa": "MKB-winstvrijstelling (۱۲.۷٪) به طور خودکار محاسبه می‌شود. آیا سود کسب‌وکار دارید؟",
+    "help_text_nl": "Dit is geen extra actie nodig — de Belastingdienst berekent het automatisch op uw winst na ondernemersaftrek.",
+    "help_text_en": "No extra action needed — automatically 12.7% of profit after ondernemersaftrek is exempt from tax.",
+    "help_text_fa": "نیازی به اقدام اضافی نیست — به طور خودکار ۱۲.۷٪ از سود پس از ondernemersaftrek از مالیات معاف می‌شود.",
+    "input_type": "boolean",
+    "required_for": ["zzp"],
+    "user_types": ["zzp"],
+    "rule_ids": ["MKB-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/mkb-winstvrijstelling/",
+    "common_mistakes": [
+      "Applying MKB before unternemersaftrek instead of after",
+      "Thinking MKB requires hours worked (it doesn't — no urencriterium)"
+    ],
+    "ai_follow_up_questions": []
+  },
+  {
+    "field_code": "1f",
+    "box": 1,
+    "section_nl": "Aftrekbare kosten",
+    "section_en": "Deductible costs",
+    "official_label_nl": "Lijfrentepremies (jaarruimte)",
+    "plain_question_nl": "Heeft u in 2026 premies betaald voor een lijfrenteverzekering of gestort op een lijfrenterekening?",
+    "plain_question_en": "Did you pay premiums for a lijfrente (pension) product or make deposits to a pension account in 2026?",
+    "plain_question_fa": "آیا در ۲۰۲۶ برای یک محصول بازنشستگی (lijfrente) مشارکت پرداخت کردید؟",
+    "help_text_nl": "Als ZZP'er kunt u tot 30% van uw inkomen minus de AOW-franchise (€19.172) aftrekken voor pensioenopbouw. Dit is de meest onderbenutte aftrekpost!",
+    "help_text_en": "As a ZZP freelancer, you can deduct up to 30% of income minus AOW franchise (€19,172) for pension. This is the most underused deduction!",
+    "help_text_fa": "به عنوان ZZP‌کار، می‌توانید تا ۳۰٪ از درآمد منهای فرانشیز AOW (۱۹٬۱۷۲ یورو) را برای بازنشستگی کسر کنید. این کمترین استفاده شده کسر است!",
+    "input_type": "currency_amount",
+    "required_for": ["zzp_with_pension"],
+    "user_types": ["zzp", "employee"],
+    "rule_ids": ["LR-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/aftrek_en_bijdragen/aftrekbare_kosten/lijfrentepremie/",
+    "common_mistakes": [
+      "Not knowing they have unused jaarruimte from past years (reserveringsruimte)",
+      "Confusing the contribution amount with the allowed maximum",
+      "Making the deposit after 31 December — must be paid in 2026 to deduct in 2026"
+    ],
+    "ai_follow_up_questions": [
+      "Have you ever contributed to a pension or lijfrente product as a ZZP freelancer?",
+      "What was your approximate income in 2025? (to calculate jaarruimte for 2026)",
+      "Do you know if you have unused jaarruimte from past years (reserveringsruimte)?"
+    ]
+  },
+  {
+    "field_code": "2a",
+    "box": 2,
+    "section_nl": "Inkomen uit aanmerkelijk belang",
+    "section_en": "Income from substantial shareholding",
+    "official_label_nl": "Voordeel uit aanmerkelijk belang",
+    "plain_question_nl": "Bezit u 5% of meer van de aandelen van een BV of andere vennootschap?",
+    "plain_question_en": "Do you own 5% or more of shares in a BV or other company?",
+    "plain_question_fa": "آیا ۵٪ یا بیشتر از سهام یک BV یا شرکت دیگری را دارید؟",
+    "help_text_nl": "Box 2 is alleen van toepassing als u een aanmerkelijk belang heeft (5%+ aandelen). Voor de meeste ZZP'ers met eenmanszaak is dit nihil.",
+    "help_text_en": "Box 2 only applies with 5%+ shareholding. Most ZZP freelancers with eenmanszaak: answer is NO.",
+    "help_text_fa": "جعبه ۲ فقط با مالکیت ۵٪+ سهام اعمال می‌شود. برای اکثر ZZP‌کاران با eenmanszaak: پاسخ خیر است.",
+    "input_type": "boolean",
+    "required_for": ["dga", "major_shareholder"],
+    "user_types": ["dga"],
+    "rule_ids": ["BOX-2026-002", "B2R-2026-001", "B2R-2026-002"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/aanmerkelijk_belang/",
+    "common_mistakes": [
+      "Confusing owning <5% shares (Box 3) with owning 5%+ shares (Box 2)",
+      "Not reporting dividend received from own BV"
+    ],
+    "ai_follow_up_questions": [
+      "Do you have a BV (besloten vennootschap)?",
+      "Did you receive dividend from your BV this year?",
+      "Did you sell shares in your company this year?"
+    ]
+  },
+  {
+    "field_code": "3a",
+    "box": 3,
+    "section_nl": "Sparen en beleggen",
+    "section_en": "Savings and investments",
+    "official_label_nl": "Bezittingen en schulden op 1 januari 2026",
+    "plain_question_nl": "Wat was het totaal van uw spaargeld, beleggingen en andere bezittingen op 1 januari 2026?",
+    "plain_question_en": "What was the total of your savings, investments, and other assets on 1 January 2026?",
+    "plain_question_fa": "کل پس‌انداز، سرمایه‌گذاری‌ها و سایر دارایی‌های شما در اول ژانویه ۲۰۲۶ چقدر بود؟",
+    "help_text_nl": "Teldatum is 1 januari 2026. Bezittingen: spaargeld, aandelen, obligaties, crypto, verhuurde woning. Schulden: consumptief krediet, studieschuld.",
+    "help_text_en": "Reference date: 1 January 2026. Assets: savings, stocks, bonds, crypto, rental property. Liabilities: consumer loans, student debt.",
+    "help_text_fa": "تاریخ مرجع: اول ژانویه ۲۰۲۶. دارایی‌ها: پس‌انداز، سهام، اوراق، ارز دیجیتال، ملک اجاره‌ای. بدهی‌ها: وام مصرفی، بدهی تحصیلی.",
+    "input_type": "currency_amount",
+    "required_for": ["all_with_assets_above_exemption"],
+    "user_types": ["all"],
+    "rule_ids": ["BOX-2026-003", "B3R-2026-001"],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/vermogen/belasting-betalen-over-uw-vermogen/",
+    "common_mistakes": [
+      "Using year-end balance instead of 1 January balance",
+      "Forgetting cryptocurrency holdings",
+      "Not splitting between savings vs investments (different fictitious returns: 1.28% vs 6%)",
+      "Including the main home value — the primary residence is NOT in Box 3"
+    ],
+    "ai_follow_up_questions": [
+      "What type of assets do you have? (savings account, stocks, bonds, crypto, rental property?)",
+      "What was the balance on each savings/investment account on 1 January 2026?",
+      "Do you have any loans or debts that can be offset against Box 3 assets?"
+    ]
+  },
+  {
+    "field_code": "VOL-1",
+    "box": null,
+    "section_nl": "Voorlopige aanslag / reservering",
+    "section_en": "Provisional assessment / tax reserve",
+    "official_label_nl": "Voorlopige aanslag inkomstenbelasting",
+    "plain_question_nl": "Heeft u in 2026 een voorlopige aanslag (voorschot op de belasting) betaald?",
+    "plain_question_en": "Did you pay a provisional tax assessment (voorlopige aanslag) during 2026?",
+    "plain_question_fa": "آیا در ۲۰۲۶ پیش‌پرداخت مالیاتی (voorlopige aanslag) پرداخت کردید؟",
+    "help_text_nl": "Als u een voorlopige aanslag heeft betaald, wordt dit verrekend met uw definitieve belasting. Controleer uw MijnBelastingdienst.",
+    "help_text_en": "If you paid provisional assessments during the year, these are offset against your final tax bill.",
+    "help_text_fa": "اگر در طول سال پیش‌پرداخت مالیاتی پرداخت کردید، این با قبض نهایی مالیاتی شما تسویه می‌شود.",
+    "input_type": "currency_amount",
+    "required_for": ["all_who_paid_voorlopige_aanslag"],
+    "user_types": ["all"],
+    "rule_ids": [],
+    "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/aangifte_doen/na-de-aangifte/voorlopige-aanslag/",
+    "common_mistakes": [
+      "Not requesting a voorlopige aanslag as ZZP — leads to large lump-sum tax bill in May",
+      "Forgetting to adjust the voorlopige aanslag when income changed during the year"
+    ],
+    "ai_follow_up_questions": [
+      "Did you request a voorlopige aanslag to spread your tax payments monthly?",
+      "If yes: did your income change significantly during the year? The voorlopige aanslag may need adjustment."
+    ]
+  }
+]

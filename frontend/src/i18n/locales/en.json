@@ -1,0 +1,29 @@
+{
+  "app_name": "TaxWijs",
+  "tagline": "Your smart tax assistant",
+  "nav": {
+    "chat": "Ask a question",
+    "calculator": "Calculate tax",
+    "profile": "Profile",
+    "login": "Log in",
+    "logout": "Log out"
+  },
+  "chat": {
+    "placeholder": "Ask your tax question...",
+    "send": "Send",
+    "new_conversation": "New conversation"
+  },
+  "auth": {
+    "email": "Email address",
+    "password": "Password",
+    "login": "Log in",
+    "register": "Register",
+    "user_type": "I am a..."
+  },
+  "user_types": {
+    "zzp": "ZZP / Freelancer",
+    "employee": "Employee",
+    "expat": "Expat",
+    "dga": "DGA / Director"
+  }
+}
