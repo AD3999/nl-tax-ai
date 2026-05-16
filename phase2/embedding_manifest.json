@@ -3,5 +3,5 @@
   "model": "all-MiniLM-L6-v2",
   "dimensions": 384,
   "chunk_count": 91,
-  "built_at": "2026-05-15T16:45:57.272288+00:00"
+  "built_at": "2026-05-16T14:32:05.819095+00:00"
 }
