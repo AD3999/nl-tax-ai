@@ -25,5 +25,23 @@
     "employee": "Werknemer",
     "expat": "Expat",
     "dga": "DGA / Directeur"
+  },
+  "phase2": {
+    "nav": "RAG Demo",
+    "meta": "Fase 2 · RAG Pipeline",
+    "title": "Retrieval Demo",
+    "subtitle": "Test de kennisophaalpijplijn. Voer een belastingvraag in een willekeurige taal in en bekijk welke regels, Q&A-paren en scenario's worden teruggevonden.",
+    "question_label": "Vraag",
+    "question_placeholder": "Stel een belastingvraag in NL, EN of FA…",
+    "user_type_label": "Gebruikerstype",
+    "any": "Elk",
+    "retrieve": "Ophalen",
+    "retrieving": "Bezig met ophalen…",
+    "results_count": "{{count}} resultaten",
+    "no_results": "Geen resultaten gevonden. Probeer een andere vraag of gebruikerstype.",
+    "show_more": "Meer tonen",
+    "show_less": "Minder tonen",
+    "ai_hint_label": "AI-instructie",
+    "cascade_label": "cascade"
   }
 }

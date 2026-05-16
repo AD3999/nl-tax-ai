@@ -25,5 +25,23 @@
     "employee": "Employee",
     "expat": "Expat",
     "dga": "DGA / Director"
+  },
+  "phase2": {
+    "nav": "RAG Demo",
+    "meta": "Phase 2 · RAG Pipeline",
+    "title": "Retrieval Demo",
+    "subtitle": "Test the knowledge retrieval pipeline. Enter a Dutch tax question in any language and see which rules, Q&A pairs and scenarios are returned by the vector search.",
+    "question_label": "Question",
+    "question_placeholder": "Ask a Dutch tax question in NL, EN or FA…",
+    "user_type_label": "User type",
+    "any": "Any",
+    "retrieve": "Retrieve",
+    "retrieving": "Retrieving…",
+    "results_count": "{{count}} results",
+    "no_results": "No results found. Try a different question or user type.",
+    "show_more": "Show more",
+    "show_less": "Show less",
+    "ai_hint_label": "AI instruction",
+    "cascade_label": "cascade"
   }
 }

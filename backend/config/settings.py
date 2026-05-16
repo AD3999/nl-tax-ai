@@ -3,10 +3,16 @@ Django settings for nl-tax-ai backend.
 Reads all secrets from environment variables via django-environ.
 """
 
+import sys
 import environ
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Allow importing phase2 modules (project root is one level above backend/)
+_PROJECT_ROOT = str(BASE_DIR.parent)
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
 
 env = environ.Env(
     DEBUG=(bool, False),
