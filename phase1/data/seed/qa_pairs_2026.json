@@ -16,7 +16,7 @@
       "short_fa": "تقریباً ۱۰٬۰۰۰ تا ۱۳٬۰۰۰ یورو بسته به کسرها — ۲۵ تا ۲۸٪ ذخیره کنید.",
       "detailed_nl": "Bij €50.000 winst en standaard ZZP-aftrekposten: Zelfstandigenaftrek €1.200, MKB-winstvrijstelling 12,7% = €6.200, Belastbaar inkomen: ~€42.600. Box 1 belasting vóór kortingen: ~€15.230. Na algemene heffingskorting (~€1.900) en arbeidskorting (~€3.600): ~€9.730 inkomstenbelasting. Plus ZVW 5,32% over €42.600 = ~€2.266. Totaal: ~€12.000. Maandelijkse reservering: €1.000/maand.",
       "detailed_en": "With €50,000 profit and standard ZZP deductions: After zelfstandigenaftrek (€1,200) and MKB-winstvrijstelling (12.7%), taxable income is ~€42,600. Box 1 tax before credits ~€15,230. After AHK and arbeidskorting: ~€9,730 income tax + ZVW €2,266 = total ~€12,000.",
-      "detailed_fa": "با ۵۰٬۰۰۰ یورو سود و کسرهای استاندارد ZZP: پس از zelfstandigenaftrek و MKB-winstvrijstelling، درآمد مشمول مالیات ~۴۲٬۶۰۰ یورو. مالیات جعبه ۱ قبل از اعتبارات: ~۱۵٬۲۳۰ یورو. بعد از AHK و arbeidskorting: ~۹٬۷۳۰ مالیات بر درآمد + ZVW 2٬۲۶۶ = جمع ~۱۲٬۰۰۰ یورو.",
+      "detailed_fa": "با ۵۰٬۰۰۰ یورو سود و کسرهای استاندارد ZZP: ابتدا zelfstandigenaftrek (۱٬۲۰۰ یورو) کم می‌شود، سپس MKB-winstvrijstelling (۱۲.۷٪) اعمال می‌شود. درآمد مشمول مالیات: ~۴۲٬۶۰۰ یورو. مالیات باکس ۱ قبل از تخفیف‌ها: ~۱۵٬۲۳۰ یورو. پس از algemene heffingskorting (~۱٬۹۰۰ یورو) و arbeidskorting (~۳٬۶۰۰ یورو): ~۹٬۷۳۰ یورو مالیات بر درآمد. به علاوه ZVW (۵.۳۲٪ بر سود): ~۲٬۲۶۶ یورو. مجموع: ~۱۲٬۰۰۰ یورو. توصیه: ماهانه ۱٬۰۰۰ یورو کنار بگذارید.",
       "numeric_answer": 12000,
       "conditions_that_change_answer": [
         "If eligible for startersaftrek (€2,123 extra): reduces bill by ~€800",
@@ -51,7 +51,7 @@
       "short_fa": "۱٬۲۰۰ یورو در ۲۰۲۶. باید حداقل ۱٬۲۲۵ ساعت در سال در کسب‌وکارتان کار کنید.",
       "detailed_nl": "De zelfstandigenaftrek is €1.200 in 2026 (was €2.470 in 2025, wordt €900 in 2027). Om in aanmerking te komen moet je het urencriterium halen: minimaal 1.225 uur per jaar aan je onderneming besteden. Wat telt? Declarabele uren, administratie, acquisitie, netwerken, reistijd naar klanten, scholing. Wat telt NIET? Persoonlijke vakanties, ziektedagen, privé-tijd. Tip: houd een urenregistratie bij — dat is ook vereist als de Belastingdienst controleert.",
       "detailed_en": "€1,200 in 2026. The urencriterium requires 1,225+ hours/year. This includes: billable client hours, administration, invoicing, marketing, client travel, professional training. Does NOT include: personal vacation, sick days, private time.",
-      "detailed_fa": "۱٬۲۰۰ یورو در ۲۰۲۶. urencriterium نیاز به ۱٬۲۲۵+ ساعت در سال دارد. شامل: ساعات قابل صدور فاکتور، اداری، بازاریابی، مسافرت به مشتری. شامل نمی‌شود: تعطیلات شخصی، روزهای بیماری.",
+      "detailed_fa": "zelfstandigenaftrek در ۲۰۲۶ مبلغ ۱٬۲۰۰ یورو است (در ۲۰۲۵ برابر ۲٬۴۷۰ یورو بود و در ۲۰۲۷ به ۹۰۰ یورو کاهش می‌یابد). برای دریافت این کسر باید حداقل ۱٬۲۲۵ ساعت در سال برای کسب‌وکارتان کار کنید (urencriterium). ساعاتی که حساب می‌شوند: ساعات قابل صدور فاکتور به مشتری، امور اداری و حسابداری، بازاریابی و اکتساب مشتری، مسافرت به مشتری، آموزش حرفه‌ای. ساعاتی که حساب نمی‌شوند: تعطیلات شخصی، روزهای بیماری، اوقات خصوصی. نکته مهم: ثبت دقیق ساعات کار را نگه دارید — Belastingdienst ممکن است در بازرسی آن را درخواست کند.",
       "numeric_answer": 1200,
       "conditions_that_change_answer": [
         "If at AOW retirement age on 1 Jan 2026: only 50% applies = €600",
@@ -84,7 +84,7 @@
       "short_fa": "بله. Startersaftrek از اول ژانویه ۲۰۲۷ قطعاً لغو می‌شود. ۲۰۲۶ آخرین فرصت است.",
       "detailed_nl": "Ja, dit is bevestigd in de Wet IB 2026. Startersaftrek bedraagt €2.123 in 2026 en kun je maximaal 3 keer gebruiken in de eerste 5 jaar van ondernemerschap. Als je nog gebruik kunt maken van de startersaftrek in 2026 — maak dat dan zeker! De besparing is ongeveer €800 bij een tarief van ~37%. Combineer dit met de zelfstandigenaftrek van €1.200 voor €3.323 totale ondernemersaftrek.",
       "detailed_en": "Yes, confirmed in legislation. €2,123 in 2026. Use it if you're in the first 5 years and have used it fewer than 3 times. Combined with zelfstandigenaftrek (€1,200) gives total ondernemersaftrek of €3,323 — saving approximately €1,249 in taxes.",
-      "detailed_fa": "بله. در قانون تأیید شده. ۲٬۱۲۳ یورو در ۲۰۲۶. اگر در ۵ سال اول هستید و کمتر از ۳ بار استفاده کرده‌اید، حتماً از آن استفاده کنید.",
+      "detailed_fa": "بله، در قانون مالیاتی ۲۰۲۶ (Wet IB) رسماً تأیید شده است. startersaftrek در ۲۰۲۶ مبلغ ۲٬۱۲۳ یورو است و می‌توانید حداکثر ۳ بار در ۵ سال اول کارآفرینی از آن استفاده کنید. اگر هنوز واجد شرایط هستید، حتماً در ۲۰۲۶ از آن استفاده کنید — این آخرین فرصت است. این کسر روی zelfstandigenaftrek (۱٬۲۰۰ یورو) اضافه می‌شود و مجموع ondernemersaftrek را به ۳٬۳۲۳ یورو می‌رساند. در نرخ مالیاتی ~۳۷٪، این صرفه‌جویی حدود ۱٬۲۳۰ یورو در مالیات است.",
       "conditions_that_change_answer": [
         "Already used startersaftrek 3 times: no longer eligible",
         "More than 5 years of entrepreneurship: no longer eligible",
@@ -114,10 +114,10 @@
     "answer": {
       "short_nl": "De ZVW-bijdrage is 5,32% over je winst (max €71.628). Dit staat los van Box 1 maar wordt via de aangifte IB berekend.",
       "short_en": "ZVW is 5.32% on profit up to €71,628. It's separate from Box 1 but calculated via the IB return.",
-      "short_fa": "ZVW 5.32٪ بر سود تا ۷۱٬۶۲۸ یورو است. جدا از جعبه ۱ اما از طریق اظهارنامه IB محاسبه می‌شود.",
+      "short_fa": "ZVW برابر ۵.۳۲٪ از سود تا ۷۱٬۶۲۸ یورو است. جدا از مالیات باکس ۱ اما از طریق اظهارنامه IB محاسبه می‌شود.",
       "detailed_nl": "De ZVW (Zorgverzekeringswet) bijdrage voor zelfstandigen is 5,32% in 2026, berekend over je winst uit onderneming tot een maximum van €71.628. Maximale bijdrage: ~€3.811. Het wordt NIET vooringevuld omdat de Belastingdienst je winst pas definitief weet na je aangifte. Het wordt berekend naast je Box 1 belasting. Vergeet het niet te reserveren — het staat apart op de eindafrekening en verrast veel ZZP'ers.",
       "detailed_en": "5.32% on profit up to €71,628 = max ~€3,811/year. Not pre-filled because Belastingdienst doesn't know your final profit until you file. Calculated alongside Box 1 tax but shown separately on the final assessment.",
-      "detailed_fa": "۵.۳۲٪ بر سود تا ۷۱٬۶۲۸ یورو = حداکثر ~۳٬۸۱۱ یورو/سال. از قبل پر نمی‌شود زیرا Belastingdienst تا زمان تسلیم اظهارنامه از سود نهایی شما مطلع نیست.",
+      "detailed_fa": "ZVW (Zorgverzekeringswet) برای ZZP‌کاران ۵.۳۲٪ از سود کسب‌وکار تا سقف ۷۱٬۶۲۸ یورو است. حداکثر مبلغ: ~۳٬۸۱۱ یورو در سال. این مبلغ در اظهارنامه از قبل پر نیست زیرا Belastingdienst تا زمان دریافت اظهارنامه از سود نهایی شما اطلاع ندارد. ZVW جدا از مالیات باکس ۱ است اما همزمان با آن محاسبه می‌شود و در قبض مالیاتی نهایی (aanslag) به عنوان ردیف مجزا ظاهر می‌شود. این مهم‌ترین هزینه‌ای است که ZZP‌کاران تازه‌کار از آن غافل می‌شوند — حتماً برایش ذخیره جداگانه داشته باشید.",
       "numeric_answer": 0.0532,
       "conditions_that_change_answer": [
         "Profit above €71,628: ZVW is capped at ~€3,811 regardless of higher profit"
@@ -149,6 +149,7 @@
       "short_fa": "نه کاملاً. فقط درآمد مشمول مالیات بالای ۷۸٬۴۲۶ یورو با نرخ ۴۹.۵٪ مالیات می‌گیرد. پس از کسرهای ZZP، ۶۵٬۰۰۰ یورو سود احتمالاً در براکت ۳۵.۷۵٪ باقی می‌ماند.",
       "detailed_nl": "Bij €65.000 winst na aftrek van kosten: Zelfstandigenaftrek -€1.200 → MKB-winstvrijstelling 12,7% van €63.800 = -€8.102 → Belastbaar inkomen: €55.698. Dit valt volledig in de eerste schijf (35,75%). Je betaalt dus 35,75% over het belastbaar inkomen — niet 49,5%. De hoge schijf beginnen pas bij belastbaar inkomen boven €78.426.",
       "detailed_en": "After deductions: profit €65,000 → zelfstandigenaftrek €1,200 → MKB 12.7% = €8,102 → taxable income ~€55,698. This stays in bracket 1 (35.75%). The 49.5% bracket only kicks in at taxable income above €78,426.",
+      "detailed_fa": "با ۶۵٬۰۰۰ یورو سود (پس از کسر هزینه‌های تجاری): ابتدا zelfstandigenaftrek ۱٬۲۰۰ یورو کم می‌شود (= ۶۳٬۸۰۰ یورو). سپس MKB-winstvrijstelling: ۱۲.۷٪ از ۶۳٬۸۰۰ = ۸٬۱۰۲ یورو. درآمد مشمول مالیات: ~۵۵٬۶۹۸ یورو. این مبلغ کاملاً در براکت اول (۳۵.۷۵٪) قرار دارد. براکت ۴۹.۵٪ تنها از درآمد مشمول مالیات بالای ۷۸٬۴۲۶ یورو اعمال می‌شود — که در این مثال به آن نمی‌رسیم. نتیجه: با ۶۵٬۰۰۰ یورو سود ZZP احتمالاً در براکت بالا نیستید.",
       "conditions_that_change_answer": [
         "If additional pension contribution (lijfrente): taxable income drops further",
         "If also has significant box 2 or box 3 income: may push total into higher bracket"
@@ -180,6 +181,7 @@
       "short_fa": "بله. ZZP‌کاران می‌توانند برای huurtoeslag درخواست دهند. تغییر مهم ۲۰۲۶: سقف اجاره لغو شد.",
       "detailed_nl": "ZZP'ers zijn gewone belastingplichtigen en kunnen huurtoeslag aanvragen. In 2026 verviel de huurgrens (vroeger ~€880/maand) — nu is er geen maximale huur meer om in aanmerking te komen. De berekening van de toeslag gaat nog wel tot €932,93/maand. Belangrijk: gebruik je geschatte ZZP-winst als toetsingsinkomen. Als je meer verdient dan verwacht, pas je schatting dan aan om terugbetaling te vermijden.",
       "detailed_en": "ZZP freelancers can claim huurtoeslag. 2026 reform: rent ceiling abolished (was ~€880). Calculation ceiling still €932.93/month. Use estimated annual profit as income. Update estimate if actual income differs to avoid repayment.",
+      "detailed_fa": "ZZP‌کاران مانند سایر ساکنان هلند می‌توانند برای huurtoeslag (کمک هزینه مسکن) درخواست دهند. در ۲۰۲۶ اصلاح مهمی صورت گرفت: سقف اجاره لغو شد (قبلاً حدود ۸۸۰ یورو در ماه بود). حالا هر مبلغ اجاره‌ای می‌تواند واجد شرایط باشد. سقف محاسباتی همچنان ۹۳۲.۹۳ یورو در ماه است. مهم برای ZZP: درآمد تخمینی سالانه خود را هنگام درخواست اعلام کنید. اگر درآمد واقعی‌تان از تخمین بیشتر شد، تخمین را به‌روز کنید تا مجبور به بازپرداخت نشوید.",
       "conditions_that_change_answer": [
         "Net assets above €38,479: not eligible",
         "Age below 21: reduced or no huurtoeslag",
@@ -212,6 +214,7 @@
       "short_fa": "Schijnzelfstandigheid = رسماً ZZP اما عملاً مانند کارمند کار کردن. ریسک: مشتری واحد، تعهد شخصی، نقش یکسان با کارمندان.",
       "detailed_nl": "Schijnzelfstandigheid is formeel ZZP maar feitelijk in loondienst. Kenmerken: 1) Persoonlijk verplicht (geen vervanger mogelijk); 2) Opdrachtgever bepaalt HOE je werkt (niet alleen WAT je oplevert); 3) Economische afhankelijkheid van één opdrachtgever (>70% van inkomen); 4) Zelfde werkzaamheden als collega's in loondienst; 5) Uurtarief onder de ~€33; 6) Geen eigen materiaal, geen eigen klanten. Gevolg bij herclassificatie: opdrachtgever betaalt achterstallige loonheffing + boetes.",
       "detailed_en": "Risk factors: 1) Must work personally (no substitution); 2) Client controls how work is done; 3) >70% income from single client; 4) Same role as employed colleagues; 5) Rate below ~€33/hour; 6) No business risk. Consequence: client pays back loonheffing + penalties for entire period.",
+      "detailed_fa": "Schijnzelfstandigheid یا خوداشتغالی کاذب یعنی قرارداد ZZP اما در عمل مانند کارمند کار کردن. Belastingdienst از ژانویه ۲۰۲۵ اجرای فعال را آغاز کرده است. عوامل ریسک: ۱) تعهد شخصی به انجام کار — نمی‌توانید جایگزین بفرستید؛ ۲) کارفرما نحوه کار را دیکته می‌کند (نه فقط نتیجه)؛ ۳) بیش از ۷۰٪ درآمد از یک مشتری؛ ۴) همان نقش همکاران کارمند؛ ۵) نرخ ساعتی زیر ~۳۳ یورو؛ ۶) بدون ابزار یا مشتری مستقل. پیامد طبقه‌بندی مجدد: کارفرما مالیات حقوق (loonheffing) به‌علاوه جریمه برای تمام دوره گذشته را می‌پردازد.",
       "conditions_that_change_answer": [
         "Using approved model agreement (modelovereenkomst): reduces but doesn't eliminate risk",
         "Working for multiple clients: significantly reduces risk",
@@ -244,6 +247,7 @@
       "short_fa": "بله، باید اظهارنامه تسلیم کنید. قانون ۳۰٪ از طریق مالیات حقوق پردازش می‌شود اما باید اظهارنامه IB تسلیم شود.",
       "detailed_nl": "Ja. De 30%-ruling betekent dat je werkgever 30% van je salaris belastingvrij uitkeert als vergoeding voor extraterritoriale kosten. Maar je moet nog steeds aangifte IB doen. Je kunt kiezen voor de partiële buitenlandse belastingplicht (als je niet-inwoner kiest): dan worden beleggingen e.d. vrijgesteld van box 3.",
       "detailed_en": "The 30% ruling means employer pays 30% of salary tax-free. You still file IB return. Option: partial non-resident status exempts Box 3 foreign assets. Consult a tax advisor for this election as it has long-term implications.",
+      "detailed_fa": "بله. قانون ۳۰٪ به این معنی است که کارفرمای شما ۳۰٪ از حقوق را به عنوان بازپرداخت هزینه‌های خارج از کشور (extraterritoriale kosten) معاف از مالیات پرداخت می‌کند. اما باید اظهارنامه inkomstenbelasting (IB) سالانه نیز تسلیم کنید. گزینه مهم: می‌توانید وضعیت «مقیم جزئی خارجی» (partiële buitenlandse belastingplicht) را انتخاب کنید که دارایی‌های خارجی را از باکس ۳ معاف می‌کند. این انتخاب پیامدهای بلندمدت دارد — مشاوره با یک متخصص مالیاتی (belastingadviseur) توصیه می‌شود.",
       "conditions_that_change_answer": [
         "Chose partial non-resident status: Box 3 treatment differs significantly",
         "30% ruling expired: normal tax rules apply from expiry date"
@@ -275,6 +279,7 @@
       "short_fa": "بله! از طریق محصول lijfrente می‌توانید تا ۳۰٪ از درآمد منهای فرانشیز AOW (۱۹٬۱۷۲ یورو) کسر کنید.",
       "detailed_nl": "Via de jaarruimte mag je 30% van je inkomen minus de AOW-franchise (€19.172) aftrekken als je bijdraagt aan een lijfrenteverzekering, lijfrenterekening of lijfrentebeleggingsrecht. Voorbeeld: winst €58.000 → 30% × (€58.000 - €19.172) = €11.648 jaarruimte. Belastingbesparing in het 35,75%-tarief: ~€4.164. Ongebruikte jaarruimte van de laatste 10 jaar (reserveringsruimte) kan ook worden benut.",
       "detailed_en": "Jaarruimte = 30% × (income − €19,172 AOW franchise). For €58k income: jaarruimte = €11,648. Tax saving at 35.75%: ~€4,164. Unused jaarruimte from past 10 years (reserveringsruimte) can also be used in a single year.",
+      "detailed_fa": "بله، ZZP‌کاران می‌توانند از طریق «jaarruimte» حق بیمه lijfrente (بازنشستگی تکمیلی) را از مالیات کسر کنند. فرمول: ۳۰٪ × (درآمد سال قبل − ۱۹٬۱۷۲ یورو فرانشیز AOW). مثال: سود ۵۸٬۰۰۰ یورو → jaarruimte = ۳۰٪ × (۵۸٬۰۰۰ − ۱۹٬۱۷۲) = ۱۱٬۶۴۸ یورو. صرفه‌جویی مالیاتی در نرخ ۳۵.۷۵٪: ~۴٬۱۶۴ یورو. jaarruimte استفاده نشده از ۱۰ سال گذشته (reserveringsruimte) را هم می‌توان یک‌جا واریز کرد — برای جبران سال‌های بدون پس‌انداز بازنشستگی بسیار مفید است.",
       "conditions_that_change_answer": [
         "Has employer pension (factor A > 0): reduces jaarruimte",
         "Using reserveringsruimte: can make much larger contributions to catch up"
@@ -306,6 +311,7 @@
       "short_fa": "فصلی: Q1 تا ۳۰ آوریل، Q2 تا ۳۱ جولای، Q3 تا ۳۱ اکتبر، Q4 تا ۳۱ ژانویه ۲۰۲۷.",
       "detailed_nl": "De meeste ZZP'ers doen per kwartaal BTW-aangifte. Deadlines: Q1 (jan-mrt) → 30 april; Q2 (apr-jun) → 31 juli; Q3 (jul-sep) → 31 oktober; Q4 (okt-dec) → 31 januari 2027. Te laat = automatische boete. Nihilaangifte ook verplicht! KOR-deelnemers doen géén BTW-aangifte.",
       "detailed_en": "Most ZZP file quarterly. All deadlines include payment — file AND pay by the same date. Even a zero (nihil) return must be filed on time. KOR participants do not file BTW returns.",
+      "detailed_fa": "اکثر ZZP‌کاران هر فصل یک بار BTW-aangifte (اظهارنامه مالیات بر ارزش افزوده) تسلیم می‌کنند. مهلت‌ها: فصل اول (ژانویه-مارس) تا ۳۰ آوریل؛ فصل دوم (آوریل-ژوئن) تا ۳۱ جولای؛ فصل سوم (جولای-سپتامبر) تا ۳۱ اکتبر؛ فصل چهارم (اکتبر-دسامبر) تا ۳۱ ژانویه ۲۰۲۷. تأخیر در تسلیم اظهارنامه به طور خودکار جریمه دارد، حتی اگر مبلغ صفر باشد (nihilaangifte هم اجباری است). اگر در طرح KOR ثبت‌نام کرده‌اید: نیازی به تسلیم اظهارنامه BTW ندارید.",
       "conditions_that_change_answer": [
         "If enrolled in KOR: no BTW return required",
         "If turnover is very high: may need to file monthly"
@@ -337,6 +343,7 @@
       "short_fa": "در ۲۰۲۶، حداقل حقوق DGA (gebruikelijk loon) ۵۶٬۰۰۰ یورو ناخالص در سال است.",
       "detailed_nl": "Het gebruikelijk loon voor DGA's is in 2026 minimaal €56.000. Dit is belast als loon in Box 1. Echter: als het loon van de meest vergelijkbare werknemer hoger is dan €56.000, moet je dat hogere bedrag hanteren. Winst boven het gebruikelijk loon kan als dividend worden uitgekeerd uit de BV, belast in Box 2.",
       "detailed_en": "Minimum €56,000 in 2026. If comparable employees earn more, use that higher amount. Profit beyond salary can be paid as dividend (Box 2). Strategy: timing of dividend payments and Box 2 brackets matter.",
+      "detailed_fa": "حداقل حقوق DGA (gebruikelijk loon) در ۲۰۲۶ مبلغ ۵۶٬۰۰۰ یورو ناخالص در سال است. اگر یک کارمند با نقش مشابه بیش از این دریافت می‌کند، باید از آن مبلغ بالاتر استفاده کنید. این حقوق در باکس ۱ به عنوان درآمد کاری مالیات می‌گیرد. سود مازاد بر حقوق را می‌توان به عنوان سود سهام (dividend) از BV پرداخت کرد که در باکس ۲ مالیات می‌گیرد (۲۴.۵٪ تا ۶۸٬۸۴۳ یورو). زمان‌بندی پرداخت سود سهام و بهینه‌سازی براکت‌های باکس ۲ از مهم‌ترین استراتژی‌های مالیاتی برای DGA است.",
       "conditions_that_change_answer": [
         "Comparable employee earns >€56,000: use that higher amount",
         "Company cannot afford the salary: may apply for exception with Belastingdienst"
@@ -368,6 +375,7 @@
       "short_fa": "تقریباً هرگز. شرایط بسیار سخت است: ورودی جداگانه، امکانات بهداشتی جداگانه و فضا باید با ارزش بازار اجاره داده شود.",
       "detailed_nl": "De fiscus stelt zware eisen: de werkruimte moet een eigen toegang hebben van buitenaf én eigen sanitair. Een logeerkamer met bureau is niet genoeg. Bovendien moet het vertrek voor minimaal 70% zakelijk worden gebruikt én zelfstandig verhuurd kunnen worden. Uitzondering: als je een aparte ruimte aan je BV verhuurt, gelden andere regels.",
       "detailed_en": "Requirements: separate external entrance, own sanitary facilities, 70%+ business use, independently rentable. A spare room with a desk doesn't qualify. Exception: renting space to your own BV follows different rules.",
+      "detailed_fa": "تقریباً هرگز، برای ZZP‌کارانی که در خانه شخصی‌شان کار می‌کنند. اداره مالیات شرایط بسیار سختی دارد: ۱) ورودی جداگانه از بیرون؛ ۲) امکانات بهداشتی (دستشویی) مستقل؛ ۳) استفاده حداقل ۷۰٪ برای کار؛ ۴) قابلیت اجاره مستقل در بازار. یک اتاق اضافی با میز کار هرگز واجد شرایط نیست. استثنا: DGA که فضا را رسماً به BV خودش اجاره می‌دهد، قوانین متفاوتی دارد.",
       "conditions_that_change_answer": [
         "Working from a genuine separate studio/annex: may qualify",
         "DGA renting office space to their own BV: different rules apply"

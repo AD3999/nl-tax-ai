@@ -20,7 +20,7 @@
     },
     "plain_nl": "Iedereen met inkomen uit werk of eigen bedrijf betaalt belasting in Box 1.",
     "plain_en": "Everyone with income from employment or a business pays tax in Box 1.",
-    "plain_fa": "هر کسی با درآمد از کار یا کسب‌وکار مشمول مالیات جعبه ۱ است.",
+    "plain_fa": "هر کسی که درآمد از کار یا کسب‌وکار داشته باشد مشمول مالیات باکس ۱ می‌شود.",
     "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/aangifte_doen/aangifte_ib/",
     "tags": [
       "box1",
@@ -55,7 +55,7 @@
     },
     "plain_nl": "Box 2 geldt als je 5% of meer van de aandelen van een vennootschap hebt.",
     "plain_en": "Box 2 applies if you own 5% or more of a company's shares.",
-    "plain_fa": "جعبه ۲ زمانی اعمال می‌شود که ۵٪ یا بیشتر سهام شرکتی را داشته باشید.",
+    "plain_fa": "باکس ۲ زمانی اعمال می‌شود که ۵٪ یا بیشتر سهام یک شرکت (مانند BV) را در اختیار داشته باشید.",
     "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/aanmerkelijk_belang/",
     "tags": [
       "box2",
@@ -95,7 +95,7 @@
     },
     "plain_nl": "Box 3 geldt als je vermogen (spaargeld + beleggingen − schulden) meer is dan €59.357 per persoon.",
     "plain_en": "Box 3 applies if your net assets exceed €59,357 per person (doubled for tax partners).",
-    "plain_fa": "جعبه ۳ زمانی اعمال می‌شود که دارایی خالص شما (پس‌انداز + سرمایه‌گذاری منهای بدهی) بیش از ۵۹٬۳۵۷ یورو باشد.",
+    "plain_fa": "باکس ۳ زمانی اعمال می‌شود که دارایی خالص شما (پس‌انداز + سرمایه‌گذاری منهای بدهی) از مبلغ معافیت ۵۹٬۳۵۷ یورو (به ازای هر نفر) تجاوز کند.",
     "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/vermogen/",
     "tags": [
       "box3",
@@ -461,7 +461,7 @@
     },
     "plain_nl": "Je mag 30% van je inkomen minus de AOW-franchise (€19.172) aftrekken als je bijdraagt aan een lijfrenteproduct. Voor ZZP met factor A=0 is dit 30% x (inkomen - €19.172).",
     "plain_en": "You can deduct 30% of income minus AOW franchise (€19,172) for pension contributions. For ZZP with no employer pension (factor A=0), this is simply 30% × (income − €19,172).",
-    "plain_fa": "می‌توانید ۳۰٪ از درآمد منهای فرانشیز AOW (۱۹٬۱۷۲ یورو) را برای مشارکت‌های بازنشستگی کسر کنید.",
+    "plain_fa": "می‌توانید ۳۰٪ از درآمد سال قبل منهای فرانشیز AOW (۱۹٬۱۷۲ یورو) را به عنوان حق بیمه بازنشستگی lijfrente از مالیات کسر کنید. برای ZZP بدون صندوق بازنشستگی کارفرمایی (factor A=0)، فرمول ساده است: ۳۰٪ × (درآمد − ۱۹٬۱۷۲ یورو).",
     "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/aftrek_en_bijdragen/aftrekbare_kosten/lijfrentepremie/",
     "tags": [
       "lijfrente",
@@ -545,7 +545,7 @@
     },
     "plain_nl": "Iedereen krijgt een algemene heffingskorting van maximaal €3.115 die direct van de te betalen belasting afgaat. Daalt naarmate je meer verdient.",
     "plain_en": "Everyone gets up to €3,115 directly off their tax bill. Phases out to zero at €78,426 total income across all boxes.",
-    "plain_fa": "همه مالیات‌دهندگان اعتبار مستقیم تا ۳٬۱۱۵ یورو دریافت می‌کنند که مستقیماً از قبض مالیاتی کم می‌شود.",
+    "plain_fa": "همه مالیات‌دهندگان تا ۳٬۱۱۵ یورو تخفیف مستقیم از مالیات (heffingskorting) دریافت می‌کنند. این مبلغ با افزایش درآمد کاهش می‌یابد: از ۲۹٬۷۳۶ یورو شروع به کاهش کرده و در ۷۸٬۴۲۶ یورو درآمد کل (از همه باکس‌ها) به صفر می‌رسد.",
     "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/heffingskortingen/algemene-heffingskorting/",
     "tags": [
       "ahk",
@@ -632,7 +632,7 @@
     },
     "plain_nl": "Werkende ouders met een kind jonger dan 12 jaar kunnen maximaal €3.032 extra heffingskorting krijgen. Bij koppels gaat dit naar de minst verdienende partner.",
     "plain_en": "Working parents with a child under 12 get up to €3,032 extra tax credit. For couples, it goes to the lower-earning partner.",
-    "plain_fa": "والدین شاغل با فرزند زیر ۱۲ سال تا ۳٬۰۳۲ یورو اعتبار مالیاتی اضافی دریافت می‌کنند.",
+    "plain_fa": "والدین شاغل با فرزند زیر ۱۲ سال که در خانه ثبت است تا ۳٬۰۳۲ یورو تخفیف مالیاتی اضافی دریافت می‌کنند. در زوج‌ها، این مبلغ به والدینی تعلق می‌گیرد که درآمد کمتری دارند.",
     "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/heffingskortingen/inkomensafhankelijke-combinatiekorting/",
     "tags": [
       "iack",
@@ -672,7 +672,7 @@
     },
     "plain_nl": "Box 2 inkomen tot €68.843 wordt belast tegen 24,5%. Fiscaal partners kunnen elk van hun eigen lage tarief schijf gebruiken.",
     "plain_en": "Box 2 income up to €68,843 per person is taxed at 24.5%. Tax partners each benefit from their own lower bracket.",
-    "plain_fa": "درآمد جعبه ۲ تا ۶۸٬۸۴۳ یورو با نرخ ۲۴.۵٪ مالیات می‌گیرد. شرکای مالی هر کدام مستقلاً از این براکت استفاده می‌کنند.",
+    "plain_fa": "درآمد باکس ۲ (سود سهام و فروش سهام شرکت) تا ۶۸٬۸۴۳ یورو با نرخ ۲۴.۵٪ مالیات می‌گیرد. شرکای مالیاتی هر کدام مستقلاً از این سقف براکت پایین بهره‌مند می‌شوند.",
     "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/aanmerkelijk_belang/tarief_box_2/",
     "tags": [
       "box2",
@@ -706,7 +706,7 @@
     },
     "plain_nl": "Box 2 inkomen boven €68.843 wordt belast tegen 31%.",
     "plain_en": "Box 2 income above €68,843 is taxed at 31%.",
-    "plain_fa": "درآمد جعبه ۲ بالای ۶۸٬۸۴۳ یورو با نرخ ۳۱٪ مالیات می‌گیرد.",
+    "plain_fa": "درآمد باکس ۲ بالای ۶۸٬۸۴۳ یورو با نرخ ۳۱٪ مالیات می‌گیرد.",
     "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/aanmerkelijk_belang/tarief_box_2/",
     "tags": [
       "box2",
@@ -746,7 +746,7 @@
     },
     "plain_nl": "Box 3 belast het fictief rendement op vermogen boven €59.357 (vrijstelling per persoon) met 36%. Spaarrekeningen: 1,28% fictief; beleggingen: 6% fictief.",
     "plain_en": "Box 3 taxes fictitious return on wealth above €59,357 at 36%. Savings assumed 1.28% return; investments assumed 6%.",
-    "plain_fa": "جعبه ۳ بازده فرضی بر ثروت بالای ۵۹٬۳۵۷ یورو را با نرخ ۳۶٪ مالیات می‌گیرد. پس‌انداز: ۱.۲۸٪ فرضی؛ سرمایه‌گذاری: ۶٪ فرضی.",
+    "plain_fa": "باکس ۳ بر اساس بازده فرضی بر دارایی خالص بالای ۵۹٬۳۵۷ یورو با نرخ ۳۶٪ مالیات می‌گیرد. تاریخ مرجع: اول ژانویه هر سال. بازده فرضی: پس‌انداز ۱.۲۸٪، سرمایه‌گذاری و سهام ۶٪.",
     "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/vermogen/belasting-betalen-over-uw-vermogen/",
     "tags": [
       "box3",
@@ -914,7 +914,7 @@
     },
     "plain_nl": "Als je minder verdient dan €40.857 (alleenstaand) of €51.142 (met partner) en een Nederlandse zorgverzekering hebt, kun je tot €129/maand zorgtoeslag ontvangen.",
     "plain_en": "Income below €40,857 (single) or €51,142 (partners) qualifies for up to €129/month healthcare allowance. Hard cutoff — no gradual phase-out.",
-    "plain_fa": "اگر درآمد شما زیر ۴۰٬۸۵۷ یورو (مجرد) یا ۵۱٬۱۴۲ یورو (زوج) باشد، تا ۱۲۹ یورو در ماه zorgtoeslag دریافت می‌کنید.",
+    "plain_fa": "اگر درآمد شما زیر ۴۰٬۸۵۷ یورو (مجرد) یا ۵۱٬۱۴۲ یورو (زوج) باشد و بیمه درمانی هلندی داشته باشید، تا ۱۲۹ یورو در ماه zorgtoeslag (کمک هزینه بیمه درمانی) دریافت می‌کنید. توجه: این یک سقف سخت است — یک یورو بیشتر از حد درآمد = صفر zorgtoeslag.",
     "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/toeslagen/zorgtoeslag/",
     "tags": [
       "zorgtoeslag",
@@ -1142,7 +1142,7 @@
     },
     "plain_nl": "Expats met een 30%-ruling ontvangen 30% van hun salaris belastingvrij als vergoeding van extraterritoriale kosten. Geldig voor max 5 jaar, daarna afbouw.",
     "plain_en": "The 30% ruling allows eligible expats to receive 30% of their salary tax-free. Valid for max 5 years with phase-down in years 4-5.",
-    "plain_fa": "قانون ۳۰٪ به اکسپت‌های واجد شرایط امکان می‌دهد ۳۰٪ از حقوق خود را بدون مالیات دریافت کنند. حداکثر ۵ سال.",
+    "plain_fa": "قانون ۳۰٪ به اکسپت‌های واجد شرایط امکان می‌دهد بخشی از حقوق را به عنوان هزینه خارج از کشور (extraterritoriale kosten) معاف از مالیات دریافت کنند. برای متقاضیان جدید از ۲۰۲۴: سال ۱ تا ۳: ۳۰٪ معاف، سال ۴: ۲۰٪ معاف، سال ۵: ۱۰٪ معاف. حداکثر ۵ سال.",
     "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/internationaal/werken_in_het_buitenland/werknemers_die_naar_nederland_komen/30_procent_regeling/",
     "tags": [
       "30pct_ruling",
@@ -1178,7 +1178,7 @@
     },
     "plain_nl": "Als DGA moet je jezelf minstens €56.000 salaris uitkeren (gebruikelijk loon 2026). Dit is belast als gewoon arbeidsinkomen in Box 1.",
     "plain_en": "DGA directors must pay themselves at least €56,000 salary (gebruikelijk loon) in 2026. Taxed as employment income in Box 1.",
-    "plain_fa": "مدیران DGA باید حداقل ۵۶٬۰۰۰ یورو به عنوان حقوق به خود بپردازند (gebruikelijk loon 2026). این به عنوان درآمد کار در جعبه ۱ مالیات می‌گیرد.",
+    "plain_fa": "مدیران DGA باید حداقل ۵۶٬۰۰۰ یورو به عنوان حقوق به خود بپردازند (gebruikelijk loon 2026). این مبلغ در باکس ۱ به عنوان درآمد کاری مالیات می‌گیرد. اگر بازار برای نقش مشابه بیشتر می‌پردازد، باید از آن مبلغ بالاتر استفاده کرد.",
     "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/bv_en_andere_rechtspersonen/directeur-grootaandeelhouder/gebruikelijk_loon/",
     "tags": [
       "dga",
