@@ -312,12 +312,43 @@ Open to unauthenticated users. Results saved to DB only when authenticated.
 
 ---
 
+## Phase 3 UI — Calculator Demo Page ✅ Complete
+
+**What was built:**
+
+A calculator form page at `/calculator` — same design language as the Phase 2 RAG demo. Lets you test the engine from the browser with real inputs and see the full tax breakdown instantly.
+
+### Files created
+
+| File | Purpose |
+|------|---------|
+| `frontend/src/pages/CalculatorPage.tsx` | Calculator form + results page |
+| `frontend/src/pages/CalculatorPage.module.css` | CSS module matching Phase 2 design |
+| `frontend/src/api/calculator.ts` | TypeScript API client for `POST /api/calculator/calculate/` |
+| `frontend/src/App.tsx` | Added `/calculator` route + nav link |
+
+### UI features
+
+- User-type pills: ZZP / Employee / Expat / DGA — form fields update per type
+- ZZP fields: revenue, expenses, hours, KIA investments, single client %, starter checkbox
+- Expat fields: employment income, 30% ruling toggle, ruling year
+- DGA fields: employment income, Box 2 dividend
+- Common fields: pension, Box 3 assets, savings fraction, children, partner checkbox
+- Summary cards: total tax due, effective rate, monthly reserve, Wet DBA risk (colour-coded)
+- Full breakdown table: every intermediate step from gross revenue to total tax
+
+---
+
 ## Git Branch & Commits
 
-**Branch:** `feat/phase3-calculator`
+**Merged to `master`** — commit `936dd84`
 
 | Commit | Description |
 |--------|-------------|
+| `936dd84` | Merge phase3 into master |
+| `3871acd` | Fix: use import type for TypeScript interfaces in CalculatorPage |
+| `21a2d1b` | Phase 3 UI — calculator demo page at /calculator |
+| `f40c712` | Phase 3 engine — deterministic Dutch 2026 tax calculator |
 | `4bce20f` | Replace Vite template README with real setup guide |
 | `9e5c58e` | Fix all Persian translations in Phase 1 seed data |
 | `0032e32` | Initial Django migrations for all local apps |
@@ -331,11 +362,10 @@ Open to unauthenticated users. Results saved to DB only when authenticated.
 
 | Phase | Description | Blocked on |
 |-------|-------------|-----------|
-| **Phase 3 UI** | Calculator demo page at `/calculator` (like Phase 2 demo) | Phase 3 ✅ done |
-| **Phase 4** | AI Response Layer — Claude API integration, RAG context injection, source citation | Phase 3 ✅ done |
+| **Phase 4** | AI Response Layer — Claude API, RAG context injection, source citation, chat endpoint | Phase 3 ✅ done |
 | **Phase 5** | User Intake System — profile questionnaire, user_type detection | Phase 4 |
 | **Phase 6** | IB Return Guide — step-by-step aangifte walkthrough | Phase 5 |
-| **Phase 7** | Testing & QA — ongoing from Phase 2 | — |
+| **Phase 7** | Testing & QA — ongoing | — |
 | **Phase 8** | Product Layer — auth, billing, onboarding | Phase 6 |
 
-**Next task:** Phase 3 UI — calculator demo page, then Phase 4 AI Response Layer.
+**Next task:** Phase 4 — Claude API integration. The AI reads RAG context + calculator output and answers tax questions in NL/EN/FA with source citations.
