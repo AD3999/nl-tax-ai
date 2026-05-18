@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { calculateTax, CalcInput, CalcResult } from "../api/calculator";
+import { calculateTax } from "../api/calculator";
+import type { CalcInput, CalcResult } from "../api/calculator";
 import s from "./CalculatorPage.module.css";
 
 type UserType = "zzp" | "employee" | "expat" | "dga";
