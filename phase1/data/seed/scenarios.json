@@ -34,23 +34,24 @@
       "profit_after_ondernemers": 57917,
       "mkb_winstvrijstelling": 7355,
       "taxable_income_box1": 50562,
-      "box1_tax_bracket1": 18076,
+      "box1_tax_bracket1": 13901,
+      "box1_tax_bracket2": 4329,
       "box1_tax_bracket3": 0,
-      "box1_tax_raw": 18076,
-      "algemene_heffingskorting": 1663,
-      "arbeidskorting": 4367,
+      "box1_tax_raw": 18230,
+      "algemene_heffingskorting": 1783,
+      "arbeidskorting": 5361,
       "iack": 0,
-      "income_tax_after_credits": 12046,
+      "income_tax_after_credits": 11086,
       "zvw_contribution": 2690,
       "box2_tax": 0,
       "box3_tax": 0,
-      "total_tax_due": 14736,
-      "effective_rate": 0.236
+      "total_tax_due": 13776,
+      "effective_rate": 0.22
     },
     "result": {
-      "total_tax_due": 14736,
-      "effective_rate": 0.236,
-      "monthly_reserve_needed": 1228,
+      "total_tax_due": 13776,
+      "effective_rate": 0.22,
+      "monthly_reserve_needed": 1148,
       "eligible_toeslagen": [],
       "toeslagen_value": 0,
       "optimization_opportunities": [
@@ -68,8 +69,23 @@
         "65% revenue from single client creates medium Wet DBA risk"
       ]
     },
-    "rule_ids_applied": ["ZA-2026-001", "SA-2026-001", "KIA-2026-001", "MKB-2026-001", "BR1-2026-001", "AHK-2026-001", "AK-2026-001", "ZVW-2026-001"],
-    "tags": ["zzp", "it", "starter", "medium_income", "single_client_risk"]
+    "rule_ids_applied": [
+      "ZA-2026-001",
+      "SA-2026-001",
+      "KIA-2026-001",
+      "MKB-2026-001",
+      "BR1-2026-001",
+      "AHK-2026-001",
+      "AK-2026-001",
+      "ZVW-2026-001"
+    ],
+    "tags": [
+      "zzp",
+      "it",
+      "starter",
+      "medium_income",
+      "single_client_risk"
+    ]
   },
   {
     "id": "SCN-ZZP-002",
@@ -107,23 +123,28 @@
       "mkb_winstvrijstelling": 3150,
       "taxable_income_box1": 21650,
       "box1_tax_bracket1": 7740,
+      "box1_tax_bracket2": 0,
       "box1_tax_bracket3": 0,
       "box1_tax_raw": 7740,
       "algemene_heffingskorting": 3115,
-      "arbeidskorting": 2648,
-      "iack": 1770,
-      "income_tax_after_credits": 207,
+      "arbeidskorting": 2204,
+      "iack": 1765,
+      "income_tax_after_credits": 656,
       "zvw_contribution": 1152,
       "box2_tax": 0,
       "box3_tax": 0,
-      "total_tax_due": 1359,
-      "effective_rate": 0.048
+      "total_tax_due": 1808,
+      "effective_rate": 0.073
     },
     "result": {
-      "total_tax_due": 1359,
-      "effective_rate": 0.048,
-      "monthly_reserve_needed": 113,
-      "eligible_toeslagen": ["zorgtoeslag", "huurtoeslag", "kindgebonden_budget"],
+      "total_tax_due": 1808,
+      "effective_rate": 0.073,
+      "monthly_reserve_needed": 151,
+      "eligible_toeslagen": [
+        "zorgtoeslag",
+        "huurtoeslag",
+        "kindgebonden_budget"
+      ],
       "toeslagen_value": 4800,
       "optimization_opportunities": [
         "CRITICAL: Did NOT meet urencriterium (980 < 1225 hours) — no zelfstandigenaftrek",
@@ -141,8 +162,24 @@
         "ZVW (€1,152) is the largest single tax item this year"
       ]
     },
-    "rule_ids_applied": ["MKB-2026-001", "BR1-2026-001", "AHK-2026-001", "AK-2026-001", "IACK-2026-001", "ZVW-2026-001", "ZT-2026-001", "HT-2026-001"],
-    "tags": ["zzp", "design", "low_income", "parent", "toeslagen", "missed_urencriterium"]
+    "rule_ids_applied": [
+      "MKB-2026-001",
+      "BR1-2026-001",
+      "AHK-2026-001",
+      "AK-2026-001",
+      "IACK-2026-001",
+      "ZVW-2026-001",
+      "ZT-2026-001",
+      "HT-2026-001"
+    ],
+    "tags": [
+      "zzp",
+      "design",
+      "low_income",
+      "parent",
+      "toeslagen",
+      "missed_urencriterium"
+    ]
   },
   {
     "id": "SCN-ZZP-003",
@@ -178,24 +215,25 @@
       "ondernemersaftrek_total": 3440,
       "profit_after_ondernemers": 121560,
       "mkb_winstvrijstelling": 15438,
-      "taxable_income_box1": 106122,
-      "box1_tax_bracket1": 13910,
-      "box1_tax_bracket3": 13671,
-      "box1_tax_raw": 27581,
+      "taxable_income_box1": 88122,
+      "box1_tax_bracket1": 13901,
+      "box1_tax_bracket2": 14659,
+      "box1_tax_bracket3": 4800,
+      "box1_tax_raw": 33359,
       "algemene_heffingskorting": 0,
-      "arbeidskorting": 0,
+      "arbeidskorting": 2916,
       "iack": 0,
-      "income_tax_after_credits": 27581,
-      "zvw_contribution": 3810,
+      "income_tax_after_credits": 30443,
+      "zvw_contribution": 3811,
       "box2_tax": 0,
-      "box3_tax": 788,
-      "total_tax_due": 32179,
-      "effective_rate": 0.257
+      "box3_tax": 0,
+      "total_tax_due": 34254,
+      "effective_rate": 0.274
     },
     "result": {
-      "total_tax_due": 32179,
-      "effective_rate": 0.257,
-      "monthly_reserve_needed": 2682,
+      "total_tax_due": 34254,
+      "effective_rate": 0.274,
+      "monthly_reserve_needed": 2855,
       "eligible_toeslagen": [],
       "toeslagen_value": 0,
       "optimization_opportunities": [
@@ -213,8 +251,23 @@
         "Effective rate 25.7% is already optimized — primary lever now is pension"
       ]
     },
-    "rule_ids_applied": ["ZA-2026-001", "KIA-2026-001", "LR-2026-001", "MKB-2026-001", "BR1-2026-001", "BR1-2026-003", "ZVW-2026-001", "B3R-2026-001"],
-    "tags": ["zzp", "high_income", "pension_optimized", "bv_consideration", "box3"]
+    "rule_ids_applied": [
+      "ZA-2026-001",
+      "KIA-2026-001",
+      "LR-2026-001",
+      "MKB-2026-001",
+      "BR1-2026-001",
+      "BR1-2026-003",
+      "ZVW-2026-001",
+      "B3R-2026-001"
+    ],
+    "tags": [
+      "zzp",
+      "high_income",
+      "pension_optimized",
+      "bv_consideration",
+      "box3"
+    ]
   },
   {
     "id": "SCN-EMP-001",
@@ -252,24 +305,27 @@
       "profit_after_ondernemers": 48000,
       "mkb_winstvrijstelling": 0,
       "taxable_income_box1": 48000,
-      "box1_tax_bracket1": 13910,
+      "box1_tax_bracket1": 13901,
+      "box1_tax_bracket2": 3380,
       "box1_tax_bracket3": 0,
-      "box1_tax_raw": 13910,
-      "algemene_heffingskorting": 2122,
-      "arbeidskorting": 3855,
+      "box1_tax_raw": 17280,
+      "algemene_heffingskorting": 1946,
+      "arbeidskorting": 5528,
       "iack": 0,
-      "income_tax_after_credits": 7933,
+      "income_tax_after_credits": 9806,
       "zvw_contribution": 0,
       "box2_tax": 0,
-      "box3_tax": 277,
-      "total_tax_due": 8210,
-      "effective_rate": 0.171
+      "box3_tax": 273,
+      "total_tax_due": 10079,
+      "effective_rate": 0.21
     },
     "result": {
-      "total_tax_due": 8210,
-      "effective_rate": 0.171,
+      "total_tax_due": 10079,
+      "effective_rate": 0.21,
       "monthly_reserve_needed": 0,
-      "eligible_toeslagen": ["zorgtoeslag"],
+      "eligible_toeslagen": [
+        "zorgtoeslag"
+      ],
       "toeslagen_value": 600,
       "optimization_opportunities": [
         "Box 3: €72,000 assets → taxable €12,643 above exemption, paying €277 in box 3 tax — check if investments can be split with a partner",
@@ -285,8 +341,18 @@
         "Effective rate 17.1% because employer pension reduces taxable income"
       ]
     },
-    "rule_ids_applied": ["BR1-2026-001", "AHK-2026-001", "AK-2026-001", "B3R-2026-001"],
-    "tags": ["employee", "medium_income", "box3", "single"]
+    "rule_ids_applied": [
+      "BR1-2026-001",
+      "AHK-2026-001",
+      "AK-2026-001",
+      "B3R-2026-001"
+    ],
+    "tags": [
+      "employee",
+      "medium_income",
+      "box3",
+      "single"
+    ]
   },
   {
     "id": "SCN-EXP-001",
@@ -315,33 +381,37 @@
     "calculation": {
       "gross_revenue": 90000,
       "business_expenses": 0,
-      "gross_profit": 90000,
+      "gross_profit": 63000,
       "zelfstandigenaftrek": 0,
       "startersaftrek": 0,
       "kia_deduction": 0,
       "pension_deduction": 0,
       "ondernemersaftrek_total": 0,
-      "profit_after_ondernemers": 90000,
+      "profit_after_ondernemers": 63000,
       "mkb_winstvrijstelling": 0,
       "taxable_income_box1": 63000,
-      "box1_tax_bracket1": 22522,
+      "box1_tax_bracket1": 13901,
+      "box1_tax_bracket2": 8940,
       "box1_tax_bracket3": 0,
-      "box1_tax_raw": 22522,
-      "algemene_heffingskorting": 1027,
-      "arbeidskorting": 2073,
+      "box1_tax_raw": 22841,
+      "algemene_heffingskorting": 987,
+      "arbeidskorting": 4552,
       "iack": 3032,
-      "income_tax_after_credits": 16390,
+      "income_tax_after_credits": 14270,
       "zvw_contribution": 0,
       "box2_tax": 0,
       "box3_tax": 0,
-      "total_tax_due": 16390,
-      "effective_rate": 0.182
+      "total_tax_due": 14270,
+      "effective_rate": 0.227
     },
     "result": {
-      "total_tax_due": 16390,
-      "effective_rate": 0.182,
+      "total_tax_due": 14270,
+      "effective_rate": 0.227,
       "monthly_reserve_needed": 0,
-      "eligible_toeslagen": ["zorgtoeslag", "kinderopvangtoeslag"],
+      "eligible_toeslagen": [
+        "zorgtoeslag",
+        "kinderopvangtoeslag"
+      ],
       "toeslagen_value": 3200,
       "optimization_opportunities": [
         "30% ruling reduces taxable income by €27,000 (30% of €90k) — significant benefit",
@@ -358,8 +428,21 @@
         "Check kinderopvangtoeslag eligibility — worth thousands if child in daycare"
       ]
     },
-    "rule_ids_applied": ["EXP-2026-001", "BR1-2026-001", "BR1-2026-003", "AHK-2026-001", "AK-2026-001", "IACK-2026-001"],
-    "tags": ["expat", "30pct_ruling", "high_income", "parent", "toeslagen"]
+    "rule_ids_applied": [
+      "EXP-2026-001",
+      "BR1-2026-001",
+      "BR1-2026-003",
+      "AHK-2026-001",
+      "AK-2026-001",
+      "IACK-2026-001"
+    ],
+    "tags": [
+      "expat",
+      "30pct_ruling",
+      "high_income",
+      "parent",
+      "toeslagen"
+    ]
   },
   {
     "id": "SCN-DGA-001",
@@ -383,7 +466,8 @@
       "uses_30pct_ruling": false,
       "pension_contribution": 8000,
       "kia_investments": 0,
-      "single_client_percentage": null
+      "single_client_percentage": null,
+      "box2_dividend": 24000
     },
     "calculation": {
       "gross_revenue": 56000,
@@ -392,27 +476,28 @@
       "zelfstandigenaftrek": 0,
       "startersaftrek": 0,
       "kia_deduction": 0,
-      "pension_deduction": 0,
+      "pension_deduction": 8000,
       "ondernemersaftrek_total": 0,
       "profit_after_ondernemers": 56000,
       "mkb_winstvrijstelling": 0,
-      "taxable_income_box1": 56000,
-      "box1_tax_bracket1": 20020,
+      "taxable_income_box1": 48000,
+      "box1_tax_bracket1": 13901,
+      "box1_tax_bracket2": 3380,
       "box1_tax_bracket3": 0,
-      "box1_tax_raw": 20020,
-      "algemene_heffingskorting": 1734,
-      "arbeidskorting": 3553,
+      "box1_tax_raw": 17280,
+      "algemene_heffingskorting": 1946,
+      "arbeidskorting": 5528,
       "iack": 0,
-      "income_tax_after_credits": 14733,
+      "income_tax_after_credits": 9806,
       "zvw_contribution": 0,
       "box2_tax": 5880,
-      "box3_tax": 3498,
-      "total_tax_due": 24111,
-      "effective_rate": 0.237
+      "box3_tax": 1324,
+      "total_tax_due": 17010,
+      "effective_rate": 0.304
     },
     "result": {
-      "total_tax_due": 24111,
-      "effective_rate": 0.237,
+      "total_tax_due": 17010,
+      "effective_rate": 0.304,
       "monthly_reserve_needed": 0,
       "eligible_toeslagen": [],
       "toeslagen_value": 0,
@@ -432,7 +517,21 @@
         "Partner dividend strategy: allocating dividend to lower-earning partner saves tax"
       ]
     },
-    "rule_ids_applied": ["DGA-2026-001", "B2R-2026-001", "BR1-2026-001", "AHK-2026-001", "AK-2026-001", "B3R-2026-001"],
-    "tags": ["dga", "bv", "dividend", "box2", "box3", "optimal_structure"]
+    "rule_ids_applied": [
+      "DGA-2026-001",
+      "B2R-2026-001",
+      "BR1-2026-001",
+      "AHK-2026-001",
+      "AK-2026-001",
+      "B3R-2026-001"
+    ],
+    "tags": [
+      "dga",
+      "bv",
+      "dividend",
+      "box2",
+      "box3",
+      "optimal_structure"
+    ]
   }
 ]
