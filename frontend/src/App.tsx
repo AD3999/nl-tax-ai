@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 const Phase2Demo = lazy(() => import("./pages/Phase2Demo"));
+const CalculatorPage = lazy(() => import("./pages/CalculatorPage"));
 
 // Page stubs — built out in Phase 5+
 const ChatPage = () => {
@@ -62,6 +63,20 @@ function App() {
           {t("phase2.nav")}
         </NavLink>
 
+        <NavLink
+          to="/calculator"
+          style={({ isActive }) => ({
+            padding: "6px 12px",
+            borderRadius: "6px",
+            fontSize: "14px",
+            textDecoration: "none",
+            color: isActive ? "var(--accent)" : "var(--text)",
+            background: isActive ? "var(--accent-bg)" : "transparent",
+          })}
+        >
+          Calculator
+        </NavLink>
+
         <div style={{ marginLeft: "auto" }}>
           <select
             value={i18n.language}
@@ -94,6 +109,8 @@ function App() {
           />
           {/* Phase 2 RAG demo — no auth required, dev/testing tool */}
           <Route path="/phase2" element={<Phase2Demo />} />
+          {/* Phase 3 tax calculator */}
+          <Route path="/calculator" element={<CalculatorPage />} />
         </Routes>
       </Suspense>
     </div>
