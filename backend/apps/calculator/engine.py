@@ -70,20 +70,18 @@ def calc_ahk(aggregate_income: float) -> int:
 
 
 def calc_arbeidskorting(work_income: float) -> int:
-    r         = _load()["AK-2026-001"]["result"]
-    max_ak    = float(r["max_amount"])                  # 5685
-    phase_lo  = float(r["phase_out"]["starts_at"])      # 45592
-    phase_rate = float(r["phase_out"]["rate_per_euro"]) # 0.0651
-    build_lo, build_hi, phase_hi = 11490.0, 37697.0, 132920.0
-
-    if work_income <= build_lo:
+    # Official 2026 Belastingdienst 4-bracket table
+    # Source: belastingdienst.nl/tabel-arbeidskorting-2026
+    if work_income <= 0:
         return 0
-    if work_income <= build_hi:
-        return _eur((work_income - build_lo) / (build_hi - build_lo) * max_ak)
-    if work_income <= phase_lo:
-        return _eur(max_ak)
-    if work_income <= phase_hi:
-        return max(0, _eur(max_ak - (work_income - phase_lo) * phase_rate))
+    if work_income <= 11_965:
+        return _eur(work_income * 0.08324)
+    if work_income <= 25_845:
+        return _eur(996 + (work_income - 11_965) * 0.31009)
+    if work_income <= 45_592:
+        return _eur(5_300 + (work_income - 25_845) * 0.01950)
+    if work_income <= 132_920:
+        return max(0, _eur(5_685 - (work_income - 45_592) * 0.06510))
     return 0
 
 
@@ -111,8 +109,8 @@ def calc_kia(investments: float) -> int:
 
 
 def calc_zvw(zzp_profit: float) -> int:
-    rate    = _rv("ZVW-2026-001", "value") / 100   # 0.0532
-    ceiling = _rv("ZVW-2026-001", "ceiling_income") # 71628
+    rate    = _rv("ZVW-2026-001", "value") / 100   # 0.0485
+    ceiling = _rv("ZVW-2026-001", "ceiling_income") # 79409
     return _eur(min(zzp_profit, ceiling) * rate)
 
 
