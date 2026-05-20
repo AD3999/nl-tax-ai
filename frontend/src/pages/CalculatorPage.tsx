@@ -71,6 +71,7 @@ const DEFAULT_FORM: FormState = {
   hours_per_year: "",
   is_starter: false,
   has_partner: false,
+  partner_income: "",
   children_under_12: "0",
   net_assets_box3: "",
   savings_fraction: "0",
@@ -107,6 +108,7 @@ export default function CalculatorPage() {
         hours_per_year: int("hours_per_year") ?? null,
         is_starter: form.is_starter as boolean,
         has_partner: form.has_partner as boolean,
+        partner_income: num("partner_income") ?? null,
         children_under_12: int("children_under_12") ?? 0,
         net_assets_box3: num("net_assets_box3") ?? 0,
         savings_fraction: (parseFloat((form.savings_fraction as string) || "0")) / 100,
@@ -190,6 +192,9 @@ export default function CalculatorPage() {
           <Field label="Savings fraction (%)" value={form.savings_fraction as string} onChange={(v) => set("savings_fraction", v)} placeholder="0" />
           <Field label="Children under 12" value={form.children_under_12 as string} onChange={(v) => set("children_under_12", v)} placeholder="0" />
           <Check label="Has partner" checked={form.has_partner as boolean} onChange={(v) => set("has_partner", v)} />
+          {form.has_partner && (
+            <Field label="Partner income (€)" value={form.partner_income as string} onChange={(v) => set("partner_income", v)} placeholder="0" />
+          )}
         </div>
 
         {error && <pre className={s.error}>{error}</pre>}

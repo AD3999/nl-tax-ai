@@ -9,6 +9,7 @@ export interface CalcInput {
   hours_per_year?: number | null;
   is_starter?: boolean;
   has_partner?: boolean;
+  partner_income?: number | null;
   children_under_12?: number;
   net_assets_box3?: number;
   savings_fraction?: number;

@@ -368,4 +368,15 @@ A calculator form page at `/calculator` — same design language as the Phase 2 
 | **Phase 7** | Testing & QA — ongoing | — |
 | **Phase 8** | Product Layer — auth, billing, onboarding | Phase 6 |
 
+---
+
+## Post-Phase 3 Fixes ✅
+
+| Fix | Detail |
+|-----|--------|
+| ZVW rate 5.32% → **4.85%** | Correct 2026 rate confirmed via Belastingdienst fisin2026 |
+| ZVW ceiling €71,628 → **€79,409** | Updated maximum bijdrage-inkomen for 2026 |
+| Arbeidskorting build-up formula | Replaced incorrect linear ramp with official 2026 4-bracket table from belastingdienst.nl/tabel-arbeidskorting-2026 — fixes significant under-calculation for low-income ZZP |
+| Partner income field | Calculator UI now shows `Partner income (€)` field when "Has partner" is ticked |
+
 **Next task:** Phase 4 — Claude API integration. The AI reads RAG context + calculator output and answers tax questions in NL/EN/FA with source citations.
