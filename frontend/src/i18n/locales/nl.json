@@ -9,9 +9,15 @@
     "logout": "Uitloggen"
   },
   "chat": {
-    "placeholder": "Stel uw belastingvraag...",
+    "placeholder": "Stel uw belastingvraag... (Enter om te verzenden)",
     "send": "Versturen",
-    "new_conversation": "Nieuw gesprek"
+    "new_conversation": "Nieuw gesprek",
+    "examples": "Voorbeeldvragen",
+    "clear": "Wis gesprek",
+    "welcome_title": "Welkom bij TaxWijs",
+    "welcome_subtitle": "Stel een belastingvraag in het Nederlands, Engels of Farsi.",
+    "error": "Er is een fout opgetreden. Probeer het opnieuw.",
+    "disclaimer": "TaxWijs geeft algemene informatie — geen officieel belastingadvies."
   },
   "auth": {
     "email": "E-mailadres",

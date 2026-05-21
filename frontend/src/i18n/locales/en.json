@@ -9,9 +9,15 @@
     "logout": "Log out"
   },
   "chat": {
-    "placeholder": "Ask your tax question...",
+    "placeholder": "Ask your tax question... (Enter to send)",
     "send": "Send",
-    "new_conversation": "New conversation"
+    "new_conversation": "New conversation",
+    "examples": "Example questions",
+    "clear": "Clear chat",
+    "welcome_title": "Welcome to TaxWijs",
+    "welcome_subtitle": "Ask a Dutch tax question in English, Dutch, or Persian.",
+    "error": "Something went wrong. Please try again.",
+    "disclaimer": "TaxWijs provides general information — not official tax advice."
   },
   "auth": {
     "email": "Email address",

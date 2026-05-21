@@ -4,19 +4,12 @@ import { useTranslation } from "react-i18next";
 
 const Phase2Demo = lazy(() => import("./pages/Phase2Demo"));
 const CalculatorPage = lazy(() => import("./pages/CalculatorPage"));
-
-// Page stubs — built out in Phase 5+
-const ChatPage = () => {
-  const { t } = useTranslation();
-  return <main style={{ padding: "2rem" }}><h1>{t("chat.placeholder")}</h1></main>;
-};
+const ChatPage = lazy(() => import("./pages/ChatPage"));
 
 const LoginPage = () => {
   const { t } = useTranslation();
   return <main style={{ padding: "2rem" }}><h1>{t("auth.login")}</h1></main>;
 };
-
-const isAuthenticated = () => !!localStorage.getItem("access_token");
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -101,12 +94,9 @@ function App() {
 
       <Suspense fallback={<div style={{ padding: "3rem", textAlign: "center", color: "var(--text)" }}>Loading…</div>}>
         <Routes>
-          <Route path="/" element={<Navigate to="/phase2" replace />} />
+          <Route path="/" element={<Navigate to="/chat" replace />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route
-            path="/chat"
-            element={isAuthenticated() ? <ChatPage /> : <Navigate to="/login" replace />}
-          />
+          <Route path="/chat" element={<ChatPage />} />
           {/* Phase 2 RAG demo — no auth required, dev/testing tool */}
           <Route path="/phase2" element={<Phase2Demo />} />
           {/* Phase 3 tax calculator */}
