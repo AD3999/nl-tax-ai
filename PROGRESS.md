@@ -339,44 +339,118 @@ A calculator form page at `/calculator` — same design language as the Phase 2 
 
 ---
 
-## Git Branch & Commits
-
-**Merged to `master`** — commit `936dd84`
-
-| Commit | Description |
-|--------|-------------|
-| `936dd84` | Merge phase3 into master |
-| `3871acd` | Fix: use import type for TypeScript interfaces in CalculatorPage |
-| `21a2d1b` | Phase 3 UI — calculator demo page at /calculator |
-| `f40c712` | Phase 3 engine — deterministic Dutch 2026 tax calculator |
-| `4bce20f` | Replace Vite template README with real setup guide |
-| `9e5c58e` | Fix all Persian translations in Phase 1 seed data |
-| `0032e32` | Initial Django migrations for all local apps |
-| `521b175` | Pin Django to 6.x |
-| `00f321e` | Phase 2 UI — RAG retrieval demo page |
-| `c132118` | Phase 1 knowledge base + Phase 2 RAG pipeline complete |
-
----
-
-## What Comes Next
-
-| Phase | Description | Blocked on |
-|-------|-------------|-----------|
-| **Phase 4** | AI Response Layer — Claude API, RAG context injection, source citation, chat endpoint | Phase 3 ✅ done |
-| **Phase 5** | User Intake System — profile questionnaire, user_type detection | Phase 4 |
-| **Phase 6** | IB Return Guide — step-by-step aangifte walkthrough | Phase 5 |
-| **Phase 7** | Testing & QA — ongoing | — |
-| **Phase 8** | Product Layer — auth, billing, onboarding | Phase 6 |
-
----
-
 ## Post-Phase 3 Fixes ✅
 
 | Fix | Detail |
 |-----|--------|
 | ZVW rate 5.32% → **4.85%** | Correct 2026 rate confirmed via Belastingdienst fisin2026 |
 | ZVW ceiling €71,628 → **€79,409** | Updated maximum bijdrage-inkomen for 2026 |
-| Arbeidskorting build-up formula | Replaced incorrect linear ramp with official 2026 4-bracket table from belastingdienst.nl/tabel-arbeidskorting-2026 — fixes significant under-calculation for low-income ZZP |
-| Partner income field | Calculator UI now shows `Partner income (€)` field when "Has partner" is ticked |
+| Arbeidskorting build-up formula | Replaced incorrect linear ramp with official 2026 4-bracket table — fixes under-calculation for low-income ZZP |
+| Partner income field | Calculator UI now shows Partner income field when "Has partner" is ticked |
 
-**Next task:** Phase 4 — Claude API integration. The AI reads RAG context + calculator output and answers tax questions in NL/EN/FA with source citations.
+---
+
+## Git Branch & Commits
+
+**Branch: `master`** — all phases merged
+
+| Commit | Description |
+|--------|-------------|
+| `5bd13c2` | fix: show partner income field when has_partner is checked |
+| `1aee17d` | fix: correct 2026 ZVW rate (4.85%) and arbeidskorting formula |
+| `a261bd5` | docs: update PROGRESS.md — Phase 3 UI complete |
+| `936dd84` | merge(phase3): tax calculator engine + UI into master |
+| `3871acd` | fix: use import type for CalcInput/CalcResult interfaces |
+| `21a2d1b` | feat: Phase 3 UI — calculator demo page at /calculator |
+| `f40c712` | feat: Phase 3 engine — deterministic Dutch 2026 tax calculator |
+| `00f321e` | feat: Phase 2 UI — RAG retrieval demo page |
+| `c132118` | feat: Phase 1 knowledge base + Phase 2 RAG pipeline complete |
+
+---
+
+## Phase 4 — AI Response Layer ⏳ Next
+
+**Goal:** A working chat interface where the user asks a Dutch tax question and Claude answers using RAG context + calculator output, in NL/EN/FA, with source citations.
+
+### 5 steps
+
+**Step 1 — Backend chat endpoint**
+`POST /api/chat/message/` in `backend/apps/chat/views.py`.
+- Accept: `{ message, user_profile? }`
+- Call Phase 2 `retrieve()` to get relevant tax rules/Q&A
+- If profile present, call Phase 3 `calculate()` to get tax numbers
+- Build system prompt (see format below)
+- Call Claude API (`claude-sonnet-4-6`), stream response back
+
+**Step 2 — Claude API integration**
+- Use `anthropic` SDK (already in `backend/requirements.txt`)
+- `ANTHROPIC_API_KEY` in `.env`
+- System prompt = retrieved context block (from Phase 2 assembler) + calculator result block + language instruction
+- Claude must cite `source_url` for every factual claim, never do arithmetic
+- Use streaming so the frontend can show tokens as they arrive
+
+**Step 3 — Frontend chat page**
+- Replace the `/chat` stub in `App.tsx` with a real page
+- Message input at bottom, conversation history above
+- Streamed Claude response renders as markdown
+- Source citation cards below each AI message (source_id, url, score)
+
+**Step 4 — User profile handoff**
+- Chat page reads last calculator result from component state (or localStorage)
+- Passes it as `user_profile` to the chat endpoint so Claude has personalised numbers
+- If no profile: Claude asks intake questions to determine user_type and income
+
+**Step 5 — Guard rails & test**
+- Verify Claude never invents tax numbers (always cites sources)
+- Verify calculator result is quoted verbatim in the answer
+- Test in NL, EN, and FA — Claude must respond in the language the user wrote in
+
+### System prompt format (for Step 2)
+
+```
+You are TaxWijs, a Dutch tax assistant for ZZP workers, employees, expats, and DGA directors.
+You answer tax questions for tax year 2026. You support Dutch, English, and Persian equally.
+
+RULES:
+1. Never do arithmetic. Always cite the pre-calculated numbers from the context below.
+2. Every factual claim must include the source_url from the retrieved rule.
+3. Respond in the same language the user wrote in.
+4. If the answer requires knowing the user's income, ask for it — do not guess.
+
+{retrieved_context_block}   ← from Phase 2 assembler (~1500 tokens)
+
+{calculator_result_block}   ← from Phase 3 engine (if profile available)
+User type: zzp | Income: €72,000 | Total tax: €13,538 | Effective rate: 21.7%
+```
+
+### Files to create/modify
+
+| File | Change |
+|------|--------|
+| `backend/apps/chat/views.py` | New `ChatMessageView` — RAG + calculator + Claude API |
+| `backend/apps/chat/urls.py` | Register `message/` endpoint |
+| `backend/apps/chat/serializers.py` | `ChatMessageSerializer` (message + optional profile) |
+| `frontend/src/pages/ChatPage.tsx` | Real chat UI (replaces stub) |
+| `frontend/src/pages/ChatPage.module.css` | Chat styles |
+| `frontend/src/api/chat.ts` | Already exists — extend with new endpoint |
+
+### Key decisions already made
+
+| Decision | Choice |
+|----------|--------|
+| AI model | `claude-sonnet-4-6` (best reasoning, matches project) |
+| Streaming | Yes — SSE or chunked response for live token output |
+| Context budget | ~1,500 tokens RAG + ~200 tokens calculator = ~1,700 total |
+| Language detection | Claude auto-detects from user message — no explicit detection needed |
+| Auth for chat | AllowAny for demo (same as calculator); save history only if authenticated |
+
+---
+
+## What Comes After Phase 4
+
+| Phase | Description |
+|-------|-------------|
+| **Phase 5** | User Intake System — profile questionnaire, user_type detection |
+| **Phase 6** | IB Return Guide — step-by-step aangifte walkthrough |
+| **Phase 7** | Testing & QA |
+| **Phase 8** | Product Layer — auth, billing, onboarding |
