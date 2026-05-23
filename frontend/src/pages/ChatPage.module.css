@@ -120,6 +120,20 @@
   line-height: 1.5;
   margin: 0;
 }
+.intakeBtn {
+  margin-top: 4px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.intakeBtn:hover { opacity: 0.85; }
 
 /* ── Message bubbles ── */
 .userBubble {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { useTranslation } from "react-i18next";
 import { sendMessage } from "../api/chat";
@@ -32,6 +33,7 @@ const EXAMPLE_QUESTIONS = {
 
 export default function ChatPage() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const lang = i18n.language as "nl" | "en" | "fa";
   const isRtl = lang === "fa";
 
@@ -157,6 +159,11 @@ export default function ChatPage() {
               <div className={s.emptyIcon}>💬</div>
               <p className={s.emptyTitle}>{t("chat.welcome_title")}</p>
               <p className={s.emptySubtitle}>{t("chat.welcome_subtitle")}</p>
+              {!profile && (
+                <button className={s.intakeBtn} onClick={() => navigate("/intake")}>
+                  {t("chat.setup_profile")} →
+                </button>
+              )}
             </div>
           )}
 

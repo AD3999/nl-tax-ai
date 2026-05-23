@@ -18,7 +18,8 @@
     "welcome_subtitle": "Stel een belastingvraag in het Nederlands, Engels of Farsi.",
     "error": "Er is een fout opgetreden. Probeer het opnieuw.",
     "disclaimer": "TaxWijs geeft algemene informatie — geen officieel belastingadvies.",
-    "profile_active": "Rekenmachine-profiel actief: {{type}} · €{{income}} — Claude heeft uw berekende cijfers."
+    "profile_active": "Rekenmachine-profiel actief: {{type}} · €{{income}} — Claude heeft uw berekende cijfers.",
+    "setup_profile": "Stel uw profiel in voor persoonlijk advies"
   },
   "auth": {
     "email": "E-mailadres",
@@ -32,6 +33,36 @@
     "employee": "Werknemer",
     "expat": "Expat",
     "dga": "DGA / Directeur"
+  },
+  "intake": {
+    "step1_title": "Wie bent u?",
+    "step1_subtitle": "Selecteer uw situatie voor gepersonaliseerd advies.",
+    "step2_title": "Uw inkomsten",
+    "step2_subtitle": "Vul uw verwachte inkomsten voor 2026 in.",
+    "step3_title": "Uw situatie",
+    "step3_subtitle": "Optionele details voor een nauwkeurigere berekening.",
+    "zzp_desc": "Freelancer / eenmanszaak",
+    "employee_desc": "In loondienst",
+    "expat_desc": "30%-regeling actief",
+    "dga_desc": "Directeur-grootaandeelhouder",
+    "next": "Volgende",
+    "back": "Terug",
+    "finish": "Bereken en start chat",
+    "calculating": "Berekenen...",
+    "skip": "Sla over en ga direct naar chat",
+    "revenue": "Verwachte omzet (€)",
+    "expenses": "Zakelijke kosten (€)",
+    "is_starter": "Ik ben starter (eerste 3 jaar als ondernemer)",
+    "salary": "Bruto jaarsalaris (€)",
+    "dividend": "Dividend uit BV (€)",
+    "ruling_year": "Jaar van de 30%-regeling",
+    "year_n": "Jaar {{n}}",
+    "has_partner": "Ik heb een fiscaal partner",
+    "partner_income": "Inkomen partner (€)",
+    "children": "Kinderen jonger dan 12",
+    "assets": "Vermogen Box 3 (€)",
+    "pension": "Lijfrentepremie / pensioenaftrek (€)",
+    "optional": "optioneel"
   },
   "phase2": {
     "nav": "RAG Demo",

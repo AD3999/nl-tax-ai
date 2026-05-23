@@ -1,0 +1,184 @@
+.page {
+  min-height: calc(100vh - 52px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: var(--bg);
+}
+
+.card {
+  width: 100%;
+  max-width: 540px;
+  background: var(--card-bg, #f9f9f9);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px 48px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Progress dots ── */
+.progress {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+.dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+}
+.dotActive {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* ── Headings ── */
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0;
+  text-align: center;
+}
+.subtitle {
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.7;
+  margin: -12px 0 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* ── Step 1: type grid ── */
+.typeGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.typeCard, .typeCardActive {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 12px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+  color: var(--text);
+}
+.typeCard:hover {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+.typeCardActive {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+.typeIcon { font-size: 24px; }
+.typeDesc {
+  font-size: 11px;
+  opacity: 0.65;
+  line-height: 1.3;
+  font-weight: 400;
+  color: var(--text);
+}
+
+/* ── Step 2 & 3: fields ── */
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: -4px;
+}
+.optional {
+  font-weight: 400;
+  opacity: 0.55;
+}
+.input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.input:focus { border-color: var(--accent); }
+.checkLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+/* ── Navigation ── */
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+.navRight {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+.next, .finish {
+  padding: 10px 24px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.next:hover, .finish:hover:not(:disabled) { opacity: 0.85; }
+.finish:disabled { opacity: 0.45; cursor: not-allowed; }
+.back {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 20px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+}
+.back:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Skip link ── */
+.skip {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.4;
+  cursor: pointer;
+  text-align: center;
+  padding: 0;
+  margin-top: -8px;
+}
+.skip:hover { opacity: 0.7; }

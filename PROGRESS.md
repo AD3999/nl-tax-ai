@@ -420,11 +420,51 @@ No other changes needed — the view auto-detects the key and switches to Claude
 
 ---
 
-## What Comes After Phase 4
+---
+
+## Phase 5 — User Intake System ✅ Complete
+
+**Goal:** Guided onboarding flow so users get personalised Claude answers without manually running the calculator first.
+
+### What was built
+
+| File | Change |
+|------|--------|
+| `frontend/src/pages/IntakePage.tsx` | 3-step wizard: user type → income → situation → calls calculator → saves profile → navigates to chat |
+| `frontend/src/pages/IntakePage.module.css` | Wizard styles — centered card, progress dots, type grid, field layout |
+| `frontend/src/App.tsx` | Added `/intake` route (lazy-loaded) |
+| `frontend/src/pages/ChatPage.tsx` | Empty state now shows "Set up your profile" CTA button → `/intake` |
+| `frontend/src/pages/ChatPage.module.css` | Added `.intakeBtn` style |
+| `frontend/src/i18n/locales/nl.json` | Added `intake.*` + `chat.setup_profile` keys |
+| `frontend/src/i18n/locales/en.json` | Added `intake.*` + `chat.setup_profile` keys |
+| `frontend/src/i18n/locales/fa.json` | Added `intake.*` + `chat.setup_profile` keys (Persian) |
+
+### Intake flow (3 steps)
+
+| Step | What it collects |
+|------|-----------------|
+| 1 — Who are you? | User type: ZZP / Employee / Expat / DGA (big clickable cards) |
+| 2 — Your income | ZZP: revenue + expenses + starter flag. Employee: salary. Expat: salary + ruling year. DGA: salary + dividend |
+| 3 — Your situation | Has partner + partner income, children under 12, Box 3 assets (optional), pension (optional) |
+
+On finish: calls `POST /api/calculator/calculate/` silently, saves `CalcInput` to `localStorage["taxwijs_calc_input"]`, navigates to `/chat`. The existing Phase 4 profile banner picks it up automatically.
+
+### Key design decisions
+
+| Decision | Choice |
+|----------|--------|
+| hours_per_year default | 1300 (above 1225 urencriterium threshold — qualifies for zelfstandigenaftrek) |
+| savings_fraction default | 0.5 (50/50 savings vs investments for Box 3) |
+| Calculator call | Runs silently on submit; navigates to chat even if it fails |
+| Skip button | Always visible — users can go straight to chat and ask freely |
+| Profile storage | Same `taxwijs_calc_input` key as calculator page — banner and backend passthrough work automatically |
+
+---
+
+## What Comes After Phase 5
 
 | Phase | Description |
 |-------|-------------|
-| **Phase 5** | User Intake System — profile questionnaire, user_type detection |
 | **Phase 6** | IB Return Guide — step-by-step aangifte walkthrough |
 | **Phase 7** | Testing & QA |
 | **Phase 8** | Product Layer — auth, billing, onboarding |
