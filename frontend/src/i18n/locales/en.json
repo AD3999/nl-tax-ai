@@ -21,6 +21,22 @@
     "profile_active": "Calculator profile active: {{type}} · €{{income}} — Claude has your calculated figures.",
     "setup_profile": "Set up your profile for personalised answers"
   },
+  "ib": {
+    "nav": "IB Return",
+    "badge": "Phase 6 · Tax Return 2026",
+    "title": "Income Tax Return 2026",
+    "subtitle": "A step-by-step guide through your Dutch tax return. Answer each field and use 'Ask Claude' for explanations.",
+    "loading": "Loading fields...",
+    "progress": "{{done}} of {{total}} fields answered",
+    "box": "Box {{n}}",
+    "yes": "Yes",
+    "no": "No",
+    "common_mistakes": "Common mistakes",
+    "source": "Source (Belastingdienst)",
+    "ask_claude": "Ask Claude",
+    "summary_title": "Your return summary",
+    "go_to_chat": "Go to chat"
+  },
   "intake": {
     "step1_title": "Who are you?",
     "step1_subtitle": "Select your situation to get personalised tax advice.",

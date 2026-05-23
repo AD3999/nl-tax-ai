@@ -34,6 +34,22 @@
     "expat": "Expat",
     "dga": "DGA / Directeur"
   },
+  "ib": {
+    "nav": "IB Aangifte",
+    "badge": "Fase 6 · Aangifte 2026",
+    "title": "Inkomstenbelasting Aangifte 2026",
+    "subtitle": "Een stap-voor-stap gids voor uw belastingaangifte. Beantwoord elke vraag en gebruik 'Vraag Claude' voor uitleg.",
+    "loading": "Velden laden...",
+    "progress": "{{done}} van {{total}} velden ingevuld",
+    "box": "Box {{n}}",
+    "yes": "Ja",
+    "no": "Nee",
+    "common_mistakes": "Veelgemaakte fouten",
+    "source": "Bron (Belastingdienst)",
+    "ask_claude": "Vraag Claude",
+    "summary_title": "Uw aangifte overzicht",
+    "go_to_chat": "Ga naar chat"
+  },
   "intake": {
     "step1_title": "Wie bent u?",
     "step1_subtitle": "Selecteer uw situatie voor gepersonaliseerd advies.",

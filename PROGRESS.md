@@ -461,10 +461,56 @@ On finish: calls `POST /api/calculator/calculate/` silently, saves `CalcInput` t
 
 ---
 
-## What Comes After Phase 5
+---
+
+## Phase 6 — IB Return Guide ✅ Complete
+
+**Goal:** Step-by-step walkthrough of the Dutch annual income tax return (aangifte inkomstenbelasting), using the 9 IB form fields from Phase 1.
+
+### What was built
+
+| File | Change |
+|------|--------|
+| `backend/apps/tax/views.py` | Added `IBFieldsView` — `GET /api/tax/ib/fields/?user_type=zzp`, reads Phase 1 JSON, filters by user_type, in-memory cache |
+| `backend/apps/tax/urls.py` | Registered `ib/fields/` endpoint |
+| `frontend/src/api/ib.ts` | `IBField` TypeScript interface + `fetchIBFields()` |
+| `frontend/src/pages/IBGuidePage.tsx` | Full guide page — field cards, currency/boolean inputs, mistakes toggle, Ask Claude button, summary table |
+| `frontend/src/pages/IBGuidePage.module.css` | Guide styles |
+| `frontend/src/App.tsx` | Added `/ib-guide` route + "IB Aangifte/IB Return" nav link |
+| `frontend/src/pages/ChatPage.tsx` | Reads `location.state.question` on mount — pre-fills input when navigated from IB Guide |
+| `frontend/src/i18n/locales/nl.json` | Added `ib.*` keys |
+| `frontend/src/i18n/locales/en.json` | Added `ib.*` keys |
+| `frontend/src/i18n/locales/fa.json` | Added `ib.*` keys (Persian) |
+
+### The 9 IB fields served
+
+| Code | Field | User types |
+|------|-------|------------|
+| 1a | Winst uit onderneming | ZZP |
+| 1b | Loon en uitkeringen | Employee, ZZP |
+| 1c | Zelfstandigenaftrek (1,225 hrs check) | ZZP |
+| 1d | Startersaftrek — ⚠️ LAST YEAR 2026 | ZZP |
+| 1e | MKB-winstvrijstelling (12.7%) | ZZP |
+| 1f | Lijfrentepremies / jaarruimte | ZZP, Employee |
+| 2a | Voordeel aanmerkelijk belang | DGA |
+| 3a | Bezittingen Box 3 | All |
+| VOL-1 | Voorlopige aanslag | All |
+
+### Key design decisions
+
+| Decision | Choice |
+|----------|--------|
+| Filter | `user_type` query param filters fields at the API level; `"all"` fields always included |
+| Cache | `IBFieldsView._cache` — JSON file read once per server process |
+| "Ask Claude" | `useNavigate('/chat', { state: { question } })` — pre-fills input, user reviews before sending |
+| No backend save | Answers are guide-only (component state) — no DB model needed |
+| Summary | Appears once ≥1 field is answered; shows answered fields + "Go to chat" |
+
+---
+
+## What Comes After Phase 6
 
 | Phase | Description |
 |-------|-------------|
-| **Phase 6** | IB Return Guide — step-by-step aangifte walkthrough |
-| **Phase 7** | Testing & QA |
+| **Phase 7** | Testing & QA — automated backend + RAG + calculator tests |
 | **Phase 8** | Product Layer — auth, billing, onboarding |

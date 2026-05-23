@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { useTranslation } from "react-i18next";
 import { sendMessage } from "../api/chat";
@@ -34,6 +34,7 @@ const EXAMPLE_QUESTIONS = {
 export default function ChatPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const lang = i18n.language as "nl" | "en" | "fa";
   const isRtl = lang === "fa";
 
@@ -51,6 +52,15 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Pre-fill question when navigated from IB Guide
+  useEffect(() => {
+    const q = (location.state as { question?: string } | null)?.question;
+    if (q) {
+      setInput(q);
+      inputRef.current?.focus();
+    }
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

@@ -6,6 +6,7 @@ const Phase2Demo = lazy(() => import("./pages/Phase2Demo"));
 const CalculatorPage = lazy(() => import("./pages/CalculatorPage"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
 const IntakePage = lazy(() => import("./pages/IntakePage"));
+const IBGuidePage = lazy(() => import("./pages/IBGuidePage"));
 
 const LoginPage = () => {
   const { t } = useTranslation();
@@ -71,6 +72,20 @@ function App() {
           Calculator
         </NavLink>
 
+        <NavLink
+          to="/ib-guide"
+          style={({ isActive }) => ({
+            padding: "6px 12px",
+            borderRadius: "6px",
+            fontSize: "14px",
+            textDecoration: "none",
+            color: isActive ? "var(--accent)" : "var(--text)",
+            background: isActive ? "var(--accent-bg)" : "transparent",
+          })}
+        >
+          {t("ib.nav")}
+        </NavLink>
+
         <div style={{ marginLeft: "auto" }}>
           <select
             value={i18n.language}
@@ -99,6 +114,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/intake" element={<IntakePage />} />
+          <Route path="/ib-guide" element={<IBGuidePage />} />
           {/* Phase 2 RAG demo — no auth required, dev/testing tool */}
           <Route path="/phase2" element={<Phase2Demo />} />
           {/* Phase 3 tax calculator */}
