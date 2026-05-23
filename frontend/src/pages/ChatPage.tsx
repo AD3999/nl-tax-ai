@@ -38,6 +38,14 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(() => {
+    try {
+      const raw = localStorage.getItem("taxwijs_calc_input");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -74,6 +82,7 @@ export default function ChatPage() {
           );
         },
         abortRef.current.signal,
+        profile ?? undefined,
       );
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== "AbortError") {
@@ -123,6 +132,25 @@ export default function ChatPage() {
       </div>
 
       <div className={s.main}>
+        {profile && (
+          <div className={s.profileBanner}>
+            <span>
+              {t("chat.profile_active", {
+                type: String(profile.user_type ?? "").toUpperCase(),
+                income: (
+                  (profile.annual_revenue_zzp as number) ||
+                  (profile.employment_income as number) ||
+                  0
+                ).toLocaleString("nl-NL"),
+              })}
+            </span>
+            <button className={s.profileDismiss} onClick={() => {
+              localStorage.removeItem("taxwijs_calc_input");
+              setProfile(null);
+            }}>×</button>
+          </div>
+        )}
+
         <div className={s.messages}>
           {messages.length === 0 && (
             <div className={s.empty}>

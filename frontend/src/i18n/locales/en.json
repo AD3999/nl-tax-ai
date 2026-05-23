@@ -17,7 +17,8 @@
     "welcome_title": "Welcome to TaxWijs",
     "welcome_subtitle": "Ask a Dutch tax question in English, Dutch, or Persian.",
     "error": "Something went wrong. Please try again.",
-    "disclaimer": "TaxWijs provides general information — not official tax advice."
+    "disclaimer": "TaxWijs provides general information — not official tax advice.",
+    "profile_active": "Calculator profile active: {{type}} · €{{income}} — Claude has your calculated figures."
   },
   "auth": {
     "email": "Email address",

@@ -119,7 +119,9 @@ export default function CalculatorPage() {
         ruling_year: int("ruling_year") ?? 1,
         single_client_percentage: num("single_client_percentage") ?? null,
       };
-      setResult(await calculateTax(input));
+      const data = await calculateTax(input);
+      setResult(data);
+      localStorage.setItem("taxwijs_calc_input", JSON.stringify(input));
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: unknown } };
       const detail = axiosErr.response?.data;

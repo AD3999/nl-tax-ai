@@ -17,7 +17,8 @@
     "welcome_title": "Welkom bij TaxWijs",
     "welcome_subtitle": "Stel een belastingvraag in het Nederlands, Engels of Farsi.",
     "error": "Er is een fout opgetreden. Probeer het opnieuw.",
-    "disclaimer": "TaxWijs geeft algemene informatie — geen officieel belastingadvies."
+    "disclaimer": "TaxWijs geeft algemene informatie — geen officieel belastingadvies.",
+    "profile_active": "Rekenmachine-profiel actief: {{type}} · €{{income}} — Claude heeft uw berekende cijfers."
   },
   "auth": {
     "email": "E-mailadres",
