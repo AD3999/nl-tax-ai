@@ -1,7 +1,7 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: May 2026 (Phases 4–6 complete, merged to master)
+> Last updated: May 2026 (Phase 7 complete — 50 tests passing)
 
 ---
 
@@ -527,9 +527,37 @@ The streaming endpoint returned "Connection error." even after the API key was a
 
 ---
 
+## Phase 7 — Testing & QA ✅ Complete
+
+**50 automated tests — all passing.**
+
+### Test files
+
+| File | Tests | Coverage |
+|------|-------|----------|
+| `backend/apps/calculator/tests.py` | 38 | Scenario accuracy (6 phase1 scenarios ≤1% error), Box1/AHK/Arbeidskorting/IACK/ZVW/Box2/Box3/KIA unit tests, calculator API |
+| `backend/apps/chat/tests.py` | 12 | SSE streaming mock mode, message validation, IB fields API filter |
+
+### Key findings during testing
+
+| Finding | Detail |
+|---------|--------|
+| ZVW rate | Confirmed 4.85% (rule ZVW-2026-001), NOT 5.32% — ceiling income €79,409, max €3,851 |
+| IACK max | Reached at income ≥ €32,713 via formula `(income − 6,239) × 0.1145` |
+| KIA shape | Peaks mid-range (~€70k), not monotonically decreasing — eligible band only |
+| Serializer | `annual_revenue_zzp` must be > 0 for zzp users — 0 returns 400 |
+
+### Run tests
+
+```bash
+cd backend
+python manage.py test apps.calculator apps.chat
+```
+
+---
+
 ## What Comes Next
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| **Phase 7** | Testing & QA — automated backend + RAG + calculator tests | ⏳ Next |
-| **Phase 8** | Product Layer — auth, billing, persistent conversations, landing page | ⏳ Planned |
+| **Phase 8** | Product Layer — auth, billing, persistent conversations, landing page | ⏳ Next |
