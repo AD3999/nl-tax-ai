@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { AuthUser, fetchProfile, logout as apiLogout } from "../api/auth";
+import { type AuthUser, fetchProfile, logout as apiLogout } from "../api/auth";
 
 interface AuthState {
   user: AuthUser | null;
