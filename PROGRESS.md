@@ -1,7 +1,7 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: May 2026 (All phases 1–8 complete and merged to master — pending review)
+> Last updated: May 2026 (Phase 9 simulation complete — all phases 1–9 done)
 
 ---
 
@@ -587,6 +587,74 @@ All routes remain accessible without auth (AllowAny on all API endpoints). Auth 
 
 ---
 
+---
+
+## Phase 9 — Aangifte IB Simulation ✅ Complete
+
+**Goal:** A full branching simulation of the Belastingdienst aangifte IB 2026 process — so users can walk through the real tax return flow, understand what questions will be asked, and practice filling in all fields before doing the real thing.
+
+### What was built
+
+| File | Purpose |
+|------|---------|
+| `frontend/src/data/simulationSteps.ts` | Complete 11-step simulation data — all fields in NL/EN/FA, condition functions for branching, `answersToCalcProfile()` mapper |
+| `frontend/src/pages/SimulationPage.tsx` | Full wizard component — sidebar with clickable steps, 5 field types (boolean/number/text/select/info), OverviewStep with real calculator API + breakdown table, Ask Claude on every field |
+| `frontend/src/pages/SimulationPage.module.css` | Two-column layout: 260px sticky sidebar + flex main; field rows; result grid; responsive mobile |
+| `frontend/src/App.tsx` | Added `/simulation` route + "Simulatie Aangifte" / "Return Simulation" / "شبیه‌سازی اظهارنامه" nav link |
+| All 3 i18n files | Added `nav.simulation` key |
+
+### Simulation steps (11 total)
+
+| # | Step | Condition |
+|---|------|-----------|
+| 1 | Persoonlijke gegevens | Always shown |
+| 2 | Soort inkomen | Always shown |
+| 3 | Loon & uitkeringen | `is_employee OR has_benefits` |
+| 4 | Winst uit onderneming | `is_zzp` |
+| 5 | Eigen woning | Always shown |
+| 6 | Aftrekposten | Always shown |
+| 7 | Inkomen buitenland | `has_foreign_income` |
+| 8 | Sparen & beleggen (Box 3) | Always shown |
+| 9 | Aanmerkelijk belang (Box 2) | `has_substantial_interest` |
+| 10 | Heffingskortingen | Always shown |
+| 11 | Overzicht & berekening | Always shown (OverviewStep) |
+
+### Key features
+
+- **Full branching**: steps 3, 4, 7, 9 appear only when the user's earlier answers require them
+- **Ask Claude on every field**: each field has a context-aware question pre-written — clicking navigates to `/chat` with the question pre-filled
+- **Real calculator at the end**: step 11 calls `POST /api/calculator/calculate/` and shows result cards (total tax, effective rate, monthly reserve, provisional already paid) + full breakdown table
+- **Trilingual**: all labels, help texts, step titles, and Claude questions in NL/EN/FA
+- **Sidebar navigation**: click any step to jump; completed steps show ✓ checkmark; current step has accent border
+- **Progress bar**: fills as user advances through steps
+- **Source links**: fields with a Belastingdienst URL show a "Belastingdienst ↗" link
+- **Mobile responsive**: sidebar collapses to horizontal icon strip; field rows stack vertically
+
+### `answersToCalcProfile()` mappings
+
+Maps simulation answers to `CalcInput` for the calculator API:
+
+| Simulation field | Calculator field |
+|-----------------|-----------------|
+| `is_zzp` + `gross_profit` | `user_type: "zzp"`, `annual_revenue_zzp` |
+| `business_expenses` | `business_expenses` |
+| `hours_per_year` | `hours_per_year` |
+| `is_starter` | `is_starter` |
+| `kia_investments` | `kia_investments` |
+| `single_client_pct` | `single_client_percentage` |
+| `is_employee` + `salary` | `user_type: "employee"`, `employment_income` |
+| `has_30pct_ruling`, `ruling_year` | `has_30pct_ruling`, `ruling_year_number` |
+| `box2_dividend` | `box2_dividend` |
+| `pension_deduction` | `pension_deduction` |
+| `box3_assets` | `box3_assets` |
+| `savings_fraction` | `savings_fraction` |
+| `children_under_12` | `children_under_12` |
+| `has_fiscal_partner` | `has_fiscal_partner` |
+| `partner_income` | `partner_income` |
+| `_voorlopige_amount`, `_had_voorlopige` | Overview display only (not sent to calculator) |
+
+---
+
 ## Project Status — All Phases Complete ✅
 
 | Phase | Description | Branch | Status |
@@ -599,12 +667,13 @@ All routes remain accessible without auth (AllowAny on all API endpoints). Auth 
 | Phase 6 | IB Return Guide — 9-field aangifte walkthrough | phase6-ib-return-guide | ✅ |
 | Phase 7 | Testing & QA — 50 automated tests | phase7-testing-qa | ✅ |
 | Phase 8 | Product Layer — landing page, auth, user accounts | phase8-product-layer | ✅ |
+| Phase 9 | Aangifte IB Simulation — full branching, 11 steps, Ask Claude on every field | phase6-ib-return-guide | ✅ |
 
-**All branches merged to master. Pending: user review and bug/restyling pass.**
+**All phases complete. Pending: user review and bug/restyling pass.**
 
 ## What Comes Next
 
 | Item | Description |
 |------|-------------|
 | **Review pass** | User testing — collect bug reports and restyling requests |
-| **Phase 9** | Annual Maintenance — update tax rules each September for new year |
+| **Annual maintenance** | Update tax rules each September for the new tax year |

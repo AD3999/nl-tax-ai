@@ -3,14 +3,15 @@ import { Routes, Route, Navigate, NavLink, useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next";
 import { useAuth } from "./context/AuthContext";
 
-const Phase2Demo   = lazy(() => import("./pages/Phase2Demo"));
-const CalculatorPage = lazy(() => import("./pages/CalculatorPage"));
-const ChatPage     = lazy(() => import("./pages/ChatPage"));
-const IntakePage   = lazy(() => import("./pages/IntakePage"));
-const IBGuidePage  = lazy(() => import("./pages/IBGuidePage"));
-const LandingPage  = lazy(() => import("./pages/LandingPage"));
-const LoginPage    = lazy(() => import("./pages/LoginPage"));
-const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const Phase2Demo      = lazy(() => import("./pages/Phase2Demo"));
+const CalculatorPage  = lazy(() => import("./pages/CalculatorPage"));
+const ChatPage        = lazy(() => import("./pages/ChatPage"));
+const IntakePage      = lazy(() => import("./pages/IntakePage"));
+const IBGuidePage     = lazy(() => import("./pages/IBGuidePage"));
+const SimulationPage  = lazy(() => import("./pages/SimulationPage"));
+const LandingPage     = lazy(() => import("./pages/LandingPage"));
+const LoginPage       = lazy(() => import("./pages/LoginPage"));
+const RegisterPage    = lazy(() => import("./pages/RegisterPage"));
 
 const navLinkStyle = ({ isActive }: { isActive: boolean }) => ({
   padding: "6px 12px",
@@ -50,6 +51,7 @@ function App() {
         <NavLink to="/chat" style={navLinkStyle}>{t("nav.chat")}</NavLink>
         <NavLink to="/calculator" style={navLinkStyle}>Calculator</NavLink>
         <NavLink to="/ib-guide" style={navLinkStyle}>{t("ib.nav")}</NavLink>
+        <NavLink to="/simulation" style={navLinkStyle}>{t("nav.simulation")}</NavLink>
 
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
           <select
@@ -115,6 +117,7 @@ function App() {
           <Route path="/intake"     element={<IntakePage />} />
           <Route path="/ib-guide"   element={<IBGuidePage />} />
           <Route path="/calculator" element={<CalculatorPage />} />
+          <Route path="/simulation" element={<SimulationPage />} />
           <Route path="/phase2"     element={<Phase2Demo />} />
           <Route path="*"           element={<Navigate to="/" replace />} />
         </Routes>

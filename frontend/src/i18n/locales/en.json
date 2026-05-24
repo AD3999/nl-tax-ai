@@ -4,6 +4,7 @@
   "nav": {
     "chat": "Ask a question",
     "calculator": "Calculate tax",
+    "simulation": "Return Simulation",
     "profile": "Profile",
     "login": "Log in",
     "logout": "Log out"
