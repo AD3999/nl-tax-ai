@@ -1,0 +1,125 @@
+.page {
+  padding: 0 1rem 4rem;
+  text-align: center;
+}
+
+.hero {
+  padding: 5rem 1rem 3.5rem;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.3rem 0.9rem;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+}
+
+.h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  color: var(--text-h);
+  line-height: 1.15;
+  margin: 0 0 1rem;
+}
+
+.sub {
+  font-size: 1.1rem;
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0 0 2rem;
+}
+
+.cta {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btnPrimary {
+  padding: 0.75rem 1.75rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.btnPrimary:hover { opacity: 0.88; }
+
+.btnSecondary {
+  padding: 0.75rem 1.75rem;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnSecondary:hover { background: var(--accent-bg); }
+
+.note {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  max-width: 900px;
+  margin: 0 auto 3rem;
+  text-align: left;
+}
+
+.featureCard {
+  background: var(--social-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.featureIcon {
+  font-size: 1.75rem;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.featureTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0 0 0.4rem;
+}
+
+.featureDesc {
+  font-size: 0.875rem;
+  color: var(--text);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.disclaimer {
+  font-size: 0.8rem;
+  color: var(--text);
+  opacity: 0.6;
+}

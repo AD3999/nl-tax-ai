@@ -1,7 +1,7 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: May 2026 (Phase 7 complete — 50 tests passing)
+> Last updated: May 2026 (Phase 8 complete — auth, landing page, product layer)
 
 ---
 
@@ -556,8 +556,37 @@ python manage.py test apps.calculator apps.chat
 
 ---
 
+## Phase 8 — Product Layer ✅ Complete
+
+**Auth, landing page, and user account management.**
+
+### What was built
+
+| File | Purpose |
+|------|---------|
+| `frontend/src/context/AuthContext.tsx` | React context — holds `user`, `logout()`, `setUser()`. Fetches profile on mount via stored JWT. |
+| `frontend/src/api/auth.ts` | Added `fetchProfile()`, `AuthUser` interface. `login()` stores tokens; `logout()` clears them. |
+| `frontend/src/pages/LandingPage.tsx` | Marketing home page — hero, 4 feature cards, two CTAs. Route: `/` |
+| `frontend/src/pages/LoginPage.tsx` | Login form → JWT → profile fetch → navigate to `/chat`. |
+| `frontend/src/pages/RegisterPage.tsx` | Register form → auto-login → navigate to `/intake`. |
+| `frontend/src/App.tsx` | Auth-aware nav (email + Logout when logged in; Login + Register when not). Landing at `/`. |
+| `main.tsx` | Wrapped app in `<AuthProvider>`. |
+| All 3 i18n files | Added `auth.login_error/register_error/no_account/have_account` + full `landing.*` keys in NL/EN/FA. |
+
+### Auth flow
+
+```
+Anonymous: / (landing) → /register → auto-login → /intake → /chat
+Returning:  / (landing) → /login → /chat
+Logged in:  nav shows email + Logout button
+```
+
+All routes remain accessible without auth (AllowAny on all API endpoints). Auth adds identity + future persistence.
+
+---
+
 ## What Comes Next
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| **Phase 8** | Product Layer — auth, billing, persistent conversations, landing page | ⏳ Next |
+| **Phase 9** | Annual Maintenance — update tax rules each September for new year | ⏳ Recurring |
