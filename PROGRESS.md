@@ -1,7 +1,7 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: May 2026 (Phase 8 complete — auth, landing page, product layer)
+> Last updated: May 2026 (All phases 1–8 complete and merged to master — pending review)
 
 ---
 
@@ -585,8 +585,26 @@ All routes remain accessible without auth (AllowAny on all API endpoints). Auth 
 
 ---
 
+---
+
+## Project Status — All Phases Complete ✅
+
+| Phase | Description | Branch | Status |
+|-------|-------------|--------|--------|
+| Phase 1 | Knowledge Base — 28 rules, 12 Q&A, 6 scenarios, 9 IB fields | main | ✅ |
+| Phase 2 | RAG Pipeline — ChromaDB, embeddings, retriever, assembler | feat/phase2-ui | ✅ |
+| Phase 3 | Tax Calculator Engine — deterministic 2026 Dutch tax | feat/phase3-calculator | ✅ |
+| Phase 4 | AI Response Layer — Claude streaming via SSE | phase4-ai-response-layer | ✅ |
+| Phase 5 | User Intake Wizard — 3-step profile onboarding | phase5-user-intake | ✅ |
+| Phase 6 | IB Return Guide — 9-field aangifte walkthrough | phase6-ib-return-guide | ✅ |
+| Phase 7 | Testing & QA — 50 automated tests | phase7-testing-qa | ✅ |
+| Phase 8 | Product Layer — landing page, auth, user accounts | phase8-product-layer | ✅ |
+
+**All branches merged to master. Pending: user review and bug/restyling pass.**
+
 ## What Comes Next
 
-| Phase | Description | Status |
-|-------|-------------|--------|
-| **Phase 9** | Annual Maintenance — update tax rules each September for new year | ⏳ Recurring |
+| Item | Description |
+|------|-------------|
+| **Review pass** | User testing — collect bug reports and restyling requests |
+| **Phase 9** | Annual Maintenance — update tax rules each September for new year |
