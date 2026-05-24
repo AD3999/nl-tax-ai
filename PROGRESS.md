@@ -1,7 +1,7 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: May 2026 (Phase 3 complete)
+> Last updated: May 2026 (Phases 4–6 complete, merged to master)
 
 ---
 
@@ -508,9 +508,28 @@ On finish: calls `POST /api/calculator/calculate/` silently, saves `CalcInput` t
 
 ---
 
-## What Comes After Phase 6
+## Phase 4–6 Debugging & Integration ✅ Complete
 
-| Phase | Description |
-|-------|-------------|
-| **Phase 7** | Testing & QA — automated backend + RAG + calculator tests |
-| **Phase 8** | Product Layer — auth, billing, onboarding |
+**Real Claude API integration — root cause & fix:**
+
+The streaming endpoint returned "Connection error." even after the API key was added. Root causes found and fixed in order:
+
+| Problem | Root cause | Fix |
+|---------|-----------|-----|
+| Blank response (mock mode) | `sentence-transformers` ML model loaded before StreamingHttpResponse generator started (30–60 s block) | Moved all imports inside generator; mock mode skips RAG entirely |
+| SSE errors swallowed | `catch {}` in `sendMessage()` caught both JSON parse errors and intentional `throw new Error(data.error)` | Separated try/catch: JSON.parse only inside try, error/text handling outside |
+| "Connection error." (real mode) | `ANTHROPIC_API_KEY` in `.env` had leading space + double-quote: `' "sk-ant-api03-…'` — invalid key format | Stripped whitespace and quotes from .env value |
+| Misleading error message | `str(e)` on `anthropic.APIConnectionError` gave generic "Connection error." | Changed to `getattr(e, 'message', None) or str(e)` to surface actual Anthropic error |
+
+**Diagnostic endpoint added:** `GET /api/chat/test/` — calls Claude non-streaming and returns JSON. Useful for isolating API issues from SSE complexity.
+
+**Confirmed working:** Streaming chat with real Claude responses, RAG context injection, calculator profile block, conversation history, all three languages.
+
+---
+
+## What Comes Next
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| **Phase 7** | Testing & QA — automated backend + RAG + calculator tests | ⏳ Next |
+| **Phase 8** | Product Layer — auth, billing, persistent conversations, landing page | ⏳ Planned |
