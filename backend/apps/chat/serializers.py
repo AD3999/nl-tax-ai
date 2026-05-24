@@ -22,3 +22,13 @@ class AskSerializer(serializers.Serializer):
     question = serializers.CharField(max_length=2000)
     conversation_id = serializers.IntegerField(required=False, allow_null=True)
     language = serializers.ChoiceField(choices=["nl", "en", "fa"], default="nl")
+
+
+class ChatMessageSerializer(serializers.Serializer):
+    message = serializers.CharField(max_length=2000)
+    user_profile = serializers.DictField(required=False, allow_null=True, default=None)
+    conversation_history = serializers.ListField(
+        child=serializers.DictField(),
+        required=False,
+        default=list,
+    )

@@ -1,5 +1,8 @@
+import json
+import os
 import time
 
+from django.conf import settings
 from rest_framework import generics, permissions, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -19,6 +22,31 @@ class TaxProfileView(generics.RetrieveUpdateAPIView):
             defaults={"tax_year": self.request.user.tax_year},
         )
         return profile
+
+
+class IBFieldsView(APIView):
+    """GET /api/tax/ib/fields/?user_type=zzp — returns IB return fields from Phase 1 seed data."""
+
+    permission_classes = [AllowAny]
+
+    _cache: list | None = None
+
+    def get(self, request):
+        if IBFieldsView._cache is None:
+            path = os.path.join(
+                settings.BASE_DIR.parent, "phase1", "data", "seed", "ib_form_mapping.json"
+            )
+            with open(path, encoding="utf-8") as f:
+                IBFieldsView._cache = json.load(f)
+
+        user_type = request.query_params.get("user_type", "").strip()
+        fields = IBFieldsView._cache
+        if user_type:
+            fields = [
+                f for f in fields
+                if user_type in f.get("user_types", []) or "all" in f.get("user_types", [])
+            ]
+        return Response(fields)
 
 
 class Phase2RetrieveView(APIView):
