@@ -26,7 +26,27 @@
     "password": "Wachtwoord",
     "login": "Inloggen",
     "register": "Registreren",
-    "user_type": "Ik ben een..."
+    "user_type": "Ik ben een...",
+    "login_error": "Onjuist e-mailadres of wachtwoord.",
+    "register_error": "Registratie mislukt. Probeer het opnieuw.",
+    "no_account": "Nog geen account?",
+    "have_account": "Al een account?"
+  },
+  "landing": {
+    "badge": "Belastingjaar 2026",
+    "headline": "Belasting begrijpen, zonder de chaos",
+    "subheadline": "TaxWijs beantwoordt uw belastingvragen in het Nederlands, Engels of Farsi — persoonlijk berekend op basis van uw situatie.",
+    "cta_primary": "Profiel instellen en beginnen",
+    "cta_secondary": "Direct vragen stellen",
+    "no_account_needed": "Geen account vereist om te beginnen.",
+    "feature_chat_title": "AI-belastingassistent",
+    "feature_chat_desc": "Stel vragen in uw eigen taal. Claude legt regels uit en citeert altijd de bron.",
+    "feature_calc_title": "Nauwkeurige berekening",
+    "feature_calc_desc": "Deterministische belastingmotor voor ZZP, werknemer, expat en DGA — geen gokwerk.",
+    "feature_ib_title": "Aangifte IB-gids",
+    "feature_ib_desc": "Stap voor stap door uw belastingaangifte 2026 met uitleg per veld.",
+    "feature_lang_title": "Drie talen",
+    "feature_lang_desc": "Nederlands, Engels en Farsi als volwaardige eerste taal — niet een vertaling."
   },
   "user_types": {
     "zzp": "ZZP'er / Freelancer",

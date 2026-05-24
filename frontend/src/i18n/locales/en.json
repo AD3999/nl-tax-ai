@@ -72,7 +72,27 @@
     "password": "Password",
     "login": "Log in",
     "register": "Register",
-    "user_type": "I am a..."
+    "user_type": "I am a...",
+    "login_error": "Incorrect email or password.",
+    "register_error": "Registration failed. Please try again.",
+    "no_account": "No account yet?",
+    "have_account": "Already have an account?"
+  },
+  "landing": {
+    "badge": "Tax year 2026",
+    "headline": "Understand your Dutch taxes, without the confusion",
+    "subheadline": "TaxWijs answers your tax questions in Dutch, English, or Persian — personalised to your situation.",
+    "cta_primary": "Set up profile & start",
+    "cta_secondary": "Ask directly",
+    "no_account_needed": "No account required to get started.",
+    "feature_chat_title": "AI tax assistant",
+    "feature_chat_desc": "Ask questions in your language. Claude explains rules and always cites the source.",
+    "feature_calc_title": "Accurate calculation",
+    "feature_calc_desc": "Deterministic tax engine for ZZP, employee, expat and DGA — no guesswork.",
+    "feature_ib_title": "IB return guide",
+    "feature_ib_desc": "Step-by-step through your 2026 tax return with per-field explanations.",
+    "feature_lang_title": "Three languages",
+    "feature_lang_desc": "Dutch, English and Persian as first-class languages — not translations."
   },
   "user_types": {
     "zzp": "ZZP / Freelancer",
