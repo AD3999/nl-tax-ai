@@ -74,6 +74,9 @@ class ChatMessageView(APIView):
             client = anthropic.Anthropic(api_key=api_key)
 
             def stream_response():
+                # Keep connection alive while RAG loads (Vite proxy / browser timeout guard)
+                yield f"data: {json.dumps({'type': 'heartbeat'})}\n\n"
+
                 # RAG retrieval (runs inside generator — headers already sent)
                 retrieved_context = "=== No tax context available ==="
                 try:
@@ -118,7 +121,8 @@ class ChatMessageView(APIView):
                             yield f"data: {json.dumps({'text': text})}\n\n"
                     yield f"data: {json.dumps({'done': True})}\n\n"
                 except Exception as e:
-                    yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                    error_msg = getattr(e, 'message', None) or str(e)
+                    yield f"data: {json.dumps({'error': error_msg})}\n\n"
 
         response = StreamingHttpResponse(
             stream_response(),
@@ -127,6 +131,27 @@ class ChatMessageView(APIView):
         response["Cache-Control"] = "no-cache"
         response["X-Accel-Buffering"] = "no"
         return response
+
+
+class TestClaudeView(APIView):
+    """GET /api/chat/test/ — quick sanity check, returns one Claude sentence as JSON."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+        if not api_key:
+            return Response({"error": "ANTHROPIC_API_KEY not set"}, status=500)
+        try:
+            import anthropic
+            client = anthropic.Anthropic(api_key=api_key)
+            msg = client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=80,
+                messages=[{"role": "user", "content": "Say hello in one sentence."}],
+            )
+            return Response({"ok": True, "text": msg.content[0].text, "model": msg.model})
+        except Exception as e:
+            return Response({"ok": False, "error": str(e)}, status=500)
 
 
 class ConversationListView(generics.ListCreateAPIView):

@@ -46,13 +46,14 @@ export async function sendMessage(
 
     for (const line of lines) {
       if (!line.startsWith("data: ")) continue;
+      let data: { text?: string; done?: boolean; error?: string };
       try {
-        const data = JSON.parse(line.slice(6)) as { text?: string; done?: boolean; error?: string };
-        if (data.error) throw new Error(data.error);
-        if (data.text) onToken(data.text);
+        data = JSON.parse(line.slice(6));
       } catch {
-        // Ignore malformed SSE lines
+        continue; // skip malformed JSON lines
       }
+      if (data.error) throw new Error(data.error); // surfaces to outer catch
+      if (data.text) onToken(data.text);
     }
   }
 }
