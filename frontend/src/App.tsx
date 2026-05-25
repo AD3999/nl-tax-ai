@@ -13,6 +13,14 @@ const LandingPage     = lazy(() => import("./pages/LandingPage"));
 const LoginPage       = lazy(() => import("./pages/LoginPage"));
 const RegisterPage    = lazy(() => import("./pages/RegisterPage"));
 
+// Admin pages — lazy-loaded, scoped Tailwind via AdminLayout
+const AdminDashboard        = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminRulesPage        = lazy(() => import("./pages/admin/AdminRulesPage"));
+const AdminRuleEditorPage   = lazy(() => import("./pages/admin/AdminRuleEditorPage"));
+const AdminCalcPreviewPage  = lazy(() => import("./pages/admin/AdminCalculatorPreviewPage"));
+const AdminRAGPreviewPage   = lazy(() => import("./pages/admin/AdminRAGPreviewPage"));
+const AdminSettingsPage     = lazy(() => import("./pages/admin/AdminSettingsPage"));
+
 const navLinkStyle = ({ isActive }: { isActive: boolean }) => ({
   padding: "6px 12px",
   borderRadius: "6px",
@@ -52,6 +60,11 @@ function App() {
         <NavLink to="/calculator" style={navLinkStyle}>Calculator</NavLink>
         <NavLink to="/ib-guide" style={navLinkStyle}>{t("ib.nav")}</NavLink>
         <NavLink to="/simulation" style={navLinkStyle}>{t("nav.simulation")}</NavLink>
+        {user?.is_admin && (
+          <NavLink to="/admin" style={{ ...navLinkStyle({ isActive: false }), marginLeft: "8px", border: "1px solid var(--border)", borderRadius: "6px" }}>
+            Admin
+          </NavLink>
+        )}
 
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
           <select
@@ -119,6 +132,14 @@ function App() {
           <Route path="/calculator" element={<CalculatorPage />} />
           <Route path="/simulation" element={<SimulationPage />} />
           <Route path="/phase2"     element={<Phase2Demo />} />
+          {/* Admin — no nested layout wrapper needed; each page uses AdminLayout */}
+          <Route path="/admin"                        element={<AdminDashboard />} />
+          <Route path="/admin/rules"                  element={<AdminRulesPage />} />
+          <Route path="/admin/rules/new"              element={<AdminRuleEditorPage />} />
+          <Route path="/admin/rules/:id"              element={<AdminRuleEditorPage />} />
+          <Route path="/admin/calculator-preview"     element={<AdminCalcPreviewPage />} />
+          <Route path="/admin/rag-preview"            element={<AdminRAGPreviewPage />} />
+          <Route path="/admin/settings"               element={<AdminSettingsPage />} />
           <Route path="*"           element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

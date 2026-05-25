@@ -11,6 +11,7 @@ export interface AuthUser {
   user_type: string;
   preferred_language: string;
   tax_year: number;
+  is_admin?: boolean;
 }
 
 export const login = async (payload: LoginPayload): Promise<TokenPair> => {

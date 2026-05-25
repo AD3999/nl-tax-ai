@@ -667,13 +667,94 @@ Maps simulation answers to `CalcInput` for the calculator API:
 | Phase 6 | IB Return Guide — 9-field aangifte walkthrough | phase6-ib-return-guide | ✅ |
 | Phase 7 | Testing & QA — 50 automated tests | phase7-testing-qa | ✅ |
 | Phase 8 | Product Layer — landing page, auth, user accounts | phase8-product-layer | ✅ |
-| Phase 9 | Aangifte IB Simulation — full branching, 11 steps, Ask Claude on every field | phase6-ib-return-guide | ✅ |
+| Phase 9 | Aangifte IB Simulation — full branching, 11 steps, Ask Claude on every field | phase9-simulation | ✅ |
+| Phase 10 | Admin Tax Rules Dashboard — full CRUD, multi-year, audit log | phase10-admin-dashboard | ✅ |
 
-**All phases complete. Pending: user review and bug/restyling pass.**
+---
+
+## Phase 10 — Admin Tax Rules Dashboard ✅ Complete
+
+**Goal:** A professional internal admin panel for managing Dutch tax rules. Admins can browse, search, filter, create, edit, verify, and duplicate rules across tax years. All changes are logged in an audit trail.
+
+### Architecture decisions
+
+| Decision | Choice |
+|----------|--------|
+| Stack | React + TypeScript + Tailwind CSS (admin-scoped, no base reset) |
+| Backend | Mock in-memory store (drop-in for Django API later) |
+| CSS isolation | `@tailwind components/utilities` only in `admin.css`, imported only via `AdminLayout` — does not affect existing CSS Module pages |
+| Components | shadcn-style (manual build) — no CLI, full Tailwind control |
+| Icons | lucide-react |
+| Forms | React Hook Form + Zod validation with cross-field rules |
+| Routing | 6 admin routes in React Router, lazy-loaded |
+| Data | 35+ mock rules across 2025/2026/2027 with realistic Dutch tax data |
+
+### Files created
+
+| File | Purpose |
+|------|---------|
+| `frontend/src/styles/admin.css` | Scoped Tailwind entry (no base reset) |
+| `frontend/src/lib/utils.ts` | `cn()`, `formatEur()`, `formatPct()`, `formatDate()` |
+| `frontend/src/lib/tax-rules/types.ts` | Full TypeScript types: TaxRule, AuditEntry, AdminStats, RuleFilters |
+| `frontend/src/lib/tax-rules/schema.ts` | Zod schemas with cross-field validation |
+| `frontend/src/lib/tax-rules/mock-data.ts` | 35+ rules for 2025/2026/2027 with realistic data |
+| `frontend/src/lib/tax-rules/api.ts` | Mock CRUD API: getRules, getRuleById, createRule, updateRule, duplicateRuleToYear, deleteRule, getAdminStats |
+| `frontend/src/lib/tax-rules/audit.ts` | Audit log with pre-seeded entries |
+| `frontend/src/components/ui/index.tsx` | Button, Badge, Input, Textarea, Select, Card, Table, Alert, Spinner |
+| `frontend/src/components/admin/AdminLayout.tsx` | Sidebar + Topbar wrapper |
+| `frontend/src/components/admin/AdminSidebar.tsx` | Dark slate-900 sidebar with NavLink items |
+| `frontend/src/components/admin/AdminTopbar.tsx` | White header with page title + user email |
+| `frontend/src/components/admin/RuleStatusBadge.tsx` | Status-to-Badge mapper |
+| `frontend/src/components/admin/StatCard.tsx` | Metric card with icon, value, trend, colour variants |
+| `frontend/src/pages/admin/AdminDashboard.tsx` | Overview: 6 stat cards, attention table, rules by year/category, quick actions |
+| `frontend/src/pages/admin/AdminRulesPage.tsx` | Full rules table: search, 4 filters, column sort, duplicate/delete dialogs |
+| `frontend/src/pages/admin/AdminRuleEditorPage.tsx` | 6-tab rule editor: Basic Info, Result/Formula, Multilingual, AI & RAG, Source & Verification, Audit History |
+| `frontend/src/pages/admin/AdminCalculatorPreviewPage.tsx` | Profile form → matched verified rules with match reasons |
+| `frontend/src/pages/admin/AdminRAGPreviewPage.tsx` | Query box → simulated vector retrieval → assembled AI context block |
+| `frontend/src/pages/admin/AdminSettingsPage.tsx` | Active year, language, verification policy, backend status |
+
+### Admin pages (6 routes)
+
+| Route | Page | Key features |
+|-------|------|-------------|
+| `/admin` | Overview Dashboard | 6 stat cards (total/verified/pending/draft/expired/expiring-soon), "Needs Attention" table, rules-by-year bars, category tag cloud, quick actions |
+| `/admin/rules` | Rules Table | Full-text search; filter by year/user_type/status/category; sortable columns (ID/topic/year/status/updated); row actions (edit/duplicate/delete); URL-synced filters |
+| `/admin/rules/new` | New Rule Editor | 6-tab form; user type multi-select pills; tag input; phase-out fields; radio status picker with descriptions; Zod validation on save |
+| `/admin/rules/:id` | Edit Rule Editor | Same form, pre-populated; unsaved-changes indicator; audit history tab with diff display |
+| `/admin/calculator-preview` | Calculator Preview | Sample profile builder → shows all verified rules that match, with match reason and AI hint |
+| `/admin/rag-preview` | RAG Preview | Query text + filters → simulated top-5 retrieval → assembled context block (mirrors phase2/assembler.py format) |
+| `/admin/settings` | Settings | Active tax year picker, default language, verification policy, data source status |
+
+### Rule editor tabs
+
+| Tab | Contents |
+|-----|---------|
+| Basic Info | ID, year, topic, category, user types (pill toggles), effective dates, supersedes, tags |
+| Result / Formula | Result type, value, unit, formula expression, notes, phase-out parameters |
+| Multilingual | Dutch (NL), English (EN), Persian (FA) explanation textareas — all required for verified status |
+| AI & RAG | `ai_prompt_hint` field — injected as `AI INSTRUCTION: …` into assembled RAG context |
+| Source & Verification | Source URL (with live open link), verification status radio picker with descriptions |
+| Audit History | Chronological log of all changes with actor, timestamp, and field diff |
+
+### Data: 35+ mock rules
+
+Rules span 2025/2026/2027 with realistic Dutch tax data:
+- **2026** (23 rules): BR1, MKB, ZA, SA, ZVW, AHK, AK, IACK, B2R, B3R, KIA, ZT, EXP, DGA, WD, BTW, KOR, DL, LR, HT — all verified
+- **2025** (11 rules): Same rule set with 2025 values — ZA at €2,470, AHK at €3,068, etc.
+- **2027** (1 rule): ZA-2027-001 as draft (€900 estimate — startersaftrek abolished from 2027)
+
+### TypeScript
+
+All files pass `npx tsc --noEmit` with `strict: true`, `noUnusedLocals: true`, `noUnusedParameters: true`, `verbatimModuleSyntax: true`.
+
+---
 
 ## What Comes Next
 
 | Item | Description |
 |------|-------------|
-| **Review pass** | User testing — collect bug reports and restyling requests |
+| **Phase 11** | Connect admin to real Django backend — swap mock api.ts for fetch calls |
+| **Stripe integration** | Subscription plans, usage limits, /pricing page |
+| **SEO pages** | Django templates for landing + tax guide pages (server-rendered for Google indexing) |
+| **Proactive alerts** | Tax reminder engine — email/push notifications near deadlines |
 | **Annual maintenance** | Update tax rules each September for the new tax year |
