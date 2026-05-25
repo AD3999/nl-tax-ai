@@ -10,9 +10,6 @@ import {
   type Lang,
 } from "../data/simulationSteps";
 import { calculateTax, type CalcResult } from "../api/calculator";
-import styles from "./SimulationPage.module.css";
-
-// ─── helpers ────────────────────────────────────────────────────────────────
 
 function t3(field: { nl: string; en: string; fa: string }, lang: Lang) {
   return field[lang] || field.nl;
@@ -21,6 +18,17 @@ function t3(field: { nl: string; en: string; fa: string }, lang: Lang) {
 function visibleSteps(answers: Answers): SimStep[] {
   return SIMULATION_STEPS.filter(s => !s.condition || s.condition(answers));
 }
+
+const inputCls = "px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--bg)] text-[var(--text)] font-[inherit] text-sm outline-none transition-colors focus:border-[var(--accent)] w-full";
+
+const boolBtn = (active: boolean) =>
+  `px-5 py-2 rounded-lg border font-[inherit] text-sm cursor-pointer transition-all ${
+    active
+      ? "border-[var(--accent)] bg-[var(--accent-bg)] text-[var(--accent)] font-semibold"
+      : "border-[var(--border)] bg-[var(--bg)] text-[var(--text)] hover:border-[var(--accent)]"
+  }`;
+
+const claudeBtn = "px-3 py-1.5 rounded-lg border border-[var(--accent)] bg-[var(--accent-bg)] text-[var(--accent)] font-[inherit] text-[13px] cursor-pointer hover:bg-[var(--accent)] hover:text-white transition-all";
 
 // ─── Field renderer ──────────────────────────────────────────────────────────
 
@@ -42,10 +50,10 @@ function FieldRow({
 
   if (field.type === "info") {
     return (
-      <div className={styles.infoBox}>
-        <p className={styles.infoLabel}>{label}</p>
-        <pre className={styles.infoBody}>{help}</pre>
-        <button className={styles.claudeBtn} onClick={() => onAskClaude(t3(field.claudeQ, lang))}>
+      <div className="p-4 bg-[var(--accent-bg)] border border-[var(--accent)] rounded-xl flex flex-col gap-2 my-1">
+        <p className="text-[15px] font-semibold text-[var(--accent)] m-0">{label}</p>
+        <pre className="text-[13px] text-[var(--text)] leading-relaxed m-0 font-[inherit] whitespace-pre-wrap">{help}</pre>
+        <button className={claudeBtn} onClick={() => onAskClaude(t3(field.claudeQ, lang))}>
           💬 Ask Claude
         </button>
       </div>
@@ -53,74 +61,61 @@ function FieldRow({
   }
 
   return (
-    <div className={styles.fieldRow}>
-      <div className={styles.fieldLeft}>
-        <label className={styles.fieldLabel}>{label}</label>
-        <p className={styles.fieldHelp}>{help}</p>
+    <div className="flex gap-6 py-4 border-b border-[var(--border)] last:border-0">
+      <div className="flex-1 min-w-0">
+        <label className="text-[15px] font-semibold text-[var(--text-h)] block mb-1">{label}</label>
+        <p className="text-[13px] text-[var(--text)] opacity-70 leading-relaxed m-0">{help}</p>
         {field.sourceUrl && (
-          <a href={field.sourceUrl} target="_blank" rel="noopener noreferrer" className={styles.sourceLink}>
+          <a href={field.sourceUrl} target="_blank" rel="noopener noreferrer"
+            className="text-xs text-[var(--text)] opacity-40 no-underline hover:opacity-70 transition-opacity mt-1.5 inline-block">
             Belastingdienst ↗
           </a>
         )}
       </div>
 
-      <div className={styles.fieldRight}>
+      <div className="flex flex-col gap-2 items-start shrink-0 w-48">
         {field.type === "boolean" && (
-          <div className={styles.boolRow}>
-            <button
-              className={`${styles.boolBtn} ${value === true ? styles.boolActive : ""}`}
-              onClick={() => onChange(field.id, true)}
-            >Ja / Yes</button>
-            <button
-              className={`${styles.boolBtn} ${value === false ? styles.boolActive : ""}`}
-              onClick={() => onChange(field.id, false)}
-            >Nee / No</button>
+          <div className="flex gap-2">
+            <button className={boolBtn(value === true)} onClick={() => onChange(field.id, true)}>Ja / Yes</button>
+            <button className={boolBtn(value === false)} onClick={() => onChange(field.id, false)}>Nee / No</button>
           </div>
         )}
 
         {field.type === "number" && (
-          <div className={styles.numRow}>
-            {field.unit === "€" && <span className={styles.unit}>€</span>}
+          <div className="flex items-center border border-[var(--border)] rounded-lg overflow-hidden bg-[var(--bg)] focus-within:border-[var(--accent)] transition-colors">
+            {field.unit === "€" && (
+              <span className="px-2.5 py-2 bg-[var(--border)] text-[13px] text-[var(--text)] opacity-70">€</span>
+            )}
             <input
               type="number"
-              className={styles.numInput}
+              className="border-none bg-transparent px-3 py-2 font-[inherit] text-sm text-[var(--text)] w-28 outline-none"
               value={value === undefined ? "" : String(value)}
               min={0}
               onChange={e => onChange(field.id, e.target.value === "" ? undefined : Number(e.target.value))}
               placeholder="0"
             />
             {field.unit && field.unit !== "€" && (
-              <span className={styles.unit}>{field.unit}</span>
+              <span className="px-2.5 py-2 text-[13px] text-[var(--text)] opacity-70">{field.unit}</span>
             )}
           </div>
         )}
 
         {field.type === "text" && (
-          <input
-            type="text"
-            className={styles.textInput}
-            value={String(value ?? "")}
-            onChange={e => onChange(field.id, e.target.value)}
-            placeholder="—"
-          />
+          <input type="text" className={inputCls} value={String(value ?? "")}
+            onChange={e => onChange(field.id, e.target.value)} placeholder="—" />
         )}
 
         {field.type === "select" && field.options && (
-          <select
-            className={styles.selectInput}
-            value={String(value ?? "")}
-            onChange={e => onChange(field.id, e.target.value)}
-          >
+          <select className={inputCls} value={String(value ?? "")}
+            onChange={e => onChange(field.id, e.target.value)}>
             <option value="">— kies / choose —</option>
             {field.options.map(opt => (
-              <option key={opt.value} value={opt.value}>
-                {t3(opt.label, lang)}
-              </option>
+              <option key={opt.value} value={opt.value}>{t3(opt.label, lang)}</option>
             ))}
           </select>
         )}
 
-        <button className={styles.claudeBtn} onClick={() => onAskClaude(t3(field.claudeQ, lang))}>
+        <button className={claudeBtn} onClick={() => onAskClaude(t3(field.claudeQ, lang))}>
           💬 Ask Claude
         </button>
       </div>
@@ -161,105 +156,108 @@ function OverviewStep({
   const hadVoorlopige = (profile as Record<string, unknown>)._had_voorlopige as boolean;
 
   return (
-    <div className={styles.overview}>
-      <h2 className={styles.overviewTitle}>
+    <div className="flex flex-col gap-6">
+      <h2 className="text-2xl font-semibold text-[var(--text-h)] m-0">
         {lang === "nl" ? "Uw geschatte aanslag 2026" :
          lang === "fa" ? "برآورد ارزیابی مالیاتی 2026 شما" :
          "Your estimated 2026 tax assessment"}
       </h2>
 
-      {loading && <p className={styles.loading}>
-        {lang === "nl" ? "Berekening…" : lang === "fa" ? "در حال محاسبه…" : "Calculating…"}
-      </p>}
-
-      {error && <p className={styles.calcError}>{error}</p>}
-
-      {result && (
-        <div className={styles.resultGrid}>
-          <div className={styles.resultCard}>
-            <span className={styles.resultLabel}>
-              {lang === "nl" ? "Totale belasting" : lang === "fa" ? "کل مالیات" : "Total tax due"}
-            </span>
-            <span className={styles.resultValue}>
-              €{result.result.total_tax_due.toLocaleString("nl-NL")}
-            </span>
-          </div>
-          <div className={styles.resultCard}>
-            <span className={styles.resultLabel}>
-              {lang === "nl" ? "Effectief tarief" : lang === "fa" ? "نرخ مؤثر" : "Effective rate"}
-            </span>
-            <span className={styles.resultValue}>
-              {(result.result.effective_rate * 100).toFixed(1)}%
-            </span>
-          </div>
-          {result.result.monthly_reserve_needed > 0 && (
-            <div className={styles.resultCard}>
-              <span className={styles.resultLabel}>
-                {lang === "nl" ? "Maandelijks reserveren" : lang === "fa" ? "ذخیره ماهانه" : "Monthly reserve"}
-              </span>
-              <span className={styles.resultValue}>
-                €{result.result.monthly_reserve_needed.toLocaleString("nl-NL")}
-              </span>
-            </div>
-          )}
-          {hadVoorlopige && voorlopige > 0 && (
-            <div className={styles.resultCard}>
-              <span className={styles.resultLabel}>
-                {lang === "nl" ? "Al betaald (voorlopige aanslag)" : lang === "fa" ? "قبلاً پرداخت شده (برگ موقت)" : "Already paid (provisional)"}
-              </span>
-              <span className={styles.resultValue}>−€{voorlopige.toLocaleString("nl-NL")}</span>
-            </div>
-          )}
-          {hadVoorlopige && voorlopige > 0 && (
-            <div className={`${styles.resultCard} ${styles.resultCardTotal}`}>
-              <span className={styles.resultLabel}>
-                {lang === "nl" ? "Nog te betalen / terug" : lang === "fa" ? "باقی‌مانده برای پرداخت / بازگشت" : "Still to pay / refund"}
-              </span>
-              <span className={styles.resultValue}>
-                {result.result.total_tax_due - voorlopige >= 0
-                  ? `€${(result.result.total_tax_due - voorlopige).toLocaleString("nl-NL")}`
-                  : `−€${Math.abs(result.result.total_tax_due - voorlopige).toLocaleString("nl-NL")} (terug)`
-                }
-              </span>
-            </div>
-          )}
-        </div>
+      {loading && (
+        <p className="text-[var(--text)] opacity-60">
+          {lang === "nl" ? "Berekening…" : lang === "fa" ? "در حال محاسبه…" : "Calculating…"}
+        </p>
       )}
 
+      {error && <p className="text-sm text-red-500 m-0">{error}</p>}
+
       {result && (
-        <div className={styles.breakdown}>
-          <h3 className={styles.breakdownTitle}>
-            {lang === "nl" ? "Berekening stap voor stap" : lang === "fa" ? "محاسبه گام به گام" : "Step-by-step breakdown"}
-          </h3>
-          <table className={styles.bTable}>
-            <tbody>
-              {[
-                ["Box 1 — belasting (raw)", result.calculation.box1_tax_raw],
-                ["Algemene heffingskorting", -result.calculation.algemene_heffingskorting],
-                ["Arbeidskorting", -result.calculation.arbeidskorting],
-                ...(result.calculation.iack > 0 ? [["IACK", -result.calculation.iack]] : []),
-                ["Box 1 na kortingen", result.calculation.income_tax_after_credits],
-                ...(result.calculation.zvw_contribution > 0 ? [["ZVW-bijdrage (5.32%)", result.calculation.zvw_contribution]] : []),
-                ...(result.calculation.box2_tax > 0 ? [["Box 2 belasting", result.calculation.box2_tax]] : []),
-                ...(result.calculation.box3_tax > 0 ? [["Box 3 belasting", result.calculation.box3_tax]] : []),
-              ].map(([label, val]) => (
-                <tr key={String(label)} className={styles.bRow}>
-                  <td className={styles.bLabel}>{label}</td>
-                  <td className={styles.bVal}>
-                    {Number(val) < 0
-                      ? `−€${Math.abs(Number(val)).toLocaleString("nl-NL")}`
-                      : `€${Number(val).toLocaleString("nl-NL")}`}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
+            <div className="p-4 px-5 border border-[var(--border)] rounded-xl bg-[var(--bg)] flex flex-col gap-1.5">
+              <span className="text-[11px] font-bold tracking-widest uppercase text-[var(--text)]">
+                {lang === "nl" ? "Totale belasting" : lang === "fa" ? "کل مالیات" : "Total tax due"}
+              </span>
+              <span className="text-3xl font-bold text-[var(--text-h)] -tracking-wide">
+                €{result.result.total_tax_due.toLocaleString("nl-NL")}
+              </span>
+            </div>
+            <div className="p-4 px-5 border border-[var(--border)] rounded-xl bg-[var(--bg)] flex flex-col gap-1.5">
+              <span className="text-[11px] font-bold tracking-widest uppercase text-[var(--text)]">
+                {lang === "nl" ? "Effectief tarief" : lang === "fa" ? "نرخ مؤثر" : "Effective rate"}
+              </span>
+              <span className="text-3xl font-bold text-[var(--text-h)] -tracking-wide">
+                {(result.result.effective_rate * 100).toFixed(1)}%
+              </span>
+            </div>
+            {result.result.monthly_reserve_needed > 0 && (
+              <div className="p-4 px-5 border border-[var(--border)] rounded-xl bg-[var(--bg)] flex flex-col gap-1.5">
+                <span className="text-[11px] font-bold tracking-widest uppercase text-[var(--text)]">
+                  {lang === "nl" ? "Maandelijks reserveren" : lang === "fa" ? "ذخیره ماهانه" : "Monthly reserve"}
+                </span>
+                <span className="text-3xl font-bold text-[var(--text-h)] -tracking-wide">
+                  €{result.result.monthly_reserve_needed.toLocaleString("nl-NL")}
+                </span>
+              </div>
+            )}
+            {hadVoorlopige && voorlopige > 0 && (
+              <div className="p-4 px-5 border border-[var(--border)] rounded-xl bg-[var(--bg)] flex flex-col gap-1.5">
+                <span className="text-[11px] font-bold tracking-widest uppercase text-[var(--text)]">
+                  {lang === "nl" ? "Al betaald (voorlopige)" : lang === "fa" ? "قبلاً پرداخت شده" : "Already paid"}
+                </span>
+                <span className="text-3xl font-bold text-[var(--text-h)] -tracking-wide">
+                  −€{voorlopige.toLocaleString("nl-NL")}
+                </span>
+              </div>
+            )}
+            {hadVoorlopige && voorlopige > 0 && (
+              <div className="p-4 px-5 border border-[var(--accent)] rounded-xl bg-[var(--accent-bg)] flex flex-col gap-1.5">
+                <span className="text-[11px] font-bold tracking-widest uppercase text-[var(--accent)]">
+                  {lang === "nl" ? "Nog te betalen / terug" : lang === "fa" ? "باقی‌مانده" : "Still to pay / refund"}
+                </span>
+                <span className="text-3xl font-bold text-[var(--accent)] -tracking-wide">
+                  {result.result.total_tax_due - voorlopige >= 0
+                    ? `€${(result.result.total_tax_due - voorlopige).toLocaleString("nl-NL")}`
+                    : `−€${Math.abs(result.result.total_tax_due - voorlopige).toLocaleString("nl-NL")} (terug)`}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <div className="p-5 px-6 border border-[var(--border)] rounded-xl bg-[var(--bg)]">
+            <div className="text-[13px] font-bold tracking-widest uppercase text-[var(--text)] mb-4">
+              {lang === "nl" ? "Berekening stap voor stap" : lang === "fa" ? "محاسبه گام به گام" : "Step-by-step breakdown"}
+            </div>
+            <table className="w-full border-collapse text-sm">
+              <tbody>
+                {[
+                  ["Box 1 — belasting (raw)", result.calculation.box1_tax_raw],
+                  ["Algemene heffingskorting", -result.calculation.algemene_heffingskorting],
+                  ["Arbeidskorting", -result.calculation.arbeidskorting],
+                  ...(result.calculation.iack > 0 ? [["IACK", -result.calculation.iack]] : []),
+                  ["Box 1 na kortingen", result.calculation.income_tax_after_credits],
+                  ...(result.calculation.zvw_contribution > 0 ? [["ZVW-bijdrage (5.32%)", result.calculation.zvw_contribution]] : []),
+                  ...(result.calculation.box2_tax > 0 ? [["Box 2 belasting", result.calculation.box2_tax]] : []),
+                  ...(result.calculation.box3_tax > 0 ? [["Box 3 belasting", result.calculation.box3_tax]] : []),
+                ].map(([label, val]) => (
+                  <tr key={String(label)} className="border-b border-[var(--border)]">
+                    <td className="py-1.5 text-[var(--text)]">{label}</td>
+                    <td className="py-1.5 text-right font-mono font-semibold text-[var(--text-h)] whitespace-nowrap">
+                      {Number(val) < 0
+                        ? `−€${Math.abs(Number(val)).toLocaleString("nl-NL")}`
+                        : `€${Number(val).toLocaleString("nl-NL")}`}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
-      <div className={styles.overviewActions}>
+      <div className="flex flex-col gap-3">
         <button
-          className={styles.chatBtn}
+          className="self-start px-6 py-2.5 rounded-lg border-none bg-[var(--accent)] text-white font-[inherit] text-sm font-medium cursor-pointer hover:opacity-85 transition-opacity"
           onClick={() => onGoToChat(
             lang === "nl"
               ? `Ik heb de simulatie ingevuld en mijn geschatte belasting is €${result?.result.total_tax_due ?? "?"} voor 2026. Kunt u dit uitleggen en tips geven?`
@@ -270,7 +268,7 @@ function OverviewStep({
         >
           💬 {lang === "nl" ? "Bespreek met Claude" : lang === "fa" ? "بحث با Claude" : "Discuss with Claude"}
         </button>
-        <p className={styles.disclaimer}>
+        <p className="text-xs text-[var(--text)] opacity-50 leading-relaxed m-0">
           {lang === "nl"
             ? "Dit is een simulatie — geen officiële aangifte. Gebruik de echte aangifte op mijn.belastingdienst.nl."
             : lang === "fa"
@@ -305,7 +303,6 @@ export default function SimulationPage() {
     navigate("/chat", { state: { question } });
   }, [navigate]);
 
-  // Recalculate visible steps when answers change; keep stepIdx valid
   useEffect(() => {
     const newSteps = visibleSteps(answers);
     if (stepIdx >= newSteps.length) setStepIdx(newSteps.length - 1);
@@ -320,82 +317,106 @@ export default function SimulationPage() {
   if (!currentStep) return null;
 
   return (
-    <div className={styles.page}>
+    <div className="flex h-[calc(100vh-52px)]">
       {/* Sidebar */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarHeader}>
-          <span className={styles.sidebarBadge}>
+      <aside className="w-60 border-r border-[var(--border)] flex flex-col bg-[var(--bg)] overflow-y-auto shrink-0">
+        <div className="px-5 py-4 border-b border-[var(--border)]">
+          <span className="text-[11px] font-bold tracking-widest uppercase text-[var(--accent)]">
             {lang === "nl" ? "Simulatie Aangifte IB 2026" :
              lang === "fa" ? "شبیه‌سازی اظهارنامه IB 2026" :
              "IB Return Simulation 2026"}
           </span>
         </div>
-        <nav className={styles.stepList}>
+        <nav className="flex flex-col py-2">
           {steps.map((step, idx) => (
             <button
               key={step.id}
-              className={`${styles.stepItem} ${idx === stepIdx ? styles.stepActive : ""} ${idx < stepIdx ? styles.stepDone : ""}`}
+              className={`flex items-center gap-2.5 px-5 py-3 border-none bg-transparent cursor-pointer text-left w-full transition-colors font-[inherit] ${
+                idx === stepIdx
+                  ? "bg-[var(--accent-bg)] text-[var(--accent)]"
+                  : idx < stepIdx
+                  ? "text-[var(--text)] opacity-60 hover:bg-[var(--accent-bg)] hover:opacity-100"
+                  : "text-[var(--text)] hover:bg-[var(--accent-bg)] hover:text-[var(--accent)]"
+              }`}
               onClick={() => setStepIdx(idx)}
             >
-              <span className={styles.stepIcon}>{idx < stepIdx ? "✓" : step.icon}</span>
-              <span className={styles.stepLabel}>{t3(step.title, lang)}</span>
+              <span className="text-sm w-5 text-center shrink-0">
+                {idx < stepIdx ? "✓" : step.icon}
+              </span>
+              <span className={`text-[13px] ${idx === stepIdx ? "font-semibold" : ""}`}>
+                {t3(step.title, lang)}
+              </span>
             </button>
           ))}
         </nav>
       </aside>
 
       {/* Main content */}
-      <main className={styles.main}>
+      <main className="flex-1 overflow-y-auto flex flex-col">
         {/* Progress bar */}
-        <div className={styles.progressBar}>
-          <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+        <div className="h-1 bg-[var(--border)]">
+          <div className="h-full bg-[var(--accent)] transition-all duration-300" style={{ width: `${progress}%` }} />
         </div>
 
-        <div className={styles.stepHeader}>
-          <span className={styles.stepNum}>
+        <div className="px-10 pt-10 pb-6">
+          <span className="text-xs font-bold tracking-widest uppercase text-[var(--text)] opacity-50">
             {lang === "nl" ? `Stap ${currentStep.number} van ${totalSteps}` :
              lang === "fa" ? `مرحله ${currentStep.number} از ${totalSteps}` :
              `Step ${currentStep.number} of ${totalSteps}`}
           </span>
-          <h1 className={styles.stepTitle}>{currentStep.icon} {t3(currentStep.title, lang)}</h1>
-          <p className={styles.stepSubtitle}>{t3(currentStep.subtitle, lang)}</p>
+          <h1 className="text-3xl font-semibold text-[var(--text-h)] m-0 mt-1">
+            {currentStep.icon} {t3(currentStep.title, lang)}
+          </h1>
+          <p className="text-[15px] text-[var(--text)] opacity-70 mt-2 leading-relaxed m-0">
+            {t3(currentStep.subtitle, lang)}
+          </p>
         </div>
 
-        {isOverview ? (
-          <OverviewStep answers={answers} lang={lang} onGoToChat={handleAskClaude} />
-        ) : (
-          <div className={styles.sections}>
-            {currentStep.sections.map(section => {
-              if (section.condition && !section.condition(answers)) return null;
-              return (
-                <div key={section.id} className={styles.section}>
-                  <h2 className={styles.sectionTitle}>{t3(section.title, lang)}</h2>
-                  {section.fields.map(field => {
-                    if (field.condition && !field.condition(answers)) return null;
-                    return (
-                      <FieldRow
-                        key={field.id}
-                        field={field}
-                        lang={lang}
-                        value={answers[field.id]}
-                        onChange={setAnswer}
-                        onAskClaude={handleAskClaude}
-                      />
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-        )}
+        <div className="flex-1 px-10 pb-6">
+          {isOverview ? (
+            <OverviewStep answers={answers} lang={lang} onGoToChat={handleAskClaude} />
+          ) : (
+            <div className="flex flex-col gap-8">
+              {currentStep.sections.map(section => {
+                if (section.condition && !section.condition(answers)) return null;
+                return (
+                  <div key={section.id}>
+                    <h2 className="text-[13px] font-bold tracking-widest uppercase text-[var(--text)] opacity-50 mb-4">
+                      {t3(section.title, lang)}
+                    </h2>
+                    {section.fields.map(field => {
+                      if (field.condition && !field.condition(answers)) return null;
+                      return (
+                        <FieldRow
+                          key={field.id}
+                          field={field}
+                          lang={lang}
+                          value={answers[field.id]}
+                          onChange={setAnswer}
+                          onAskClaude={handleAskClaude}
+                        />
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Navigation */}
         {!isOverview && (
-          <div className={styles.nav}>
-            <button className={styles.navBack} onClick={goPrev} disabled={stepIdx === 0}>
+          <div className="flex justify-between items-center px-10 py-6 border-t border-[var(--border)]">
+            <button
+              className="px-5 py-2.5 rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] font-[inherit] text-sm cursor-pointer hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              onClick={goPrev} disabled={stepIdx === 0}
+            >
               ← {lang === "nl" ? "Vorige" : lang === "fa" ? "قبلی" : "Back"}
             </button>
-            <button className={styles.navNext} onClick={goNext}>
+            <button
+              className="px-6 py-2.5 rounded-lg border-none bg-[var(--accent)] text-white font-[inherit] text-sm font-medium cursor-pointer hover:opacity-85 transition-opacity"
+              onClick={goNext}
+            >
               {isLast
                 ? (lang === "nl" ? "Overzicht" : lang === "fa" ? "خلاصه" : "Overview")
                 : (lang === "nl" ? "Volgende" : lang === "fa" ? "بعدی" : "Next")}

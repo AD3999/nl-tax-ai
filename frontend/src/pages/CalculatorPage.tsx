@@ -1,63 +1,47 @@
 import { useState } from "react";
 import { calculateTax } from "../api/calculator";
 import type { CalcInput, CalcResult } from "../api/calculator";
-import s from "./CalculatorPage.module.css";
 
 type UserType = "zzp" | "employee" | "expat" | "dga";
 
-const EUR = (n: number) => "€ " + n.toLocaleString("nl-NL");
+const EUR = (n: number) => "€ " + n.toLocaleString("nl-NL");
 const PCT = (n: number) => (n * 100).toFixed(1) + "%";
 
 const DBA_COLOR: Record<string, string> = {
-  high: "#dc2626",
-  medium: "#ca8a04",
-  low: "#16a34a",
-  "n/a": "#6b7280",
+  high: "#dc2626", medium: "#ca8a04", low: "#16a34a", "n/a": "#6b7280",
 };
 
-function Field({
-  label, value, onChange, placeholder,
-}: {
+const inputCls = "px-3 py-2.5 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-[var(--text-h)] font-[inherit] text-sm w-full outline-none transition focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-bg)] box-border placeholder:opacity-45";
+const labelCls = "text-[13px] font-semibold text-[var(--text-h)]";
+
+function Field({ label, value, onChange, placeholder }: {
   label: string; value: string; onChange: (v: string) => void; placeholder?: string;
 }) {
   return (
-    <div className={s.field}>
-      <label className={s.label}>{label}</label>
-      <input
-        type="number"
-        className={s.input}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        min="0"
-      />
+    <div className="flex flex-col gap-1.5">
+      <label className={labelCls}>{label}</label>
+      <input type="number" className={inputCls} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} min="0" />
     </div>
   );
 }
 
-function Check({
-  label, checked, onChange,
-}: {
+function Check({ label, checked, onChange }: {
   label: string; checked: boolean; onChange: (v: boolean) => void;
 }) {
   return (
-    <div className={s.checkField}>
-      <input
-        type="checkbox"
-        id={label}
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-      />
-      <label htmlFor={label} className={s.label}>{label}</label>
+    <div className="flex items-center gap-2.5 pt-6">
+      <input type="checkbox" id={label} checked={checked} onChange={(e) => onChange(e.target.checked)} className="w-4 h-4 cursor-pointer accent-[var(--accent)]" />
+      <label htmlFor={label} className={labelCls}>{label}</label>
     </div>
   );
 }
 
-function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+function Row({ label, value, bold, sep }: { label?: string; value?: string; bold?: boolean; sep?: boolean }) {
+  if (sep) return <tr><td colSpan={2} className="py-1 border-t border-[var(--border)]" /></tr>;
   return (
-    <tr className={bold ? s.rowBold : undefined}>
-      <td>{label}</td>
-      <td>{value}</td>
+    <tr className={bold ? "text-[var(--text-h)] font-semibold" : undefined}>
+      <td className="py-1.5 text-sm text-[var(--text)] align-top">{label}</td>
+      <td className="py-1.5 text-[13px] text-right font-mono whitespace-nowrap align-top">{value}</td>
     </tr>
   );
 }
@@ -65,22 +49,11 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
 type FormState = Record<string, string | boolean>;
 
 const DEFAULT_FORM: FormState = {
-  annual_revenue_zzp: "",
-  employment_income: "",
-  business_expenses: "",
-  hours_per_year: "",
-  is_starter: false,
-  has_partner: false,
-  partner_income: "",
-  children_under_12: "0",
-  net_assets_box3: "",
-  savings_fraction: "0",
-  box2_dividend: "",
-  pension_contribution: "",
-  kia_investments: "",
-  uses_30pct_ruling: false,
-  ruling_year: "1",
-  single_client_percentage: "",
+  annual_revenue_zzp: "", employment_income: "", business_expenses: "",
+  hours_per_year: "", is_starter: false, has_partner: false, partner_income: "",
+  children_under_12: "0", net_assets_box3: "", savings_fraction: "0",
+  box2_dividend: "", pension_contribution: "", kia_investments: "",
+  uses_30pct_ruling: false, ruling_year: "1", single_client_percentage: "",
 };
 
 export default function CalculatorPage() {
@@ -100,8 +73,7 @@ export default function CalculatorPage() {
     setError(null);
     try {
       const input: CalcInput = {
-        user_type: userType,
-        year: 2026,
+        user_type: userType, year: 2026,
         annual_revenue_zzp: userType === "zzp" ? num("annual_revenue_zzp") ?? null : null,
         employment_income: userType !== "zzp" ? num("employment_income") ?? null : null,
         business_expenses: num("business_expenses") ?? 0,
@@ -135,25 +107,28 @@ export default function CalculatorPage() {
   const r = result?.result;
 
   return (
-    <div className={s.page}>
-      <div className={s.header}>
-        <span className={s.badge}>Phase 3</span>
-        <h1 className={s.title}>Tax Calculator 2026</h1>
-        <p className={s.subtitle}>
-          Deterministic Dutch income tax — all values from verified 2026 rules.
-          Try it with your own numbers.
+    <div className="max-w-[860px] mx-auto px-12 py-12 pb-24 flex flex-col gap-8">
+      <div className="flex flex-col gap-2.5">
+        <span className="text-[11px] font-bold tracking-widest uppercase text-[var(--accent)]">Phase 3</span>
+        <h1 className="text-4xl font-semibold text-[var(--text-h)] m-0 -tracking-wide leading-tight">Tax Calculator 2026</h1>
+        <p className="text-[15px] text-[var(--text)] leading-relaxed max-w-[620px] m-0">
+          Deterministic Dutch income tax — all values from verified 2026 rules. Try it with your own numbers.
         </p>
       </div>
 
-      <form className={s.form} onSubmit={handleSubmit}>
-        <div className={s.field}>
-          <label className={s.label}>User type</label>
-          <div className={s.pillRow}>
+      <form className="flex flex-col gap-5 p-7 bg-[var(--bg)] border border-[var(--border)] rounded-xl shadow-[var(--shadow)]" onSubmit={handleSubmit}>
+        {/* User type pills */}
+        <div className="flex flex-col gap-1.5">
+          <label className={labelCls}>User type</label>
+          <div className="flex gap-2 flex-wrap">
             {(["zzp", "employee", "expat", "dga"] as UserType[]).map((t) => (
               <button
-                key={t}
-                type="button"
-                className={[s.pill, userType === t ? s.pillActive : ""].join(" ")}
+                key={t} type="button"
+                className={`px-[18px] py-1.5 border rounded-3xl font-[inherit] text-[13px] font-semibold cursor-pointer transition-all tracking-wide ${
+                  userType === t
+                    ? "bg-[var(--accent)] border-[var(--accent)] text-white"
+                    : "bg-transparent border-[var(--border)] text-[var(--text)] hover:border-[var(--accent-border)] hover:text-[var(--text-h)]"
+                }`}
                 onClick={() => setUserType(t)}
               >
                 {t.toUpperCase()}
@@ -162,7 +137,7 @@ export default function CalculatorPage() {
           </div>
         </div>
 
-        <div className={s.grid}>
+        <div className="grid grid-cols-2 gap-4">
           {userType === "zzp" ? (
             <>
               <Field label="Annual revenue (€)" value={form.annual_revenue_zzp as string} onChange={(v) => set("annual_revenue_zzp", v)} placeholder="72000" />
@@ -199,47 +174,35 @@ export default function CalculatorPage() {
           )}
         </div>
 
-        {error && <pre className={s.error}>{error}</pre>}
+        {error && <pre className="p-3 px-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-[13px] font-mono whitespace-pre-wrap m-0">{error}</pre>}
 
-        <button type="submit" className={s.submitBtn} disabled={loading}>
-          {loading && <span className={s.spinner} />}
+        <button type="submit" className="inline-flex items-center gap-2.5 px-7 py-3 bg-[var(--accent)] text-white border-none rounded-lg font-[inherit] text-[15px] font-medium cursor-pointer self-start hover:opacity-85 disabled:opacity-45 disabled:cursor-not-allowed transition-opacity" disabled={loading}>
+          {loading && (
+            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full flex-shrink-0 animate-spin" />
+          )}
           {loading ? "Calculating…" : "Calculate"}
         </button>
       </form>
 
       {result && c && r && (
-        <div className={s.results}>
-          <div className={s.summaryRow}>
-            <div className={s.summaryCard}>
-              <div className={s.summaryLabel}>Total tax due</div>
-              <div className={s.summaryValue}>{EUR(r.total_tax_due)}</div>
-            </div>
-            <div className={s.summaryCard}>
-              <div className={s.summaryLabel}>Effective rate</div>
-              <div className={s.summaryValue}>{PCT(r.effective_rate)}</div>
-            </div>
-            {r.monthly_reserve_needed > 0 && (
-              <div className={s.summaryCard}>
-                <div className={s.summaryLabel}>Monthly reserve</div>
-                <div className={s.summaryValue}>{EUR(r.monthly_reserve_needed)}</div>
+        <div className="flex flex-col gap-4">
+          <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}>
+            {[
+              { label: "Total tax due", value: EUR(r.total_tax_due), color: undefined },
+              { label: "Effective rate", value: PCT(r.effective_rate), color: undefined },
+              ...(r.monthly_reserve_needed > 0 ? [{ label: "Monthly reserve", value: EUR(r.monthly_reserve_needed), color: undefined }] : []),
+              ...(r.wet_dba_risk !== "n/a" ? [{ label: "Wet DBA risk", value: r.wet_dba_risk.toUpperCase(), color: DBA_COLOR[r.wet_dba_risk] ?? "#6b7280" }] : []),
+            ].map((card) => (
+              <div key={card.label} className="p-4 px-5 border border-[var(--border)] rounded-xl bg-[var(--bg)] flex flex-col gap-1.5">
+                <div className="text-[11px] font-bold tracking-widest uppercase text-[var(--text)]">{card.label}</div>
+                <div className="text-3xl font-bold text-[var(--text-h)] -tracking-wide" style={card.color ? { color: card.color } : undefined}>{card.value}</div>
               </div>
-            )}
-            {r.wet_dba_risk !== "n/a" && (
-              <div className={s.summaryCard}>
-                <div className={s.summaryLabel}>Wet DBA risk</div>
-                <div
-                  className={s.summaryValue}
-                  style={{ color: DBA_COLOR[r.wet_dba_risk] ?? "#6b7280" }}
-                >
-                  {r.wet_dba_risk.toUpperCase()}
-                </div>
-              </div>
-            )}
+            ))}
           </div>
 
-          <div className={s.card}>
-            <div className={s.cardTitle}>Breakdown</div>
-            <table className={s.table}>
+          <div className="p-5 px-6 border border-[var(--border)] rounded-xl bg-[var(--bg)]">
+            <div className="text-[13px] font-bold tracking-widest uppercase text-[var(--text)] mb-4">Breakdown</div>
+            <table className="w-full border-collapse">
               <tbody>
                 <Row label="Gross revenue / income" value={EUR(c.gross_revenue)} />
                 {c.business_expenses > 0 && <Row label="Business expenses" value={`− ${EUR(c.business_expenses)}`} />}
@@ -249,9 +212,9 @@ export default function CalculatorPage() {
                 {c.kia_deduction > 0 && <Row label="KIA deduction" value={`− ${EUR(c.kia_deduction)}`} />}
                 {c.mkb_winstvrijstelling > 0 && <Row label="MKB-winstvrijstelling (12.7%)" value={`− ${EUR(c.mkb_winstvrijstelling)}`} />}
                 {c.pension_deduction > 0 && <Row label="Pension deduction" value={`− ${EUR(c.pension_deduction)}`} />}
-                <tr><td colSpan={2} className={s.sep} /></tr>
+                <Row sep />
                 <Row label="Taxable income (Box 1)" value={EUR(c.taxable_income_box1)} bold />
-                <tr><td colSpan={2} className={s.sep} /></tr>
+                <Row sep />
                 <Row label="Box 1 — bracket 1 (35.75%)" value={EUR(c.box1_tax_bracket1)} />
                 {c.box1_tax_bracket2 > 0 && <Row label="Box 1 — bracket 2 (37.07%)" value={EUR(c.box1_tax_bracket2)} />}
                 {c.box1_tax_bracket3 > 0 && <Row label="Box 1 — bracket 3 (49.50%)" value={EUR(c.box1_tax_bracket3)} />}
@@ -260,10 +223,10 @@ export default function CalculatorPage() {
                 {c.arbeidskorting > 0 && <Row label="Arbeidskorting" value={`− ${EUR(c.arbeidskorting)}`} />}
                 {c.iack > 0 && <Row label="IACK (working parents credit)" value={`− ${EUR(c.iack)}`} />}
                 <Row label="Income tax after credits" value={EUR(c.income_tax_after_credits)} bold />
-                {c.zvw_contribution > 0 && <Row label="ZVW contribution (5.32%)" value={EUR(c.zvw_contribution)} />}
+                {c.zvw_contribution > 0 && <Row label="ZVW contribution (4.85%)" value={EUR(c.zvw_contribution)} />}
                 {c.box2_tax > 0 && <Row label="Box 2 tax (dividend)" value={EUR(c.box2_tax)} />}
                 {c.box3_tax > 0 && <Row label="Box 3 tax (wealth)" value={EUR(c.box3_tax)} />}
-                <tr><td colSpan={2} className={s.sep} /></tr>
+                <Row sep />
                 <Row label="TOTAL TAX DUE" value={EUR(c.total_tax_due)} bold />
               </tbody>
             </table>

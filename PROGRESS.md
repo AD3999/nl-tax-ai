@@ -1,7 +1,7 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: May 2026 (Phase 9 simulation complete — all phases 1–9 done)
+> Last updated: May 2026 (Full Tailwind migration complete — all pages CSS-module-free)
 
 ---
 
@@ -746,6 +746,63 @@ Rules span 2025/2026/2027 with realistic Dutch tax data:
 ### TypeScript
 
 All files pass `npx tsc --noEmit` with `strict: true`, `noUnusedLocals: true`, `noUnusedParameters: true`, `verbatimModuleSyntax: true`.
+
+---
+
+---
+
+## Full Tailwind Migration ✅ Complete
+
+**Goal:** Remove all CSS Modules from the frontend; migrate every page to fully Tailwind-based styling. Extend mock tax rules to 50+ rules with trilingual user-facing questions. Rebuild ChatPage with card-based UX (no free-text input).
+
+### What was changed
+
+| File | Change |
+|------|--------|
+| `frontend/tailwind.config.js` | Expanded `content` to `"./src/**/*.{ts,tsx}"` (was admin-only); added brand color aliases, `slideUp`/`fadeIn` keyframes, `slide-up`/`fade-in` animation utilities |
+| `frontend/src/index.css` | Added `@tailwind base/components/utilities` globally at top; kept all CSS variables |
+| `frontend/src/styles/admin.css` | Removed duplicate `@tailwind` directives (now global); kept `.admin-root`, `.rtl-field`, `.admin-scrollbar` |
+| `frontend/src/lib/tax-rules/types.ts` | Added `user_facing_question_nl/en/fa` optional fields to `TaxRule` interface |
+| `frontend/src/lib/tax-rules/mock-data.ts` | Expanded from 28 → 50+ rules; added `user_facing_question_nl/en/fa` to all rules; new 2026 rules: KOT, KGB, REI, THW, EW, HYP, GIF, ZK, VOL, RES, EFF, ERF, VPB×2, BTW-2026-002 |
+| `frontend/src/pages/ChatPage.tsx` | Fully rewritten — card-based UX (Option 2): no free text input; question cards slide up in chat area with staggered animation; `RESULT_QUESTIONS` per user type (ZZP/employee/expat/DGA) × 3 languages; `askedQuestions` set tracks history; 10-message session limit; gate screen when no profile |
+| `frontend/src/pages/LandingPage.tsx` | Migrated to Tailwind; removed CSS module import |
+| `frontend/src/pages/LoginPage.tsx` | Migrated to Tailwind; removed CSS module import |
+| `frontend/src/pages/RegisterPage.tsx` | Migrated to Tailwind; removed CSS module import |
+| `frontend/src/pages/IntakePage.tsx` | Migrated to Tailwind; removed CSS module import |
+| `frontend/src/pages/CalculatorPage.tsx` | Migrated to Tailwind; removed CSS module import |
+| `frontend/src/pages/IBGuidePage.tsx` | Migrated to Tailwind; removed CSS module import; fixed `.catch(() => setFields([]))` bug |
+| `frontend/src/pages/SimulationPage.tsx` | Migrated to Tailwind; removed CSS module import; full two-column layout preserved |
+| `frontend/src/pages/Phase2Demo.tsx` | Migrated to Tailwind; removed CSS module import; doc-type/behavior badges now use semantic Tailwind color classes |
+| `frontend/src/App.tsx` | Nav fully migrated to Tailwind; extracted `NavItem` component; removed all inline `style={{}}` objects |
+
+### Deleted files
+
+All orphaned CSS module files removed:
+- `src/App.css`
+- `src/pages/ChatPage.module.css`
+- `src/pages/LandingPage.module.css`
+- `src/pages/LoginPage.module.css`
+- `src/pages/RegisterPage.module.css`
+- `src/pages/IntakePage.module.css`
+- `src/pages/CalculatorPage.module.css`
+- `src/pages/IBGuidePage.module.css`
+- `src/pages/SimulationPage.module.css`
+- `src/pages/Phase2Demo.module.css`
+
+### ChatPage card UX (Option 2)
+
+- Cards live **inside the chat area**, not a sidebar — they slide up with `animate-slide-up` staggered by `animationDelay: i * 60ms`
+- Empty state: 6 cards shown; after first exchange: 4 remaining unasked cards shown
+- `RESULT_QUESTIONS` — 10 ZZP questions, 8 employee, 6 expat, 6 DGA; all in NL/EN/FA
+- `askedQuestions: Set<string>` — already-asked cards filtered out
+- `showCards: boolean` — hidden during loading, shown 300ms after AI responds
+- No free-text input at all — all interaction via question cards
+- Profile gate: if no `taxwijs_calc_input` in localStorage, shows CTA to `/intake`
+- Session counter shown; "Clear" button resets conversation
+
+### TypeScript
+
+All files pass `npx tsc --noEmit` with strict mode (`noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`).
 
 ---
 

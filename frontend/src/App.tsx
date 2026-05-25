@@ -13,7 +13,6 @@ const LandingPage     = lazy(() => import("./pages/LandingPage"));
 const LoginPage       = lazy(() => import("./pages/LoginPage"));
 const RegisterPage    = lazy(() => import("./pages/RegisterPage"));
 
-// Admin pages — lazy-loaded, scoped Tailwind via AdminLayout
 const AdminDashboard        = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminRulesPage        = lazy(() => import("./pages/admin/AdminRulesPage"));
 const AdminRuleEditorPage   = lazy(() => import("./pages/admin/AdminRuleEditorPage"));
@@ -21,14 +20,22 @@ const AdminCalcPreviewPage  = lazy(() => import("./pages/admin/AdminCalculatorPr
 const AdminRAGPreviewPage   = lazy(() => import("./pages/admin/AdminRAGPreviewPage"));
 const AdminSettingsPage     = lazy(() => import("./pages/admin/AdminSettingsPage"));
 
-const navLinkStyle = ({ isActive }: { isActive: boolean }) => ({
-  padding: "6px 12px",
-  borderRadius: "6px",
-  fontSize: "14px",
-  textDecoration: "none",
-  color: isActive ? "var(--accent)" : "var(--text)",
-  background: isActive ? "var(--accent-bg)" : "transparent",
-});
+function NavItem({ to, children }: { to: string; children: React.ReactNode }) {
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        `px-3 py-1.5 rounded-md text-[14px] no-underline transition-colors ${
+          isActive
+            ? "bg-[var(--accent-bg)] text-[var(--accent)]"
+            : "text-[var(--text)] hover:text-[var(--text-h)]"
+        }`
+      }
+    >
+      {children}
+    </NavLink>
+  );
+}
 
 function App() {
   const { t, i18n } = useTranslation();
@@ -42,44 +49,29 @@ function App() {
 
   return (
     <div dir={i18n.language === "fa" ? "rtl" : "ltr"}>
-      <nav style={{
-        padding: "0 48px",
-        borderBottom: "1px solid var(--border)",
-        display: "flex",
-        alignItems: "center",
-        gap: "4px",
-        height: "52px",
-      }}>
-        <NavLink to="/" style={{ marginRight: "12px", textDecoration: "none" }}>
-          <strong style={{ color: "var(--text-h)", fontSize: "15px" }}>
-            {t("app_name")}
-          </strong>
+      <nav className="px-12 border-b border-[var(--border)] flex items-center gap-1 h-[52px]">
+        <NavLink to="/" className="mr-3 no-underline">
+          <strong className="text-[var(--text-h)] text-[15px]">{t("app_name")}</strong>
         </NavLink>
 
-        <NavLink to="/chat" style={navLinkStyle}>{t("nav.chat")}</NavLink>
-        <NavLink to="/calculator" style={navLinkStyle}>Calculator</NavLink>
-        <NavLink to="/ib-guide" style={navLinkStyle}>{t("ib.nav")}</NavLink>
-        <NavLink to="/simulation" style={navLinkStyle}>{t("nav.simulation")}</NavLink>
+        <NavItem to="/chat">{t("nav.chat")}</NavItem>
+        <NavItem to="/calculator">Calculator</NavItem>
+        <NavItem to="/ib-guide">{t("ib.nav")}</NavItem>
+        <NavItem to="/simulation">{t("nav.simulation")}</NavItem>
         {user?.is_admin && (
-          <NavLink to="/admin" style={{ ...navLinkStyle({ isActive: false }), marginLeft: "8px", border: "1px solid var(--border)", borderRadius: "6px" }}>
+          <NavLink
+            to="/admin"
+            className="px-3 py-1.5 ml-2 rounded-md border border-[var(--border)] text-[14px] no-underline text-[var(--text)] hover:text-[var(--text-h)] transition-colors"
+          >
             Admin
           </NavLink>
         )}
 
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="ml-auto flex items-center gap-2">
           <select
             value={i18n.language}
             onChange={e => { i18n.changeLanguage(e.target.value); localStorage.setItem("lang", e.target.value); }}
-            style={{
-              padding: "5px 8px",
-              border: "1px solid var(--border)",
-              borderRadius: "6px",
-              background: "var(--bg)",
-              color: "var(--text)",
-              font: "inherit",
-              fontSize: "13px",
-              cursor: "pointer",
-            }}
+            className="px-2 py-[5px] border border-[var(--border)] rounded-md bg-[var(--bg)] text-[var(--text)] font-[inherit] text-[13px] cursor-pointer outline-none"
           >
             <option value="nl">NL</option>
             <option value="en">EN</option>
@@ -88,31 +80,22 @@ function App() {
 
           {user ? (
             <>
-              <span style={{ fontSize: "13px", color: "var(--text)", maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span className="text-[13px] text-[var(--text)] max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap">
                 {user.email}
               </span>
               <button
                 onClick={handleLogout}
-                style={{
-                  padding: "5px 12px",
-                  border: "1px solid var(--border)",
-                  borderRadius: "6px",
-                  background: "transparent",
-                  color: "var(--text)",
-                  font: "inherit",
-                  fontSize: "13px",
-                  cursor: "pointer",
-                }}
+                className="px-3 py-[5px] border border-[var(--border)] rounded-md bg-transparent text-[var(--text)] font-[inherit] text-[13px] cursor-pointer hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors"
               >
                 {t("nav.logout")}
               </button>
             </>
           ) : (
             <>
-              <NavLink to="/login" style={navLinkStyle}>{t("nav.login")}</NavLink>
+              <NavItem to="/login">{t("nav.login")}</NavItem>
               <NavLink
                 to="/register"
-                style={{ ...navLinkStyle({ isActive: false }), background: "var(--accent)", color: "#fff", fontWeight: 600 }}
+                className="px-3 py-1.5 rounded-md bg-[var(--accent)] text-white text-[14px] font-semibold no-underline hover:opacity-85 transition-opacity"
               >
                 {t("auth.register")}
               </NavLink>
@@ -121,7 +104,7 @@ function App() {
         </div>
       </nav>
 
-      <Suspense fallback={<div style={{ padding: "3rem", textAlign: "center", color: "var(--text)" }}>Loading…</div>}>
+      <Suspense fallback={<div className="p-12 text-center text-[var(--text)] opacity-50">Loading…</div>}>
         <Routes>
           <Route path="/"           element={<LandingPage />} />
           <Route path="/login"      element={<LoginPage />} />
@@ -132,7 +115,6 @@ function App() {
           <Route path="/calculator" element={<CalculatorPage />} />
           <Route path="/simulation" element={<SimulationPage />} />
           <Route path="/phase2"     element={<Phase2Demo />} />
-          {/* Admin — no nested layout wrapper needed; each page uses AdminLayout */}
           <Route path="/admin"                        element={<AdminDashboard />} />
           <Route path="/admin/rules"                  element={<AdminRulesPage />} />
           <Route path="/admin/rules/new"              element={<AdminRuleEditorPage />} />

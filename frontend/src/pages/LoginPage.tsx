@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import { login } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 import { fetchProfile } from "../api/auth";
-import styles from "./LoginPage.module.css";
+
+const inputCls = "w-full px-3 py-2.5 border border-[var(--border)] rounded-lg bg-[var(--bg)] text-[var(--text-h)] font-[inherit] text-[15px] outline-none transition-colors focus:border-[var(--accent)]";
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -33,45 +34,31 @@ export default function LoginPage() {
   }
 
   return (
-    <main className={styles.page}>
-      <div className={styles.card}>
-        <h1 className={styles.title}>{t("auth.login")}</h1>
+    <main className="min-h-[calc(100svh-52px)] flex items-center justify-center p-8">
+      <div className="w-full max-w-sm bg-[var(--bg)] border border-[var(--border)] rounded-xl p-10 shadow-[var(--shadow)]">
+        <h1 className="text-2xl font-bold text-[var(--text-h)] m-0 mb-7 text-center">{t("auth.login")}</h1>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <label className={styles.label}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <label className="flex flex-col gap-1.5 text-sm text-[var(--text)]">
             {t("auth.email")}
-            <input
-              type="email"
-              className={styles.input}
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              autoComplete="email"
-            />
+            <input type="email" className={inputCls} value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
           </label>
 
-          <label className={styles.label}>
+          <label className="flex flex-col gap-1.5 text-sm text-[var(--text)]">
             {t("auth.password")}
-            <input
-              type="password"
-              className={styles.input}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-            />
+            <input type="password" className={inputCls} value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" />
           </label>
 
-          {error && <p className={styles.error}>{error}</p>}
+          {error && <p className="text-sm text-red-500 m-0">{error}</p>}
 
-          <button type="submit" className={styles.btn} disabled={loading}>
+          <button type="submit" className="mt-1 py-2.5 px-4 bg-[var(--accent)] text-white border-none rounded-lg font-[inherit] text-[15px] font-semibold cursor-pointer hover:opacity-85 disabled:opacity-60 disabled:cursor-not-allowed transition-opacity" disabled={loading}>
             {loading ? "…" : t("auth.login")}
           </button>
         </form>
 
-        <p className={styles.switch}>
+        <p className="mt-6 text-center text-sm text-[var(--text)] m-0">
           {t("auth.no_account")}{" "}
-          <Link to="/register">{t("auth.register")}</Link>
+          <Link to="/register" className="text-[var(--accent)] font-semibold no-underline">{t("auth.register")}</Link>
         </p>
       </div>
     </main>

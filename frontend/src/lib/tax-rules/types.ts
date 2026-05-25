@@ -85,6 +85,9 @@ export interface TaxRule {
   supersedes?: string;
   created_at: string;
   updated_at: string;
+  user_facing_question_nl?: string;
+  user_facing_question_en?: string;
+  user_facing_question_fa?: string;
 }
 
 export interface AuditEntry {
