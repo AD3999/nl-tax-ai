@@ -10,17 +10,27 @@ const API_BASE = import.meta.env.VITE_API_URL
  * `onToken` is called for each text token as it arrives.
  * Returns when the stream is complete or the AbortSignal fires.
  */
+export interface TokenMeta {
+  upgrade_required?: boolean;
+  reason?: string;
+  limit?: number;
+}
+
 export async function sendMessage(
   message: string,
   conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
-  onToken: (token: string) => void,
+  onToken: (token: string, meta?: TokenMeta) => void,
   signal?: AbortSignal,
   userProfile?: Record<string, unknown>,
   sessionMessageCount = 0,
 ): Promise<void> {
+  const token = localStorage.getItem("access_token");
   const response = await fetch(`${API_BASE}/chat/message/`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify({
       message,
       conversation_history: conversationHistory,
@@ -48,13 +58,14 @@ export async function sendMessage(
 
     for (const line of lines) {
       if (!line.startsWith("data: ")) continue;
-      let data: { text?: string; done?: boolean; error?: string };
+      let data: { text?: string; done?: boolean; error?: string; upgrade_required?: boolean; reason?: string; limit?: number };
       try {
         data = JSON.parse(line.slice(6));
       } catch {
-        continue; // skip malformed JSON lines
+        continue;
       }
-      if (data.error) throw new Error(data.error); // surfaces to outer catch
+      if (data.error) throw new Error(data.error);
+      if (data.upgrade_required) { onToken("", { upgrade_required: true, reason: data.reason, limit: data.limit }); return; }
       if (data.text) onToken(data.text);
     }
   }

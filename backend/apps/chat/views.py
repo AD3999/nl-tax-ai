@@ -1,6 +1,8 @@
 import json
 import os
+from datetime import date
 
+from django.conf import settings
 from django.http import StreamingHttpResponse
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -10,7 +12,8 @@ from .models import Conversation
 from .serializers import AskSerializer, ChatMessageSerializer, ConversationSerializer
 from .tasks import generate_response
 
-MAX_SESSION_MESSAGES = 10  # Claude calls per session; raise this for paid users later
+ANON_SESSION_LIMIT = getattr(settings, "ANON_SESSION_LIMIT", 5)
+FREE_DAILY_LIMIT = getattr(settings, "FREE_DAILY_LIMIT", 10)
 
 # Strict prompt: Claude is a results-interpreter ONLY, not a general assistant.
 # All factual content comes from the calculator engine and verified rules — not Claude's knowledge.
@@ -78,18 +81,28 @@ class ChatMessageView(APIView):
                 yield f"data: {json.dumps({'done': True})}\n\n"
             return StreamingHttpResponse(stream_no_profile(), content_type="text/event-stream")
 
-        # Guard 2: Session limit reached → refuse without calling Claude
-        if session_count >= MAX_SESSION_MESSAGES:
-            def stream_limit():
-                msgs = {
-                    "nl": f"U heeft het maximum van {MAX_SESSION_MESSAGES} vragen voor deze sessie bereikt. Update uw profiel om een nieuwe sessie te starten.",
-                    "en": f"You have reached the limit of {MAX_SESSION_MESSAGES} questions for this session. Update your profile to start a new session.",
-                    "fa": f"شما به حداکثر {MAX_SESSION_MESSAGES} سوال در این جلسه رسیده‌اید.",
-                }
-                lang = "en" if any(c.isascii() and c.isalpha() for c in message[:20]) else "nl"
-                yield f"data: {json.dumps({'text': msgs.get(lang, msgs['nl'])})}\n\n"
-                yield f"data: {json.dumps({'done': True})}\n\n"
-            return StreamingHttpResponse(stream_limit(), content_type="text/event-stream")
+        # Guard 2: Usage limits — differs by auth state and plan
+        if request.user.is_authenticated:
+            user = request.user
+            if user.plan != "premium":
+                today = date.today()
+                if user.daily_message_date != today:
+                    user.daily_message_count = 0
+                    user.daily_message_date = today
+                if user.daily_message_count >= FREE_DAILY_LIMIT:
+                    def stream_daily_limit():
+                        yield f"data: {json.dumps({'upgrade_required': True, 'reason': 'daily_limit', 'limit': FREE_DAILY_LIMIT})}\n\n"
+                        yield f"data: {json.dumps({'done': True})}\n\n"
+                    return StreamingHttpResponse(stream_daily_limit(), content_type="text/event-stream")
+                user.daily_message_count += 1
+                user.save(update_fields=["daily_message_count", "daily_message_date"])
+        else:
+            # Anonymous users: session-based limit enforced by frontend count
+            if session_count >= ANON_SESSION_LIMIT:
+                def stream_anon_limit():
+                    yield f"data: {json.dumps({'upgrade_required': True, 'reason': 'session_limit', 'limit': ANON_SESSION_LIMIT})}\n\n"
+                    yield f"data: {json.dumps({'done': True})}\n\n"
+                return StreamingHttpResponse(stream_anon_limit(), content_type="text/event-stream")
 
         api_key = os.environ.get("ANTHROPIC_API_KEY", "")
 

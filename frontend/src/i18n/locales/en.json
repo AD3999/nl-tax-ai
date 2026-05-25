@@ -5,6 +5,7 @@
     "chat": "Ask a question",
     "calculator": "Calculate tax",
     "simulation": "Return Simulation",
+    "pricing": "Pricing",
     "profile": "Profile",
     "login": "Log in",
     "logout": "Log out"
@@ -29,7 +30,9 @@
     "update_profile": "Update profile",
     "update_profile_btn": "Update profile",
     "setup_profile": "Set up your profile for personalised answers",
-    "session_count": "{{used}} / {{max}} questions used",
+    "session_count": "{{used}} / {{max}} questions this session",
+    "daily_count": "{{used}} / {{max}} questions today",
+    "upgrade_cta": "Upgrade",
     "session_limit_placeholder": "Session limit reached — update your profile to restart",
     "session_limit_msg": "You have reached the limit of {{max}} questions for this session. Update your profile to start a new session.",
     "gate_title": "Complete your tax profile first",
@@ -133,5 +136,38 @@
     "show_less": "Show less",
     "ai_hint_label": "AI instruction",
     "cascade_label": "cascade"
+  },
+  "upgrade": {
+    "headline_session": "You've used all your free questions",
+    "headline_daily": "Daily limit reached",
+    "headline_register": "Create a free account",
+    "subheadline_register": "Register for free to get 10 questions per day. Upgrade to Premium for unlimited access.",
+    "subheadline_upgrade": "Upgrade to Premium for unlimited questions and the full simulation.",
+    "month": "month",
+    "cta_register": "Create free account",
+    "cta_upgrade": "Upgrade to Premium — €9.99/month",
+    "maybe_later": "Maybe later",
+    "error": "Something went wrong. Please try again."
+  },
+  "pricing": {
+    "badge": "Plans",
+    "headline": "Simple, honest pricing",
+    "subheadline": "Start for free. Upgrade when you need unlimited access to your Dutch tax assistant.",
+    "free_label": "Free",
+    "premium_label": "Premium",
+    "month": "month",
+    "popular": "Most popular",
+    "free_cta": "Start for free",
+    "cta_register": "Create free account",
+    "cta_upgrade": "Upgrade to Premium",
+    "manage_billing": "Manage billing",
+    "current_plan": "Your current plan",
+    "faq_title": "Common questions",
+    "faq_1_q": "Can I cancel anytime?",
+    "faq_1_a": "Yes. Cancel from your billing portal and you keep access until the end of the billing period.",
+    "faq_2_q": "Is my tax data stored?",
+    "faq_2_a": "Your profile is stored locally in your browser. Conversations are not saved to our servers.",
+    "faq_3_q": "What payment methods are accepted?",
+    "faq_3_a": "All major credit and debit cards via Stripe. iDEAL available for Dutch bank accounts."
   }
 }

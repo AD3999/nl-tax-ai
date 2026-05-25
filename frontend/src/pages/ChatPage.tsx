@@ -3,8 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { useTranslation } from "react-i18next";
 import { sendMessage } from "../api/chat";
+import { useAuth } from "../context/AuthContext";
+import UpgradeModal from "../components/UpgradeModal";
 
-const MAX_SESSION_MESSAGES = 10;
+const ANON_SESSION_LIMIT = 5;
 
 interface ChatMsg {
   id: string;
@@ -140,6 +142,7 @@ export default function ChatPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const lang = i18n.language as "nl" | "en" | "fa";
   const isRtl = lang === "fa";
 
@@ -148,6 +151,7 @@ export default function ChatPage() {
   const [sessionCount, setSessionCount] = useState(0);
   const [askedQuestions, setAskedQuestions] = useState<Set<string>>(new Set());
   const [showCards, setShowCards] = useState(true);
+  const [upgradeModal, setUpgradeModal] = useState<{ reason: "session_limit" | "daily_limit" | "register" } | null>(null);
 
   const [profile] = useState<Record<string, unknown> | null>(() => {
     try {
@@ -169,7 +173,7 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sessionLimitReached = sessionCount >= MAX_SESSION_MESSAGES;
+  const sessionLimitReached = !user && sessionCount >= ANON_SESSION_LIMIT;
   const userType = String(profile?.user_type ?? "zzp");
   const allQuestions = getQuestions(userType, lang);
   const remainingCards = allQuestions.filter((q) => !askedQuestions.has(q));
@@ -196,7 +200,15 @@ export default function ChatPage() {
       await sendMessage(
         question,
         history,
-        (token) => {
+        (token, meta) => {
+          if (meta?.upgrade_required) {
+            const reason = meta.reason === "daily_limit" ? "daily_limit"
+              : meta.reason === "session_limit" ? "session_limit"
+              : "register";
+            setUpgradeModal({ reason });
+            setMessages((prev) => prev.filter((m) => m.id !== assistantId));
+            return;
+          }
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantId ? { ...m, content: m.content + token } : m
@@ -262,6 +274,10 @@ export default function ChatPage() {
       style={{ height: "calc(100vh - 52px)" }}
       dir={isRtl ? "rtl" : "ltr"}
     >
+      {upgradeModal && (
+        <UpgradeModal reason={upgradeModal.reason} onClose={() => setUpgradeModal(null)} />
+      )}
+
       {/* Profile banner */}
       <div className="flex items-center justify-between bg-[var(--accent-bg)] border-b border-[var(--accent)] px-10 py-2 text-[13px] text-[var(--accent)] flex-shrink-0">
         <span>
@@ -270,11 +286,37 @@ export default function ChatPage() {
             income,
           })}
         </span>
-        <div className="flex items-center gap-4">
-          {/* Session counter */}
-          <span className={`text-[11px] ${sessionLimitReached ? "text-red-600 font-semibold" : "opacity-60"}`}>
-            {t("chat.session_count", { used: sessionCount, max: MAX_SESSION_MESSAGES })}
-          </span>
+        <div className="flex items-center gap-3">
+          {/* Plan badge / usage counter */}
+          {user?.plan === "premium" ? (
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[var(--accent)] text-white tracking-wide uppercase">
+              ⚡ Premium
+            </span>
+          ) : user ? (
+            <span className={`text-[11px] ${sessionLimitReached ? "text-red-600 font-semibold" : "opacity-60"}`}>
+              {t("chat.daily_count", { used: user.daily_message_count, max: 10 })}
+            </span>
+          ) : (
+            <span className={`text-[11px] ${sessionLimitReached ? "text-red-600 font-semibold" : "opacity-60"}`}>
+              {t("chat.session_count", { used: sessionCount, max: ANON_SESSION_LIMIT })}
+            </span>
+          )}
+          {!user && (
+            <button
+              className="text-[11px] font-semibold text-[var(--accent)] bg-none border-none cursor-pointer p-0 hover:opacity-70 transition-opacity font-[inherit]"
+              onClick={() => setUpgradeModal({ reason: "register" })}
+            >
+              {t("chat.upgrade_cta")} →
+            </button>
+          )}
+          {user && user.plan === "free" && (
+            <button
+              className="text-[11px] font-semibold text-[var(--accent)] bg-none border-none cursor-pointer p-0 hover:opacity-70 transition-opacity font-[inherit]"
+              onClick={() => navigate("/pricing")}
+            >
+              ⚡ {t("chat.upgrade_cta")}
+            </button>
+          )}
           <button
             className="bg-none border-none text-[var(--accent)] text-lg cursor-pointer opacity-70 hover:opacity-100 transition-opacity p-0 px-1 leading-none"
             onClick={() => navigate("/intake")}

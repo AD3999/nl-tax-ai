@@ -3,10 +3,18 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    is_admin = serializers.SerializerMethodField()
+
+    def get_is_admin(self, obj):
+        return obj.is_staff or obj.is_superuser
+
     class Meta:
         model = User
-        fields = ["id", "email", "username", "user_type", "preferred_language", "tax_year"]
-        read_only_fields = ["id", "email"]
+        fields = [
+            "id", "email", "username", "user_type", "preferred_language",
+            "tax_year", "plan", "daily_message_count", "daily_message_date", "is_admin",
+        ]
+        read_only_fields = ["id", "email", "plan", "daily_message_count", "daily_message_date", "is_admin"]
 
 
 class RegisterSerializer(serializers.ModelSerializer):

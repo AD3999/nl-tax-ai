@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "apps.tax",
     "apps.chat",
     "apps.calculator",
+    "apps.payments",
 ]
 
 MIDDLEWARE = [
@@ -135,6 +136,18 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Europe/Amsterdam"
+
+# ── Stripe ────────────────────────────────────────────────────────────────────
+
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
+STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
+STRIPE_PRICE_ID = env("STRIPE_PRICE_ID", default="")   # monthly premium price ID
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
+
+# ── Premium limits ────────────────────────────────────────────────────────────
+
+FREE_DAILY_LIMIT = 10       # questions/day for free authenticated users
+ANON_SESSION_LIMIT = 5      # questions/session for anonymous users
 
 # ── Internationalisation ──────────────────────────────────────────────────────
 

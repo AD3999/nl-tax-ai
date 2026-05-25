@@ -13,6 +13,7 @@ const LandingPage     = lazy(() => import("./pages/LandingPage"));
 const LoginPage       = lazy(() => import("./pages/LoginPage"));
 const RegisterPage    = lazy(() => import("./pages/RegisterPage"));
 
+const PricingPage       = lazy(() => import("./pages/PricingPage"));
 const AdminDashboard        = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminRulesPage        = lazy(() => import("./pages/admin/AdminRulesPage"));
 const AdminRuleEditorPage   = lazy(() => import("./pages/admin/AdminRuleEditorPage"));
@@ -58,6 +59,7 @@ function App() {
         <NavItem to="/calculator">Calculator</NavItem>
         <NavItem to="/ib-guide">{t("ib.nav")}</NavItem>
         <NavItem to="/simulation">{t("nav.simulation")}</NavItem>
+        <NavItem to="/pricing">{t("nav.pricing")}</NavItem>
         {user?.is_admin && (
           <NavLink
             to="/admin"
@@ -80,6 +82,9 @@ function App() {
 
           {user ? (
             <>
+              {user.plan === "premium" && (
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[var(--accent)] text-white tracking-wide">⚡ Premium</span>
+              )}
               <span className="text-[13px] text-[var(--text)] max-w-[140px] overflow-hidden text-ellipsis whitespace-nowrap">
                 {user.email}
               </span>
@@ -114,6 +119,7 @@ function App() {
           <Route path="/ib-guide"   element={<IBGuidePage />} />
           <Route path="/calculator" element={<CalculatorPage />} />
           <Route path="/simulation" element={<SimulationPage />} />
+          <Route path="/pricing"    element={<PricingPage />} />
           <Route path="/phase2"     element={<Phase2Demo />} />
           <Route path="/admin"                        element={<AdminDashboard />} />
           <Route path="/admin/rules"                  element={<AdminRulesPage />} />

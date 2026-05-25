@@ -806,12 +806,85 @@ All files pass `npx tsc --noEmit` with strict mode (`noUnusedLocals`, `noUnusedP
 
 ---
 
+---
+
+## Premium / Monetisation Layer ✅ Complete
+
+**Goal:** Free tier with daily limits, Premium tier at €9.99/month via Stripe, upgrade modal on limit hit, pricing page.
+
+### Tiers
+
+| Tier | Who | Limit | Gate |
+|------|-----|-------|------|
+| Anonymous | Not logged in | 5 questions / session | Register modal |
+| Free | Logged-in, plan=free | 10 questions / day | Upgrade modal |
+| Premium | Logged-in, plan=premium | Unlimited | — |
+
+### What was built
+
+**Backend:**
+
+| File | Change |
+|------|--------|
+| `backend/apps/users/models.py` | Added `plan` (free/premium), `stripe_customer_id`, `daily_message_count`, `daily_message_date` fields |
+| `backend/apps/users/migrations/0002_*` | Auto-migration for new fields |
+| `backend/apps/users/serializers.py` | Exposes `plan`, `daily_message_count`, `daily_message_date`, `is_admin` in profile response |
+| `backend/apps/payments/views.py` | `CreateCheckoutSessionView`, `BillingPortalView`, `StripeWebhookView` |
+| `backend/apps/payments/urls.py` | Routes: `create-checkout-session/`, `billing-portal/`, `webhook/` |
+| `backend/config/urls.py` | Registered `api/payments/` |
+| `backend/config/settings.py` | Added `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`, `FRONTEND_URL`, `FREE_DAILY_LIMIT=10`, `ANON_SESSION_LIMIT=5` |
+| `backend/apps/chat/views.py` | Replaced flat session limit with plan-aware guard: premium = unlimited, free = 10/day (server-side counter), anon = 5/session |
+| `backend/requirements.txt` | Added `stripe>=7.0.0` |
+| `.env.example` | Added Stripe keys + FRONTEND_URL |
+
+**Stripe webhook events handled:**
+- `checkout.session.completed` → set `plan=premium`, store `stripe_customer_id`
+- `customer.subscription.deleted` / `paused` → set `plan=free`
+- `customer.subscription.resumed` → set `plan=premium`
+
+**Frontend:**
+
+| File | Change |
+|------|--------|
+| `frontend/src/api/auth.ts` | Added `plan`, `daily_message_count`, `daily_message_date` to `AuthUser` |
+| `frontend/src/api/chat.ts` | Added JWT `Authorization` header to fetch; added `TokenMeta` interface; handles `upgrade_required` SSE event |
+| `frontend/src/api/payments.ts` | `createCheckoutSession()`, `createBillingPortalSession()` |
+| `frontend/src/components/UpgradeModal.tsx` | Modal with Free vs Premium comparison table, three trigger reasons (session_limit / daily_limit / register) |
+| `frontend/src/pages/PricingPage.tsx` | Full pricing page at `/pricing` — two plan cards, feature lists, FAQ |
+| `frontend/src/pages/ChatPage.tsx` | ⚡ Premium badge, daily counter for free users, session counter for anon, upgrade CTA link, UpgradeModal on limit hit |
+| `frontend/src/App.tsx` | Added `/pricing` route, `Pricing` nav link, ⚡ Premium badge in nav when `user.plan === 'premium'` |
+| All 3 i18n files | Added `upgrade.*` and `pricing.*` keys in NL/EN/FA; updated `session_count`, added `daily_count` + `upgrade_cta` |
+
+### Limit enforcement flow
+
+```
+SSE response → backend checks plan
+  premium user    → no limit, stream Claude
+  free user       → check daily_message_count vs FREE_DAILY_LIMIT
+                    if over → stream { upgrade_required: true, reason: "daily_limit" }
+                    else    → increment count, stream Claude
+  anon user       → check session_count from request body vs ANON_SESSION_LIMIT
+                    if over → stream { upgrade_required: true, reason: "session_limit" }
+                    else    → stream Claude
+
+Frontend parseSSE → detects upgrade_required
+  → removes pending assistant bubble
+  → shows UpgradeModal with correct reason
+```
+
+### Stripe setup (test mode)
+
+1. Create a product + monthly price in Stripe dashboard
+2. Add to `.env`: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`, `FRONTEND_URL`
+3. For local webhook testing: `stripe listen --forward-to localhost:8000/api/payments/webhook/`
+
+---
+
 ## What Comes Next
 
 | Item | Description |
 |------|-------------|
 | **Phase 11** | Connect admin to real Django backend — swap mock api.ts for fetch calls |
-| **Stripe integration** | Subscription plans, usage limits, /pricing page |
 | **SEO pages** | Django templates for landing + tax guide pages (server-rendered for Google indexing) |
 | **Proactive alerts** | Tax reminder engine — email/push notifications near deadlines |
 | **Annual maintenance** | Update tax rules each September for the new tax year |
