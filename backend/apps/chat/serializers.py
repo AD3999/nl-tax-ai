@@ -25,10 +25,13 @@ class AskSerializer(serializers.Serializer):
 
 
 class ChatMessageSerializer(serializers.Serializer):
-    message = serializers.CharField(max_length=2000)
+    # 400 chars is enough for any real question about your own tax results
+    message = serializers.CharField(max_length=400, min_length=1)
     user_profile = serializers.DictField(required=False, allow_null=True, default=None)
     conversation_history = serializers.ListField(
         child=serializers.DictField(),
         required=False,
         default=list,
+        max_length=20,   # keep last 10 turns max (20 items: 10 user + 10 assistant)
     )
+    session_message_count = serializers.IntegerField(required=False, default=0, min_value=0)

@@ -16,6 +16,7 @@ export async function sendMessage(
   onToken: (token: string) => void,
   signal?: AbortSignal,
   userProfile?: Record<string, unknown>,
+  sessionMessageCount = 0,
 ): Promise<void> {
   const response = await fetch(`${API_BASE}/chat/message/`, {
     method: "POST",
@@ -23,6 +24,7 @@ export async function sendMessage(
     body: JSON.stringify({
       message,
       conversation_history: conversationHistory,
+      session_message_count: sessionMessageCount,
       ...(userProfile ? { user_profile: userProfile } : {}),
     }),
     signal,

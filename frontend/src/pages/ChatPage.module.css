@@ -230,3 +230,78 @@
   padding: 0 40px 12px;
   margin: 0;
 }
+
+/* ── Session counter ── */
+.sessionCounter {
+  margin-top: auto;
+  padding: 8px 0 2px;
+}
+.sessionCountText {
+  font-size: 11px;
+  color: var(--text);
+  opacity: 0.55;
+}
+.sessionLimitHit {
+  font-size: 11px;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* ── Input meta row (char count + send button) ── */
+.inputMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.charCount {
+  font-size: 10px;
+  color: var(--text);
+  opacity: 0.4;
+}
+
+/* ── No-profile gate screen ── */
+.gateScreen {
+  margin: auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 440px;
+  padding: 40px 24px;
+}
+.gateIcon { font-size: 52px; }
+.gateTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
+}
+.gateSub {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0;
+  opacity: 0.8;
+}
+.gateBtn {
+  padding: 12px 32px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.gateBtn:hover { opacity: 0.85; }
+.gateNote {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.5;
+  margin: 0;
+}
