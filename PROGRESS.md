@@ -1,7 +1,7 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 26 May 2026 — Phase 11 UI redesign complete. Chat SSE fixed. Responsiveness added. Auth 401 fixed.
+> Last updated: 26 May 2026 — Phase 12 complete. Conversational chat intake, user dashboard, admin backend API, Docker production setup. Merged to master.
 
 ---
 
@@ -1069,11 +1069,136 @@ The Axios auto-refresh interceptor in `client.ts` does not apply because the SSE
 
 ---
 
+---
+
+## Phase 12 — Bug Fixes, Conversational Chat, Dashboard, Admin API, Docker ✅ Complete
+
+**All changes merged to `master` on 26 May 2026.**
+
+### Bug fixes
+
+| Bug | Root cause | Fix |
+|-----|-----------|-----|
+| **Hours per year field had no effect** | `IntakePage.tsx` line 211: `value=""` and `onChange={() => {}}` hardcoded — field was completely disconnected from state | Added `const [hours, setHours] = useState("1300")` and wired the `UnitInput` to it; `handleFinish` now uses `parseInt(hours) \|\| 1300` |
+| **Login invisible on mobile** | `TopNav` hid all nav links + the login `NavLink` when `isMobile` was true — only the Register button showed | Rewrote `TopNav` with a hamburger button that opens a fixed dropdown panel showing all nav links, Login, Register/Logout — all accessible on mobile |
+
+### Conversational chat intake
+
+**Problem:** The chatbot required users to complete the intake wizard before chatting. There was no free-text input — only pre-defined question cards.
+
+**What was built:**
+
+| File | Change |
+|------|--------|
+| `frontend/src/pages/ChatPage.tsx` | Full rewrite — added auto-resize `<textarea>` at bottom (always visible), removed hard profile gate, `INTAKE_GREETING` messages per language, `extractIntakeProfile()` parser for `[INTAKE_COMPLETE:{}]` SSE blocks, silent calculator call on profile extraction, result summary appended to chat message |
+| `frontend/src/api/chat.ts` | Added `intakeMode` parameter to `sendMessage()` — passed in request body as `intake_mode: boolean` |
+| `backend/apps/chat/serializers.py` | Added `intake_mode = BooleanField(required=False, default=False)`; increased `message` max_length to 800 |
+| `backend/apps/chat/views.py` | Added `INTAKE_SYSTEM_PROMPT` — 6-question structured intake via Claude (user type → income → expenses/hours → starter → partner/children → assets). Instructs Claude to output `[INTAKE_COMPLETE: {json}]` when done. When `intake_mode=True` and no profile, skips RAG + calculator and uses intake prompt instead |
+
+**New chat flow for users without a profile:**
+1. Bot greets in user's language and asks work type (ZZP / Employee / Expat / DGA)
+2. Asks income questions (max 6 total across the conversation)
+3. Claude outputs `[INTAKE_COMPLETE: {...}]` in its final intake message
+4. Frontend detects the JSON, saves to `localStorage`, silently POSTs to `/api/calculator/calculate/`, appends tax summary to the chat message
+5. Chat switches to result-explanation mode — question cards appear for follow-up
+
+### Navigation changes
+
+| Change | Detail |
+|--------|--------|
+| `/calculator` removed from user nav | Still accessible at the URL for devs/admins. Regular users interact via chat only |
+| Nav split by auth state | **Guests:** Chat · Pricing. **Logged-in:** Dashboard · Chat · IB Guide · Simulation · Pricing |
+| `nav.dashboard` i18n key added | NL: "Dashboard" · EN: "Dashboard" · FA: "داشبورد" |
+
+### User Dashboard (`/dashboard`)
+
+New page at `/dashboard` — only accessible to logged-in users (redirects to `/login` otherwise).
+
+| Section | Contents |
+|---------|----------|
+| Summary cards (4-up grid) | Total tax (accent bg), effective rate, monthly reserve, Wet DBA risk (ZZP only) — loaded from calculator via stored profile |
+| Quick actions | Ask assistant (`/chat`), Update profile (`/intake`), IB guide, Simulation |
+| Calculation history | Last 5 calculations from `GET /api/calculator/history/` — user type, year, date, total tax, effective rate |
+| Profile card | Displays user type, income, partner, children; edit button → `/intake` |
+| Upcoming deadlines | BTW Q1 (30 Apr), IB return (1 May), BTW Q2 (31 Jul), BTW Q3 (31 Oct) — colour-coded warn/ok |
+| Account card | Email, plan badge, Upgrade link for free users |
+
+### Admin backend — Tax Rules REST API
+
+**Problem:** Admin frontend was using in-memory mock data that was lost on page reload and had no persistence.
+
+| Item | Detail |
+|------|--------|
+| `TaxRule` Django model | Added to `backend/apps/tax/models.py` — mirrors Phase 1 JSON schema: `rule_id`, `year`, `topic`, `category`, `user_types`, `result_type/value/unit/formula`, `plain_nl/en/fa`, `ai_prompt_hint`, `source_url`, `verification_status`, `effective_from/until`, `supersedes`, audit fields |
+| Migration | `backend/apps/tax/migrations/0003_add_taxrule_model.py` — applied |
+| `import_from_json()` | Class method on `TaxRule` — reads Phase 1 seed JSON and `update_or_create` each rule. 28 rules now in DB |
+| REST API (staff only) | `GET/POST /api/tax/rules/` — list (with `?year=`, `?status=`, `?category=`, `?search=`) + create. `GET/PATCH/DELETE /api/tax/rules/{rule_id}/` — detail. `POST /api/tax/rules/import/` — re-import seed. `GET /api/tax/admin/stats/` — dashboard stats |
+| `IsStaffUser` permission | Custom DRF permission: `is_staff OR is_admin` |
+| Frontend `api.ts` | Rewrote `lib/tax-rules/api.ts` — real `fetch` calls to Django backend with mock data fallback. Maps Django field names ↔ frontend `TaxRule` type via `mapDjangoRule()` / `mapToPayload()` |
+
+### Docker & production setup
+
+| File | Purpose |
+|------|---------|
+| `Dockerfile.backend` | Python 3.12-slim + gunicorn; copies `backend/`, `phase1/`, `phase2/`; runs `docker-entrypoint.sh` |
+| `docker-entrypoint.sh` | Runs `migrate`, `collectstatic`, seeds tax rules from Phase 1 JSON if DB is empty, then starts gunicorn |
+| `Dockerfile.frontend` | Node 22 build stage → nginx alpine; accepts `VITE_API_URL` build arg |
+| `nginx.conf` | SPA `try_files`, `/api/` proxy to backend, `proxy_buffering off` for SSE streaming, 1-year cache for hashed assets |
+| `docker-compose.yml` | Services: `db` (pgvector/pg16, healthcheck), `backend` (depends on healthy db), `frontend` (nginx); named volumes for postgres data, chromadb, static files |
+| `.env.production.example` | All required env vars documented with comments |
+| `backend/config/settings.py` | Added `if not DEBUG:` production security block: `SECURE_PROXY_SSL_HEADER`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, `SECURE_HSTS_SECONDS=31536000`, `SECURE_HSTS_INCLUDE_SUBDOMAINS`, `SECURE_CONTENT_TYPE_NOSNIFF`, `X_FRAME_OPTIONS=DENY` |
+
+### Deploy with Docker
+
+```bash
+# 1. Clone repo and fill in environment
+cp .env.production.example .env
+# Edit .env — fill in POSTGRES_PASSWORD, DJANGO_SECRET_KEY,
+# ANTHROPIC_API_KEY, OPENAI_API_KEY, STRIPE_*, ALLOWED_HOSTS, FRONTEND_URL
+
+# 2. Start all services
+docker-compose up -d
+
+# 3. Create first admin user
+docker-compose exec backend python manage.py createsuperuser
+
+# 4. (Optional) Build the Phase 2 RAG index
+docker-compose exec backend python /app/phase2/build_index.py --provider openai
+```
+
+### Test results
+
+| Suite | Result |
+|-------|--------|
+| Django tests (`apps.calculator apps.chat`) | ✅ 50/50 pass |
+| TypeScript strict (`npx tsc --noEmit`) | ✅ 0 errors |
+
+---
+
+## Project Status — All Phases Complete ✅
+
+| Phase | Description | Branch | Status |
+|-------|-------------|--------|--------|
+| Phase 1 | Knowledge Base — 28 rules, 12 Q&A, 6 scenarios, 9 IB fields | master | ✅ |
+| Phase 2 | RAG Pipeline — ChromaDB, embeddings, retriever, assembler | master | ✅ |
+| Phase 3 | Tax Calculator Engine — deterministic 2026 Dutch tax | master | ✅ |
+| Phase 4 | AI Response Layer — Claude streaming via SSE | master | ✅ |
+| Phase 5 | User Intake Wizard — 3-step profile onboarding | master | ✅ |
+| Phase 6 | IB Return Guide — 9-field aangifte walkthrough | master | ✅ |
+| Phase 7 | Testing & QA — 50 automated tests | master | ✅ |
+| Phase 8 | Product Layer — landing page, auth, user accounts | master | ✅ |
+| Phase 9 | Aangifte IB Simulation — full branching, 11 steps | master | ✅ |
+| Phase 10 | Admin Tax Rules Dashboard — full CRUD, multi-year, audit log | master | ✅ |
+| Phase 11 | UI Redesign — sage/olive design system, all pages rebuilt | master | ✅ |
+| Phase 12 | Bug fixes, conversational chat, dashboard, admin API, Docker | master | ✅ |
+
+---
+
 ## Current State (26 May 2026)
 
 ### Branch
 
-`phase11-ui-redesign` — not yet merged to `master`
+`master` — all phases merged and pushed to GitHub (`289fd74`).
 
 ### Servers
 
@@ -1081,6 +1206,7 @@ The Axios auto-refresh interceptor in `client.ts` does not apply because the SSE
 |--------|---------|-----|
 | Django | `.venv\Scripts\python.exe backend/manage.py runserver` | `http://localhost:8000` |
 | Vite | `cd frontend && npm run dev` | `http://localhost:5173` |
+| Docker (prod) | `docker-compose up -d` | `http://localhost` |
 
 ### Environment (`.env` at project root)
 
@@ -1088,7 +1214,7 @@ Both `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` are set and confirmed working. `AN
 
 ### Database
 
-PostgreSQL (default `DATABASE_URL` in settings). Run migrations if the DB is fresh:
+PostgreSQL. The `TaxRule` table is seeded with all 28 Phase 1 rules. Run migrations on a fresh DB:
 ```bash
 .venv\Scripts\python.exe backend/manage.py migrate
 ```
@@ -1101,9 +1227,8 @@ All files pass `npx tsc --noEmit` with strict mode. No errors.
 
 | Item | Detail |
 |------|--------|
-| Phase 2 index | The ChromaDB at `phase2/.chromadb/` is empty (not yet built for the running server). RAG calls fall back to `"=== No tax context available ==="` silently. To build: `python phase2/build_index.py` |
-| Admin pages | `ui/src/screens/admin.jsx` has a new design but the admin pages (`/admin/*`) were NOT redesigned in Phase 11 — they still use the old Tailwind component library. Redesign is optional. |
-| `phase11-ui-redesign` merge | Not yet merged to `master`. Merge when the user is happy with the redesign. |
+| Phase 2 RAG index | ChromaDB at `phase2/chroma_db/` is empty unless built. RAG calls fall back to `"=== No tax context available ==="` silently. To build: `python phase2/build_index.py --provider local` (or `--provider openai`) |
+| Admin UI redesign | `ui/src/screens/admin.jsx` has a new design spec. Admin pages (`/admin/*`) still use the Phase 10 Tailwind component library. Redesign is optional — functionality works. |
 
 ---
 
@@ -1111,10 +1236,9 @@ All files pass `npx tsc --noEmit` with strict mode. No errors.
 
 | Item | Priority | Description |
 |------|----------|-------------|
-| **Merge phase11 → master** | 🔴 First | `git merge phase11-ui-redesign` into master, push |
-| **Admin UI redesign** | 🟡 Optional | Port admin pages to new design system (see `ui/src/screens/admin.jsx`) |
-| **Connect admin to real backend** | 🟡 Next | Swap mock `lib/tax-rules/api.ts` for real `fetch` calls to Django CRUD endpoints |
-| **Build Phase 2 RAG index** | 🟡 Next | `python phase2/build_index.py` — populates ChromaDB so chat gets real rule context |
+| **Build Phase 2 RAG index** | 🔴 High | `python phase2/build_index.py --provider openai` — gives chat real rule context |
+| **Deploy to VPS** | 🔴 High | Fill `.env.production.example`, `docker-compose up -d`, create superuser |
+| **Admin UI redesign** | 🟡 Optional | Port `/admin/*` pages to new sage design system (see `ui/src/screens/admin.jsx`) |
 | **SEO pages** | Later | Django templates for landing + tax guide pages (server-rendered for Google indexing) |
 | **Proactive alerts** | Later | Tax reminder engine — email/push notifications near deadlines |
-| **Annual maintenance** | September | Update tax rules each September for the new tax year |
+| **Annual maintenance** | September | Update tax rules each September for the new tax year via admin panel |
