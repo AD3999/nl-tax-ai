@@ -1,7 +1,7 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: May 2026 (Full Tailwind migration complete — all pages CSS-module-free)
+> Last updated: May 2026 — UI redesign task defined. Design files in `ui/`. All previous phases complete.
 
 ---
 
@@ -880,11 +880,117 @@ Frontend parseSSE → detects upgrade_required
 
 ---
 
+## UI Redesign — ⏳ Next Task
+
+**Goal:** Rebuild the entire frontend UI to match the designer's files in `ui/`. Complete visual rebrand from purple-on-white to sage/olive-green on warm cream paper.
+
+### Design files location
+
+```
+ui/
+├── TaxWijs UI.html          ← standalone HTML preview of all screens
+├── src/
+│   ├── tokens.css           ← full design token system (CSS custom properties)
+│   ├── components.jsx       ← shared components: Wordmark, TopNav, LangSwitch, Icon, MobileFrame, etc.
+│   └── screens/
+│       ├── landing.jsx      ← LandingPage (desktop + mobile)
+│       ├── chat.jsx         ← ChatPage (desktop + mobile, ProfileBar, AnswerCard, ChatCards)
+│       ├── intake.jsx       ← IntakePage (3-column wizard)
+│       ├── calculator.jsx   ← CalculatorPage (type selector, results, bracket bar, breakdown table)
+│       ├── ib-guide.jsx     ← IBGuidePage (progress strip, IBFieldCard with box badges)
+│       ├── simulation.jsx   ← SimulationPage (sidebar nav, step 4 content, step 11 overview)
+│       ├── pricing.jsx      ← PricingPage + UpgradeModal (desktop + mobile)
+│       ├── auth.jsx         ← LoginPage + RegisterPage (2-column split with editorial right panel)
+│       ├── admin.jsx        ← Admin dashboard + rules table
+│       └── system.jsx       ← Design system showcase (colors, type, buttons, tokens)
+```
+
+### New design system (from `ui/src/tokens.css`)
+
+**Brand color:** Sage / olive-green (`--sage-600` = primary) — replaces current purple `#aa3bff`
+
+**Color tokens (replace current vars in `index.css`):**
+```css
+--paper:       oklch(0.985 0.008 95)   /* warm cream page bg */
+--paper-2:     oklch(0.972 0.012 95)   /* card surface */
+--paper-3:     oklch(0.955 0.015 95)   /* nested surface */
+--paper-tint:  oklch(0.96 0.022 115)   /* green wash */
+--ink:         oklch(0.20 0.012 90)    /* headings, primary text */
+--ink-2:       oklch(0.36 0.012 90)    /* body */
+--ink-3:       oklch(0.52 0.010 90)    /* muted */
+--ink-4:       oklch(0.70 0.008 90)    /* hint / disabled */
+--hairline:    oklch(0.88 0.012 95)    /* dividers */
+--hairline-2:  oklch(0.82 0.014 95)    /* stronger dividers */
+--sage-500 through --sage-700          /* primary brand scale */
+--accent:      var(--sage-600)
+--accent-soft: oklch(0.95 0.045 115)   /* soft green bg */
+--accent-line: oklch(0.80 0.090 117)   /* green border */
+--ok:  oklch(0.55 0.13 150)   --warn: oklch(0.72 0.14 75)   --danger: oklch(0.58 0.18 25)
+```
+
+**Typography (3 fonts, load via Google Fonts):**
+- `--sans`: Geist — all UI text
+- `--serif`: Instrument Serif — all display headings (`h1`, `h2`, featured numbers)
+- `--mono`: JetBrains Mono — all numeric values, eyebrow labels, code
+
+**Component atoms (from tokens.css):**
+- `.eyebrow` — 10.5px mono, 0.14em letter-spacing, uppercase, `var(--ink-3)` — used everywhere as section labels
+- `.eyebrow-accent` — same but `var(--sage-700)`
+- `.font-serif` — switches element to Instrument Serif
+- `.font-mono` — switches element to JetBrains Mono + tabular nums
+- `.pill`, `.pill-accent`, `.pill-ok`, `.pill-warn`, `.pill-danger` — status badges
+- `.btn`, `.btn-primary`, `.btn-accent`, `.btn-ghost`, `.btn-soft` + `.btn-sm`/`.btn-lg` — button system
+- `.input` — standard text input (42px, focus ring in sage)
+- `.card` — `var(--paper-2)` bg, hairline border, `--r-lg` radius
+- `.grain` — hero section background with radial gradient overlays
+- `.dots` — dashed horizontal divider
+- `.hair`, `.hair-v` — 1px solid dividers
+
+### Shared components to create
+
+| Component | File | What it does |
+|-----------|------|-------------|
+| `Wordmark` | `components/Wordmark.tsx` | Shield SVG (sage-600 fill, white checkmark path) + Instrument Serif "TaxWijs" text |
+| `TopNav` | `components/TopNav.tsx` | Sticky 64px header: Wordmark + nav links (underline-active style) + LangSwitch + auth area |
+| `LangSwitch` | `components/LangSwitch.tsx` | NL / EN / FA pill toggle (paper-3 bg, ink active pill) |
+| `Icon` | `components/Icon.tsx` | arrow, check, x, spark, chev, edit, info, external — all as SVG functional components |
+
+### Pages to rebuild (10 pages)
+
+| Page | Key design features |
+|------|---------------------|
+| **LandingPage** | Grain hero section; 64px Instrument Serif headline with italic sage; live-answer card mockup with floating "NL" and "€ 24,310" chips; 4-column features grid (separated by hairline); proof table; footer CTA centered |
+| **ChatPage** | `ProfileBar` — sage-soft bg strip with user type avatar (colored square + glyph); `AnswerCard` — assistant avatar "T" circle, paper-2 card, "Your numbers" dashed panel, sources footer; `ChatCards` — 2×3 grid, slide-up animation on mount, eyebrow tag + question text + "Ask →" |
+| **IntakePage** | 3-column grid (320px sidebar · 1fr center card · 320px right panel); step list with filled/active circles; running estimate box in sidebar; dark ink card on right ("Why we ask"); `IntakeStep1` type grid 2×2; `IntakeStep2` unit-prefix inputs; `IntakeStep3` ToggleField / SelectField / NumField |
+| **CalculatorPage** | Type selector pills (ink bg when active); 2-column form + results; `SummaryCard` variants (primary=sage-100, ink=dark, warn, ok); bracket bar; full breakdown table with big serif total |
+| **IBGuidePage** | Progress bar strip (9 colored segments); `IBFieldCard` with BOX badge (color per box), mono field code, serif field title, warn pill for startersaftrek; common-mistakes expand; "Ask TaxWijs" btn-soft footer |
+| **SimulationPage** | Full-width progress bar (sage-600); 280px sidebar with dark step indicators; `SimSection` with eyebrow title + 2-col field grid; `SimField` with "Ask" button per field; step 11 big reveal card |
+| **PricingPage** | Serif headline "Free to try. €9.99 when you're ready."; free card (plain ghost btn); premium card (gradient bg, sage-300 border, shadow-lg, absolute "⚡ MOST PICKED" badge); `PricingList` with circle check icons; 4-item FAQ accordion |
+| **LoginPage** | 2-column split: form left (max-w 380, centered vertically) + grain right panel with today's tip quote + 3 stat boxes |
+| **RegisterPage** | Same 2-column shell; right panel shows type-specific benefit list that updates as user selects type |
+| **App.tsx / nav** | Replace current nav with `TopNav` component; 64px height; Wordmark; nav links use underline-active (not bg pill); `LangSwitch` in header |
+
+### Implementation approach
+
+- CSS custom properties handle all colors and typography — Tailwind handles layout/spacing
+- Keep all route paths, i18n keys, API calls, auth logic, and Stripe integration unchanged
+- Add Google Fonts import to `index.html` (not `index.css`) for best performance
+- Replace current CSS variables in `index.css` with new token set from `tokens.css`
+- Global `.eyebrow`, `.font-serif`, `.font-mono`, `.grain`, `.dots`, `.pill-*`, `.btn-*`, `.input`, `.card` atoms go in `index.css` under `@layer components`
+- Mobile responsive: use `md:` prefix for structural breakpoints
+
+### Branch
+
+Work on branch: `phase11-ui-redesign`
+
+---
+
 ## What Comes Next
 
-| Item | Description |
-|------|-------------|
-| **Phase 11** | Connect admin to real Django backend — swap mock api.ts for fetch calls |
-| **SEO pages** | Django templates for landing + tax guide pages (server-rendered for Google indexing) |
-| **Proactive alerts** | Tax reminder engine — email/push notifications near deadlines |
-| **Annual maintenance** | Update tax rules each September for the new tax year |
+| Item | Priority | Description |
+|------|----------|-------------|
+| **UI Redesign** | 🔴 Next | Rebuild all 10 pages to match `ui/` design files — see section above |
+| **Phase 11** | After UI | Connect admin to real Django backend — swap mock `api.ts` for fetch calls |
+| **SEO pages** | Later | Django templates for landing + tax guide pages (server-rendered for Google indexing) |
+| **Proactive alerts** | Later | Tax reminder engine — email/push notifications near deadlines |
+| **Annual maintenance** | September | Update tax rules each September for the new tax year |
