@@ -3,14 +3,13 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { createCheckoutSession } from "../api/payments";
 import { useAuth } from "../context/AuthContext";
+import { Icon } from "./Icon";
 
-const FEATURES = [
-  { free: "5 questions / session", premium: "Unlimited questions" },
-  { free: "Basic calculator", premium: "Full calculator + simulation" },
-  { free: "IB return guide", premium: "IB return guide" },
-  { free: "—", premium: "Saved conversation history" },
-  { free: "—", premium: "Priority responses" },
-  { free: "—", premium: "Cancel anytime" },
+const COMPARISON_ROWS = [
+  ["Chat questions",     "10/day", "∞"],
+  ["Full simulation",   "—",      "✓"],
+  ["Saved scenarios",   "1",      "∞"],
+  ["PDF export",         "—",      "✓"],
 ] as const;
 
 interface Props {
@@ -30,8 +29,8 @@ export default function UpgradeModal({ reason, onClose }: Props) {
 
   const headlineMap = {
     session_limit: t("upgrade.headline_session"),
-    daily_limit: t("upgrade.headline_daily"),
-    register: t("upgrade.headline_register"),
+    daily_limit:   t("upgrade.headline_daily"),
+    register:      t("upgrade.headline_register"),
   };
 
   const handleUpgrade = async () => {
@@ -51,61 +50,89 @@ export default function UpgradeModal({ reason, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md bg-[var(--bg)] border border-[var(--border)] rounded-2xl shadow-2xl flex flex-col gap-0 overflow-hidden animate-slide-up">
-        {/* Header */}
-        <div className="px-8 pt-8 pb-6 text-center">
-          <div className="w-12 h-12 rounded-full bg-[var(--accent-bg)] border border-[var(--accent)] flex items-center justify-center mx-auto mb-4">
-            <span className="text-xl">⚡</span>
-          </div>
-          <h2 className="text-xl font-bold text-[var(--text-h)] mb-2">
-            {headlineMap[reason] ?? headlineMap.session_limit}
-          </h2>
-          <p className="text-[14px] text-[var(--text)] opacity-70 leading-relaxed">
-            {isRegisterPrompt ? t("upgrade.subheadline_register") : t("upgrade.subheadline_upgrade")}
-          </p>
+    <div
+      style={{ position: "fixed", inset: 0, zIndex: 50, display: "grid", placeItems: "center", padding: 20, background: "rgba(20,18,14,0.40)", backdropFilter: "blur(4px)" }}
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="card" style={{ width: 440, padding: 28, borderRadius: "var(--r-xl)", boxShadow: "var(--shadow-lg)", animation: "cardIn .2s ease-out both" }}>
+        {/* Header row */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ width: 40, height: 40, borderRadius: 999, background: "var(--accent-soft)", color: "var(--sage-700)", display: "grid", placeItems: "center", fontSize: 18 }}>
+            ⚡
+          </span>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{ width: 28, height: 28, borderRadius: 999, border: "1px solid var(--hairline)", background: "var(--paper)", display: "grid", placeItems: "center", cursor: "pointer" }}
+          >
+            <Icon.x style={{ width: 11, height: 11 }} />
+          </button>
         </div>
 
-        {/* Feature comparison */}
-        <div className="mx-6 mb-6 border border-[var(--border)] rounded-xl overflow-hidden text-[13px]">
-          <div className="grid grid-cols-2 bg-[var(--border)]">
-            <div className="px-4 py-2 font-bold text-[var(--text)] opacity-60 uppercase tracking-widest text-[11px]">Free</div>
-            <div className="px-4 py-2 font-bold text-[var(--accent)] uppercase tracking-widest text-[11px] bg-[var(--accent-bg)]">Premium</div>
+        {/* Headline */}
+        <h2 style={{ marginTop: 18, fontFamily: "var(--serif)", fontSize: 28, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.015em", lineHeight: 1.15 }}>
+          {headlineMap[reason] ?? headlineMap.session_limit}
+        </h2>
+        <p style={{ marginTop: 8, color: "var(--ink-3)", fontSize: 13.5, lineHeight: 1.55 }}>
+          {isRegisterPrompt
+            ? t("upgrade.subheadline_register")
+            : t("upgrade.subheadline_upgrade")}
+        </p>
+
+        {/* Comparison table */}
+        <div style={{ marginTop: 18, padding: 14, background: "var(--paper-3)", borderRadius: "var(--r)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", fontSize: 11, color: "var(--ink-3)", fontFamily: "var(--mono)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+            <span />
+            <span style={{ textAlign: "center" }}>Free</span>
+            <span style={{ textAlign: "center", color: "var(--sage-700)" }}>Premium</span>
           </div>
-          {FEATURES.map((row, i) => (
-            <div key={i} className="grid grid-cols-2 border-t border-[var(--border)]">
-              <div className={`px-4 py-2.5 text-[var(--text)] ${row.free === "—" ? "opacity-30" : ""}`}>{row.free}</div>
-              <div className="px-4 py-2.5 text-[var(--text-h)] bg-[var(--accent-bg)] font-medium">{row.premium}</div>
+          {COMPARISON_ROWS.map(([k, a, b], i) => (
+            <div key={k} style={{ padding: "8px 0", borderTop: i === 0 ? "1px solid var(--hairline)" : "1px solid var(--hairline)", display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", alignItems: "center", fontSize: 13 }}>
+              <span style={{ color: "var(--ink-2)" }}>{k}</span>
+              <span className="num" style={{ textAlign: "center", color: "var(--ink-3)" }}>{a}</span>
+              <span className="num" style={{ textAlign: "center", color: "var(--sage-700)", fontWeight: 600 }}>{b}</span>
             </div>
           ))}
         </div>
 
         {/* Price */}
         {!isRegisterPrompt && (
-          <div className="text-center mb-4">
-            <span className="text-3xl font-bold text-[var(--text-h)]">€9.99</span>
-            <span className="text-[14px] text-[var(--text)] opacity-60"> / {t("upgrade.month")}</span>
+          <div style={{ textAlign: "center", marginTop: 16 }}>
+            <span className="font-serif" style={{ fontSize: 36, color: "var(--ink)" }}>€9.99</span>
+            <span style={{ fontSize: 14, color: "var(--ink-3)" }}> / month</span>
           </div>
         )}
 
-        {error && <p className="text-sm text-red-500 text-center mx-6 mb-2">{error}</p>}
+        {error && (
+          <div style={{ marginTop: 8, padding: "8px 12px", background: "var(--danger-soft)", borderRadius: "var(--r-sm)", fontSize: 13, color: "var(--danger)", textAlign: "center" }}>
+            {error}
+          </div>
+        )}
 
         {/* CTAs */}
-        <div className="px-6 pb-8 flex flex-col gap-2.5">
+        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
           <button
+            className="btn btn-accent btn-lg"
+            type="button"
+            style={{ width: "100%" }}
             onClick={handleUpgrade}
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-[var(--accent)] text-white font-semibold text-[15px] border-none cursor-pointer hover:opacity-85 disabled:opacity-50 transition-opacity"
           >
-            {loading ? "…" : isRegisterPrompt ? t("upgrade.cta_register") : t("upgrade.cta_upgrade")}
+            {loading ? "…" : isRegisterPrompt ? t("upgrade.cta_register") : <>Upgrade — €9.99 / month <Icon.arrow /></>}
           </button>
           <button
+            className="btn btn-ghost"
+            type="button"
+            style={{ width: "100%", height: 36, fontSize: 13 }}
             onClick={onClose}
-            className="w-full py-2.5 rounded-xl bg-transparent border border-[var(--border)] text-[var(--text)] text-[14px] cursor-pointer hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors font-[inherit]"
           >
             {t("upgrade.maybe_later")}
           </button>
         </div>
+
+        <p style={{ marginTop: 12, fontSize: 11, color: "var(--ink-4)", textAlign: "center" }}>
+          Secure checkout · Stripe · Cancel anytime
+        </p>
       </div>
     </div>
   );

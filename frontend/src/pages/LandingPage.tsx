@@ -1,65 +1,214 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Icon } from "../components/Icon";
+import { useMobile } from "../hooks/useMobile";
+
+const USER_TYPE_DOTS = [
+  { label: "ZZP",      color: "var(--sage-600)" },
+  { label: "Employee", color: "oklch(0.55 0.12 230)" },
+  { label: "Expat",    color: "oklch(0.62 0.13 50)" },
+  { label: "DGA",      color: "oklch(0.55 0.10 290)" },
+];
 
 const FEATURES = [
-  { icon: "💬", key: "feature_chat" },
-  { icon: "🧮", key: "feature_calc" },
-  { icon: "📋", key: "feature_ib" },
-  { icon: "🌍", key: "feature_lang" },
-] as const;
+  { kbd: "01", title: "Chat",           body: "Plain-language tax answers in NL, EN, or FA — grounded in 2026 rules and your own numbers." },
+  { kbd: "02", title: "Calculator",     body: "Box 1 · 2 · 3, ZZP deductions, credits and Wet DBA — calculated, not estimated." },
+  { kbd: "03", title: "IB Return",      body: "Field-by-field walkthrough of the official aangifte with explanations and traps." },
+  { kbd: "04", title: "Three languages",body: "Dutch, English and Persian — first class, with full RTL layout." },
+];
+
+const PROOF_ROWS = [
+  ["ZZP · 1 client",         "€72,000", "WET DBA · HIGH"],
+  ["Employee · 30% ruling",  "€95,000", "RULING YEAR 2"],
+  ["DGA · BV salary + div",  "€56,000", "DIVIDEND €12k"],
+];
 
 export default function LandingPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const isMobile = useMobile();
 
   return (
-    <main className="px-4 pb-16 text-center">
-      {/* Hero */}
-      <section className="py-20 px-4 max-w-2xl mx-auto">
-        <div className="inline-block px-3.5 py-1.5 bg-[var(--accent-bg)] border border-[var(--accent-border)] rounded-full text-xs font-bold text-[var(--accent)] tracking-widest uppercase mb-6">
-          {t("landing.badge")}
+    <main style={{ background: "var(--paper)", flex: 1 }}>
+
+      {/* ── HERO ── */}
+      <section className="grain" style={{ padding: isMobile ? "48px 20px 40px" : "72px 56px 56px", borderBottom: "1px solid var(--hairline)" }}>
+        <div style={{ maxWidth: 1140, margin: "0 auto", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.15fr 1fr", gap: isMobile ? 32 : 56, alignItems: "center" }}>
+          <div>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 11px", borderRadius: 999, background: "var(--paper)", border: "1px solid var(--accent-line)" }}>
+              <span style={{ width: 6, height: 6, borderRadius: 999, background: "var(--sage-600)" }} />
+              <span className="eyebrow eyebrow-accent">Dutch Tax AI · 2026</span>
+            </div>
+
+            <h1 style={{ marginTop: 22, fontSize: 64, lineHeight: 1.02, color: "var(--ink)", fontWeight: 400, fontFamily: "var(--serif)", letterSpacing: "-0.025em" }}>
+              {t("landing.headline_1")}<br />
+              <span style={{ fontStyle: "italic", color: "var(--sage-700)" }}>{t("landing.headline_2")}</span>
+            </h1>
+
+            <p style={{ marginTop: 18, fontSize: 17, lineHeight: 1.5, color: "var(--ink-2)", maxWidth: 520 }}>
+              {t("landing.subheadline")}
+            </p>
+
+            <div style={{ marginTop: 28, display: "flex", alignItems: "center", gap: 12 }}>
+              <button className="btn btn-accent btn-lg" onClick={() => navigate("/intake")}>
+                {t("landing.cta_primary")} <Icon.arrow />
+              </button>
+              <button className="btn btn-ghost btn-lg" onClick={() => navigate("/chat")}>
+                {t("landing.cta_secondary")}
+              </button>
+            </div>
+
+            <div style={{ marginTop: 18, display: "flex", alignItems: "center", gap: 14, color: "var(--ink-3)", fontSize: 12.5 }}>
+              <span>· {t("landing.no_account_needed")}</span>
+              <span>· 2026 rules verified</span>
+              <span>· Sources on every answer</span>
+            </div>
+          </div>
+
+          {/* Hero artifact card — hidden on mobile to keep the page scannable */}
+          {!isMobile && <div style={{ position: "relative" }}>
+            <div className="card" style={{ padding: 18, boxShadow: "var(--shadow-lg)", borderRadius: "var(--r-xl)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "2px 6px 12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: 999, background: "var(--sage-500)" }} />
+                  <span className="eyebrow">Live answer · ZZP · €72,000</span>
+                </div>
+                <span style={{ fontSize: 11, color: "var(--ink-4)" }}>2.3s</span>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+                <div style={{ padding: "8px 14px", borderRadius: 16, background: "var(--ink)", color: "var(--paper)", fontSize: 13, maxWidth: 320 }}>
+                  Am I a Wet DBA risk if I have one client?
+                </div>
+              </div>
+
+              <div style={{ padding: 16, background: "var(--paper-3)", borderRadius: "var(--r)", border: "1px solid var(--hairline)" }}>
+                <p style={{ fontSize: 13.5, color: "var(--ink-2)", lineHeight: 1.55 }}>
+                  Yes — one client accounting for 100% of revenue places you in{" "}
+                  <strong style={{ color: "var(--ink)" }}>HIGH risk</strong> under the Wet DBA test. The Belastingdienst can reclassify the relationship as employment.
+                </p>
+                <div style={{ marginTop: 12, padding: 12, background: "var(--paper)", borderRadius: "var(--r-sm)", border: "1px dashed var(--accent-line)" }}>
+                  <div className="eyebrow eyebrow-accent" style={{ marginBottom: 4 }}>Your numbers</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr auto", rowGap: 4, fontSize: 13 }}>
+                    <span>Revenue</span><span className="num">€ 72,000</span>
+                    <span>Single-client share</span><span className="num">100 %</span>
+                    <span>Risk band</span><span className="num" style={{ color: "var(--danger)" }}>HIGH</span>
+                  </div>
+                </div>
+                <div style={{ marginTop: 12, display: "flex", gap: 6, flexWrap: "wrap" }}>
+                  {["What proves independence?", "Add a second client", "Modelovereenkomst guide"].map(s => (
+                    <span key={s} style={{ padding: "5px 10px", borderRadius: 999, fontSize: 12, background: "var(--paper)", border: "1px solid var(--hairline-2)", color: "var(--ink-2)" }}>{s}</span>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 4px 2px", fontSize: 11, color: "var(--ink-3)" }}>
+                <span className="eyebrow">Sources</span>
+                <span>belastingdienst.nl/wet-dba</span>
+                <span>·</span>
+                <span>kvk.nl/modelovereenkomst</span>
+              </div>
+            </div>
+
+            {/* Floating chips */}
+            <div className="card" style={{ position: "absolute", left: -32, top: 36, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "var(--shadow)" }}>
+              <span style={{ width: 22, height: 22, borderRadius: 999, background: "var(--sage-100)", display: "grid", placeItems: "center", color: "var(--sage-700)", fontSize: 11, fontWeight: 600 }}>NL</span>
+              <span style={{ fontSize: 12 }}>Switch to Nederlands</span>
+            </div>
+            <div className="card" style={{ position: "absolute", right: -28, bottom: 60, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "var(--shadow)" }}>
+              <span className="font-mono" style={{ fontSize: 11, color: "var(--sage-700)" }}>€ 24,310</span>
+              <span style={{ fontSize: 11.5, color: "var(--ink-3)" }}>tax to reserve</span>
+            </div>
+          </div>}
         </div>
-        <h1 className="text-[clamp(2rem,5vw,3rem)] font-extrabold text-[var(--text-h)] leading-tight m-0 mb-4">
-          {t("landing.headline")}
-        </h1>
-        <p className="text-lg text-[var(--text)] leading-relaxed m-0 mb-8">
-          {t("landing.subheadline")}
-        </p>
-        <div className="flex gap-3 justify-center flex-wrap">
-          <button
-            className="px-7 py-3 bg-[var(--accent)] text-white border-none rounded-xl font-[inherit] text-base font-bold cursor-pointer hover:opacity-88 transition-opacity"
-            onClick={() => navigate("/intake")}
-          >
-            {t("landing.cta_primary")}
-          </button>
-          <button
-            className="px-7 py-3 bg-transparent text-[var(--accent)] border border-[var(--accent-border)] rounded-xl font-[inherit] text-base font-semibold cursor-pointer hover:bg-[var(--accent-bg)] transition-colors"
-            onClick={() => navigate("/chat")}
-          >
-            {t("landing.cta_secondary")}
-          </button>
-        </div>
-        <p className="mt-4 text-[0.8rem] text-[var(--text)] opacity-70">
-          {t("landing.no_account_needed")}
-        </p>
       </section>
 
-      {/* Feature cards */}
-      <section className="grid gap-5 max-w-4xl mx-auto mb-12 text-left" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-        {FEATURES.map(f => (
-          <div key={f.key} className="bg-[var(--social-bg)] border border-[var(--border)] rounded-xl p-6">
-            <span className="text-3xl block mb-3">{f.icon}</span>
-            <h3 className="text-base font-bold text-[var(--text-h)] m-0 mb-1.5">
-              {t(`landing.${f.key}_title`)}
-            </h3>
-            <p className="text-sm text-[var(--text)] leading-relaxed m-0">
-              {t(`landing.${f.key}_desc`)}
+      {/* ── FEATURES ── */}
+      <section style={{ padding: isMobile ? "48px 20px" : "72px 56px", borderBottom: "1px solid var(--hairline)" }}>
+        <div style={{ maxWidth: 1140, margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: isMobile ? "flex-start" : "flex-end", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", gap: isMobile ? 12 : 0, marginBottom: 32 }}>
+            <div>
+              <div className="eyebrow eyebrow-accent">What it does</div>
+              <h2 style={{ fontSize: 36, fontFamily: "var(--serif)", fontWeight: 400, color: "var(--ink)", marginTop: 6, letterSpacing: "-0.02em" }}>
+                Four tools, one tax brain.
+              </h2>
+            </div>
+            <p style={{ maxWidth: 360, color: "var(--ink-3)", fontSize: 14 }}>
+              Each tool shares the same verified ruleset, your stored profile and the same calculation engine — answers stay consistent.
             </p>
           </div>
-        ))}
+
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 1, background: "var(--hairline)", border: "1px solid var(--hairline)", borderRadius: "var(--r-lg)", overflow: "hidden" }}>
+            {FEATURES.map(f => (
+              <div key={f.kbd} style={{ padding: "28px 22px 30px", background: "var(--paper)", display: "flex", flexDirection: "column", gap: 14, minHeight: 220 }}>
+                <span className="eyebrow">{f.kbd}</span>
+                <h3 style={{ fontFamily: "var(--serif)", fontSize: 26, fontWeight: 400, color: "var(--ink)" }}>{f.title}</h3>
+                <p style={{ fontSize: 13.5, color: "var(--ink-3)", lineHeight: 1.55 }}>{f.body}</p>
+                <span style={{ marginTop: "auto", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--sage-700)" }}>
+                  Open <Icon.arrow />
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
-      <p className="text-[0.8rem] text-[var(--text)] opacity-60">{t("chat.disclaimer")}</p>
+      {/* ── PROOF / WHO IT'S FOR ── */}
+      <section style={{ padding: isMobile ? "48px 20px" : "72px 56px", background: "var(--paper-tint)", borderBottom: "1px solid var(--hairline)" }}>
+        <div style={{ maxWidth: 1140, margin: "0 auto", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1.1fr", gap: isMobile ? 28 : 56, alignItems: "center" }}>
+          <div>
+            <div className="eyebrow eyebrow-accent">Built for the four ways NL gets taxed</div>
+            <h2 style={{ fontSize: 36, fontFamily: "var(--serif)", fontWeight: 400, marginTop: 6, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+              Same engine. Different rules per type.
+            </h2>
+            <p style={{ marginTop: 14, color: "var(--ink-3)", fontSize: 14.5, lineHeight: 1.55, maxWidth: 460 }}>
+              The system knows the rules that apply to <em>you</em> — including the ones most people miss, like MKB-vrijstelling, IACK, or the last year of startersaftrek.
+            </p>
+            <div style={{ marginTop: 22, display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {USER_TYPE_DOTS.map(v => (
+                <span key={v.label} style={{ padding: "8px 14px", border: "1px solid var(--hairline-2)", borderRadius: 999, background: "var(--paper)", fontSize: 13, display: "inline-flex", gap: 8, alignItems: "center" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: 999, background: v.color }} />
+                  {v.label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="card" style={{ background: "var(--paper)", padding: 0, overflow: "hidden" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", padding: "14px 22px", background: "var(--paper-3)", borderBottom: "1px solid var(--hairline)" }}>
+              <span className="eyebrow">Sample profile</span>
+              <span className="eyebrow" style={{ textAlign: "right" }}>Income</span>
+              <span className="eyebrow" style={{ textAlign: "right" }}>Flag</span>
+            </div>
+            {PROOF_ROWS.map(([a, b, c], i) => (
+              <div key={i} style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", padding: "18px 22px", borderBottom: i < PROOF_ROWS.length - 1 ? "1px solid var(--hairline)" : "none", alignItems: "center" }}>
+                <span style={{ fontSize: 14, color: "var(--ink)" }}>{a}</span>
+                <span className="num" style={{ color: "var(--ink)" }}>{b}</span>
+                <span className="num" style={{ fontSize: 11, color: "var(--sage-700)", letterSpacing: "0.06em" }}>{c}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER CTA ── */}
+      <section style={{ padding: isMobile ? "56px 20px" : "80px 56px" }}>
+        <div style={{ maxWidth: 880, margin: "0 auto", textAlign: "center" }}>
+          <h2 style={{ fontSize: 46, fontFamily: "var(--serif)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em", lineHeight: 1.05 }}>
+            File 2026 with a second pair of eyes.
+          </h2>
+          <p style={{ marginTop: 14, color: "var(--ink-3)", fontSize: 15 }}>
+            Free to try · upgrade only if you want unlimited.
+          </p>
+          <div style={{ marginTop: 22, display: "inline-flex", gap: 10 }}>
+            <button className="btn btn-accent btn-lg" onClick={() => navigate("/register")}>Start free</button>
+            <button className="btn btn-ghost btn-lg" onClick={() => navigate("/pricing")}>{t("nav.pricing")}</button>
+          </div>
+          <p style={{ marginTop: 40, fontSize: 11.5, color: "var(--ink-4)" }}>
+            TaxWijs provides general information — not official tax advice.
+          </p>
+        </div>
+      </section>
     </main>
   );
 }

@@ -1,7 +1,7 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: May 2026 — UI redesign task defined. Design files in `ui/`. All previous phases complete.
+> Last updated: 26 May 2026 — Phase 11 UI redesign complete. Chat SSE fixed. Responsiveness added. Auth 401 fixed.
 
 ---
 
@@ -880,7 +880,7 @@ Frontend parseSSE → detects upgrade_required
 
 ---
 
-## UI Redesign — ⏳ Next Task
+## Phase 11 — UI Redesign ✅ Complete
 
 **Goal:** Rebuild the entire frontend UI to match the designer's files in `ui/`. Complete visual rebrand from purple-on-white to sage/olive-green on warm cream paper.
 
@@ -979,9 +979,131 @@ ui/
 - Global `.eyebrow`, `.font-serif`, `.font-mono`, `.grain`, `.dots`, `.pill-*`, `.btn-*`, `.input`, `.card` atoms go in `index.css` under `@layer components`
 - Mobile responsive: use `md:` prefix for structural breakpoints
 
+### What was built
+
+| File | Change |
+|------|--------|
+| `frontend/index.html` | Added Google Fonts import: Geist, Instrument Serif, JetBrains Mono |
+| `frontend/src/index.css` | Full design token system (oklch color scale, sage/paper/ink tokens, shadow, radii, typography vars); global component atoms: `.eyebrow`, `.btn`, `.card`, `.grain`, `.pill`, `.hair`, `.dots`, `.tw-input`, `.tw-label`; animations `cardIn`, `fadeIn` |
+| `frontend/src/components/Wordmark.tsx` | NEW — shield SVG + Instrument Serif "TaxWijs" wordmark |
+| `frontend/src/components/TopNav.tsx` | NEW — sticky 64px header: Wordmark + nav links + LangSwitch + auth area; mobile-responsive (nav links hidden on small screens) |
+| `frontend/src/components/LangSwitch.tsx` | NEW — NL/EN/FA pill toggle |
+| `frontend/src/components/Icon.tsx` | NEW — arrow, check, x, spark, chev, edit, info, external SVG components |
+| `frontend/src/hooks/useMobile.ts` | NEW — `useMobile(breakpoint?)` hook using `matchMedia` |
+| `frontend/src/pages/LandingPage.tsx` | Full redesign — grain hero, 64px serif headline, live-answer card, 4-column features, proof table, footer CTA; responsive |
+| `frontend/src/pages/LoginPage.tsx` | Full redesign — 2-column split (form left, editorial right with today's tip); right panel hidden on mobile |
+| `frontend/src/pages/RegisterPage.tsx` | Full redesign — same 2-column shell; right panel shows type-specific benefit list; right panel hidden on mobile |
+| `frontend/src/pages/ChatPage.tsx` | Full redesign — ProfileBar with user type avatar, sage-soft strip; answer bubbles; 2-column question cards; RTL support; mobile-responsive |
+| `frontend/src/pages/IBGuidePage.tsx` | Full redesign — progress strip, IBFieldCard with BOX badge (colored per box), mono field code, serif title, mistakes expander, "Ask TaxWijs" footer; 2-column grid → single on mobile |
+| `frontend/src/pages/SimulationPage.tsx` | Full redesign — 4px full-width progress bar; 280px sidebar with step indicators; FieldRow with unit-prefix inputs; OverviewStep with dark ink header + serif result; sidebar hidden on mobile |
+| `frontend/src/pages/PricingPage.tsx` | Full redesign — serif headline; free + premium cards (premium has gradient bg, shadow-lg, "⚡ MOST PICKED" badge); feature comparison list; FAQ section |
+| `frontend/src/components/UpgradeModal.tsx` | Full redesign — blur backdrop; comparison table; serif headline; ⚡ accent circle; headlineMap per reason |
+| `frontend/src/App.tsx` | Updated to use `TopNav` + `LangSwitch` components; added all new routes |
+| `frontend/src/context/AuthContext.tsx` | Fixed `import type { ReactNode }` for `verbatimModuleSyntax` |
+| `frontend/tsconfig.app.json` | Added `"ignoreDeprecations": "6.0"` to silence TypeScript 6 `baseUrl` deprecation |
+| All 3 i18n locale files | Added `landing.headline_1/2` split keys; fixed missing commas (root cause of blank page bug on first deploy) |
+| `frontend/src/lib/tax-rules/api.ts` | Removed unused `baseId` variable |
+| `frontend/src/pages/admin/AdminRulesPage.tsx` | Removed unused `Input` import |
+| `frontend/src/pages/admin/AdminRAGPreviewPage.tsx` | Removed unused `Input` import |
+
+### Bugs fixed during redesign
+
+| Bug | Root cause | Fix |
+|-----|-----------|-----|
+| Blank page on first load | All three i18n locale JSON files were missing commas after the `"headline_2"` key — invalid JSON crashed i18next silently at startup | Added missing commas |
+| `login()` / `register()` wrong call signature | Pages called `login(email, password)` with two positional args; API takes an object `{ username, password }` | Fixed to pass objects |
+| `s.optional` doesn't exist on `SimStep` | SimulationPage sidebar rendered `{s.optional && …}` but `SimStep` only has `condition?: (a) => boolean` | Changed to `{s.condition && …}` |
+| `field.hint` doesn't exist on `SimField` | FieldRow referenced `field.hint` which isn't in the interface | Removed the line |
+| UpgradeModal wrong Icon import path | Used `"../components/Icon"` from within `components/` | Fixed to `"./Icon"` |
+| Duplicate style keys in IBGuidePage `<ul>` | Had both `marginTop` and `margin`, and `paddingLeft` twice | Collapsed to `margin: "8px 0 0 0", paddingLeft: 28` |
+
+---
+
+## Phase 11 Post-Redesign Bug Fixes ✅
+
+### Chat SSE — stream stalled after heartbeat
+
+**Symptom:** Chat sent the SSE heartbeat event but no Claude tokens ever arrived. Stream hung indefinitely.
+
+**Root cause:** The `stream_response()` generator, after yielding the heartbeat, called `retrieve()` from `phase2.retriever`. Since the embedding manifest exists and both `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` are set, `retrieve()` made a live OpenAI embedding API call followed by ChromaDB initialisation. If the OpenAI call hung (network latency, rate limit, etc.), the entire generator blocked indefinitely — no more yields, no Claude response.
+
+**Secondary cause:** Vite's proxy had no explicit timeout, so on slower machines the connection could also be dropped.
+
+**Fixes applied:**
+
+| File | Fix |
+|------|-----|
+| `backend/apps/chat/views.py` | Wrapped the entire RAG block in a `ThreadPoolExecutor` with `future.result(timeout=8)`. If RAG takes > 8 seconds, it's skipped and Claude is called with the `"=== No tax context available ==="` fallback. The executor is shut down with `wait=False` so a hung background thread never blocks the stream. |
+| `frontend/vite.config.ts` | Added `proxyTimeout: 120_000` and `timeout: 120_000` (2 minutes) to the `/api` proxy so the connection is never dropped while waiting for Claude to start streaming. |
+
+### Chat SSE — 401 Unauthorized on every message
+
+**Symptom:** Django logs showed `POST /api/chat/message/ HTTP/1.1" 401 178` on every chat request.
+
+**Root cause:** The frontend sends `Authorization: Bearer <token>` on every request (via `localStorage.getItem("access_token")`). When the JWT access token expires, `JWTAuthentication.authenticate()` raises `InvalidToken` — which Django REST Framework converts to a `401` response **before** the permission check even runs. The view has `permission_classes = [AllowAny]`, but that check is never reached.
+
+The Axios auto-refresh interceptor in `client.ts` does not apply because the SSE endpoint uses native `fetch`, not Axios.
+
+**Fixes applied:**
+
+| File | Fix |
+|------|-----|
+| `backend/apps/chat/views.py` | Added `SoftJWTAuthentication(JWTAuthentication)` — catches `InvalidToken` and returns `None` instead of raising, treating an expired/invalid token as anonymous. `ChatMessageView` now uses `authentication_classes = [SoftJWTAuthentication]`. |
+| `frontend/src/api/chat.ts` | Added `refreshAccessToken()` helper that calls `/api/auth/token/refresh/` with the stored refresh token. `sendMessage()` now retries on 401: tries refresh → if successful, retries with new token; if refresh fails (no refresh token or refresh expired), retries without `Authorization` header (anonymous). The `AllowAny` + `SoftJWTAuthentication` combination accepts anonymous requests. |
+
+### Responsiveness — no mobile layout
+
+**Symptom:** All redesigned pages used hardcoded inline grid styles with fixed column counts. On mobile screens (< 768px) layouts overflowed or were too narrow to read.
+
+**Fix:** Created `frontend/src/hooks/useMobile.ts` — a `matchMedia`-based React hook. Applied it to the 6 most-used pages and the TopNav:
+
+| Component | Desktop → Mobile change |
+|-----------|------------------------|
+| `TopNav` | Nav links hidden; email/pill hidden; padding reduced to `0 16px` |
+| `LandingPage` | Hero 2-col → 1-col (card hidden); features 4-col → 2-col; proof 2-col → 1-col; padding reduced |
+| `LoginPage` | Right editorial panel hidden; form takes full width; padding reduced |
+| `RegisterPage` | Same as Login |
+| `SimulationPage` | Sidebar hidden (progress bar still visible); grid → single column |
+| `IBGuidePage` | 2-column fields + sidebar → single column; padding reduced |
+| `ChatPage` | Question cards 2-col → 1-col; profile bar and message area padding reduced |
+
+---
+
+## Current State (26 May 2026)
+
 ### Branch
 
-Work on branch: `phase11-ui-redesign`
+`phase11-ui-redesign` — not yet merged to `master`
+
+### Servers
+
+| Server | Command | URL |
+|--------|---------|-----|
+| Django | `.venv\Scripts\python.exe backend/manage.py runserver` | `http://localhost:8000` |
+| Vite | `cd frontend && npm run dev` | `http://localhost:5173` |
+
+### Environment (`.env` at project root)
+
+Both `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` are set and confirmed working. `ANTHROPIC_API_KEY` used for Claude chat streaming. `OPENAI_API_KEY` used for Phase 2 RAG embeddings (OpenAI embedding calls happen in a background thread with 8s timeout — they're non-blocking for chat).
+
+### Database
+
+PostgreSQL (default `DATABASE_URL` in settings). Run migrations if the DB is fresh:
+```bash
+.venv\Scripts\python.exe backend/manage.py migrate
+```
+
+### TypeScript
+
+All files pass `npx tsc --noEmit` with strict mode. No errors.
+
+### Known open items
+
+| Item | Detail |
+|------|--------|
+| Phase 2 index | The ChromaDB at `phase2/.chromadb/` is empty (not yet built for the running server). RAG calls fall back to `"=== No tax context available ==="` silently. To build: `python phase2/build_index.py` |
+| Admin pages | `ui/src/screens/admin.jsx` has a new design but the admin pages (`/admin/*`) were NOT redesigned in Phase 11 — they still use the old Tailwind component library. Redesign is optional. |
+| `phase11-ui-redesign` merge | Not yet merged to `master`. Merge when the user is happy with the redesign. |
 
 ---
 
@@ -989,8 +1111,10 @@ Work on branch: `phase11-ui-redesign`
 
 | Item | Priority | Description |
 |------|----------|-------------|
-| **UI Redesign** | 🔴 Next | Rebuild all 10 pages to match `ui/` design files — see section above |
-| **Phase 11** | After UI | Connect admin to real Django backend — swap mock `api.ts` for fetch calls |
+| **Merge phase11 → master** | 🔴 First | `git merge phase11-ui-redesign` into master, push |
+| **Admin UI redesign** | 🟡 Optional | Port admin pages to new design system (see `ui/src/screens/admin.jsx`) |
+| **Connect admin to real backend** | 🟡 Next | Swap mock `lib/tax-rules/api.ts` for real `fetch` calls to Django CRUD endpoints |
+| **Build Phase 2 RAG index** | 🟡 Next | `python phase2/build_index.py` — populates ChromaDB so chat gets real rule context |
 | **SEO pages** | Later | Django templates for landing + tax guide pages (server-rendered for Google indexing) |
 | **Proactive alerts** | Later | Tax reminder engine — email/push notifications near deadlines |
 | **Annual maintenance** | September | Update tax rules each September for the new tax year |

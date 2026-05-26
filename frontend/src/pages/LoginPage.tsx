@@ -1,66 +1,119 @@
-import { useState, FormEvent } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { login } from "../api/auth";
+import { login, fetchProfile } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
-import { fetchProfile } from "../api/auth";
-
-const inputCls = "w-full px-3 py-2.5 border border-[var(--border)] rounded-lg bg-[var(--bg)] text-[var(--text-h)] font-[inherit] text-[15px] outline-none transition-colors focus:border-[var(--accent)]";
+import Wordmark from "../components/Wordmark";
+import { Icon } from "../components/Icon";
+import { useMobile } from "../hooks/useMobile";
 
 export default function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { setUser } = useAuth();
+  const isMobile = useMobile();
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError]       = useState("");
+  const [loading, setLoading]   = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
       await login({ username: email, password });
-      const user = await fetchProfile();
-      setUser(user);
+      const profile = await fetchProfile();
+      setUser(profile);
       navigate("/chat");
     } catch {
       setError(t("auth.login_error"));
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <main className="min-h-[calc(100svh-52px)] flex items-center justify-center p-8">
-      <div className="w-full max-w-sm bg-[var(--bg)] border border-[var(--border)] rounded-xl p-10 shadow-[var(--shadow)]">
-        <h1 className="text-2xl font-bold text-[var(--text-h)] m-0 mb-7 text-center">{t("auth.login")}</h1>
+    <div style={{ flex: 1, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.1fr 1fr", minHeight: "calc(100vh - 64px)" }}>
+      {/* Left — form */}
+      <div style={{ padding: isMobile ? "28px 20px" : "36px 56px", display: "flex", flexDirection: "column", background: "var(--paper)", overflow: "auto" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Wordmark size={16} />
+          <Link to="/" style={{ fontSize: 13, color: "var(--ink-3)" }}>← Back to home</Link>
+        </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <label className="flex flex-col gap-1.5 text-sm text-[var(--text)]">
-            {t("auth.email")}
-            <input type="email" className={inputCls} value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
-          </label>
+        <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
+          <div style={{ width: "100%", maxWidth: 380 }}>
+            <div className="eyebrow eyebrow-accent">Welcome back</div>
+            <h1 style={{ marginTop: 8, fontSize: 36, fontFamily: "var(--serif)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+              Log in to your<br />tax workspace.
+            </h1>
 
-          <label className="flex flex-col gap-1.5 text-sm text-[var(--text)]">
-            {t("auth.password")}
-            <input type="password" className={inputCls} value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" />
-          </label>
+            {error && (
+              <div style={{ marginTop: 16, padding: 12, background: "var(--danger-soft)", borderRadius: "var(--r-sm)", fontSize: 13, color: "var(--danger)" }}>
+                {error}
+              </div>
+            )}
 
-          {error && <p className="text-sm text-red-500 m-0">{error}</p>}
+            <form onSubmit={handleSubmit} style={{ marginTop: 28, display: "flex", flexDirection: "column", gap: 14 }}>
+              <div>
+                <div className="tw-label" style={{ marginBottom: 6 }}>{t("auth.email")}</div>
+                <input className="tw-input" type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" required />
+              </div>
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span className="tw-label">{t("auth.password")}</span>
+                  <span style={{ fontSize: 11.5, color: "var(--sage-700)", cursor: "pointer" }}>Forgot?</span>
+                </div>
+                <input className="tw-input" type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" required />
+              </div>
 
-          <button type="submit" className="mt-1 py-2.5 px-4 bg-[var(--accent)] text-white border-none rounded-lg font-[inherit] text-[15px] font-semibold cursor-pointer hover:opacity-85 disabled:opacity-60 disabled:cursor-not-allowed transition-opacity" disabled={loading}>
-            {loading ? "…" : t("auth.login")}
-          </button>
-        </form>
+              <button className="btn btn-accent btn-lg" type="submit" disabled={loading} style={{ marginTop: 6 }}>
+                {loading ? "Logging in…" : <>{t("nav.login")} <Icon.arrow /></>}
+              </button>
+            </form>
 
-        <p className="mt-6 text-center text-sm text-[var(--text)] m-0">
-          {t("auth.no_account")}{" "}
-          <Link to="/register" className="text-[var(--accent)] font-semibold no-underline">{t("auth.register")}</Link>
-        </p>
+            <div style={{ margin: "22px 0", display: "flex", alignItems: "center", gap: 12, color: "var(--ink-4)", fontSize: 11 }}>
+              <span className="hair" style={{ flex: 1 }} /> OR <span className="hair" style={{ flex: 1 }} />
+            </div>
+
+            <p style={{ fontSize: 13, color: "var(--ink-3)" }}>
+              {t("auth.no_account")}{" "}
+              <Link to="/register" style={{ color: "var(--sage-700)", fontWeight: 500 }}>
+                {t("auth.register")} →
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        <div style={{ fontSize: 11, color: "var(--ink-4)", display: "flex", justifyContent: "space-between" }}>
+          <span>© 2026 TaxWijs</span>
+          <span>Privacy · Terms</span>
+        </div>
       </div>
-    </main>
+
+      {/* Right — editorial side (hidden on mobile) */}
+      {!isMobile && <div className="grain" style={{ padding: 36, borderLeft: "1px solid var(--hairline)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+        <Wordmark size={14} />
+        <div>
+          <span className="pill" style={{ background: "rgba(255,255,255,0.18)", color: "var(--ink-2)" }}>Today's tip</span>
+          <h2 style={{ marginTop: 16, color: "var(--ink)", fontFamily: "var(--serif)", fontWeight: 400, fontSize: 32, lineHeight: 1.12, letterSpacing: "-0.015em" }}>
+            "Startersaftrek runs out at the end of <em>2026</em> — last call for the €2,123 deduction."
+          </h2>
+          <p style={{ marginTop: 16, color: "var(--ink-3)", fontSize: 13, maxWidth: 360 }}>
+            One of 28 verified 2026 rules in your knowledge base.
+          </p>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+          {[["28", "Rules verified"], ["3", "Languages"], ["1,225 h", "ZZP hour rule"]].map(([n, l]) => (
+            <div key={l} style={{ padding: 14, background: "var(--paper)", border: "1px solid var(--hairline)", borderRadius: "var(--r)" }}>
+              <div className="font-serif" style={{ fontSize: 26, color: "var(--ink)", lineHeight: 1 }}>{n}</div>
+              <div className="eyebrow" style={{ marginTop: 6 }}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>}
+    </div>
   );
 }

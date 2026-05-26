@@ -2,11 +2,12 @@
   "app_name": "TaxWijs",
   "tagline": "Uw slimme belastingassistent",
   "nav": {
-    "chat": "Vraag stellen",
-    "calculator": "Belasting berekenen",
-    "simulation": "Simulatie Aangifte",
+    "chat": "Chat",
+    "calculator": "Rekenmachine",
+    "simulation": "IB Simulatie",
     "pricing": "Prijzen",
     "profile": "Profiel",
+    "dashboard": "Dashboard",
     "login": "Inloggen",
     "logout": "Uitloggen"
   },
@@ -54,6 +55,8 @@
   "landing": {
     "badge": "Belastingjaar 2026",
     "headline": "Belasting begrijpen, zonder de chaos",
+    "headline_1": "Belasting in Nederland,",
+    "headline_2": "helder uitgelegd.",
     "subheadline": "TaxWijs beantwoordt uw belastingvragen in het Nederlands, Engels of Farsi — persoonlijk berekend op basis van uw situatie.",
     "cta_primary": "Profiel instellen en beginnen",
     "cta_secondary": "Direct vragen stellen",

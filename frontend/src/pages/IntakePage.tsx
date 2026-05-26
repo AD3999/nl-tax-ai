@@ -3,33 +3,64 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { calculateTax } from "../api/calculator";
 import type { CalcInput } from "../api/calculator";
+import { Icon } from "../components/Icon";
 
 type UserType = "zzp" | "employee" | "expat" | "dga";
 
-const TYPES: Array<{ key: UserType; icon: string; i18nDesc: string }> = [
-  { key: "zzp",      icon: "💼", i18nDesc: "intake.zzp_desc" },
-  { key: "employee", icon: "🏢", i18nDesc: "intake.employee_desc" },
-  { key: "expat",    icon: "🌍", i18nDesc: "intake.expat_desc" },
-  { key: "dga",      icon: "🏛️", i18nDesc: "intake.dga_desc" },
-];
+const USER_TYPES = {
+  zzp:      { label: "ZZP",      glyph: "ZZ", desc: "Freelance · self-employed",   color: "var(--sage-600)",      tags: ["Wet DBA", "Zelfstandigenaftrek", "MKB"] },
+  employee: { label: "Employee", glyph: "EM", desc: "Salaried · payslip",          color: "oklch(0.55 0.12 230)", tags: ["Loonheffing", "IACK"] },
+  expat:    { label: "Expat",    glyph: "EX", desc: "30% ruling · foreign income", color: "oklch(0.62 0.13 50)",  tags: ["30% ruling", "Foreign income"] },
+  dga:      { label: "DGA",      glyph: "DG", desc: "Director · own BV",           color: "oklch(0.55 0.10 290)", tags: ["Box 2", "Salary + dividend"] },
+} as const;
 
-const inputCls = "w-full px-3 py-2 border border-[var(--border)] rounded-lg bg-[var(--bg)] text-[var(--text)] font-[inherit] text-sm outline-none transition-colors focus:border-[var(--accent)] box-border";
+const WHY_TEXT: Record<number, string> = {
+  1: "Your tax type changes everything — deductions, credits, even what questions the chat shows you.",
+  2: "Income drives every Box 1 calculation. We round to the cent on the official 2026 brackets.",
+  3: "Partner, kids, and Box 3 assets unlock IACK, heffingskorting transfers and the savings threshold.",
+};
+
+function StepDots({ step }: { step: number }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      {[1, 2, 3].map(i => (
+        <div key={i} style={{ height: 4, borderRadius: 2, width: i === step ? 36 : 18, background: i <= step ? "var(--sage-600)" : "var(--hairline-2)", transition: "width .2s" }} />
+      ))}
+    </div>
+  );
+}
+
+function UnitInput({ label, unit, value, onChange, placeholder, hint }: { label: string; unit: string; value: string; onChange: (v: string) => void; placeholder?: string; hint?: string }) {
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+        <span className="tw-label">{label}</span>
+        {hint && <span style={{ fontSize: 10.5, color: "var(--ink-4)" }}>{hint}</span>}
+      </div>
+      <div style={{ position: "relative" }}>
+        <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--ink-4)", fontSize: 14 }}>{unit}</span>
+        <input className="tw-input" type="number" min="0" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{ paddingLeft: 32 }} />
+      </div>
+    </div>
+  );
+}
 
 export default function IntakePage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const isRtl = i18n.language === "fa";
 
-  const [step, setStep]           = useState<1 | 2 | 3>(1);
-  const [userType, setUserType]   = useState<UserType>("zzp");
-  const [loading, setLoading]     = useState(false);
+  const [step, setStep]         = useState<1 | 2 | 3>(1);
+  const [userType, setUserType] = useState<UserType>("zzp");
+  const [loading, setLoading]   = useState(false);
 
-  const [revenue, setRevenue]       = useState("");
-  const [expenses, setExpenses]     = useState("");
-  const [salary, setSalary]         = useState("");
-  const [dividend, setDividend]     = useState("");
-  const [rulingYear, setRulingYear] = useState("1");
-  const [isStarter, setIsStarter]   = useState(false);
+  const [revenue, setRevenue]         = useState("");
+  const [expenses, setExpenses]       = useState("");
+  const [hours, setHours]             = useState("1300");
+  const [salary, setSalary]           = useState("");
+  const [dividend, setDividend]       = useState("");
+  const [rulingYear, setRulingYear]   = useState("1");
+  const [isStarter, setIsStarter]     = useState(false);
 
   const [hasPartner, setHasPartner]       = useState(false);
   const [partnerIncome, setPartnerIncome] = useState("");
@@ -42,22 +73,22 @@ export default function IntakePage() {
     const input: CalcInput = {
       user_type: userType,
       year: 2026,
-      annual_revenue_zzp:  userType === "zzp"  ? (parseFloat(revenue) || null)  : null,
-      employment_income:   userType !== "zzp"  ? (parseFloat(salary)  || null)  : null,
-      business_expenses:   parseFloat(expenses) || 0,
-      hours_per_year:      userType === "zzp"  ? 1300 : null,
-      is_starter:          isStarter,
-      has_partner:         hasPartner,
-      partner_income:      hasPartner ? (parseFloat(partnerIncome) || null) : null,
-      children_under_12:   parseInt(children) || 0,
-      net_assets_box3:     parseFloat(assets) || 0,
-      savings_fraction:    0.5,
+      annual_revenue_zzp:   userType === "zzp" ? (parseFloat(revenue) || null) : null,
+      employment_income:    userType !== "zzp" ? (parseFloat(salary) || null) : null,
+      business_expenses:    parseFloat(expenses) || 0,
+      hours_per_year:       userType === "zzp" ? (parseInt(hours) || 1300) : null,
+      is_starter:           isStarter,
+      has_partner:          hasPartner,
+      partner_income:       hasPartner ? (parseFloat(partnerIncome) || null) : null,
+      children_under_12:    parseInt(children) || 0,
+      net_assets_box3:      parseFloat(assets) || 0,
+      savings_fraction:     0.5,
       pension_contribution: parseFloat(pension) || 0,
-      box2_dividend:       userType === "dga"  ? (parseFloat(dividend) || 0) : 0,
-      uses_30pct_ruling:   userType === "expat",
-      ruling_year:         userType === "expat" ? (parseInt(rulingYear) || 1) : 1,
+      box2_dividend:        userType === "dga" ? (parseFloat(dividend) || 0) : 0,
+      uses_30pct_ruling:    userType === "expat",
+      ruling_year:          userType === "expat" ? (parseInt(rulingYear) || 1) : 1,
       single_client_percentage: null,
-      kia_investments:     0,
+      kia_investments: 0,
     };
     try { await calculateTax(input); } catch { /* save anyway */ }
     localStorage.setItem("taxwijs_calc_input", JSON.stringify(input));
@@ -65,122 +96,218 @@ export default function IntakePage() {
     navigate("/chat");
   };
 
-  const labelCls = "text-[13px] font-medium text-[var(--text)]";
-  const checkCls = "flex items-center gap-2 text-sm text-[var(--text)] cursor-pointer mt-0.5";
-  const btnPrimary = "px-6 py-2.5 rounded-lg border-none bg-[var(--accent)] text-white font-[inherit] text-sm font-medium cursor-pointer hover:opacity-85 disabled:opacity-45 disabled:cursor-not-allowed transition-opacity";
-  const btnBack = "px-5 py-2.5 rounded-lg border border-[var(--border)] bg-transparent font-[inherit] text-sm text-[var(--text)] cursor-pointer hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors";
-
   return (
-    <div className="min-h-[calc(100vh-52px)] flex items-center justify-center px-6 py-10 bg-[var(--bg)]" dir={isRtl ? "rtl" : "ltr"}>
-      <div className="w-full max-w-[540px] bg-[var(--card-bg,#f9f9f9)] border border-[var(--border)] rounded-2xl px-12 py-10 flex flex-col gap-5">
+    <div className="grain" style={{ flex: 1 }} dir={isRtl ? "rtl" : "ltr"}>
+      <div style={{ display: "grid", gridTemplateColumns: "300px 1fr 300px", maxWidth: 1160, margin: "0 auto", padding: "32px 40px 56px", gap: 40, alignItems: "flex-start" }}>
 
-        {/* Progress dots */}
-        <div className="flex gap-2 justify-center">
-          {([1, 2, 3] as const).map((n) => (
-            <div key={n} className={`w-2 h-2 rounded-full ${n <= step ? "bg-[var(--accent)]" : "bg-[var(--border)]"}`} />
-          ))}
-        </div>
+        {/* Left rail */}
+        <aside style={{ position: "sticky", top: 92 }}>
+          <div className="eyebrow eyebrow-accent">Profile intake</div>
+          <h2 style={{ marginTop: 6, fontFamily: "var(--serif)", fontSize: 30, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+            Two minutes.<br />One tax brain.
+          </h2>
+          <p style={{ marginTop: 12, fontSize: 13.5, color: "var(--ink-3)", lineHeight: 1.55 }}>
+            Your answers personalise the assistant. They never leave your browser unless you create an account.
+          </p>
 
-        {/* Step 1 */}
-        {step === 1 && (
-          <>
-            <h2 className="text-[22px] font-semibold text-[var(--text-h)] m-0 text-center">{t("intake.step1_title")}</h2>
-            <p className="text-sm text-[var(--text)] opacity-70 m-0 -mt-3 text-center leading-relaxed">{t("intake.step1_subtitle")}</p>
-            <div className="grid grid-cols-2 gap-3">
-              {TYPES.map(({ key, icon, i18nDesc }) => (
-                <button
-                  key={key}
-                  className={`flex flex-col items-center gap-1.5 px-3 py-4 rounded-xl border-2 cursor-pointer text-center transition-all ${
-                    userType === key
-                      ? "border-[var(--accent)] bg-[var(--accent-bg)] text-[var(--accent)]"
-                      : "border-[var(--border)] bg-[var(--bg)] text-[var(--text)] hover:border-[var(--accent)] hover:bg-[var(--accent-bg)]"
-                  }`}
-                  onClick={() => setUserType(key)}
-                >
-                  <span className="text-2xl">{icon}</span>
-                  <strong className="text-sm">{t(`user_types.${key}`)}</strong>
-                  <span className="text-[11px] opacity-65 leading-tight font-normal text-[var(--text)]">{t(i18nDesc)}</span>
+          <div style={{ marginTop: 22, display: "flex", flexDirection: "column", gap: 2 }}>
+            {[
+              { i: 1, t: t("intake.step1_title"), d: "Profession & tax type" },
+              { i: 2, t: t("intake.step2_title"), d: "Annual figures" },
+              { i: 3, t: t("intake.step3_title"), d: "Partner · kids · assets" },
+            ].map(s => {
+              const done = s.i < step, active = s.i === step;
+              return (
+                <button key={s.i} onClick={() => setStep(s.i as 1|2|3)} style={{
+                  textAlign: "left", padding: "12px 14px", border: "none",
+                  background: active ? "var(--accent-soft)" : "transparent",
+                  borderRadius: "var(--r)", display: "flex", gap: 12, alignItems: "center", cursor: "pointer",
+                }}>
+                  <span style={{
+                    width: 26, height: 26, borderRadius: 999, display: "grid", placeItems: "center",
+                    background: done ? "var(--sage-600)" : active ? "var(--ink)" : "var(--paper-3)",
+                    color: done || active ? "white" : "var(--ink-3)",
+                    fontSize: 11, fontWeight: 600, flexShrink: 0,
+                  }}>
+                    {done ? <Icon.check style={{ width: 12, height: 12 }} /> : s.i}
+                  </span>
+                  <div>
+                    <div style={{ fontSize: 13.5, color: active || done ? "var(--ink)" : "var(--ink-3)", fontWeight: 500 }}>{s.t}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--ink-4)" }}>{s.d}</div>
+                  </div>
                 </button>
-              ))}
-            </div>
-            <div className="flex justify-end mt-1">
-              <button className={btnPrimary} onClick={() => setStep(2)}>{t("intake.next")} →</button>
-            </div>
-          </>
-        )}
+              );
+            })}
+          </div>
 
-        {/* Step 2 */}
-        {step === 2 && (
-          <>
-            <h2 className="text-[22px] font-semibold text-[var(--text-h)] m-0 text-center">{t("intake.step2_title")}</h2>
-            <p className="text-sm text-[var(--text)] opacity-70 m-0 -mt-3 text-center leading-relaxed">{t("intake.step2_subtitle")}</p>
-            <div className="flex flex-col gap-2.5">
-              {userType === "zzp" && <>
-                <label className={labelCls}>{t("intake.revenue")}</label>
-                <input className={inputCls} type="number" min="0" value={revenue} onChange={e => setRevenue(e.target.value)} placeholder="72000" />
-                <label className={labelCls}>{t("intake.expenses")}</label>
-                <input className={inputCls} type="number" min="0" value={expenses} onChange={e => setExpenses(e.target.value)} placeholder="5000" />
-                <label className={checkCls}><input type="checkbox" checked={isStarter} onChange={e => setIsStarter(e.target.checked)} />{t("intake.is_starter")}</label>
-              </>}
-              {(userType === "employee" || userType === "dga") && <>
-                <label className={labelCls}>{t("intake.salary")}</label>
-                <input className={inputCls} type="number" min="0" value={salary} onChange={e => setSalary(e.target.value)} placeholder={userType === "dga" ? "56000" : "48000"} />
-              </>}
-              {userType === "dga" && <>
-                <label className={labelCls}>{t("intake.dividend")}</label>
-                <input className={inputCls} type="number" min="0" value={dividend} onChange={e => setDividend(e.target.value)} placeholder="24000" />
-              </>}
-              {userType === "expat" && <>
-                <label className={labelCls}>{t("intake.salary")}</label>
-                <input className={inputCls} type="number" min="0" value={salary} onChange={e => setSalary(e.target.value)} placeholder="90000" />
-                <label className={labelCls}>{t("intake.ruling_year")}</label>
-                <select className={inputCls} value={rulingYear} onChange={e => setRulingYear(e.target.value)}>
-                  {[1, 2, 3, 4, 5].map(y => <option key={y} value={y}>{t("intake.year_n", { n: y })}</option>)}
-                </select>
-              </>}
-            </div>
-            <div className="flex justify-between items-center mt-1">
-              <button className={btnBack} onClick={() => setStep(1)}>← {t("intake.back")}</button>
-              <button className={btnPrimary} onClick={() => setStep(3)}>{t("intake.next")} →</button>
-            </div>
-          </>
-        )}
+          <div style={{ marginTop: 24, padding: 14, border: "1px dashed var(--hairline-2)", borderRadius: "var(--r)" }}>
+            <div className="eyebrow">{t("intake.estimate_label", { defaultValue: "Estimate so far" })}</div>
+            <div className="font-mono" style={{ marginTop: 6, fontSize: 22, color: "var(--ink)", letterSpacing: "-0.01em" }}>€ —</div>
+            <div style={{ fontSize: 11.5, color: "var(--ink-3)" }}>updates on finish</div>
+          </div>
+        </aside>
 
-        {/* Step 3 */}
-        {step === 3 && (
-          <>
-            <h2 className="text-[22px] font-semibold text-[var(--text-h)] m-0 text-center">{t("intake.step3_title")}</h2>
-            <p className="text-sm text-[var(--text)] opacity-70 m-0 -mt-3 text-center leading-relaxed">{t("intake.step3_subtitle")}</p>
-            <div className="flex flex-col gap-2.5">
-              <label className={checkCls}><input type="checkbox" checked={hasPartner} onChange={e => setHasPartner(e.target.checked)} />{t("intake.has_partner")}</label>
-              {hasPartner && <>
-                <label className={labelCls}>{t("intake.partner_income")}</label>
-                <input className={inputCls} type="number" min="0" value={partnerIncome} onChange={e => setPartnerIncome(e.target.value)} placeholder="0" />
-              </>}
-              <label className={labelCls}>{t("intake.children")}</label>
-              <select className={inputCls} value={children} onChange={e => setChildren(e.target.value)}>
-                <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3+</option>
-              </select>
-              <label className={labelCls}>{t("intake.assets")} <span className="font-normal opacity-55">({t("intake.optional")})</span></label>
-              <input className={inputCls} type="number" min="0" value={assets} onChange={e => setAssets(e.target.value)} placeholder="0" />
-              <label className={labelCls}>{t("intake.pension")} <span className="font-normal opacity-55">({t("intake.optional")})</span></label>
-              <input className={inputCls} type="number" min="0" value={pension} onChange={e => setPension(e.target.value)} placeholder="0" />
+        {/* Center card */}
+        <main className="card" style={{ padding: 36, borderRadius: "var(--r-xl)", boxShadow: "var(--shadow)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <StepDots step={step} />
+            <span className="eyebrow">Step {step} of 3</span>
+          </div>
+
+          {/* Step 1 */}
+          {step === 1 && (
+            <div style={{ marginTop: 24 }}>
+              <h1 style={{ fontFamily: "var(--serif)", fontSize: 34, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+                {t("intake.step1_title")}
+              </h1>
+              <p style={{ marginTop: 8, color: "var(--ink-3)", fontSize: 14 }}>{t("intake.step1_subtitle")}</p>
+              <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {(Object.entries(USER_TYPES) as [UserType, typeof USER_TYPES[UserType]][]).map(([k, v]) => {
+                  const on = userType === k;
+                  return (
+                    <button key={k} onClick={() => setUserType(k)} style={{
+                      textAlign: "left", padding: "18px 20px", borderRadius: "var(--r)",
+                      border: `1px solid ${on ? "var(--sage-600)" : "var(--hairline-2)"}`,
+                      background: on ? "var(--accent-soft)" : "var(--paper)",
+                      display: "flex", flexDirection: "column", gap: 12, cursor: "pointer", minHeight: 150, position: "relative",
+                    }}>
+                      {on && (
+                        <span style={{ position: "absolute", top: 14, right: 14, width: 18, height: 18, borderRadius: 999, background: "var(--sage-600)", color: "white", display: "grid", placeItems: "center" }}>
+                          <Icon.check style={{ width: 10, height: 10 }} />
+                        </span>
+                      )}
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <span style={{ width: 38, height: 38, borderRadius: 10, background: v.color, color: "white", display: "grid", placeItems: "center", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em" }}>
+                          {v.glyph}
+                        </span>
+                        <div>
+                          <div style={{ fontFamily: "var(--serif)", fontSize: 22, color: "var(--ink)" }}>{v.label}</div>
+                          <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{v.desc}</div>
+                        </div>
+                      </div>
+                      <div style={{ marginTop: "auto", display: "flex", gap: 6, flexWrap: "wrap" }}>
+                        {v.tags.map(tag => (
+                          <span key={tag} className="eyebrow" style={{ padding: "3px 7px", background: "var(--paper-3)", borderRadius: 999 }}>{tag}</span>
+                        ))}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="flex justify-between items-center mt-1">
-              <button className={btnBack} onClick={() => setStep(2)}>← {t("intake.back")}</button>
-              <button className={btnPrimary} onClick={handleFinish} disabled={loading}>
-                {loading ? t("intake.calculating") : t("intake.finish")}
+          )}
+
+          {/* Step 2 */}
+          {step === 2 && (
+            <div style={{ marginTop: 24 }}>
+              <h1 style={{ fontFamily: "var(--serif)", fontSize: 34, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+                Your <span style={{ color: "var(--sage-700)", fontStyle: "italic" }}>{USER_TYPES[userType].label}</span> income.
+              </h1>
+              <p style={{ marginTop: 8, color: "var(--ink-3)", fontSize: 14 }}>Numbers stay on your device until you create an account.</p>
+              <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+                {userType === "zzp" && <>
+                  <UnitInput label={t("intake.revenue")} unit="€" value={revenue} onChange={setRevenue} placeholder="72000" hint="Gross before expenses" />
+                  <UnitInput label={t("intake.expenses")} unit="€" value={expenses} onChange={setExpenses} placeholder="8000" hint="Software, travel, materials" />
+                  <UnitInput label="Hours per year" unit="h" value={hours} onChange={setHours} placeholder="1500" hint="Need 1,225 h for zelfstandigenaftrek" />
+                  <label style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", background: "var(--paper-3)", borderRadius: "var(--r-sm)", fontSize: 13.5, cursor: "pointer" }}>
+                    <input type="checkbox" checked={isStarter} onChange={e => setIsStarter(e.target.checked)} />
+                    <span><strong style={{ color: "var(--ink)" }}>Starter year?</strong> {t("intake.is_starter")} (€2,123 — last year 2026)</span>
+                  </label>
+                </>}
+                {(userType === "employee" || userType === "dga") && (
+                  <UnitInput label={t("intake.salary")} unit="€" value={salary} onChange={setSalary} placeholder={userType === "dga" ? "56000" : "48000"} />
+                )}
+                {userType === "dga" && (
+                  <UnitInput label={t("intake.dividend")} unit="€" value={dividend} onChange={setDividend} placeholder="12000" />
+                )}
+                {userType === "expat" && <>
+                  <UnitInput label={t("intake.salary")} unit="€" value={salary} onChange={setSalary} placeholder="90000" />
+                  <div>
+                    <div className="tw-label" style={{ marginBottom: 6 }}>{t("intake.ruling_year")}</div>
+                    <select className="tw-input" value={rulingYear} onChange={e => setRulingYear(e.target.value)}>
+                      {[1, 2, 3, 4, 5].map(y => <option key={y} value={y}>{t("intake.year_n", { n: y })}</option>)}
+                    </select>
+                  </div>
+                </>}
+              </div>
+            </div>
+          )}
+
+          {/* Step 3 */}
+          {step === 3 && (
+            <div style={{ marginTop: 24 }}>
+              <h1 style={{ fontFamily: "var(--serif)", fontSize: 34, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+                {t("intake.step3_title")}
+              </h1>
+              <p style={{ marginTop: 8, color: "var(--ink-3)", fontSize: 14 }}>{t("intake.step3_subtitle")}</p>
+              <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <div className="tw-label" style={{ marginBottom: 6 }}>{t("intake.has_partner")}</div>
+                  <div style={{ display: "flex", border: "1px solid var(--hairline-2)", borderRadius: "var(--r-sm)", overflow: "hidden" }}>
+                    {[["Yes", true], ["No", false]].map(([lbl, val]) => (
+                      <button key={String(lbl)} onClick={() => setHasPartner(Boolean(val))} style={{
+                        flex: 1, padding: "9px 0", fontSize: 13.5, border: "none", cursor: "pointer",
+                        background: hasPartner === Boolean(val) ? "var(--accent-soft)" : "var(--paper)",
+                        color: hasPartner === Boolean(val) ? "var(--sage-700)" : "var(--ink-3)",
+                        fontWeight: hasPartner === Boolean(val) ? 600 : 400,
+                      }}>{String(lbl)}</button>
+                    ))}
+                  </div>
+                </div>
+                {hasPartner && (
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <UnitInput label={t("intake.partner_income")} unit="€" value={partnerIncome} onChange={setPartnerIncome} placeholder="0" />
+                  </div>
+                )}
+                <div>
+                  <div className="tw-label" style={{ marginBottom: 6 }}>{t("intake.children")}</div>
+                  <select className="tw-input" value={children} onChange={e => setChildren(e.target.value)}>
+                    <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3+</option>
+                  </select>
+                </div>
+                <UnitInput label={t("intake.assets")} unit="€" value={assets} onChange={setAssets} placeholder="0" />
+                <UnitInput label={t("intake.pension")} unit="€" value={pension} onChange={setPension} placeholder="0" />
+              </div>
+            </div>
+          )}
+
+          {/* Nav buttons */}
+          <div style={{ marginTop: 30, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <button className="btn btn-ghost" onClick={() => setStep(Math.max(1, step - 1) as 1|2|3)} disabled={step === 1}>
+              ← {t("intake.back")}
+            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button style={{ background: "none", border: "none", fontSize: 12.5, color: "var(--ink-4)", cursor: "pointer" }} onClick={() => navigate("/chat")}>
+                {t("intake.skip")}
               </button>
+              {step < 3 ? (
+                <button className="btn btn-accent" onClick={() => setStep((step + 1) as 2|3)}>
+                  {t("intake.next")} <Icon.arrow />
+                </button>
+              ) : (
+                <button className="btn btn-accent" onClick={handleFinish} disabled={loading}>
+                  {loading ? t("intake.calculating") : <>{t("intake.finish")} <Icon.arrow /></>}
+                </button>
+              )}
             </div>
-          </>
-        )}
+          </div>
+        </main>
 
-        <button
-          className="bg-none border-none text-xs text-[var(--text)] opacity-40 cursor-pointer text-center p-0 -mt-2 hover:opacity-70 transition-opacity"
-          onClick={() => navigate("/chat")}
-        >
-          {t("intake.skip")}
-        </button>
+        {/* Right tip */}
+        <aside style={{ position: "sticky", top: 92 }}>
+          <div className="card" style={{ padding: 18, background: "var(--ink)", color: "var(--paper)", border: "none" }}>
+            <span className="eyebrow" style={{ color: "var(--sage-300)" }}>Why we ask</span>
+            <p style={{ marginTop: 10, fontSize: 13.5, lineHeight: 1.5, color: "oklch(0.88 0.01 95)" }}>
+              {WHY_TEXT[step]}
+            </p>
+          </div>
+          <div style={{ marginTop: 14, padding: 14, fontSize: 12, color: "var(--ink-3)", border: "1px solid var(--hairline)", borderRadius: "var(--r)" }}>
+            <span className="eyebrow eyebrow-accent">Did you know</span>
+            <p style={{ marginTop: 6, color: "var(--ink-2)", fontSize: 12.5, lineHeight: 1.5 }}>
+              2026 is the <em>last year</em> of startersaftrek (€2,123). The chat will flag if you qualify.
+            </p>
+          </div>
+        </aside>
       </div>
     </div>
   );

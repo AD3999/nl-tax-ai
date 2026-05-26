@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import {
-  Button, Input, Select, Card, CardHeader, CardBody, CardTitle,
+  Button, Select, Card, CardHeader, CardBody, CardTitle,
   Badge, Alert, Spinner,
 } from "@/components/ui/index";
 import { getRules } from "@/lib/tax-rules/api";

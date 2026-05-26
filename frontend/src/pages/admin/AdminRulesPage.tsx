@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { RuleStatusBadge } from "@/components/admin/RuleStatusBadge";
 import {
-  Button, Badge, Input, Select, Card, Spinner, Alert,
+  Button, Badge, Select, Card, Spinner, Alert,
 } from "@/components/ui/index";
 import { getRules, duplicateRuleToYear, deleteRule } from "@/lib/tax-rules/api";
 import { AVAILABLE_YEARS } from "@/lib/tax-rules/mock-data";

@@ -2,11 +2,12 @@
   "app_name": "TaxWijs",
   "tagline": "Your smart tax assistant",
   "nav": {
-    "chat": "Ask a question",
-    "calculator": "Calculate tax",
-    "simulation": "Return Simulation",
+    "chat": "Chat",
+    "calculator": "Calculator",
+    "simulation": "IB Simulation",
     "pricing": "Pricing",
     "profile": "Profile",
+    "dashboard": "Dashboard",
     "login": "Log in",
     "logout": "Log out"
   },
@@ -100,6 +101,8 @@
   "landing": {
     "badge": "Tax year 2026",
     "headline": "Understand your Dutch taxes, without the confusion",
+    "headline_1": "Tax in the Netherlands,",
+    "headline_2": "answered plainly.",
     "subheadline": "TaxWijs answers your tax questions in Dutch, English, or Persian — personalised to your situation.",
     "cta_primary": "Set up profile & start",
     "cta_secondary": "Ask directly",

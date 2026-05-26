@@ -16,6 +16,24 @@ export interface TokenMeta {
   limit?: number;
 }
 
+async function refreshAccessToken(): Promise<string | null> {
+  const refresh = localStorage.getItem("refresh_token");
+  if (!refresh) return null;
+  try {
+    const res = await fetch(`${API_BASE}/auth/token/refresh/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { access: string };
+    localStorage.setItem("access_token", data.access);
+    return data.access;
+  } catch {
+    return null;
+  }
+}
+
 export async function sendMessage(
   message: string,
   conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
@@ -23,22 +41,39 @@ export async function sendMessage(
   signal?: AbortSignal,
   userProfile?: Record<string, unknown>,
   sessionMessageCount = 0,
+  intakeMode = false,
 ): Promise<void> {
-  const token = localStorage.getItem("access_token");
-  const response = await fetch(`${API_BASE}/chat/message/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    body: JSON.stringify({
-      message,
-      conversation_history: conversationHistory,
-      session_message_count: sessionMessageCount,
-      ...(userProfile ? { user_profile: userProfile } : {}),
-    }),
-    signal,
+  let token = localStorage.getItem("access_token");
+
+  const body = JSON.stringify({
+    message,
+    conversation_history: conversationHistory,
+    session_message_count: sessionMessageCount,
+    intake_mode: intakeMode,
+    ...(userProfile ? { user_profile: userProfile } : {}),
   });
+
+  const makeRequest = (authToken: string | null) =>
+    fetch(`${API_BASE}/chat/message/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
+      body,
+      signal,
+    });
+
+  let response = await makeRequest(token);
+
+  // On 401: try to refresh the access token once, then retry.
+  // If refresh fails, retry without a token (anonymous — AllowAny view allows it).
+  if (response.status === 401) {
+    const newToken = await refreshAccessToken();
+    if (!newToken) localStorage.removeItem("access_token");
+    token = newToken;
+    response = await makeRequest(token);
+  }
 
   if (!response.ok || !response.body) {
     throw new Error(`Chat request failed: ${response.status}`);

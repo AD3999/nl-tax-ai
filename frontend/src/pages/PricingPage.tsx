@@ -3,24 +3,55 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { createCheckoutSession, createBillingPortalSession } from "../api/payments";
 import { useAuth } from "../context/AuthContext";
+import { Icon } from "../components/Icon";
 
-const FREE_FEATURES = [
-  "5 questions per session",
-  "Tax calculator (all user types)",
-  "IB return guide",
-  "3-language support (NL/EN/FA)",
+const PRICING_ROWS: [string, string, string][] = [
+  ["Verified 2026 rules",       "all 28",    "all 28"],
+  ["Calculator (Box 1·2·3)",    "yes",       "yes"],
+  ["IB Return guide",           "yes",       "yes"],
+  ["NL · EN · FA + RTL",        "yes",       "yes"],
+  ["Chat questions",            "10/day",    "unlimited"],
+  ["Full 11-step simulation",   "no",        "yes"],
+  ["Saved scenarios & history", "1",         "unlimited"],
+  ["PDF export",                "no",        "yes"],
+  ["Priority responses",        "no",        "yes"],
+  ["Email reminders",           "no",        "yes"],
 ];
 
-const PREMIUM_FEATURES = [
-  "Unlimited questions, every day",
-  "Tax calculator (all user types)",
-  "IB return guide",
-  "3-language support (NL/EN/FA)",
-  "Full aangifte IB simulation",
-  "Saved conversation history",
-  "Priority Claude responses",
-  "Cancel anytime",
-];
+function PricingList({ rows, accent = false }: { rows: [string, string][]; accent?: boolean }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {rows.map(([label, val]) => {
+        const yes = val === "yes" || val === "unlimited" || val === "all 28";
+        const no = val === "no" || val === "—";
+        return (
+          <div key={label} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{
+              width: 18, height: 18, borderRadius: 999, display: "grid", placeItems: "center", flexShrink: 0,
+              background: no ? "var(--paper-3)" : accent ? "var(--sage-600)" : "var(--ink)",
+              color: no ? "var(--ink-4)" : "white",
+            }}>
+              {no
+                ? <Icon.x style={{ width: 9, height: 9 }} />
+                : <Icon.check style={{ width: 10, height: 10 }} />}
+            </span>
+            <span style={{ fontSize: 13.5, color: no ? "var(--ink-4)" : "var(--ink-2)", flex: 1 }}>{label}</span>
+            <span style={{ fontSize: 12, color: no ? "var(--ink-4)" : "var(--ink-3)", fontFamily: yes ? "var(--mono)" : "var(--sans)" }}>
+              {val}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const FAQ_ITEMS = [
+  ["Can I cancel anytime?",       "Yes — managed by Stripe. Cancel from your billing portal, no email required. Active until the end of the billing period."],
+  ["Is my tax data stored?",      "Anonymous use stays in your browser. Logged-in profiles are encrypted at rest in EU-region Postgres. We never sell or share."],
+  ["What payment methods?",       "Credit card, iDEAL, SEPA direct debit, Apple Pay and Google Pay — all via Stripe Checkout."],
+  ["Do you do my actual return?", "No. TaxWijs is decision support. You file via Mijn Belastingdienst — we generate the numbers and walk you through every field."],
+] as const;
 
 export default function PricingPage() {
   const { t } = useTranslation();
@@ -54,109 +85,117 @@ export default function PricingPage() {
     }
   };
 
-  const check = (s: string) => (
-    <li key={s} className="flex items-start gap-2.5 text-[14px] text-[var(--text)]">
-      <span className="text-[var(--accent)] font-bold mt-0.5 shrink-0">✓</span>
-      {s}
-    </li>
-  );
-
-  const cross = (s: string) => (
-    <li key={s} className="flex items-start gap-2.5 text-[14px] text-[var(--text)] opacity-45">
-      <span className="font-bold mt-0.5 shrink-0">✕</span>
-      {s}
-    </li>
-  );
-
   return (
-    <div className="max-w-[860px] mx-auto px-12 py-16 pb-24 flex flex-col gap-12">
-      {/* Header */}
-      <div className="text-center flex flex-col gap-3">
-        <span className="text-[11px] font-bold tracking-widest uppercase text-[var(--accent)]">
-          {t("pricing.badge")}
-        </span>
-        <h1 className="text-[36px] font-extrabold text-[var(--text-h)] m-0 -tracking-wide leading-tight">
-          {t("pricing.headline")}
+    <div style={{ background: "var(--paper)", overflowX: "hidden" }}>
+      {/* Hero */}
+      <section style={{ padding: "56px 40px 40px", textAlign: "center" }}>
+        <div className="eyebrow eyebrow-accent">Pricing</div>
+        <h1 style={{ marginTop: 8, fontFamily: "var(--serif)", fontSize: 56, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.025em", lineHeight: 1.04 }}>
+          Free to try.<br /><em style={{ color: "var(--sage-700)" }}>€9.99</em> when you're ready.
         </h1>
-        <p className="text-[16px] text-[var(--text)] opacity-70 m-0 max-w-lg mx-auto leading-relaxed">
-          {t("pricing.subheadline")}
+        <p style={{ marginTop: 12, color: "var(--ink-3)", fontSize: 15.5, maxWidth: 540, margin: "12px auto 0" }}>
+          One transparent price. No upsells, no surprise add-ons. Cancel any time from your billing portal.
         </p>
-      </div>
+      </section>
 
       {/* Plan cards */}
-      <div className="grid grid-cols-2 gap-5 max-w-[640px] mx-auto w-full">
-        {/* Free card */}
-        <div className="border border-[var(--border)] rounded-2xl p-7 flex flex-col gap-5 bg-[var(--bg)]">
-          <div>
-            <p className="text-[11px] font-bold tracking-widest uppercase text-[var(--text)] opacity-50 mb-1">
-              {t("pricing.free_label")}
+      <section style={{ padding: "8px 40px 64px" }}>
+        <div style={{ maxWidth: 940, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1.05fr", gap: 22 }}>
+          {/* Free */}
+          <div className="card" style={{ padding: 32 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span className="pill" style={{ background: "var(--paper-3)", color: "var(--ink-3)" }}>Free</span>
+              <span style={{ fontSize: 11.5, color: "var(--ink-4)" }}>No account needed</span>
+            </div>
+            <div style={{ marginTop: 18, display: "flex", alignItems: "baseline", gap: 6 }}>
+              <span className="font-serif" style={{ fontSize: 64, color: "var(--ink)", letterSpacing: "-0.025em", lineHeight: 1 }}>€0</span>
+              <span style={{ color: "var(--ink-3)", fontSize: 14 }}>/month</span>
+            </div>
+            <p style={{ marginTop: 8, color: "var(--ink-3)", fontSize: 13.5, lineHeight: 1.55 }}>
+              The full calculator, the IB guide, and 10 chat questions a day. Plenty for most filings.
             </p>
-            <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-extrabold text-[var(--text-h)]">€0</span>
-              <span className="text-[14px] text-[var(--text)] opacity-60">/ {t("pricing.month")}</span>
+            <button className="btn btn-ghost btn-lg" style={{ width: "100%", marginTop: 22 }} onClick={() => navigate("/chat")}>
+              Start free
+            </button>
+            <div className="dots" style={{ margin: "22px 0" }} />
+            <PricingList rows={PRICING_ROWS.map(r => [r[0], r[1]])} />
+          </div>
+
+          {/* Premium */}
+          <div style={{ position: "relative" }}>
+            <div style={{ position: "absolute", top: -12, left: 28, zIndex: 1, display: "inline-flex", padding: "5px 12px", borderRadius: 999, background: "var(--ink)", color: "var(--paper)", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em" }}>
+              ⚡ MOST PICKED
+            </div>
+            <div style={{
+              padding: 32, borderRadius: "var(--r-xl)",
+              background: "linear-gradient(180deg, var(--sage-100) 0%, var(--paper) 70%)",
+              border: "1px solid var(--sage-300)",
+              boxShadow: "var(--shadow-lg)",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span className="pill pill-accent">Premium</span>
+                <span style={{ fontSize: 11.5, color: "var(--sage-700)" }}>Cancel anytime</span>
+              </div>
+              <div style={{ marginTop: 18, display: "flex", alignItems: "baseline", gap: 6 }}>
+                <span className="font-serif" style={{ fontSize: 64, color: "var(--ink)", letterSpacing: "-0.025em", lineHeight: 1 }}>
+                  €9<span style={{ fontSize: 28 }}>.99</span>
+                </span>
+                <span style={{ color: "var(--ink-3)", fontSize: 14 }}>/month</span>
+              </div>
+              <p style={{ marginTop: 8, color: "var(--ink-2)", fontSize: 13.5, lineHeight: 1.55 }}>
+                Unlimited chat, the full 11-step simulation, PDF export and saved scenarios. The whole brain.
+              </p>
+
+              {error && (
+                <div style={{ marginTop: 10, padding: "8px 12px", background: "var(--danger-soft)", borderRadius: "var(--r-sm)", fontSize: 13, color: "var(--danger)" }}>
+                  {error}
+                </div>
+              )}
+
+              <button
+                className="btn btn-accent btn-lg"
+                style={{ width: "100%", marginTop: 22 }}
+                disabled={loading}
+                onClick={handlePremiumCta}
+              >
+                {loading ? "…"
+                  : isPremium ? t("pricing.manage_billing")
+                  : !user ? t("pricing.cta_register")
+                  : t("pricing.cta_upgrade")}
+                {!loading && <Icon.arrow />}
+              </button>
+
+              {isPremium && (
+                <div style={{ marginTop: 10, textAlign: "center", fontSize: 12, color: "var(--sage-700)", fontWeight: 500 }}>
+                  ✓ {t("pricing.current_plan")}
+                </div>
+              )}
+
+              <div className="dots" style={{ margin: "22px 0" }} />
+              <PricingList rows={PRICING_ROWS.map(r => [r[0], r[2]])} accent />
             </div>
           </div>
-          <ul className="flex flex-col gap-2.5 m-0 p-0 list-none">
-            {FREE_FEATURES.map(check)}
-            {["Full simulation", "Saved history", "Priority responses"].map(cross)}
-          </ul>
-          <button
-            className="mt-auto w-full py-2.5 rounded-xl border border-[var(--border)] bg-transparent text-[var(--text)] font-semibold text-[14px] cursor-pointer hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors font-[inherit]"
-            onClick={() => navigate("/chat")}
-          >
-            {t("pricing.free_cta")}
-          </button>
         </div>
 
-        {/* Premium card */}
-        <div className="border-2 border-[var(--accent)] rounded-2xl p-7 flex flex-col gap-5 bg-[var(--accent-bg)] relative">
-          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-            <span className="bg-[var(--accent)] text-white text-[11px] font-bold px-3 py-1 rounded-full tracking-wide uppercase">
-              {t("pricing.popular")}
-            </span>
+        {/* FAQ */}
+        <div style={{ maxWidth: 760, margin: "60px auto 0" }}>
+          <div className="eyebrow eyebrow-accent">Questions</div>
+          <h2 style={{ marginTop: 4, fontFamily: "var(--serif)", fontSize: 32, color: "var(--ink)", fontWeight: 400, letterSpacing: "-0.015em" }}>
+            Things people ask before they upgrade.
+          </h2>
+          <div style={{ marginTop: 22, border: "1px solid var(--hairline)", borderRadius: "var(--r-lg)", overflow: "hidden" }}>
+            {FAQ_ITEMS.map(([q, a], i) => (
+              <div key={q} style={{ padding: "20px 22px", borderBottom: i < FAQ_ITEMS.length - 1 ? "1px solid var(--hairline)" : "none" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
+                  <span style={{ fontSize: 15.5, fontFamily: "var(--serif)", color: "var(--ink)" }}>{q}</span>
+                  <Icon.chev style={{ transform: "rotate(90deg)", flexShrink: 0, marginTop: 4, color: "var(--ink-3)" }} />
+                </div>
+                <p style={{ marginTop: 8, fontSize: 13.5, color: "var(--ink-3)", lineHeight: 1.55, maxWidth: 600 }}>{a}</p>
+              </div>
+            ))}
           </div>
-          <div>
-            <p className="text-[11px] font-bold tracking-widest uppercase text-[var(--accent)] mb-1">
-              {t("pricing.premium_label")}
-            </p>
-            <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-extrabold text-[var(--text-h)]">€9.99</span>
-              <span className="text-[14px] text-[var(--text)] opacity-60">/ {t("pricing.month")}</span>
-            </div>
-          </div>
-          <ul className="flex flex-col gap-2.5 m-0 p-0 list-none">
-            {PREMIUM_FEATURES.map(check)}
-          </ul>
-          {error && <p className="text-sm text-red-500 m-0">{error}</p>}
-          <button
-            disabled={loading}
-            className="mt-auto w-full py-3 rounded-xl bg-[var(--accent)] text-white font-bold text-[15px] border-none cursor-pointer hover:opacity-85 disabled:opacity-50 transition-opacity font-[inherit]"
-            onClick={handlePremiumCta}
-          >
-            {loading ? "…" : isPremium ? t("pricing.manage_billing") : !user ? t("pricing.cta_register") : t("pricing.cta_upgrade")}
-          </button>
-          {isPremium && (
-            <p className="text-center text-[12px] text-[var(--accent)] font-semibold m-0">
-              ✓ {t("pricing.current_plan")}
-            </p>
-          )}
         </div>
-      </div>
-
-      {/* FAQ */}
-      <div className="max-w-[540px] mx-auto w-full flex flex-col gap-4">
-        <h2 className="text-[18px] font-bold text-[var(--text-h)] m-0 text-center">{t("pricing.faq_title")}</h2>
-        {[
-          { q: t("pricing.faq_1_q"), a: t("pricing.faq_1_a") },
-          { q: t("pricing.faq_2_q"), a: t("pricing.faq_2_a") },
-          { q: t("pricing.faq_3_q"), a: t("pricing.faq_3_a") },
-        ].map(({ q, a }) => (
-          <div key={q} className="border border-[var(--border)] rounded-xl p-5">
-            <p className="text-[14px] font-semibold text-[var(--text-h)] m-0 mb-1">{q}</p>
-            <p className="text-[13px] text-[var(--text)] opacity-70 m-0 leading-relaxed">{a}</p>
-          </div>
-        ))}
-      </div>
+      </section>
     </div>
   );
 }
