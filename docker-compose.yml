@@ -1,58 +1,73 @@
 version: "3.9"
 
 services:
+
+  # ── PostgreSQL database ───────────────────────────────────
   db:
     image: pgvector/pgvector:pg16
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: nltaxai
-      POSTGRES_USER: nltaxai
-      POSTGRES_PASSWORD: nltaxai
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${POSTGRES_DB:-taxwijs}
+      POSTGRES_USER: ${POSTGRES_USER:-taxwijs}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taxwijs_dev}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-  redis:
-    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-taxwijs}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
-      - "6379:6379"
+      - "5432:5432"
 
+  # ── Django backend ────────────────────────────────────────
   backend:
-    build: ./backend
-    command: python manage.py runserver 0.0.0.0:8000
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-taxwijs}:${POSTGRES_PASSWORD:-taxwijs_dev}@db:5432/${POSTGRES_DB:-taxwijs}
+      DJANGO_SETTINGS_MODULE: config.settings
     volumes:
-      - ./backend:/app
-      - ./.env:/.env
+      - chroma_data:/app/phase2/chroma_db
+      - static_files:/app/backend/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "8000:8000"
-    depends_on:
-      - db
-      - redis
-    environment:
-      DATABASE_URL: postgresql://nltaxai:nltaxai@db:5432/nltaxai
-      REDIS_URL: redis://redis:6379/0
-      DEBUG: "true"
 
-  celery:
-    build: ./backend
-    command: celery -A config worker -l info
-    volumes:
-      - ./backend:/app
-      - ./.env:/.env
-    depends_on:
-      - db
-      - redis
-    environment:
-      DATABASE_URL: postgresql://nltaxai:nltaxai@db:5432/nltaxai
-      REDIS_URL: redis://redis:6379/0
-
+  # ── React frontend + nginx ────────────────────────────────
   frontend:
-    build: ./frontend
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_URL: ""
+    restart: unless-stopped
+    depends_on:
+      - backend
     ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - "80:80"
+
+  # ── (Optional) Dev-only: hot-reload frontend ──────────────
+  # Uncomment for local development:
+  # frontend-dev:
+  #   image: node:22-alpine
+  #   working_dir: /app
+  #   command: npm run dev -- --host
+  #   volumes:
+  #     - ./frontend:/app
+  #     - /app/node_modules
+  #   ports:
+  #     - "5173:5173"
+  #   environment:
+  #     VITE_API_URL: "http://localhost:8000"
 
 volumes:
   postgres_data:
+  chroma_data:
+  static_files:

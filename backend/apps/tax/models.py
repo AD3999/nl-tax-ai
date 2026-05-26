@@ -1,3 +1,4 @@
+import json
 from django.db import models
 from django.conf import settings
 
@@ -41,3 +42,101 @@ class TaxProfile(models.Model):
 
     class Meta:
         db_table = "tax_profiles"
+
+
+class TaxRule(models.Model):
+    """
+    A single Dutch tax rule — stored in the database and editable by admins.
+    Mirrors the structure of phase1/data/seed/tax_rules_2026.json.
+    """
+    STATUS_CHOICES = [
+        ("verified", "Verified"),
+        ("pending_review", "Pending Review"),
+        ("draft", "Draft"),
+    ]
+    RESULT_TYPE_CHOICES = [
+        ("rate", "Rate"), ("amount", "Amount"), ("threshold", "Threshold"),
+        ("risk", "Risk"), ("deadline", "Deadline"), ("boolean", "Boolean"),
+    ]
+
+    # Identity
+    rule_id = models.CharField(max_length=50, unique=True)
+    year = models.PositiveIntegerField(default=2026)
+    topic = models.CharField(max_length=100)
+    category = models.CharField(max_length=100, blank=True)
+    user_types = models.JSONField(default=list)
+    tags = models.JSONField(default=list)
+
+    # Condition / result
+    condition_summary = models.TextField(blank=True)
+    result_type = models.CharField(max_length=20, choices=RESULT_TYPE_CHOICES, default="amount")
+    result_value = models.FloatField(null=True, blank=True)
+    result_unit = models.CharField(max_length=20, blank=True)
+    result_formula = models.TextField(blank=True)
+    notes = models.TextField(blank=True)
+
+    # Multilingual plain text
+    plain_nl = models.TextField(blank=True)
+    plain_en = models.TextField(blank=True)
+    plain_fa = models.TextField(blank=True)
+
+    # AI / RAG
+    ai_prompt_hint = models.TextField(blank=True)
+
+    # Source + verification
+    source_url = models.URLField(max_length=500, blank=True)
+    verification_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+
+    # Date range
+    effective_from = models.DateField(null=True, blank=True)
+    effective_until = models.DateField(null=True, blank=True)
+    supersedes = models.CharField(max_length=50, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.CharField(max_length=150, blank=True)
+
+    class Meta:
+        db_table = "tax_rules"
+        ordering = ["year", "rule_id"]
+
+    def __str__(self):
+        return f"{self.rule_id} ({self.year})"
+
+    @classmethod
+    def import_from_json(cls, path: str, replace: bool = False):
+        """Import rules from a Phase 1 seed JSON file."""
+        with open(path, encoding="utf-8") as f:
+            rules = json.load(f)
+        created, updated = 0, 0
+        for r in rules:
+            condition = r.get("condition", {})
+            result = r.get("result", {})
+            defaults = {
+                "year": r.get("year", 2026),
+                "topic": r.get("topic", ""),
+                "category": r.get("category", ""),
+                "user_types": r.get("user_types", []),
+                "tags": r.get("tags", []),
+                "condition_summary": str(condition),
+                "result_type": result.get("type", "amount"),
+                "result_value": float(result["value"]) if isinstance(result.get("value"), (int, float)) else None,
+                "result_unit": result.get("unit", ""),
+                "result_formula": result.get("formula", ""),
+                "notes": result.get("notes", ""),
+                "plain_nl": r.get("plain_nl", ""),
+                "plain_en": r.get("plain_en", ""),
+                "plain_fa": r.get("plain_fa", ""),
+                "ai_prompt_hint": r.get("ai_prompt_hint", ""),
+                "source_url": r.get("source_url", ""),
+                "verification_status": r.get("verification_status", "draft"),
+                "effective_from": r.get("effective_from"),
+                "effective_until": r.get("effective_until"),
+                "supersedes": r.get("supersedes", ""),
+            }
+            obj, was_created = cls.objects.update_or_create(rule_id=r["id"], defaults=defaults)
+            if was_created:
+                created += 1
+            else:
+                updated += 1
+        return created, updated

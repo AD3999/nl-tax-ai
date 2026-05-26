@@ -1,7 +1,7 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: May 2026 (All phases 1–8 complete and merged to master — pending review)
+> Last updated: 26 May 2026 — Phase 11 UI redesign complete. Chat SSE fixed. Responsiveness added. Auth 401 fixed.
 
 ---
 
@@ -587,6 +587,74 @@ All routes remain accessible without auth (AllowAny on all API endpoints). Auth 
 
 ---
 
+---
+
+## Phase 9 — Aangifte IB Simulation ✅ Complete
+
+**Goal:** A full branching simulation of the Belastingdienst aangifte IB 2026 process — so users can walk through the real tax return flow, understand what questions will be asked, and practice filling in all fields before doing the real thing.
+
+### What was built
+
+| File | Purpose |
+|------|---------|
+| `frontend/src/data/simulationSteps.ts` | Complete 11-step simulation data — all fields in NL/EN/FA, condition functions for branching, `answersToCalcProfile()` mapper |
+| `frontend/src/pages/SimulationPage.tsx` | Full wizard component — sidebar with clickable steps, 5 field types (boolean/number/text/select/info), OverviewStep with real calculator API + breakdown table, Ask Claude on every field |
+| `frontend/src/pages/SimulationPage.module.css` | Two-column layout: 260px sticky sidebar + flex main; field rows; result grid; responsive mobile |
+| `frontend/src/App.tsx` | Added `/simulation` route + "Simulatie Aangifte" / "Return Simulation" / "شبیه‌سازی اظهارنامه" nav link |
+| All 3 i18n files | Added `nav.simulation` key |
+
+### Simulation steps (11 total)
+
+| # | Step | Condition |
+|---|------|-----------|
+| 1 | Persoonlijke gegevens | Always shown |
+| 2 | Soort inkomen | Always shown |
+| 3 | Loon & uitkeringen | `is_employee OR has_benefits` |
+| 4 | Winst uit onderneming | `is_zzp` |
+| 5 | Eigen woning | Always shown |
+| 6 | Aftrekposten | Always shown |
+| 7 | Inkomen buitenland | `has_foreign_income` |
+| 8 | Sparen & beleggen (Box 3) | Always shown |
+| 9 | Aanmerkelijk belang (Box 2) | `has_substantial_interest` |
+| 10 | Heffingskortingen | Always shown |
+| 11 | Overzicht & berekening | Always shown (OverviewStep) |
+
+### Key features
+
+- **Full branching**: steps 3, 4, 7, 9 appear only when the user's earlier answers require them
+- **Ask Claude on every field**: each field has a context-aware question pre-written — clicking navigates to `/chat` with the question pre-filled
+- **Real calculator at the end**: step 11 calls `POST /api/calculator/calculate/` and shows result cards (total tax, effective rate, monthly reserve, provisional already paid) + full breakdown table
+- **Trilingual**: all labels, help texts, step titles, and Claude questions in NL/EN/FA
+- **Sidebar navigation**: click any step to jump; completed steps show ✓ checkmark; current step has accent border
+- **Progress bar**: fills as user advances through steps
+- **Source links**: fields with a Belastingdienst URL show a "Belastingdienst ↗" link
+- **Mobile responsive**: sidebar collapses to horizontal icon strip; field rows stack vertically
+
+### `answersToCalcProfile()` mappings
+
+Maps simulation answers to `CalcInput` for the calculator API:
+
+| Simulation field | Calculator field |
+|-----------------|-----------------|
+| `is_zzp` + `gross_profit` | `user_type: "zzp"`, `annual_revenue_zzp` |
+| `business_expenses` | `business_expenses` |
+| `hours_per_year` | `hours_per_year` |
+| `is_starter` | `is_starter` |
+| `kia_investments` | `kia_investments` |
+| `single_client_pct` | `single_client_percentage` |
+| `is_employee` + `salary` | `user_type: "employee"`, `employment_income` |
+| `has_30pct_ruling`, `ruling_year` | `has_30pct_ruling`, `ruling_year_number` |
+| `box2_dividend` | `box2_dividend` |
+| `pension_deduction` | `pension_deduction` |
+| `box3_assets` | `box3_assets` |
+| `savings_fraction` | `savings_fraction` |
+| `children_under_12` | `children_under_12` |
+| `has_fiscal_partner` | `has_fiscal_partner` |
+| `partner_income` | `partner_income` |
+| `_voorlopige_amount`, `_had_voorlopige` | Overview display only (not sent to calculator) |
+
+---
+
 ## Project Status — All Phases Complete ✅
 
 | Phase | Description | Branch | Status |
@@ -599,12 +667,454 @@ All routes remain accessible without auth (AllowAny on all API endpoints). Auth 
 | Phase 6 | IB Return Guide — 9-field aangifte walkthrough | phase6-ib-return-guide | ✅ |
 | Phase 7 | Testing & QA — 50 automated tests | phase7-testing-qa | ✅ |
 | Phase 8 | Product Layer — landing page, auth, user accounts | phase8-product-layer | ✅ |
+| Phase 9 | Aangifte IB Simulation — full branching, 11 steps, Ask Claude on every field | phase9-simulation | ✅ |
+| Phase 10 | Admin Tax Rules Dashboard — full CRUD, multi-year, audit log | phase10-admin-dashboard | ✅ |
 
-**All branches merged to master. Pending: user review and bug/restyling pass.**
+---
+
+## Phase 10 — Admin Tax Rules Dashboard ✅ Complete
+
+**Goal:** A professional internal admin panel for managing Dutch tax rules. Admins can browse, search, filter, create, edit, verify, and duplicate rules across tax years. All changes are logged in an audit trail.
+
+### Architecture decisions
+
+| Decision | Choice |
+|----------|--------|
+| Stack | React + TypeScript + Tailwind CSS (admin-scoped, no base reset) |
+| Backend | Mock in-memory store (drop-in for Django API later) |
+| CSS isolation | `@tailwind components/utilities` only in `admin.css`, imported only via `AdminLayout` — does not affect existing CSS Module pages |
+| Components | shadcn-style (manual build) — no CLI, full Tailwind control |
+| Icons | lucide-react |
+| Forms | React Hook Form + Zod validation with cross-field rules |
+| Routing | 6 admin routes in React Router, lazy-loaded |
+| Data | 35+ mock rules across 2025/2026/2027 with realistic Dutch tax data |
+
+### Files created
+
+| File | Purpose |
+|------|---------|
+| `frontend/src/styles/admin.css` | Scoped Tailwind entry (no base reset) |
+| `frontend/src/lib/utils.ts` | `cn()`, `formatEur()`, `formatPct()`, `formatDate()` |
+| `frontend/src/lib/tax-rules/types.ts` | Full TypeScript types: TaxRule, AuditEntry, AdminStats, RuleFilters |
+| `frontend/src/lib/tax-rules/schema.ts` | Zod schemas with cross-field validation |
+| `frontend/src/lib/tax-rules/mock-data.ts` | 35+ rules for 2025/2026/2027 with realistic data |
+| `frontend/src/lib/tax-rules/api.ts` | Mock CRUD API: getRules, getRuleById, createRule, updateRule, duplicateRuleToYear, deleteRule, getAdminStats |
+| `frontend/src/lib/tax-rules/audit.ts` | Audit log with pre-seeded entries |
+| `frontend/src/components/ui/index.tsx` | Button, Badge, Input, Textarea, Select, Card, Table, Alert, Spinner |
+| `frontend/src/components/admin/AdminLayout.tsx` | Sidebar + Topbar wrapper |
+| `frontend/src/components/admin/AdminSidebar.tsx` | Dark slate-900 sidebar with NavLink items |
+| `frontend/src/components/admin/AdminTopbar.tsx` | White header with page title + user email |
+| `frontend/src/components/admin/RuleStatusBadge.tsx` | Status-to-Badge mapper |
+| `frontend/src/components/admin/StatCard.tsx` | Metric card with icon, value, trend, colour variants |
+| `frontend/src/pages/admin/AdminDashboard.tsx` | Overview: 6 stat cards, attention table, rules by year/category, quick actions |
+| `frontend/src/pages/admin/AdminRulesPage.tsx` | Full rules table: search, 4 filters, column sort, duplicate/delete dialogs |
+| `frontend/src/pages/admin/AdminRuleEditorPage.tsx` | 6-tab rule editor: Basic Info, Result/Formula, Multilingual, AI & RAG, Source & Verification, Audit History |
+| `frontend/src/pages/admin/AdminCalculatorPreviewPage.tsx` | Profile form → matched verified rules with match reasons |
+| `frontend/src/pages/admin/AdminRAGPreviewPage.tsx` | Query box → simulated vector retrieval → assembled AI context block |
+| `frontend/src/pages/admin/AdminSettingsPage.tsx` | Active year, language, verification policy, backend status |
+
+### Admin pages (6 routes)
+
+| Route | Page | Key features |
+|-------|------|-------------|
+| `/admin` | Overview Dashboard | 6 stat cards (total/verified/pending/draft/expired/expiring-soon), "Needs Attention" table, rules-by-year bars, category tag cloud, quick actions |
+| `/admin/rules` | Rules Table | Full-text search; filter by year/user_type/status/category; sortable columns (ID/topic/year/status/updated); row actions (edit/duplicate/delete); URL-synced filters |
+| `/admin/rules/new` | New Rule Editor | 6-tab form; user type multi-select pills; tag input; phase-out fields; radio status picker with descriptions; Zod validation on save |
+| `/admin/rules/:id` | Edit Rule Editor | Same form, pre-populated; unsaved-changes indicator; audit history tab with diff display |
+| `/admin/calculator-preview` | Calculator Preview | Sample profile builder → shows all verified rules that match, with match reason and AI hint |
+| `/admin/rag-preview` | RAG Preview | Query text + filters → simulated top-5 retrieval → assembled context block (mirrors phase2/assembler.py format) |
+| `/admin/settings` | Settings | Active tax year picker, default language, verification policy, data source status |
+
+### Rule editor tabs
+
+| Tab | Contents |
+|-----|---------|
+| Basic Info | ID, year, topic, category, user types (pill toggles), effective dates, supersedes, tags |
+| Result / Formula | Result type, value, unit, formula expression, notes, phase-out parameters |
+| Multilingual | Dutch (NL), English (EN), Persian (FA) explanation textareas — all required for verified status |
+| AI & RAG | `ai_prompt_hint` field — injected as `AI INSTRUCTION: …` into assembled RAG context |
+| Source & Verification | Source URL (with live open link), verification status radio picker with descriptions |
+| Audit History | Chronological log of all changes with actor, timestamp, and field diff |
+
+### Data: 35+ mock rules
+
+Rules span 2025/2026/2027 with realistic Dutch tax data:
+- **2026** (23 rules): BR1, MKB, ZA, SA, ZVW, AHK, AK, IACK, B2R, B3R, KIA, ZT, EXP, DGA, WD, BTW, KOR, DL, LR, HT — all verified
+- **2025** (11 rules): Same rule set with 2025 values — ZA at €2,470, AHK at €3,068, etc.
+- **2027** (1 rule): ZA-2027-001 as draft (€900 estimate — startersaftrek abolished from 2027)
+
+### TypeScript
+
+All files pass `npx tsc --noEmit` with `strict: true`, `noUnusedLocals: true`, `noUnusedParameters: true`, `verbatimModuleSyntax: true`.
+
+---
+
+---
+
+## Full Tailwind Migration ✅ Complete
+
+**Goal:** Remove all CSS Modules from the frontend; migrate every page to fully Tailwind-based styling. Extend mock tax rules to 50+ rules with trilingual user-facing questions. Rebuild ChatPage with card-based UX (no free-text input).
+
+### What was changed
+
+| File | Change |
+|------|--------|
+| `frontend/tailwind.config.js` | Expanded `content` to `"./src/**/*.{ts,tsx}"` (was admin-only); added brand color aliases, `slideUp`/`fadeIn` keyframes, `slide-up`/`fade-in` animation utilities |
+| `frontend/src/index.css` | Added `@tailwind base/components/utilities` globally at top; kept all CSS variables |
+| `frontend/src/styles/admin.css` | Removed duplicate `@tailwind` directives (now global); kept `.admin-root`, `.rtl-field`, `.admin-scrollbar` |
+| `frontend/src/lib/tax-rules/types.ts` | Added `user_facing_question_nl/en/fa` optional fields to `TaxRule` interface |
+| `frontend/src/lib/tax-rules/mock-data.ts` | Expanded from 28 → 50+ rules; added `user_facing_question_nl/en/fa` to all rules; new 2026 rules: KOT, KGB, REI, THW, EW, HYP, GIF, ZK, VOL, RES, EFF, ERF, VPB×2, BTW-2026-002 |
+| `frontend/src/pages/ChatPage.tsx` | Fully rewritten — card-based UX (Option 2): no free text input; question cards slide up in chat area with staggered animation; `RESULT_QUESTIONS` per user type (ZZP/employee/expat/DGA) × 3 languages; `askedQuestions` set tracks history; 10-message session limit; gate screen when no profile |
+| `frontend/src/pages/LandingPage.tsx` | Migrated to Tailwind; removed CSS module import |
+| `frontend/src/pages/LoginPage.tsx` | Migrated to Tailwind; removed CSS module import |
+| `frontend/src/pages/RegisterPage.tsx` | Migrated to Tailwind; removed CSS module import |
+| `frontend/src/pages/IntakePage.tsx` | Migrated to Tailwind; removed CSS module import |
+| `frontend/src/pages/CalculatorPage.tsx` | Migrated to Tailwind; removed CSS module import |
+| `frontend/src/pages/IBGuidePage.tsx` | Migrated to Tailwind; removed CSS module import; fixed `.catch(() => setFields([]))` bug |
+| `frontend/src/pages/SimulationPage.tsx` | Migrated to Tailwind; removed CSS module import; full two-column layout preserved |
+| `frontend/src/pages/Phase2Demo.tsx` | Migrated to Tailwind; removed CSS module import; doc-type/behavior badges now use semantic Tailwind color classes |
+| `frontend/src/App.tsx` | Nav fully migrated to Tailwind; extracted `NavItem` component; removed all inline `style={{}}` objects |
+
+### Deleted files
+
+All orphaned CSS module files removed:
+- `src/App.css`
+- `src/pages/ChatPage.module.css`
+- `src/pages/LandingPage.module.css`
+- `src/pages/LoginPage.module.css`
+- `src/pages/RegisterPage.module.css`
+- `src/pages/IntakePage.module.css`
+- `src/pages/CalculatorPage.module.css`
+- `src/pages/IBGuidePage.module.css`
+- `src/pages/SimulationPage.module.css`
+- `src/pages/Phase2Demo.module.css`
+
+### ChatPage card UX (Option 2)
+
+- Cards live **inside the chat area**, not a sidebar — they slide up with `animate-slide-up` staggered by `animationDelay: i * 60ms`
+- Empty state: 6 cards shown; after first exchange: 4 remaining unasked cards shown
+- `RESULT_QUESTIONS` — 10 ZZP questions, 8 employee, 6 expat, 6 DGA; all in NL/EN/FA
+- `askedQuestions: Set<string>` — already-asked cards filtered out
+- `showCards: boolean` — hidden during loading, shown 300ms after AI responds
+- No free-text input at all — all interaction via question cards
+- Profile gate: if no `taxwijs_calc_input` in localStorage, shows CTA to `/intake`
+- Session counter shown; "Clear" button resets conversation
+
+### TypeScript
+
+All files pass `npx tsc --noEmit` with strict mode (`noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`).
+
+---
+
+---
+
+## Premium / Monetisation Layer ✅ Complete
+
+**Goal:** Free tier with daily limits, Premium tier at €9.99/month via Stripe, upgrade modal on limit hit, pricing page.
+
+### Tiers
+
+| Tier | Who | Limit | Gate |
+|------|-----|-------|------|
+| Anonymous | Not logged in | 5 questions / session | Register modal |
+| Free | Logged-in, plan=free | 10 questions / day | Upgrade modal |
+| Premium | Logged-in, plan=premium | Unlimited | — |
+
+### What was built
+
+**Backend:**
+
+| File | Change |
+|------|--------|
+| `backend/apps/users/models.py` | Added `plan` (free/premium), `stripe_customer_id`, `daily_message_count`, `daily_message_date` fields |
+| `backend/apps/users/migrations/0002_*` | Auto-migration for new fields |
+| `backend/apps/users/serializers.py` | Exposes `plan`, `daily_message_count`, `daily_message_date`, `is_admin` in profile response |
+| `backend/apps/payments/views.py` | `CreateCheckoutSessionView`, `BillingPortalView`, `StripeWebhookView` |
+| `backend/apps/payments/urls.py` | Routes: `create-checkout-session/`, `billing-portal/`, `webhook/` |
+| `backend/config/urls.py` | Registered `api/payments/` |
+| `backend/config/settings.py` | Added `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID`, `FRONTEND_URL`, `FREE_DAILY_LIMIT=10`, `ANON_SESSION_LIMIT=5` |
+| `backend/apps/chat/views.py` | Replaced flat session limit with plan-aware guard: premium = unlimited, free = 10/day (server-side counter), anon = 5/session |
+| `backend/requirements.txt` | Added `stripe>=7.0.0` |
+| `.env.example` | Added Stripe keys + FRONTEND_URL |
+
+**Stripe webhook events handled:**
+- `checkout.session.completed` → set `plan=premium`, store `stripe_customer_id`
+- `customer.subscription.deleted` / `paused` → set `plan=free`
+- `customer.subscription.resumed` → set `plan=premium`
+
+**Frontend:**
+
+| File | Change |
+|------|--------|
+| `frontend/src/api/auth.ts` | Added `plan`, `daily_message_count`, `daily_message_date` to `AuthUser` |
+| `frontend/src/api/chat.ts` | Added JWT `Authorization` header to fetch; added `TokenMeta` interface; handles `upgrade_required` SSE event |
+| `frontend/src/api/payments.ts` | `createCheckoutSession()`, `createBillingPortalSession()` |
+| `frontend/src/components/UpgradeModal.tsx` | Modal with Free vs Premium comparison table, three trigger reasons (session_limit / daily_limit / register) |
+| `frontend/src/pages/PricingPage.tsx` | Full pricing page at `/pricing` — two plan cards, feature lists, FAQ |
+| `frontend/src/pages/ChatPage.tsx` | ⚡ Premium badge, daily counter for free users, session counter for anon, upgrade CTA link, UpgradeModal on limit hit |
+| `frontend/src/App.tsx` | Added `/pricing` route, `Pricing` nav link, ⚡ Premium badge in nav when `user.plan === 'premium'` |
+| All 3 i18n files | Added `upgrade.*` and `pricing.*` keys in NL/EN/FA; updated `session_count`, added `daily_count` + `upgrade_cta` |
+
+### Limit enforcement flow
+
+```
+SSE response → backend checks plan
+  premium user    → no limit, stream Claude
+  free user       → check daily_message_count vs FREE_DAILY_LIMIT
+                    if over → stream { upgrade_required: true, reason: "daily_limit" }
+                    else    → increment count, stream Claude
+  anon user       → check session_count from request body vs ANON_SESSION_LIMIT
+                    if over → stream { upgrade_required: true, reason: "session_limit" }
+                    else    → stream Claude
+
+Frontend parseSSE → detects upgrade_required
+  → removes pending assistant bubble
+  → shows UpgradeModal with correct reason
+```
+
+### Stripe setup (test mode)
+
+1. Create a product + monthly price in Stripe dashboard
+2. Add to `.env`: `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`, `FRONTEND_URL`
+3. For local webhook testing: `stripe listen --forward-to localhost:8000/api/payments/webhook/`
+
+---
+
+## Phase 11 — UI Redesign ✅ Complete
+
+**Goal:** Rebuild the entire frontend UI to match the designer's files in `ui/`. Complete visual rebrand from purple-on-white to sage/olive-green on warm cream paper.
+
+### Design files location
+
+```
+ui/
+├── TaxWijs UI.html          ← standalone HTML preview of all screens
+├── src/
+│   ├── tokens.css           ← full design token system (CSS custom properties)
+│   ├── components.jsx       ← shared components: Wordmark, TopNav, LangSwitch, Icon, MobileFrame, etc.
+│   └── screens/
+│       ├── landing.jsx      ← LandingPage (desktop + mobile)
+│       ├── chat.jsx         ← ChatPage (desktop + mobile, ProfileBar, AnswerCard, ChatCards)
+│       ├── intake.jsx       ← IntakePage (3-column wizard)
+│       ├── calculator.jsx   ← CalculatorPage (type selector, results, bracket bar, breakdown table)
+│       ├── ib-guide.jsx     ← IBGuidePage (progress strip, IBFieldCard with box badges)
+│       ├── simulation.jsx   ← SimulationPage (sidebar nav, step 4 content, step 11 overview)
+│       ├── pricing.jsx      ← PricingPage + UpgradeModal (desktop + mobile)
+│       ├── auth.jsx         ← LoginPage + RegisterPage (2-column split with editorial right panel)
+│       ├── admin.jsx        ← Admin dashboard + rules table
+│       └── system.jsx       ← Design system showcase (colors, type, buttons, tokens)
+```
+
+### New design system (from `ui/src/tokens.css`)
+
+**Brand color:** Sage / olive-green (`--sage-600` = primary) — replaces current purple `#aa3bff`
+
+**Color tokens (replace current vars in `index.css`):**
+```css
+--paper:       oklch(0.985 0.008 95)   /* warm cream page bg */
+--paper-2:     oklch(0.972 0.012 95)   /* card surface */
+--paper-3:     oklch(0.955 0.015 95)   /* nested surface */
+--paper-tint:  oklch(0.96 0.022 115)   /* green wash */
+--ink:         oklch(0.20 0.012 90)    /* headings, primary text */
+--ink-2:       oklch(0.36 0.012 90)    /* body */
+--ink-3:       oklch(0.52 0.010 90)    /* muted */
+--ink-4:       oklch(0.70 0.008 90)    /* hint / disabled */
+--hairline:    oklch(0.88 0.012 95)    /* dividers */
+--hairline-2:  oklch(0.82 0.014 95)    /* stronger dividers */
+--sage-500 through --sage-700          /* primary brand scale */
+--accent:      var(--sage-600)
+--accent-soft: oklch(0.95 0.045 115)   /* soft green bg */
+--accent-line: oklch(0.80 0.090 117)   /* green border */
+--ok:  oklch(0.55 0.13 150)   --warn: oklch(0.72 0.14 75)   --danger: oklch(0.58 0.18 25)
+```
+
+**Typography (3 fonts, load via Google Fonts):**
+- `--sans`: Geist — all UI text
+- `--serif`: Instrument Serif — all display headings (`h1`, `h2`, featured numbers)
+- `--mono`: JetBrains Mono — all numeric values, eyebrow labels, code
+
+**Component atoms (from tokens.css):**
+- `.eyebrow` — 10.5px mono, 0.14em letter-spacing, uppercase, `var(--ink-3)` — used everywhere as section labels
+- `.eyebrow-accent` — same but `var(--sage-700)`
+- `.font-serif` — switches element to Instrument Serif
+- `.font-mono` — switches element to JetBrains Mono + tabular nums
+- `.pill`, `.pill-accent`, `.pill-ok`, `.pill-warn`, `.pill-danger` — status badges
+- `.btn`, `.btn-primary`, `.btn-accent`, `.btn-ghost`, `.btn-soft` + `.btn-sm`/`.btn-lg` — button system
+- `.input` — standard text input (42px, focus ring in sage)
+- `.card` — `var(--paper-2)` bg, hairline border, `--r-lg` radius
+- `.grain` — hero section background with radial gradient overlays
+- `.dots` — dashed horizontal divider
+- `.hair`, `.hair-v` — 1px solid dividers
+
+### Shared components to create
+
+| Component | File | What it does |
+|-----------|------|-------------|
+| `Wordmark` | `components/Wordmark.tsx` | Shield SVG (sage-600 fill, white checkmark path) + Instrument Serif "TaxWijs" text |
+| `TopNav` | `components/TopNav.tsx` | Sticky 64px header: Wordmark + nav links (underline-active style) + LangSwitch + auth area |
+| `LangSwitch` | `components/LangSwitch.tsx` | NL / EN / FA pill toggle (paper-3 bg, ink active pill) |
+| `Icon` | `components/Icon.tsx` | arrow, check, x, spark, chev, edit, info, external — all as SVG functional components |
+
+### Pages to rebuild (10 pages)
+
+| Page | Key design features |
+|------|---------------------|
+| **LandingPage** | Grain hero section; 64px Instrument Serif headline with italic sage; live-answer card mockup with floating "NL" and "€ 24,310" chips; 4-column features grid (separated by hairline); proof table; footer CTA centered |
+| **ChatPage** | `ProfileBar` — sage-soft bg strip with user type avatar (colored square + glyph); `AnswerCard` — assistant avatar "T" circle, paper-2 card, "Your numbers" dashed panel, sources footer; `ChatCards` — 2×3 grid, slide-up animation on mount, eyebrow tag + question text + "Ask →" |
+| **IntakePage** | 3-column grid (320px sidebar · 1fr center card · 320px right panel); step list with filled/active circles; running estimate box in sidebar; dark ink card on right ("Why we ask"); `IntakeStep1` type grid 2×2; `IntakeStep2` unit-prefix inputs; `IntakeStep3` ToggleField / SelectField / NumField |
+| **CalculatorPage** | Type selector pills (ink bg when active); 2-column form + results; `SummaryCard` variants (primary=sage-100, ink=dark, warn, ok); bracket bar; full breakdown table with big serif total |
+| **IBGuidePage** | Progress bar strip (9 colored segments); `IBFieldCard` with BOX badge (color per box), mono field code, serif field title, warn pill for startersaftrek; common-mistakes expand; "Ask TaxWijs" btn-soft footer |
+| **SimulationPage** | Full-width progress bar (sage-600); 280px sidebar with dark step indicators; `SimSection` with eyebrow title + 2-col field grid; `SimField` with "Ask" button per field; step 11 big reveal card |
+| **PricingPage** | Serif headline "Free to try. €9.99 when you're ready."; free card (plain ghost btn); premium card (gradient bg, sage-300 border, shadow-lg, absolute "⚡ MOST PICKED" badge); `PricingList` with circle check icons; 4-item FAQ accordion |
+| **LoginPage** | 2-column split: form left (max-w 380, centered vertically) + grain right panel with today's tip quote + 3 stat boxes |
+| **RegisterPage** | Same 2-column shell; right panel shows type-specific benefit list that updates as user selects type |
+| **App.tsx / nav** | Replace current nav with `TopNav` component; 64px height; Wordmark; nav links use underline-active (not bg pill); `LangSwitch` in header |
+
+### Implementation approach
+
+- CSS custom properties handle all colors and typography — Tailwind handles layout/spacing
+- Keep all route paths, i18n keys, API calls, auth logic, and Stripe integration unchanged
+- Add Google Fonts import to `index.html` (not `index.css`) for best performance
+- Replace current CSS variables in `index.css` with new token set from `tokens.css`
+- Global `.eyebrow`, `.font-serif`, `.font-mono`, `.grain`, `.dots`, `.pill-*`, `.btn-*`, `.input`, `.card` atoms go in `index.css` under `@layer components`
+- Mobile responsive: use `md:` prefix for structural breakpoints
+
+### What was built
+
+| File | Change |
+|------|--------|
+| `frontend/index.html` | Added Google Fonts import: Geist, Instrument Serif, JetBrains Mono |
+| `frontend/src/index.css` | Full design token system (oklch color scale, sage/paper/ink tokens, shadow, radii, typography vars); global component atoms: `.eyebrow`, `.btn`, `.card`, `.grain`, `.pill`, `.hair`, `.dots`, `.tw-input`, `.tw-label`; animations `cardIn`, `fadeIn` |
+| `frontend/src/components/Wordmark.tsx` | NEW — shield SVG + Instrument Serif "TaxWijs" wordmark |
+| `frontend/src/components/TopNav.tsx` | NEW — sticky 64px header: Wordmark + nav links + LangSwitch + auth area; mobile-responsive (nav links hidden on small screens) |
+| `frontend/src/components/LangSwitch.tsx` | NEW — NL/EN/FA pill toggle |
+| `frontend/src/components/Icon.tsx` | NEW — arrow, check, x, spark, chev, edit, info, external SVG components |
+| `frontend/src/hooks/useMobile.ts` | NEW — `useMobile(breakpoint?)` hook using `matchMedia` |
+| `frontend/src/pages/LandingPage.tsx` | Full redesign — grain hero, 64px serif headline, live-answer card, 4-column features, proof table, footer CTA; responsive |
+| `frontend/src/pages/LoginPage.tsx` | Full redesign — 2-column split (form left, editorial right with today's tip); right panel hidden on mobile |
+| `frontend/src/pages/RegisterPage.tsx` | Full redesign — same 2-column shell; right panel shows type-specific benefit list; right panel hidden on mobile |
+| `frontend/src/pages/ChatPage.tsx` | Full redesign — ProfileBar with user type avatar, sage-soft strip; answer bubbles; 2-column question cards; RTL support; mobile-responsive |
+| `frontend/src/pages/IBGuidePage.tsx` | Full redesign — progress strip, IBFieldCard with BOX badge (colored per box), mono field code, serif title, mistakes expander, "Ask TaxWijs" footer; 2-column grid → single on mobile |
+| `frontend/src/pages/SimulationPage.tsx` | Full redesign — 4px full-width progress bar; 280px sidebar with step indicators; FieldRow with unit-prefix inputs; OverviewStep with dark ink header + serif result; sidebar hidden on mobile |
+| `frontend/src/pages/PricingPage.tsx` | Full redesign — serif headline; free + premium cards (premium has gradient bg, shadow-lg, "⚡ MOST PICKED" badge); feature comparison list; FAQ section |
+| `frontend/src/components/UpgradeModal.tsx` | Full redesign — blur backdrop; comparison table; serif headline; ⚡ accent circle; headlineMap per reason |
+| `frontend/src/App.tsx` | Updated to use `TopNav` + `LangSwitch` components; added all new routes |
+| `frontend/src/context/AuthContext.tsx` | Fixed `import type { ReactNode }` for `verbatimModuleSyntax` |
+| `frontend/tsconfig.app.json` | Added `"ignoreDeprecations": "6.0"` to silence TypeScript 6 `baseUrl` deprecation |
+| All 3 i18n locale files | Added `landing.headline_1/2` split keys; fixed missing commas (root cause of blank page bug on first deploy) |
+| `frontend/src/lib/tax-rules/api.ts` | Removed unused `baseId` variable |
+| `frontend/src/pages/admin/AdminRulesPage.tsx` | Removed unused `Input` import |
+| `frontend/src/pages/admin/AdminRAGPreviewPage.tsx` | Removed unused `Input` import |
+
+### Bugs fixed during redesign
+
+| Bug | Root cause | Fix |
+|-----|-----------|-----|
+| Blank page on first load | All three i18n locale JSON files were missing commas after the `"headline_2"` key — invalid JSON crashed i18next silently at startup | Added missing commas |
+| `login()` / `register()` wrong call signature | Pages called `login(email, password)` with two positional args; API takes an object `{ username, password }` | Fixed to pass objects |
+| `s.optional` doesn't exist on `SimStep` | SimulationPage sidebar rendered `{s.optional && …}` but `SimStep` only has `condition?: (a) => boolean` | Changed to `{s.condition && …}` |
+| `field.hint` doesn't exist on `SimField` | FieldRow referenced `field.hint` which isn't in the interface | Removed the line |
+| UpgradeModal wrong Icon import path | Used `"../components/Icon"` from within `components/` | Fixed to `"./Icon"` |
+| Duplicate style keys in IBGuidePage `<ul>` | Had both `marginTop` and `margin`, and `paddingLeft` twice | Collapsed to `margin: "8px 0 0 0", paddingLeft: 28` |
+
+---
+
+## Phase 11 Post-Redesign Bug Fixes ✅
+
+### Chat SSE — stream stalled after heartbeat
+
+**Symptom:** Chat sent the SSE heartbeat event but no Claude tokens ever arrived. Stream hung indefinitely.
+
+**Root cause:** The `stream_response()` generator, after yielding the heartbeat, called `retrieve()` from `phase2.retriever`. Since the embedding manifest exists and both `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` are set, `retrieve()` made a live OpenAI embedding API call followed by ChromaDB initialisation. If the OpenAI call hung (network latency, rate limit, etc.), the entire generator blocked indefinitely — no more yields, no Claude response.
+
+**Secondary cause:** Vite's proxy had no explicit timeout, so on slower machines the connection could also be dropped.
+
+**Fixes applied:**
+
+| File | Fix |
+|------|-----|
+| `backend/apps/chat/views.py` | Wrapped the entire RAG block in a `ThreadPoolExecutor` with `future.result(timeout=8)`. If RAG takes > 8 seconds, it's skipped and Claude is called with the `"=== No tax context available ==="` fallback. The executor is shut down with `wait=False` so a hung background thread never blocks the stream. |
+| `frontend/vite.config.ts` | Added `proxyTimeout: 120_000` and `timeout: 120_000` (2 minutes) to the `/api` proxy so the connection is never dropped while waiting for Claude to start streaming. |
+
+### Chat SSE — 401 Unauthorized on every message
+
+**Symptom:** Django logs showed `POST /api/chat/message/ HTTP/1.1" 401 178` on every chat request.
+
+**Root cause:** The frontend sends `Authorization: Bearer <token>` on every request (via `localStorage.getItem("access_token")`). When the JWT access token expires, `JWTAuthentication.authenticate()` raises `InvalidToken` — which Django REST Framework converts to a `401` response **before** the permission check even runs. The view has `permission_classes = [AllowAny]`, but that check is never reached.
+
+The Axios auto-refresh interceptor in `client.ts` does not apply because the SSE endpoint uses native `fetch`, not Axios.
+
+**Fixes applied:**
+
+| File | Fix |
+|------|-----|
+| `backend/apps/chat/views.py` | Added `SoftJWTAuthentication(JWTAuthentication)` — catches `InvalidToken` and returns `None` instead of raising, treating an expired/invalid token as anonymous. `ChatMessageView` now uses `authentication_classes = [SoftJWTAuthentication]`. |
+| `frontend/src/api/chat.ts` | Added `refreshAccessToken()` helper that calls `/api/auth/token/refresh/` with the stored refresh token. `sendMessage()` now retries on 401: tries refresh → if successful, retries with new token; if refresh fails (no refresh token or refresh expired), retries without `Authorization` header (anonymous). The `AllowAny` + `SoftJWTAuthentication` combination accepts anonymous requests. |
+
+### Responsiveness — no mobile layout
+
+**Symptom:** All redesigned pages used hardcoded inline grid styles with fixed column counts. On mobile screens (< 768px) layouts overflowed or were too narrow to read.
+
+**Fix:** Created `frontend/src/hooks/useMobile.ts` — a `matchMedia`-based React hook. Applied it to the 6 most-used pages and the TopNav:
+
+| Component | Desktop → Mobile change |
+|-----------|------------------------|
+| `TopNav` | Nav links hidden; email/pill hidden; padding reduced to `0 16px` |
+| `LandingPage` | Hero 2-col → 1-col (card hidden); features 4-col → 2-col; proof 2-col → 1-col; padding reduced |
+| `LoginPage` | Right editorial panel hidden; form takes full width; padding reduced |
+| `RegisterPage` | Same as Login |
+| `SimulationPage` | Sidebar hidden (progress bar still visible); grid → single column |
+| `IBGuidePage` | 2-column fields + sidebar → single column; padding reduced |
+| `ChatPage` | Question cards 2-col → 1-col; profile bar and message area padding reduced |
+
+---
+
+## Current State (26 May 2026)
+
+### Branch
+
+`phase11-ui-redesign` — not yet merged to `master`
+
+### Servers
+
+| Server | Command | URL |
+|--------|---------|-----|
+| Django | `.venv\Scripts\python.exe backend/manage.py runserver` | `http://localhost:8000` |
+| Vite | `cd frontend && npm run dev` | `http://localhost:5173` |
+
+### Environment (`.env` at project root)
+
+Both `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` are set and confirmed working. `ANTHROPIC_API_KEY` used for Claude chat streaming. `OPENAI_API_KEY` used for Phase 2 RAG embeddings (OpenAI embedding calls happen in a background thread with 8s timeout — they're non-blocking for chat).
+
+### Database
+
+PostgreSQL (default `DATABASE_URL` in settings). Run migrations if the DB is fresh:
+```bash
+.venv\Scripts\python.exe backend/manage.py migrate
+```
+
+### TypeScript
+
+All files pass `npx tsc --noEmit` with strict mode. No errors.
+
+### Known open items
+
+| Item | Detail |
+|------|--------|
+| Phase 2 index | The ChromaDB at `phase2/.chromadb/` is empty (not yet built for the running server). RAG calls fall back to `"=== No tax context available ==="` silently. To build: `python phase2/build_index.py` |
+| Admin pages | `ui/src/screens/admin.jsx` has a new design but the admin pages (`/admin/*`) were NOT redesigned in Phase 11 — they still use the old Tailwind component library. Redesign is optional. |
+| `phase11-ui-redesign` merge | Not yet merged to `master`. Merge when the user is happy with the redesign. |
+
+---
 
 ## What Comes Next
 
-| Item | Description |
-|------|-------------|
-| **Review pass** | User testing — collect bug reports and restyling requests |
-| **Phase 9** | Annual Maintenance — update tax rules each September for new year |
+| Item | Priority | Description |
+|------|----------|-------------|
+| **Merge phase11 → master** | 🔴 First | `git merge phase11-ui-redesign` into master, push |
+| **Admin UI redesign** | 🟡 Optional | Port admin pages to new design system (see `ui/src/screens/admin.jsx`) |
+| **Connect admin to real backend** | 🟡 Next | Swap mock `lib/tax-rules/api.ts` for real `fetch` calls to Django CRUD endpoints |
+| **Build Phase 2 RAG index** | 🟡 Next | `python phase2/build_index.py` — populates ChromaDB so chat gets real rule context |
+| **SEO pages** | Later | Django templates for landing + tax guide pages (server-rendered for Google indexing) |
+| **Proactive alerts** | Later | Tax reminder engine — email/push notifications near deadlines |
+| **Annual maintenance** | September | Update tax rules each September for the new tax year |

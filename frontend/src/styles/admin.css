@@ -1,0 +1,18 @@
+/* Tailwind directives are now global (index.css). This file keeps admin-specific overrides only. */
+
+/* Admin layout root */
+.admin-root {
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+/* RTL support for Persian (Farsi) text fields */
+.rtl-field {
+  direction: rtl;
+  text-align: right;
+  font-family: "Tahoma", "Arial", sans-serif;
+}
+
+/* Custom scrollbar for sidebar */
+.admin-scrollbar::-webkit-scrollbar { width: 4px; }
+.admin-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.admin-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }

@@ -1,3 +1,6 @@
+# Claude Code local memory (not project code)
+.claude/
+
 # Environment
 .env
 *.env.local

@@ -11,6 +11,10 @@ export interface AuthUser {
   user_type: string;
   preferred_language: string;
   tax_year: number;
+  plan: "free" | "premium";
+  daily_message_count: number;
+  daily_message_date: string | null;
+  is_admin?: boolean;
 }
 
 export const login = async (payload: LoginPayload): Promise<TokenPair> => {

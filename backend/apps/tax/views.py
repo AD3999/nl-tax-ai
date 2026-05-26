@@ -4,12 +4,12 @@ import time
 
 from django.conf import settings
 from rest_framework import generics, permissions, status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import TaxProfile
-from .serializers import TaxProfileSerializer
+from .models import TaxProfile, TaxRule
+from .serializers import TaxProfileSerializer, TaxRuleSerializer
 
 
 class TaxProfileView(generics.RetrieveUpdateAPIView):
@@ -129,3 +129,90 @@ class Phase2RetrieveView(APIView):
                 {"error": str(exc)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+# ──────────────────────────────────────────
+# Admin-only Tax Rules API
+# ──────────────────────────────────────────
+
+class IsStaffUser(permissions.BasePermission):
+    """Allow only staff/admin users."""
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and (request.user.is_staff or getattr(request.user, 'is_admin', False)))
+
+
+class TaxRuleListView(generics.ListCreateAPIView):
+    """GET /api/tax/rules/ — list + filter; POST — create new rule (admin only)."""
+    serializer_class = TaxRuleSerializer
+    permission_classes = [IsStaffUser]
+
+    def get_queryset(self):
+        qs = TaxRule.objects.all()
+        year = self.request.query_params.get("year")
+        status_filter = self.request.query_params.get("status")
+        category = self.request.query_params.get("category")
+        search = self.request.query_params.get("search", "").strip()
+        if year:
+            qs = qs.filter(year=year)
+        if status_filter:
+            qs = qs.filter(verification_status=status_filter)
+        if category:
+            qs = qs.filter(category=category)
+        if search:
+            qs = qs.filter(rule_id__icontains=search) | qs.filter(topic__icontains=search) | qs.filter(plain_en__icontains=search)
+        return qs.order_by("year", "rule_id")
+
+    def perform_create(self, serializer):
+        serializer.save(updated_by=self.request.user.email)
+
+
+class TaxRuleDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """GET/PUT/PATCH/DELETE /api/tax/rules/{rule_id}/ (admin only)."""
+    serializer_class = TaxRuleSerializer
+    permission_classes = [IsStaffUser]
+    lookup_field = "rule_id"
+    queryset = TaxRule.objects.all()
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user.email)
+
+
+class TaxRuleImportView(APIView):
+    """POST /api/tax/rules/import/ — import rules from Phase 1 JSON seed (admin only)."""
+    permission_classes = [IsStaffUser]
+
+    def post(self, request):
+        seed_path = os.path.join(
+            settings.BASE_DIR.parent, "phase1", "data", "seed", "tax_rules_2026.json"
+        )
+        if not os.path.exists(seed_path):
+            return Response({"error": "Seed file not found."}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            created, updated = TaxRule.import_from_json(seed_path)
+            return Response({"created": created, "updated": updated, "total": TaxRule.objects.count()})
+        except Exception as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AdminStatsView(APIView):
+    """GET /api/tax/admin/stats/ — dashboard statistics (admin only)."""
+    permission_classes = [IsStaffUser]
+
+    def get(self, request):
+        from django.db.models import Count
+        from apps.users.models import User
+        from apps.calculator.models import CalculationResult
+
+        rules_qs = TaxRule.objects.all()
+        stats = {
+            "total_rules": rules_qs.count(),
+            "verified_rules": rules_qs.filter(verification_status="verified").count(),
+            "pending_rules": rules_qs.filter(verification_status="pending_review").count(),
+            "draft_rules": rules_qs.filter(verification_status="draft").count(),
+            "rules_by_year": list(rules_qs.values("year").annotate(count=Count("id")).order_by("year")),
+            "rules_by_category": list(rules_qs.values("category").annotate(count=Count("id")).order_by("-count")[:10]),
+            "total_users": User.objects.count(),
+            "premium_users": User.objects.filter(plan="premium").count(),
+            "total_calculations": CalculationResult.objects.count() if hasattr(CalculationResult, 'objects') else 0,
+        }
+        return Response(stats)

@@ -10,23 +10,70 @@ const API_BASE = import.meta.env.VITE_API_URL
  * `onToken` is called for each text token as it arrives.
  * Returns when the stream is complete or the AbortSignal fires.
  */
+export interface TokenMeta {
+  upgrade_required?: boolean;
+  reason?: string;
+  limit?: number;
+}
+
+async function refreshAccessToken(): Promise<string | null> {
+  const refresh = localStorage.getItem("refresh_token");
+  if (!refresh) return null;
+  try {
+    const res = await fetch(`${API_BASE}/auth/token/refresh/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json() as { access: string };
+    localStorage.setItem("access_token", data.access);
+    return data.access;
+  } catch {
+    return null;
+  }
+}
+
 export async function sendMessage(
   message: string,
   conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
-  onToken: (token: string) => void,
+  onToken: (token: string, meta?: TokenMeta) => void,
   signal?: AbortSignal,
   userProfile?: Record<string, unknown>,
+  sessionMessageCount = 0,
+  intakeMode = false,
 ): Promise<void> {
-  const response = await fetch(`${API_BASE}/chat/message/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      message,
-      conversation_history: conversationHistory,
-      ...(userProfile ? { user_profile: userProfile } : {}),
-    }),
-    signal,
+  let token = localStorage.getItem("access_token");
+
+  const body = JSON.stringify({
+    message,
+    conversation_history: conversationHistory,
+    session_message_count: sessionMessageCount,
+    intake_mode: intakeMode,
+    ...(userProfile ? { user_profile: userProfile } : {}),
   });
+
+  const makeRequest = (authToken: string | null) =>
+    fetch(`${API_BASE}/chat/message/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
+      body,
+      signal,
+    });
+
+  let response = await makeRequest(token);
+
+  // On 401: try to refresh the access token once, then retry.
+  // If refresh fails, retry without a token (anonymous — AllowAny view allows it).
+  if (response.status === 401) {
+    const newToken = await refreshAccessToken();
+    if (!newToken) localStorage.removeItem("access_token");
+    token = newToken;
+    response = await makeRequest(token);
+  }
 
   if (!response.ok || !response.body) {
     throw new Error(`Chat request failed: ${response.status}`);
@@ -46,13 +93,14 @@ export async function sendMessage(
 
     for (const line of lines) {
       if (!line.startsWith("data: ")) continue;
-      let data: { text?: string; done?: boolean; error?: string };
+      let data: { text?: string; done?: boolean; error?: string; upgrade_required?: boolean; reason?: string; limit?: number };
       try {
         data = JSON.parse(line.slice(6));
       } catch {
-        continue; // skip malformed JSON lines
+        continue;
       }
-      if (data.error) throw new Error(data.error); // surfaces to outer catch
+      if (data.error) throw new Error(data.error);
+      if (data.upgrade_required) { onToken("", { upgrade_required: true, reason: data.reason, limit: data.limit }); return; }
       if (data.text) onToken(data.text);
     }
   }
