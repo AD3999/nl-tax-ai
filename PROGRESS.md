@@ -1,7 +1,52 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 27 May 2026 — Phase 14 complete. Chat language fix + profile-aware chatbot with server sync across devices. Build clean.
+> Last updated: 27 May 2026 — Phase 15 complete. Registration 400 fix + global toast notification system (errors + successes in NL/EN/FA). Build clean.
+
+---
+
+## Phase 15 — Registration Fix + Toast Notifications ✅ Complete
+
+### Bug Fixed: Registration returning 400
+
+**Root cause:** When a user tried to register with an email already in use, Django's username uniqueness constraint fired in Dutch (`Er bestaat al een gebruiker met deze gebruikersnaam.`) — 70 bytes, exactly matching the log. The frontend caught any error as a generic `t("auth.register_error")` so the user saw nothing useful.
+
+**Backend fix (`backend/apps/users/serializers.py`):**
+- Added `validate_email()` method — checks `email__iexact` uniqueness before the username constraint fires, returns a clean English message: `"An account with this email address already exists."`
+- Added `validated_data.setdefault("username", email)` in `create()` as a safety guard if frontend ever omits `username`
+
+**Frontend fix (`frontend/src/pages/RegisterPage.tsx`):**
+- Parses the API error shape: `data.email` or `data.username` → localised "email already exists" in NL/EN/FA
+- `data.password` → shows actual password error from server or localised weak-password fallback
+- Unknown error → falls back to `t("auth.register_error")`
+- `preferred_language` now set to `i18n.language` (was hardcoded `"en"`)
+
+---
+
+### Feature: Global Toast Notification System
+
+**New file: `frontend/src/context/ToastContext.tsx`**
+- `ToastProvider` — React context provider, mounted at app root in `main.tsx`
+- `useToast()` hook — returns `showToast(message, type)` usable from any page
+- Toast types: `error` (red), `success` (green), `warn` (yellow), `info` (blue)
+- Toasts appear bottom-right, stack upward, auto-dismiss after 5 seconds, have a manual × button
+- Animated fade-in using existing `fadeIn` keyframe from `index.css`
+
+**Wired into:**
+
+| Page | Event | Toast type |
+|------|-------|-----------|
+| LoginPage | Wrong credentials | error |
+| LoginPage | Login success | success |
+| RegisterPage | Email already exists | error |
+| RegisterPage | Password too weak | error |
+| RegisterPage | Account created | success |
+| IntakePage | Profile saved | success |
+| IntakePage | Also PATCHes server for auth users | (server sync, same as ChatPage) |
+| ChatPage | Chat stream error | error |
+| ChatPage | Chat intake profile created | success |
+
+All toast messages are localised in **NL / EN / FA**.
 
 ---
 
