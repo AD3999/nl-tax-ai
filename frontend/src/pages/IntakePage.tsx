@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import { calculateTax } from "../api/calculator";
 import type { CalcInput } from "../api/calculator";
 import { Icon } from "../components/Icon";
+import { useToast } from "../context/ToastContext";
+import { useAuth } from "../context/AuthContext";
 
 type UserType = "zzp" | "employee" | "expat" | "dga";
 
@@ -48,7 +50,10 @@ function UnitInput({ label, unit, value, onChange, placeholder, hint }: { label:
 export default function IntakePage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const isRtl = i18n.language === "fa";
+  const { user } = useAuth();
+  const { showToast } = useToast();
+  const lang = i18n.language as "nl" | "en" | "fa";
+  const isRtl = lang === "fa";
 
   const [step, setStep]         = useState<1 | 2 | 3>(1);
   const [userType, setUserType] = useState<UserType>("zzp");
@@ -92,6 +97,21 @@ export default function IntakePage() {
     };
     try { await calculateTax(input); } catch { /* save anyway */ }
     localStorage.setItem("taxwijs_calc_input", JSON.stringify(input));
+
+    // Sync to server for authenticated users
+    if (user) {
+      const token = localStorage.getItem("access_token");
+      fetch("/api/users/profile/", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ intake_profile: input }),
+      }).catch(() => null);
+    }
+
+    showToast(
+      lang === "nl" ? "Profiel opgeslagen! U kunt nu vragen stellen." : lang === "fa" ? "پروفایل ذخیره شد! اکنون می‌توانید سؤال بپرسید." : "Profile saved! You can now ask questions.",
+      "success",
+    );
     setLoading(false);
     navigate("/chat");
   };

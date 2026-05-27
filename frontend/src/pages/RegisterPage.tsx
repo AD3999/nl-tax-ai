@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import Wordmark from "../components/Wordmark";
 import { Icon } from "../components/Icon";
 import { useMobile } from "../hooks/useMobile";
+import { useToast } from "../context/ToastContext";
 
 type ApiError = { response?: { data?: Record<string, string[]> } };
 
@@ -21,6 +22,7 @@ export default function RegisterPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { setUser } = useAuth();
+  const { showToast } = useToast();
   const isMobile = useMobile();
   const lang = i18n.language as "nl" | "en" | "fa";
 
@@ -50,16 +52,23 @@ export default function RegisterPage() {
       await login({ username: email, password });
       const profile = await fetchProfile();
       setUser(profile);
+      showToast(
+        lang === "nl" ? "Account aangemaakt! Welkom bij TaxWijs." : lang === "fa" ? "حساب ایجاد شد! به TaxWijs خوش آمدید." : "Account created! Welcome to TaxWijs.",
+        "success",
+      );
       navigate("/intake");
     } catch (err: unknown) {
       const data = (err as ApiError)?.response?.data;
+      let msg: string;
       if (data?.email || data?.username) {
-        setError(EMAIL_TAKEN[lang] ?? EMAIL_TAKEN.en);
+        msg = EMAIL_TAKEN[lang] ?? EMAIL_TAKEN.en;
       } else if (data?.password) {
-        setError((data.password[0] ?? "") || (PW_WEAK[lang] ?? PW_WEAK.en));
+        msg = (data.password[0] ?? "") || (PW_WEAK[lang] ?? PW_WEAK.en);
       } else {
-        setError(t("auth.register_error"));
+        msg = t("auth.register_error");
       }
+      setError(msg);
+      showToast(msg, "error");
     } finally {
       setLoading(false);
     }

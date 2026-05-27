@@ -6,17 +6,26 @@ import { useAuth } from "../context/AuthContext";
 import Wordmark from "../components/Wordmark";
 import { Icon } from "../components/Icon";
 import { useMobile } from "../hooks/useMobile";
+import { useToast } from "../context/ToastContext";
 
 export default function LoginPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { setUser } = useAuth();
+  const { showToast } = useToast();
   const isMobile = useMobile();
+  const lang = i18n.language as "nl" | "en" | "fa";
 
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
+
+  const LOGIN_ERR: Record<string, string> = {
+    nl: "Onjuist e-mailadres of wachtwoord.",
+    en: "Incorrect email address or password.",
+    fa: "آدرس ایمیل یا رمز عبور اشتباه است.",
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,9 +35,15 @@ export default function LoginPage() {
       await login({ username: email, password });
       const profile = await fetchProfile();
       setUser(profile);
+      showToast(
+        lang === "nl" ? "Ingelogd! Welkom terug." : lang === "fa" ? "وارد شدید! خوش آمدید." : "Logged in! Welcome back.",
+        "success",
+      );
       navigate("/chat");
     } catch {
-      setError(t("auth.login_error"));
+      const msg = LOGIN_ERR[lang] ?? t("auth.login_error");
+      setError(msg);
+      showToast(msg, "error");
     } finally {
       setLoading(false);
     }

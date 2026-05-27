@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import UpgradeModal from "../components/UpgradeModal";
 import { Icon } from "../components/Icon";
 import { useMobile } from "../hooks/useMobile";
+import { useToast } from "../context/ToastContext";
 
 const ANON_SESSION_LIMIT = 5;
 
@@ -134,6 +135,8 @@ export default function ChatPage() {
   const lang = i18n.language as "nl" | "en" | "fa";
   const isRtl = lang === "fa";
   const isMobile = useMobile();
+
+  const { showToast } = useToast();
 
   const [messages, setMessages]           = useState<ChatMsg[]>([]);
   const [inputText, setInputText]         = useState("");
@@ -315,6 +318,11 @@ export default function ChatPage() {
           }).catch(() => null); // non-fatal
         }
 
+        showToast(
+          lang === "nl" ? "Profiel aangemaakt! Uw belasting wordt berekend." : lang === "fa" ? "پروفایل ایجاد شد! در حال محاسبه مالیات شما." : "Profile created! Calculating your taxes.",
+          "success",
+        );
+
         // Strip the JSON block from the displayed message
         const cleanContent = fullResponse.replace(/\[INTAKE_COMPLETE:\s*\{[\s\S]*?\}\]/g, "").trim();
         setMessages(prev => prev.map(m => m.id === aid ? { ...m, content: cleanContent } : m));
@@ -349,7 +357,9 @@ export default function ChatPage() {
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== "AbortError") {
+        const errMsg = lang === "nl" ? "Er is een fout opgetreden. Probeer het opnieuw." : lang === "fa" ? "خطایی رخ داد. دوباره تلاش کنید." : "Something went wrong. Please try again.";
         setMessages(prev => prev.map(m => m.id === aid ? { ...m, content: t("chat.error"), streaming: false } : m));
+        showToast(errMsg, "error");
       }
     } finally {
       setMessages(prev => prev.map(m => m.id === aid ? { ...m, streaming: false } : m));
