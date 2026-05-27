@@ -27,5 +27,8 @@ class User(AbstractUser):
     daily_message_count = models.PositiveIntegerField(default=0)
     daily_message_date = models.DateField(null=True, blank=True)
 
+    # Tax profile collected via chat intake or /intake form
+    intake_profile = models.JSONField(null=True, blank=True)
+
     class Meta:
         db_table = "users"

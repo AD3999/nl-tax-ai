@@ -42,6 +42,7 @@ export async function sendMessage(
   userProfile?: Record<string, unknown>,
   sessionMessageCount = 0,
   intakeMode = false,
+  language: "nl" | "en" | "fa" = "nl",
 ): Promise<void> {
   let token = localStorage.getItem("access_token");
 
@@ -50,6 +51,7 @@ export async function sendMessage(
     conversation_history: conversationHistory,
     session_message_count: sessionMessageCount,
     intake_mode: intakeMode,
+    language,
     ...(userProfile ? { user_profile: userProfile } : {}),
   });
 

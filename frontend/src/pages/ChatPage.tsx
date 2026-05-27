@@ -148,25 +148,56 @@ export default function ChatPage() {
     try { const r = localStorage.getItem("taxwijs_calc_input"); return r ? JSON.parse(r) : null; }
     catch { return null; }
   });
+  const [loadingProfile, setLoadingProfile] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef  = useRef<AbortController | null>(null);
   const inputRef  = useRef<HTMLTextAreaElement>(null);
 
-  // On mount: handle pre-filled question from IB guide / intake redirect
+  function startIntakeGreeting() {
+    setMessages([{
+      id: "intake-greeting",
+      role: "assistant",
+      content: INTAKE_GREETING[lang] ?? INTAKE_GREETING.en,
+      isIntake: true,
+    }]);
+  }
+
+  // On mount: load profile (localStorage → server fallback for auth users → intake)
   useEffect(() => {
     const q = (location.state as { question?: string } | null)?.question;
-    if (q && profile) {
-      void submit(q);
-    } else if (!profile && messages.length === 0) {
-      // Start conversational intake with greeting
-      const greet = INTAKE_GREETING[lang] ?? INTAKE_GREETING.en;
-      setMessages([{
-        id: "intake-greeting",
-        role: "assistant",
-        content: greet,
-        isIntake: true,
-      }]);
+    const stored = localStorage.getItem("taxwijs_calc_input");
+
+    if (stored) {
+      // Already have a profile — go straight to result mode
+      if (q) void submit(q);
+      return;
+    }
+
+    if (user) {
+      // Authenticated but no localStorage: try to load from server
+      setLoadingProfile(true);
+      const token = localStorage.getItem("access_token");
+      fetch("/api/users/profile/", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+        .then(r => r.ok ? r.json() as Promise<{ intake_profile?: Record<string, unknown> | null }> : null)
+        .then(data => {
+          if (data?.intake_profile) {
+            // Server has a profile — use it, no intake needed
+            localStorage.setItem("taxwijs_calc_input", JSON.stringify(data.intake_profile));
+            setProfile(data.intake_profile);
+            if (q) void submit(q);
+          } else {
+            // Authenticated but no profile anywhere — start intake
+            startIntakeGreeting();
+          }
+        })
+        .catch(() => startIntakeGreeting())
+        .finally(() => setLoadingProfile(false));
+    } else {
+      // Anonymous + no localStorage — start intake
+      startIntakeGreeting();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -260,6 +291,7 @@ export default function ChatPage() {
         profile ?? undefined,
         newCount,
         isIntakeMode,
+        lang,
       );
 
       // Check if intake profile was embedded in the response
@@ -269,6 +301,19 @@ export default function ChatPage() {
         localStorage.setItem("taxwijs_calc_input", JSON.stringify(extracted));
         setProfile(extracted);
         setIntakeComplete(true);
+
+        // For authenticated users: also persist to server so it works across devices
+        if (user) {
+          const token = localStorage.getItem("access_token");
+          fetch("/api/users/profile/", {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({ intake_profile: extracted }),
+          }).catch(() => null); // non-fatal
+        }
 
         // Strip the JSON block from the displayed message
         const cleanContent = fullResponse.replace(/\[INTAKE_COMPLETE:\s*\{[\s\S]*?\}\]/g, "").trim();
@@ -373,8 +418,15 @@ export default function ChatPage() {
       <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "20px 14px 16px" : "32px 28px 24px" }}>
         <div style={{ maxWidth: 880, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
 
+          {/* Loading profile from server */}
+          {loadingProfile && (
+            <div style={{ textAlign: "center", paddingTop: 48, color: "var(--ink-4)", fontSize: 14 }}>
+              {lang === "nl" ? "Profiel laden…" : lang === "fa" ? "در حال بارگذاری پروفایل…" : "Loading your profile…"}
+            </div>
+          )}
+
           {/* Empty state (with profile, before first real message) */}
-          {profile && !hasRealMessages && (
+          {profile && !hasRealMessages && !loadingProfile && (
             <div style={{ textAlign: "center", paddingBottom: 24 }}>
               <span style={{ display: "inline-grid", placeItems: "center", width: 56, height: 56, borderRadius: 999, background: "var(--accent-soft)", color: "var(--sage-700)", fontFamily: "var(--serif)", fontSize: 24 }}>T</span>
               <h2 style={{ marginTop: 16, fontFamily: "var(--serif)", fontSize: 32, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
@@ -524,11 +576,7 @@ export default function ChatPage() {
                   setAskedSet(new Set());
                   setShowCards(true);
                   setIntakeComplete(false);
-                  // Restart greeting if no profile
-                  if (!profile) {
-                    const greet = INTAKE_GREETING[lang] ?? INTAKE_GREETING.en;
-                    setMessages([{ id: "intake-greeting", role: "assistant", content: greet, isIntake: true }]);
-                  }
+                  if (!profile) startIntakeGreeting();
                 }}
               >
                 {t("chat.clear")}

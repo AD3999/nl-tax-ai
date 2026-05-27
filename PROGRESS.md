@@ -1,7 +1,58 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 27 May 2026 — Phase 13 complete. Security hardening, full API test suite, brand logo + Lora fonts + loading screen. All clean.
+> Last updated: 27 May 2026 — Phase 14 complete. Chat language fix + profile-aware chatbot with server sync across devices. Build clean.
+
+---
+
+## Phase 14 — Chat Language Fix + Profile-Aware Chatbot ✅ Complete
+
+### Bug 1 Fixed: Chatbot always answered in Dutch
+
+**Root cause:** The `sendMessage()` API call never sent the UI language to the backend. The system prompts said "respond in the user's language" but Claude had no language signal on the first response, so it defaulted to Dutch regardless of the UI language setting.
+
+**Changes:**
+- `frontend/src/api/chat.ts` — added `language: "nl" | "en" | "fa"` parameter (8th arg, default `"nl"`)
+- `frontend/src/pages/ChatPage.tsx` — passes `lang` (from `i18n.language`) to every `sendMessage()` call
+- `backend/apps/chat/serializers.py` — added `language = ChoiceField(["nl","en","fa"], default="nl")`; also raised `message` max_length from 800 → 2000
+- `backend/apps/chat/views.py` — replaced hard-coded `SYSTEM_PROMPT` and `INTAKE_SYSTEM_PROMPT` strings with functions `_result_system_prompt(language, ...)` and `_intake_system_prompt(language)`. Each injects a language-specific ABSOLUTE rule in the target language itself (NL/EN/FA) so Claude cannot ignore it
+
+**Language rules injected (example for EN):**
+```
+LANGUAGE RULE (ABSOLUTE — DO NOT IGNORE): You MUST always respond in ENGLISH only.
+Do not switch to any other language, regardless of what the user writes.
+```
+
+---
+
+### Bug 2 Fixed: Profile-aware chatbot + cross-device dashboard sync
+
+**Root cause:** The user tax profile was stored in `localStorage` only — device-specific, lost on new device/browser. When an authenticated user completed the chat intake, nothing was saved to the server. Dashboard had no fallback to the server.
+
+**Backend changes:**
+- `backend/apps/users/models.py` — added `intake_profile = JSONField(null=True, blank=True)` to User model
+- `backend/apps/users/serializers.py` — added `intake_profile` to `UserSerializer` fields (writable via PATCH)
+- Migration `0003_add_intake_profile.py` created and applied
+
+**Frontend — ChatPage (`frontend/src/pages/ChatPage.tsx`):**
+- On mount: checks localStorage first, then (for authenticated users) fetches `GET /api/users/profile/` and uses `intake_profile` from server if found — syncs to localStorage, skips intake
+- After intake completes: for authenticated users, also `PATCH /api/users/profile/` with `{intake_profile: {...}}` to persist cross-device
+- Added `loadingProfile` state + spinner shown while fetching server profile
+- Clear chat button uses `startIntakeGreeting()` helper (respects current language)
+
+**Frontend — DashboardPage (`frontend/src/pages/DashboardPage.tsx`):**
+- Converted `profile` from inline computed value to `useState` so it can be updated reactively
+- On mount (authenticated, no localStorage profile): fetches `GET /api/users/profile/` → syncs `intake_profile` to localStorage + sets state
+- Calculator runs in a separate `useEffect` that fires whenever `profile` changes — handles both localStorage load and server load
+
+**Complete flow (authenticated user):**
+1. User opens chat → no localStorage profile → fetches server → if `intake_profile` found → loads it, goes to result mode
+2. User opens chat → no localStorage, no server profile → shows intake greeting in correct language
+3. User completes intake → profile saved to localStorage AND `PATCH`ed to server
+4. User opens dashboard → if no localStorage → fetches from server → calculator runs → dashboard populates
+5. User on a different device → opens chat/dashboard → server profile loads → works identically
+
+**TypeScript build:** clean (0 errors) · **Django check:** 0 issues
 
 ---
 

@@ -62,44 +62,55 @@ export default function DashboardPage() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loadingCalc, setLoadingCalc] = useState(false);
 
-  const profile = (() => {
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(() => {
     try {
       const r = localStorage.getItem("taxwijs_calc_input");
       return r ? (JSON.parse(r) as Record<string, unknown>) : null;
     } catch { return null; }
-  })();
+  });
 
+  const authHeader = (): Record<string, string> => {
+    const t = localStorage.getItem("access_token");
+    return t ? { Authorization: `Bearer ${t}` } : {};
+  };
+
+  // Redirect if not logged in; load profile from server if no localStorage profile
   useEffect(() => {
-    if (!user) {
-      navigate("/login");
-      return;
+    if (!user) { navigate("/login"); return; }
+
+    if (!profile) {
+      fetch("/api/users/profile/", { headers: authHeader() })
+        .then(r => r.ok ? r.json() as Promise<{ intake_profile?: Record<string, unknown> | null }> : null)
+        .then(data => {
+          if (data?.intake_profile) {
+            localStorage.setItem("taxwijs_calc_input", JSON.stringify(data.intake_profile));
+            setProfile(data.intake_profile);
+          }
+        })
+        .catch(() => null);
     }
-    // Run calculator silently with stored profile
-    if (profile) {
-      setLoadingCalc(true);
-      fetch("/api/calculator/calculate/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(localStorage.getItem("access_token") ? { Authorization: `Bearer ${localStorage.getItem("access_token")}` } : {}),
-        },
-        body: JSON.stringify(profile),
-      })
-        .then(r => r.json() as Promise<CalcResult>)
-        .then(data => setCalcResult(data))
-        .catch(() => null)
-        .finally(() => setLoadingCalc(false));
-    }
+
     // Load calculation history
-    fetch("/api/calculator/history/", {
-      headers: {
-        ...(localStorage.getItem("access_token") ? { Authorization: `Bearer ${localStorage.getItem("access_token")}` } : {}),
-      },
-    })
+    fetch("/api/calculator/history/", { headers: authHeader() })
       .then(r => r.ok ? r.json() as Promise<HistoryItem[]> : [])
       .then(data => setHistory(data))
       .catch(() => null);
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Run calculator whenever profile becomes available
+  useEffect(() => {
+    if (!profile) return;
+    setLoadingCalc(true);
+    fetch("/api/calculator/calculate/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeader() },
+      body: JSON.stringify(profile),
+    })
+      .then(r => r.json() as Promise<CalcResult>)
+      .then(data => setCalcResult(data))
+      .catch(() => null)
+      .finally(() => setLoadingCalc(false));
+  }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const userType = String(profile?.user_type ?? "");
   const totalTax = calcResult?.result.total_tax ?? 0;

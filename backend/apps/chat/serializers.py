@@ -25,7 +25,7 @@ class AskSerializer(serializers.Serializer):
 
 
 class ChatMessageSerializer(serializers.Serializer):
-    message = serializers.CharField(max_length=800, min_length=1)
+    message = serializers.CharField(max_length=2000, min_length=1)
     user_profile = serializers.DictField(required=False, allow_null=True, default=None)
     conversation_history = serializers.ListField(
         child=serializers.DictField(),
@@ -35,3 +35,4 @@ class ChatMessageSerializer(serializers.Serializer):
     )
     session_message_count = serializers.IntegerField(required=False, default=0, min_value=0)
     intake_mode = serializers.BooleanField(required=False, default=False)
+    language = serializers.ChoiceField(choices=["nl", "en", "fa"], default="nl")
