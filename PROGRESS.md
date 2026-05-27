@@ -1,7 +1,20 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 27 May 2026 — Phase 20 complete. Splash loading screen, skeleton shimmer states on dashboard summary cards and chat profile load.
+> Last updated: 27 May 2026 — Phase 21 complete. Animated typing indicator replaces blank streaming card in chat.
+
+---
+
+## Phase 21 — Animated Typing Indicator ✅ Complete
+
+### Problem
+While waiting for the AI response, the chat showed two overlapping indicators: a blank white card with a blinking `▍` cursor, and a separate `T ···` row below it — redundant and visually jarring.
+
+### Fix
+- `index.css`: Added `@keyframes typingBounce` — three sage-colored dots that bounce sequentially (30° phase offset per dot, 1.3 s loop).
+- `ChatPage.tsx`: When an assistant message is streaming but has no content yet (`msg.streaming && !msg.content`), the card renders the 3 bouncing dots instead of the blank cursor.
+- The moment the first token arrives, dots are seamlessly replaced by streaming text.
+- Removed the separate `loading` indicator row below the messages — it was redundant now that the streaming bubble handles the waiting state.
 
 ---
 
