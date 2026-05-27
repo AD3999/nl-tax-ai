@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useMobile } from "../hooks/useMobile";
 import { Icon } from "../components/Icon";
+import { Skeleton } from "../components/Skeleton";
 
 interface CalcResult {
   result: {
@@ -36,7 +37,7 @@ const DEADLINES = [
   { date: "31 Oct 2026",  label: { nl: "BTW Q3 aangifte", en: "VAT Q3 return", fa: "اظهارنامه مالیات بر ارزش افزوده Q3" }, urgency: "ok" as const },
 ];
 
-function SummaryCard({ title, value, subtitle, accent }: { title: string; value: string; subtitle?: string; accent?: boolean }) {
+function SummaryCard({ title, value, subtitle, accent, loading }: { title: string; value: string; subtitle?: string; accent?: boolean; loading?: boolean }) {
   return (
     <div className="card" style={{
       padding: "22px 24px",
@@ -44,7 +45,12 @@ function SummaryCard({ title, value, subtitle, accent }: { title: string; value:
       border: `1px solid ${accent ? "var(--accent-line)" : "var(--hairline)"}`,
     }}>
       <div className="eyebrow" style={{ color: accent ? "var(--sage-700)" : "var(--ink-3)" }}>{title}</div>
-      <div style={{ marginTop: 8, fontFamily: "var(--serif)", fontSize: 36, color: "var(--ink)", letterSpacing: "-0.02em" }}>{value}</div>
+      <div style={{ marginTop: 8, minHeight: 44, display: "flex", alignItems: "center" }}>
+        {loading
+          ? <Skeleton height={36} width="70%" radius="var(--r-sm)" />
+          : <span style={{ fontFamily: "var(--serif)", fontSize: 36, color: "var(--ink)", letterSpacing: "-0.02em" }}>{value}</span>
+        }
+      </div>
       {subtitle && <div style={{ marginTop: 4, fontSize: 12, color: "var(--ink-3)" }}>{subtitle}</div>}
     </div>
   );
@@ -157,24 +163,28 @@ export default function DashboardPage() {
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr 1fr", gap: 14, marginBottom: 32 }}>
           <SummaryCard
             title={lang === "nl" ? "Totale belasting" : lang === "fa" ? "مجموع مالیات" : "Total tax"}
-            value={loadingCalc ? "…" : `€${Math.round(totalTax).toLocaleString("nl-NL")}`}
+            value={`€${Math.round(totalTax).toLocaleString("nl-NL")}`}
             subtitle="2026"
             accent
+            loading={loadingCalc}
           />
           <SummaryCard
             title={lang === "nl" ? "Effectief tarief" : lang === "fa" ? "نرخ مؤثر" : "Effective rate"}
-            value={loadingCalc ? "…" : `${(effectiveRate * 100).toFixed(1)}%`}
+            value={`${(effectiveRate * 100).toFixed(1)}%`}
+            loading={loadingCalc}
           />
           <SummaryCard
             title={lang === "nl" ? "Maandelijks reserveren" : lang === "fa" ? "ذخیره ماهانه" : "Monthly reserve"}
-            value={loadingCalc ? "…" : `€${Math.round(monthlyReserve).toLocaleString("nl-NL")}`}
+            value={`€${Math.round(monthlyReserve).toLocaleString("nl-NL")}`}
             subtitle={lang === "nl" ? "Apart zetten" : lang === "fa" ? "کنار بگذارید" : "Set aside"}
+            loading={loadingCalc}
           />
           {userType === "zzp" && (
             <SummaryCard
               title="Wet DBA"
-              value={loadingCalc ? "…" : (wetDba || "N/A")}
+              value={wetDba || "N/A"}
               subtitle={lang === "nl" ? "Risico" : lang === "fa" ? "ریسک" : "Risk level"}
+              loading={loadingCalc}
             />
           )}
         </div>

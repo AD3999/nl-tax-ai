@@ -1,7 +1,26 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 27 May 2026 — Phase 19 complete. Profile leak fix, per-user persistent chat history, glass navbar, smooth mobile menu, scroll-to-top button.
+> Last updated: 27 May 2026 — Phase 20 complete. Splash loading screen, skeleton shimmer states on dashboard summary cards and chat profile load.
+
+---
+
+## Phase 20 — Loading Screens & Skeleton States ✅ Complete
+
+### App-wide splash screen
+- `App.tsx`: 2.4 s splash overlay using the existing `LoadingScreen` component renders over the entire app while it hydrates; fades out over 0.5 s. App content renders behind the overlay so navigation is instant after the fade.
+- No new files needed — reused `LoadingScreen`.
+
+### Skeleton shimmer component
+- `components/Skeleton.tsx`: new `Skeleton` and `SkeletonCard` components with CSS shimmer animation (`@keyframes shimmer` in `index.css`).
+- `Skeleton`: single shimmer bar, configurable width / height / radius.
+- `SkeletonCard`: a full card-shaped block of skeleton lines for placeholder loading states.
+
+### Dashboard summary cards
+- `DashboardPage.tsx`: `SummaryCard` accepts a `loading` prop. While `loadingCalc` is true (API call in flight), each summary card shows a `Skeleton` bar (h=36, w=70%) instead of the number — same card shell, just animated shimmer where the figure would be.
+
+### Chat profile loading
+- `ChatPage.tsx`: the "Loading your profile…" text is replaced with three `Skeleton` bars (widths 55%, 80%, 40%) while `loadingProfile` is true — consistent with the rest of the app's loading pattern.
 
 ---
 

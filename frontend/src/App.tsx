@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import TopNav from "./components/TopNav";
@@ -30,9 +30,21 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+const SPLASH_DURATION = 2400; // ms until fade starts
+const SPLASH_FADE     = 500;  // ms for the fade-out transition
+
 function App() {
   const { i18n } = useTranslation();
   const isRtl = i18n.language === "fa";
+
+  const [splashFading, setSplashFading] = useState(false);
+  const [splashDone,   setSplashDone]   = useState(false);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setSplashFading(true),  SPLASH_DURATION);
+    const t2 = setTimeout(() => setSplashDone(true),    SPLASH_DURATION + SPLASH_FADE);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} style={{ display: "flex", flexDirection: "column", minHeight: "100svh" }}>
@@ -61,6 +73,20 @@ function App() {
           <Route path="*"            element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+
+      {/* Initial splash — rendered as overlay so the app hydrates behind it */}
+      {!splashDone && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 9999,
+          opacity: splashFading ? 0 : 1,
+          transition: `opacity ${SPLASH_FADE}ms ease-out`,
+          pointerEvents: splashFading ? "none" : "auto",
+        }}>
+          <LoadingScreen />
+        </div>
+      )}
     </div>
   );
 }

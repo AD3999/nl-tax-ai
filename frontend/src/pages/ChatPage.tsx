@@ -8,6 +8,7 @@ import UpgradeModal from "../components/UpgradeModal";
 import { Icon } from "../components/Icon";
 import { useMobile } from "../hooks/useMobile";
 import { useToast } from "../context/ToastContext";
+import { Skeleton } from "../components/Skeleton";
 
 const ANON_SESSION_LIMIT = 5;
 
@@ -458,8 +459,10 @@ export default function ChatPage() {
 
           {/* Loading profile from server */}
           {loadingProfile && (
-            <div style={{ textAlign: "center", paddingTop: 48, color: "var(--ink-4)", fontSize: 14 }}>
-              {lang === "nl" ? "Profiel laden…" : lang === "fa" ? "در حال بارگذاری پروفایل…" : "Loading your profile…"}
+            <div style={{ paddingTop: 40, display: "flex", flexDirection: "column", gap: 12 }}>
+              <Skeleton height={14} width="55%" />
+              <Skeleton height={14} width="80%" />
+              <Skeleton height={14} width="40%" />
             </div>
           )}
 
