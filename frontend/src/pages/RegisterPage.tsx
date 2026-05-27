@@ -7,6 +7,8 @@ import Wordmark from "../components/Wordmark";
 import { Icon } from "../components/Icon";
 import { useMobile } from "../hooks/useMobile";
 
+type ApiError = { response?: { data?: Record<string, string[]> } };
+
 const USER_TYPES = {
   zzp:      { label: "ZZP",      glyph: "ZZ", desc: "Freelance · self-employed",   color: "var(--sage-600)",      benefits: ["Wet DBA risk check on every chat", "Zelfstandigenaftrek + MKB-vrijstelling auto-applied", "Quarterly VAT reminders"] },
   employee: { label: "Employee", glyph: "EM", desc: "Salaried · payslip",          color: "oklch(0.55 0.12 230)", benefits: ["Payslip translator (loonheffing → take-home)", "Box 3 forecast with WOZ inputs", "All standard tax credits"] },
@@ -16,10 +18,11 @@ const USER_TYPES = {
 type UTK = keyof typeof USER_TYPES;
 
 export default function RegisterPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { setUser } = useAuth();
   const isMobile = useMobile();
+  const lang = i18n.language as "nl" | "en" | "fa";
 
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
@@ -27,18 +30,36 @@ export default function RegisterPage() {
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
 
+  const EMAIL_TAKEN: Record<string, string> = {
+    nl: "Er bestaat al een account met dit e-mailadres.",
+    en: "An account with this email address already exists.",
+    fa: "یک حساب با این آدرس ایمیل قبلاً ثبت شده است.",
+  };
+  const PW_WEAK: Record<string, string> = {
+    nl: "Wachtwoord is te zwak of te kort (min. 8 tekens).",
+    en: "Password is too weak or too short (min. 8 characters).",
+    fa: "رمز عبور خیلی ضعیف یا کوتاه است (حداقل ۸ کاراکتر).",
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      await register({ email, username: email, password, user_type: userType, preferred_language: "en" });
+      await register({ email, username: email, password, user_type: userType, preferred_language: lang });
       await login({ username: email, password });
       const profile = await fetchProfile();
       setUser(profile);
       navigate("/intake");
-    } catch {
-      setError(t("auth.register_error"));
+    } catch (err: unknown) {
+      const data = (err as ApiError)?.response?.data;
+      if (data?.email || data?.username) {
+        setError(EMAIL_TAKEN[lang] ?? EMAIL_TAKEN.en);
+      } else if (data?.password) {
+        setError((data.password[0] ?? "") || (PW_WEAK[lang] ?? PW_WEAK.en));
+      } else {
+        setError(t("auth.register_error"));
+      }
     } finally {
       setLoading(false);
     }
