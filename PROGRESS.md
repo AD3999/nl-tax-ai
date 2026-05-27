@@ -1,7 +1,37 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 27 May 2026 — Phase 16 complete. Calculator zero-tax bug fixed + ZVW rate corrected to 5.32% + all 6 scenarios verified at exact ground truth.
+> Last updated: 27 May 2026 — Phase 17 complete. Chatbot humanised (friendly advisor persona, plain language) + calculator context block bug fixed.
+
+---
+
+## Phase 17 — Humanised Chatbot Persona ✅ Complete
+
+### Chatbot rewritten to feel like a knowledgeable friend
+
+**Problem:** The chatbot read like a tax authority or corporate AI — formal openers, jargon, bullet-list answers. Users felt they were talking to a robot.
+
+**Changes to `backend/apps/chat/views.py`:**
+
+**New persona — "Alex":**
+- Named advisor persona: warm, direct, honest — "like a knowledgeable friend who knows taxes"
+- Uses contractions (you'll, you're, here's), plain numbers, no filler openers
+- Always ends with one concrete actionable takeaway
+- Explains effective rate in human terms: "for every €100 you earn, about €X goes to tax"
+- Uses "you" and "your" throughout — never "the taxpayer"
+
+**Intake flow rewritten:**
+- Acknowledges what the user says before moving to the next question
+- Never lists multiple questions at once
+- Confirms numbers back: "Got it, €60k revenue" → then next question
+- 6-question maximum, fills in defaults for anything not mentioned
+
+**Bug fixed — `_build_calculator_block` always returned €0:**
+- Was reading `result.get('total_tax', 0)` etc. from the top-level engine dict
+- Top-level dict has keys `"calculation"` and `"result"` — not `"total_tax"` directly
+- Fixed to read from `calc_result["result"]` and `calc_result["calculation"]`
+- Also expanded the block to include itemised breakdown (ZA, SA, MKB, ZVW, Box 2, Box 3)
+  so Alex can explain each component naturally in conversation
 
 ---
 
