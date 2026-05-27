@@ -166,19 +166,43 @@ export default function ChatPage() {
     }]);
   }
 
-  // On mount: load profile (localStorage → server fallback for auth users → intake)
+  // Persist messages to localStorage on every change (strip streaming flag so restore is clean)
+  useEffect(() => {
+    if (messages.length === 0) return;
+    localStorage.setItem("taxwijs_chat_history", JSON.stringify(messages));
+  }, [messages]);
+
+  // On mount: restore history first, then fall through to normal init if nothing saved
   useEffect(() => {
     const q = (location.state as { question?: string } | null)?.question;
-    const stored = localStorage.getItem("taxwijs_calc_input");
 
+    // 1. Try restoring a previous conversation
+    try {
+      const raw = localStorage.getItem("taxwijs_chat_history");
+      if (raw) {
+        const saved = (JSON.parse(raw) as ChatMsg[])
+          .map(m => ({ ...m, streaming: false }))   // never restore a streaming state
+          .filter(m => m.content.trim().length > 0); // drop any empty partial messages
+        if (saved.length > 0) {
+          setMessages(saved);
+          // Rebuild session count and asked-set from the saved messages
+          const userMsgs = saved.filter(m => m.role === "user");
+          setSessionCount(userMsgs.length);
+          setAskedSet(new Set(userMsgs.map(m => m.content)));
+          if (profile) setIntakeComplete(true);
+          return; // skip normal init — history is restored
+        }
+      }
+    } catch { /* corrupted cache — fall through to normal init */ }
+
+    // 2. Normal init flow (no saved history)
+    const stored = localStorage.getItem("taxwijs_calc_input");
     if (stored) {
-      // Already have a profile — go straight to result mode
       if (q) void submit(q);
       return;
     }
 
     if (user) {
-      // Authenticated but no localStorage: try to load from server
       setLoadingProfile(true);
       const token = localStorage.getItem("access_token");
       fetch("/api/users/profile/", {
@@ -187,19 +211,16 @@ export default function ChatPage() {
         .then(r => r.ok ? r.json() as Promise<{ intake_profile?: Record<string, unknown> | null }> : null)
         .then(data => {
           if (data?.intake_profile) {
-            // Server has a profile — use it, no intake needed
             localStorage.setItem("taxwijs_calc_input", JSON.stringify(data.intake_profile));
             setProfile(data.intake_profile);
             if (q) void submit(q);
           } else {
-            // Authenticated but no profile anywhere — start intake
             startIntakeGreeting();
           }
         })
         .catch(() => startIntakeGreeting())
         .finally(() => setLoadingProfile(false));
     } else {
-      // Anonymous + no localStorage — start intake
       startIntakeGreeting();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -586,6 +607,7 @@ export default function ChatPage() {
                   setAskedSet(new Set());
                   setShowCards(true);
                   setIntakeComplete(false);
+                  localStorage.removeItem("taxwijs_chat_history");
                   if (!profile) startIntakeGreeting();
                 }}
               >

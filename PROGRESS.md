@@ -1,7 +1,32 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 27 May 2026 — Phase 17 complete. Chatbot humanised (friendly advisor persona, plain language) + calculator context block bug fixed.
+> Last updated: 27 May 2026 — Phase 18 complete. Chat history persists across navigation via localStorage.
+
+---
+
+## Phase 18 — Persistent Chat History ✅ Complete
+
+### Chat messages now survive navigation
+
+**Problem:** Every time the user navigated away from `/chat` and returned, the entire conversation was gone — React state is reset on component unmount.
+
+**Fix (`frontend/src/pages/ChatPage.tsx`):**
+
+Two new `useEffect` hooks:
+
+1. **Save on every change** — any time `messages` updates, the full array is written to `localStorage` under the key `taxwijs_chat_history`. The write is a single `JSON.stringify` so it's negligible cost.
+
+2. **Restore on mount (before normal init)** — at the very start of the init `useEffect`, the code tries to read `taxwijs_chat_history`. If messages exist:
+   - All messages get `streaming: false` (never restore a partial stream)
+   - Empty-content messages (incomplete streams) are filtered out
+   - `sessionCount` and `askedSet` are rebuilt from the restored user messages
+   - If a profile exists, `intakeComplete` is set to true
+   - The function returns early — the normal "show intake greeting" flow is skipped
+
+3. **Clear button** — also calls `localStorage.removeItem("taxwijs_chat_history")` so a manual clear wipes both the in-memory state and the saved history.
+
+**Result:** The user can navigate to the dashboard, settings, or any other page and come back to find their full conversation exactly where they left it. The "Clear" button still works as expected.
 
 ---
 
