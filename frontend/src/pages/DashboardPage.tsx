@@ -7,7 +7,7 @@ import { Icon } from "../components/Icon";
 
 interface CalcResult {
   result: {
-    total_tax: number;
+    total_tax_due: number;
     effective_rate: number;
     monthly_reserve_needed: number;
     wet_dba_risk?: string;
@@ -113,7 +113,7 @@ export default function DashboardPage() {
   }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const userType = String(profile?.user_type ?? "");
-  const totalTax = calcResult?.result.total_tax ?? 0;
+  const totalTax = calcResult?.result.total_tax_due ?? 0;
   const effectiveRate = calcResult?.result.effective_rate ?? 0;
   const monthlyReserve = calcResult?.result.monthly_reserve_needed ?? 0;
   const wetDba = calcResult?.result.wet_dba_risk ?? "";

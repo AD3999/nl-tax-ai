@@ -1,7 +1,45 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 27 May 2026 — Phase 15 complete. Registration 400 fix + global toast notification system (errors + successes in NL/EN/FA). Build clean.
+> Last updated: 27 May 2026 — Phase 16 complete. Calculator zero-tax bug fixed + ZVW rate corrected to 5.32% + all 6 scenarios verified at exact ground truth.
+
+---
+
+## Phase 16 — Calculator Accuracy Fix ✅ Complete
+
+### Bug Fixed: Dashboard showing €0 total tax
+
+**Root cause:** `DashboardPage.tsx` interface declared `result.total_tax` but the API returns `result.total_tax_due`. TypeScript resolved the missing field as `undefined`, and `undefined ?? 0` silently displayed €0.
+
+**Fix (`frontend/src/pages/DashboardPage.tsx`):**
+- Renamed `CalcResult.result.total_tax` → `total_tax_due` in the interface (line 12)
+- Updated the usage on line 116: `calcResult?.result.total_tax_due ?? 0`
+
+### Fix: ZVW rate corrected from 4.85% → 5.32%
+
+**Root cause:** `phase1/data/seed/tax_rules_2026.json` had the 2025 ZVW rate (4.85%, ceiling €79,409). The authoritative 2026 figure from CLAUDE.md and Belastingdienst is **5.32%, ceiling €71,628, max €3,811/year**.
+
+**Changes:**
+- `phase1/data/seed/tax_rules_2026.json` — ZVW-2026-001 result: rate 4.85→5.32, ceiling_income 79409→71628, max_amount 3851.34→3810.61, formula + plain text (NL/EN/FA) updated
+- `phase1/data/seed/scenarios.json` — Three ZZP scenarios recalculated with correct ZVW:
+  - SCN-ZZP-001: zvw €2,452→€2,690, total €13,538→€13,776, monthly €1,128→€1,148
+  - SCN-ZZP-002: zvw €1,050→€1,152, total €1,050→€1,152, monthly €88→€96
+  - SCN-ZZP-003: zvw €3,851→€3,811, total €34,294→€34,254, monthly €2,858→€2,855
+
+### Verification
+
+All 6 ground-truth scenarios tested against the engine — exact match (zero error):
+
+| Scenario | Expected | Got | Diff |
+|----------|----------|-----|------|
+| SCN-ZZP-001 | €13,776 | €13,776 | 0 |
+| SCN-ZZP-002 | €1,152 | €1,152 | 0 |
+| SCN-ZZP-003 | €34,254 | €34,254 | 0 |
+| SCN-EMP-001 | €10,079 | €10,079 | 0 |
+| SCN-EXP-001 | €14,270 | €14,270 | 0 |
+| SCN-DGA-001 | €17,010 | €17,010 | 0 |
+
+---
 
 ---
 
