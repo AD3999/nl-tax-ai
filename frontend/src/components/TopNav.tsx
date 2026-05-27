@@ -96,7 +96,7 @@ export default function TopNav() {
                     transition: "color .15s",
                   })}
                 >
-                  {"labelKey" in item ? t(item.labelKey) : item.label}
+                  {t(item.labelKey)}
                 </NavLink>
               ))}
               {user?.is_admin && (
@@ -215,7 +215,7 @@ export default function TopNav() {
                   background: isActive ? "var(--accent-soft)" : "transparent",
                 })}
               >
-                {"labelKey" in item ? t(item.labelKey) : item.label}
+                {t(item.labelKey)}
               </NavLink>
             ))}
 

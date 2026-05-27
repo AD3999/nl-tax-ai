@@ -118,6 +118,14 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "60/minute",
+        "user": "300/minute",
+    },
 }
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
@@ -180,7 +188,7 @@ ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    SECURE_SSL_REDIRECT = env("SECURE_SSL_REDIRECT", default=False)
+    SECURE_SSL_REDIRECT = env.bool("SECURE_SSL_REDIRECT", default=False)
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000

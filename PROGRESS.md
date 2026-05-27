@@ -1,7 +1,7 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 26 May 2026 — Phase 12 complete. Conversational chat intake, user dashboard, admin backend API, Docker production setup. Merged to master.
+> Last updated: 27 May 2026 — Phase 13 complete. Security hardening, full API test suite, brand logo + Lora fonts + loading screen. All clean.
 
 ---
 
@@ -1194,11 +1194,72 @@ docker-compose exec backend python /app/phase2/build_index.py --provider openai
 
 ---
 
-## Current State (26 May 2026)
+## Phase 13 — Security Hardening, Full API Tests, Brand Polish ✅ Complete
+
+**All changes merged to `master` on 27 May 2026.**
+
+### Security fixes
+
+| Issue | Severity | Fix |
+|-------|----------|-----|
+| `/phase2` route publicly accessible | High | Removed from React router — page exposed internal RAG mechanics ("AI instruction" labels, chunk IDs, cascade scores) |
+| `/api/chat/test/` endpoint | High | Removed — returned `"model": "claude-sonnet-4-6"` to any unauthenticated caller, directly revealing the AI provider |
+| `Phase2RetrieveView` AllowAny | High | Changed to `IsStaffUser` — was exposing internal RAG retrieval results to anyone |
+| DB port 5432 exposed to host | Medium | Removed from docker-compose — DB is internal Docker network only |
+| Backend port 8000 exposed to host | Medium | Removed — nginx handles all external traffic on port 80 |
+| Admin routes unguarded in React | Medium | Added `AdminRoute` component — redirects non-staff to `/` before any admin page renders |
+| `SECURE_SSL_REDIRECT = env()` | Medium | Fixed to `env.bool()` — string `"True"` wasn't being parsed as boolean in production |
+| No request throttling | Medium | Added DRF `DEFAULT_THROTTLE_CLASSES` (60/min anon, 300/min user); SSE endpoint explicitly exempted |
+| `SoftJWTAuthentication` not shared | Low | Extracted to `config/authentication.py` and applied to `CalculateView` + `IBFieldsView` — stale tokens no longer cause spurious 401s on public endpoints |
+| `AskView` Celery dead code | Low | Removed from URLs and views — Celery/Redis not in compose; calling the endpoint would hang |
+| No `.dockerignore` | Low | Added — excludes `.venv/`, `node_modules/`, `.env`, `CLAUDE.md`, `PROGRESS.md` from Docker build context |
+
+### API test results (all pass)
+
+| Test | Result |
+|------|--------|
+| `GET /api/users/health/` | ✅ `{"status":"ok"}` |
+| `POST /api/users/register/` | ✅ User created |
+| `POST /api/auth/token/` | ✅ JWT access + refresh issued |
+| `GET /api/users/profile/` (authenticated) | ✅ User data (no stripe_customer_id in response) |
+| `POST /api/calculator/calculate/` (anonymous) | ✅ Returns €15,875 on €72k ZZP |
+| `POST /api/calculator/calculate/` (stale/invalid token) | ✅ HTTP 200 — SoftJWTAuthentication treats stale token as anon |
+| `GET /api/tax/ib/fields/?user_type=zzp` (no token) | ✅ 8 fields returned |
+| `GET /api/tax/rules/` (no token) | ✅ 401 |
+| `GET /api/tax/rules/` (regular user) | ✅ 403 |
+| `GET /api/tax/admin/stats/` (regular user) | ✅ 403 |
+| `GET /api/chat/test/` | ✅ 404 — endpoint removed |
+| `POST /api/tax/phase2/retrieve/` (anonymous) | ✅ 403 — now staff-only |
+| `POST /api/chat/message/` (intake mode, count=4) | ✅ SSE heartbeat + Claude response |
+| `POST /api/chat/message/` (intake mode, count=5) | ✅ `upgrade_required: session_limit` |
+| `POST /api/payments/webhook/` (no signature) | ✅ HTTP 400 |
+| `POST /api/auth/token/refresh/` | ✅ New access token issued |
+
+### Brand polish
+
+| Change | Detail |
+|--------|--------|
+| **Logo** | `Wordmark.tsx` upgraded — shield now uses `linearGradient` (sage-600 → sage-700) matching brand spec |
+| **Favicon** | Replaced generic purple lightning bolt with sage-green shield+checkmark SVG |
+| **Serif font** | Replaced `Instrument Serif` (editorial/italic) with `Lora` (professional, financial-grade serif used by legal/financial products) |
+| **Mono font** | Replaced `JetBrains Mono` with `Geist Mono` — single family source for consistency |
+| **Loading screen** | New `LoadingScreen.tsx` — shield breathing rings + animated checkmark draw-on + rotating status tips + progress bar. Replaces text "Loading…" as Suspense fallback across all lazy routes |
+
+### New files
+
+| File | Purpose |
+|------|---------|
+| `backend/config/authentication.py` | Shared `SoftJWTAuthentication` class — imported by chat, calculator, tax views |
+| `frontend/src/components/LoadingScreen.tsx` | Brand loading screen used as Suspense fallback |
+| `.dockerignore` | Excludes build artifacts, secrets, and internal docs from Docker context |
+
+---
+
+## Current State (27 May 2026)
 
 ### Branch
 
-`master` — all phases merged and pushed to GitHub (`289fd74`).
+`master` — all phases merged and pushed to GitHub.
 
 ### Servers
 

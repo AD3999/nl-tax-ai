@@ -17,8 +17,9 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-    ports:
-      - "5432:5432"
+    # Port intentionally NOT exposed to host — internal Docker network only.
+    # For local DB access during development: add "ports: ['5432:5432']" to a
+    # docker-compose.override.yml file.
 
   # ── Django backend ────────────────────────────────────────
   backend:
@@ -37,8 +38,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/users/health/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # Port intentionally NOT exposed to host — nginx handles all external traffic.
 
   # ── React frontend + nginx ────────────────────────────────
   frontend:
@@ -49,7 +55,8 @@ services:
         VITE_API_URL: ""
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "80:80"
 

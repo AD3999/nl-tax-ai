@@ -2,8 +2,9 @@ import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import TopNav from "./components/TopNav";
+import LoadingScreen from "./components/LoadingScreen";
+import { useAuth } from "./context/AuthContext";
 
-const Phase2Demo      = lazy(() => import("./pages/Phase2Demo"));
 const CalculatorPage  = lazy(() => import("./pages/CalculatorPage"));
 const ChatPage        = lazy(() => import("./pages/ChatPage"));
 const IntakePage      = lazy(() => import("./pages/IntakePage"));
@@ -22,6 +23,13 @@ const AdminCalcPreviewPage = lazy(() => import("./pages/admin/AdminCalculatorPre
 const AdminRAGPreviewPage  = lazy(() => import("./pages/admin/AdminRAGPreviewPage"));
 const AdminSettingsPage    = lazy(() => import("./pages/admin/AdminSettingsPage"));
 
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user?.is_admin) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 function App() {
   const { i18n } = useTranslation();
   const isRtl = i18n.language === "fa";
@@ -29,11 +37,7 @@ function App() {
   return (
     <div dir={isRtl ? "rtl" : "ltr"} style={{ display: "flex", flexDirection: "column", minHeight: "100svh" }}>
       <TopNav />
-      <Suspense fallback={
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-4)", fontSize: 14 }}>
-          Loading…
-        </div>
-      }>
+      <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/"            element={<LandingPage />} />
           <Route path="/login"       element={<LoginPage />} />
@@ -44,16 +48,16 @@ function App() {
           <Route path="/simulation"  element={<SimulationPage />} />
           <Route path="/pricing"     element={<PricingPage />} />
           <Route path="/dashboard"   element={<DashboardPage />} />
-          {/* Calculator: kept accessible at URL but not in user nav */}
+          {/* Calculator: kept at URL but hidden from user nav */}
           <Route path="/calculator"  element={<CalculatorPage />} />
-          <Route path="/phase2"      element={<Phase2Demo />} />
-          <Route path="/admin"                    element={<AdminDashboard />} />
-          <Route path="/admin/rules"              element={<AdminRulesPage />} />
-          <Route path="/admin/rules/new"          element={<AdminRuleEditorPage />} />
-          <Route path="/admin/rules/:id"          element={<AdminRuleEditorPage />} />
-          <Route path="/admin/calculator-preview" element={<AdminCalcPreviewPage />} />
-          <Route path="/admin/rag-preview"        element={<AdminRAGPreviewPage />} />
-          <Route path="/admin/settings"           element={<AdminSettingsPage />} />
+          {/* Admin routes — redirect to home if not staff */}
+          <Route path="/admin"                    element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/rules"              element={<AdminRoute><AdminRulesPage /></AdminRoute>} />
+          <Route path="/admin/rules/new"          element={<AdminRoute><AdminRuleEditorPage /></AdminRoute>} />
+          <Route path="/admin/rules/:id"          element={<AdminRoute><AdminRuleEditorPage /></AdminRoute>} />
+          <Route path="/admin/calculator-preview" element={<AdminRoute><AdminCalcPreviewPage /></AdminRoute>} />
+          <Route path="/admin/rag-preview"        element={<AdminRoute><AdminRAGPreviewPage /></AdminRoute>} />
+          <Route path="/admin/settings"           element={<AdminRoute><AdminSettingsPage /></AdminRoute>} />
           <Route path="*"            element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

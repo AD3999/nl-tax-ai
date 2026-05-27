@@ -4,12 +4,21 @@ import time
 
 from django.conf import settings
 from rest_framework import generics, permissions, status
-from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from config.authentication import SoftJWTAuthentication
 from .models import TaxProfile, TaxRule
 from .serializers import TaxProfileSerializer, TaxRuleSerializer
+
+
+class IsStaffUser(permissions.BasePermission):
+    """Allow only staff/admin users."""
+    def has_permission(self, request, view):
+        return bool(
+            request.user and request.user.is_authenticated
+            and (request.user.is_staff or getattr(request.user, "is_admin", False))
+        )
 
 
 class TaxProfileView(generics.RetrieveUpdateAPIView):
@@ -27,7 +36,8 @@ class TaxProfileView(generics.RetrieveUpdateAPIView):
 class IBFieldsView(APIView):
     """GET /api/tax/ib/fields/?user_type=zzp — returns IB return fields from Phase 1 seed data."""
 
-    permission_classes = [AllowAny]
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.AllowAny]
 
     _cache: list | None = None
 
@@ -51,21 +61,10 @@ class IBFieldsView(APIView):
 
 class Phase2RetrieveView(APIView):
     """
-    POST /api/tax/phase2/retrieve/
-
-    Runs the Phase 2 RAG pipeline for a given question and returns the
-    retrieved contexts. No authentication required — development endpoint.
-
-    Request body:
-        question  (str, required)  — the user's tax question
-        user_type (str, optional)  — "zzp" | "employee" | "expat" | "dga"
-
-    Response:
-        results    list of RetrievedContext objects
-        query_info metadata about the query (timing, filters applied)
+    POST /api/tax/phase2/retrieve/ — staff-only RAG inspection endpoint.
     """
 
-    permission_classes = [AllowAny]
+    permission_classes = [IsStaffUser]
 
     def post(self, request):
         question = (request.data.get("question") or "").strip()
@@ -129,16 +128,6 @@ class Phase2RetrieveView(APIView):
                 {"error": str(exc)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
-
-# ──────────────────────────────────────────
-# Admin-only Tax Rules API
-# ──────────────────────────────────────────
-
-class IsStaffUser(permissions.BasePermission):
-    """Allow only staff/admin users."""
-    def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and (request.user.is_staff or getattr(request.user, 'is_admin', False)))
 
 
 class TaxRuleListView(generics.ListCreateAPIView):

@@ -1,0 +1,276 @@
+You are Claude Code. Build a professional Admin Tax Rules Dashboard for my NL Tax AI Assistant project.
+
+First read CLAUDE.md carefully and follow the project architecture exactly.
+
+Project context:
+- This is a Dutch tax AI assistant for ZZP, employees, expats, and DGA users.
+- The AI must never calculate tax numbers itself.
+- All tax calculations must come from deterministic rules and calculator logic.
+- The dashboard must allow admin users to manage yearly Dutch tax rules, rates, thresholds, deductions, credits, and conditions.
+- Existing project has Phase 1 knowledge base and Phase 2 RAG plan.
+- Use the current schema and rule IDs from CLAUDE.md as the source of truth.
+
+Goal:
+Create a full admin dashboard where I can edit tax rules by year, for example:
+- Change working-hours requirement from 1225 hours to another value
+- Change zelfstandigenaftrek amount
+- Change Box 1 tax brackets and percentages
+- Change ZVW percentage and cap
+- Change MKB-winstvrijstelling percentage
+- Change toeslagen thresholds
+- Mark a rule as verified, draft, or pending_review
+- Set effective_from and effective_until dates
+- Add source URL
+- Add AI explanation text in Dutch, English, and Persian
+- Add ai_prompt_hint for RAG behavior
+
+Important principles:
+1. Never hardcode tax values in UI or calculator.
+2. All tax values must be loaded from structured rule data.
+3. Every rule must have:
+   - id
+   - year
+   - topic
+   - category
+   - user_types
+   - condition
+   - result
+   - plain_nl
+   - plain_en
+   - plain_fa
+   - source_url
+   - verification_status
+   - effective_from
+   - effective_until
+   - ai_prompt_hint
+   - tags
+4. Only verified rules can be used by the public AI assistant.
+5. Admin can edit draft and pending rules.
+6. Persian text must support UTF-8 and RTL display.
+7. The dashboard must support multi-year rules: 2025, 2026, 2027, etc.
+8. The system must keep rule history instead of overwriting old years.
+9. Add validation before saving rules.
+10. Add audit log for every admin change.
+
+Tech requirements:
+- Use React.js with TypeScript.
+- Use Tailwind CSS.
+- Use shadcn/ui components.
+- Use React Hook Form + Zod validation.
+- Use a clean, professional SaaS admin UI.
+- Data layer can initially use JSON files or local mock API.
+- Structure code so it can later connect to Supabase/Postgres.
+- Create reusable components.
+
+Dashboard pages:
+1. /admin
+   - Overview dashboard
+   - Total rules
+   - Verified rules
+   - Draft rules
+   - Pending review rules
+   - Expiring rules
+   - Rules by year
+   - Rules by category
+
+2. /admin/rules
+   - Table of all tax rules
+   - Search by rule ID, topic, category
+   - Filter by year
+   - Filter by user type: zzp, employee, expat, dga
+   - Filter by verification status
+   - Filter by category
+   - Show status badge
+   - Show effective dates
+   - Edit button
+   - Duplicate to new year button
+
+3. /admin/rules/new
+   - Create new tax rule form
+
+4. /admin/rules/[id]
+   - Edit existing tax rule
+   - Tabs:
+     - Basic Info
+     - Conditions
+     - Result / Formula
+     - Multilingual Explanation
+     - AI / RAG Behavior
+     - Source & Verification
+     - Audit History
+
+5. /admin/calculator-preview
+   - Admin can test a rule change with sample user data
+   - Example inputs:
+     - user type
+     - year
+     - income/profit
+     - hours worked
+     - deductions
+   - Show which rules were applied
+   - Show calculation result from deterministic calculator only
+   - Show warning if rule is draft or unverified
+
+6. /admin/rag-preview
+   - Admin can type a user question
+   - Select language: NL, EN, FA
+   - Select user type
+   - Select year
+   - Show retrieved rules
+   - Show source URLs
+   - Show ai_prompt_hint
+   - Show whether rule is verified
+
+7. /admin/settings
+   - Active tax year
+   - Default language
+   - Rule verification policy
+   - Source citation requirement
+
+Components to create:
+- AdminLayout
+- Sidebar
+- Topbar
+- RuleTable
+- RuleStatusBadge
+- YearSelector
+- UserTypeFilter
+- RuleEditorForm
+- ConditionBuilder
+- ResultFormulaEditor
+- MultilingualTextFields
+- SourceUrlField
+- VerificationPanel
+- AuditLogPanel
+- CalculatorPreview
+- RagPreview
+- EmptyState
+- LoadingState
+
+Rule editor details:
+The condition builder should allow structured conditions like:
+- hours_gte = 1225
+- income_lte = 38883
+- profit_gte = 0
+- user_type = zzp
+- has_child_under_12 = true
+- is_aow_age = false
+
+The result editor should allow:
+- fixed amount
+- percentage
+- bracket
+- formula
+- cap
+- threshold
+- phase-out
+
+Example rule object:
+{
+  "id": "ZA-2026-001",
+  "year": 2026,
+  "topic": "zelfstandigenaftrek",
+  "category": "deduction",
+  "user_types": ["zzp"],
+  "condition": {
+    "is_entrepreneur": true,
+    "hours_gte": 1225
+  },
+  "result": {
+    "type": "fixed_amount",
+    "value": 1200,
+    "currency": "EUR"
+  },
+  "plain_nl": "...",
+  "plain_en": "...",
+  "plain_fa": "...",
+  "source_url": "...",
+  "verification_status": "verified",
+  "effective_from": "2026-01-01",
+  "effective_until": "2026-12-31",
+  "ai_prompt_hint": "Always check urencriterium before applying this deduction.",
+  "tags": ["zzp", "deduction", "hours criterion"]
+}
+
+Validation requirements:
+- Rule ID must follow TOPIC-YEAR-SEQ format.
+- Year must match rule ID.
+- source_url is required before verified status.
+- plain_nl, plain_en, and plain_fa are required before verified status.
+- verified rules must have effective_from.
+- expired rules must not be used in preview calculations.
+- Do not allow public usage of pending_review or draft rules.
+
+UI design:
+- Professional tax SaaS style.
+- Clean sidebar.
+- Cards for metrics.
+- Tables with filters.
+- Forms with clear sections.
+- Status badges:
+  - verified = green
+  - pending_review = yellow
+  - draft = gray
+  - expired = red
+- Persian fields should be RTL.
+- Use accessible labels and helper text.
+
+Also create:
+- mock tax rules based on CLAUDE.md
+- TypeScript types
+- Zod schemas
+- mock API functions:
+  - getRules()
+  - getRuleById()
+  - createRule()
+  - updateRule()
+  - duplicateRuleToYear()
+  - validateRule()
+  - getAuditLog()
+  - previewCalculation()
+  - previewRetrieval()
+
+Folder structure:
+app/
+  admin/
+    page.tsx
+    rules/
+      page.tsx
+      new/page.tsx
+      [id]/page.tsx
+    calculator-preview/page.tsx
+    rag-preview/page.tsx
+    settings/page.tsx
+
+components/
+  admin/
+  rules/
+  forms/
+  preview/
+
+lib/
+  tax-rules/
+    types.ts
+    schema.ts
+    mock-data.ts
+    api.ts
+    validation.ts
+    audit.ts
+
+Deliverables:
+1. Working React.js admin dashboard
+2. Fully typed TypeScript code
+3. Zod validation
+4. Mock data from 2026 tax rules
+5. Rule editor form
+6. Rule table with filters
+7. Calculator preview page
+8. RAG preview page
+9. Clear README explaining how to run
+
+Important:
+Before coding, inspect the existing project structure.
+Do not delete existing files.
+Do not change CLAUDE.md.
+Follow the architecture principles from CLAUDE.md.
+Build this dashboard as a new admin/product layer that can later connect to Phase 3 calculator and Phase 2 RAG pipeline.

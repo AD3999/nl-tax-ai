@@ -2,6 +2,7 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from config.authentication import SoftJWTAuthentication
 from .engine import calculate
 from .models import CalculationResult
 from .serializers import CalculationResultSerializer, CalculatorInputSerializer
@@ -10,10 +11,10 @@ from .serializers import CalculationResultSerializer, CalculatorInputSerializer
 class CalculateView(APIView):
     """
     POST /api/calculator/calculate/
-    Deterministic Dutch 2026 tax calculator (Phase 3).
-    Open to unauthenticated users for demo/frontend use.
-    Results are only persisted to DB when the user is authenticated.
+    Deterministic Dutch 2026 tax calculator.
+    Open to all including anonymous users; results only persisted for authenticated users.
     """
+    authentication_classes = [SoftJWTAuthentication]
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
