@@ -199,6 +199,10 @@ input, textarea, select { font-family: inherit; }
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0);   opacity: 0.35; }
+  30%            { transform: translateY(-6px); opacity: 1;    }
+}
 
 .animate-card-in { animation: cardIn .35s ease-out both; }
 .animate-fade-in { animation: fadeIn .2s ease-out both; }

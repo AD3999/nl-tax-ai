@@ -489,12 +489,27 @@ export default function ChatPage() {
               <div key={msg.id} style={{ display: "flex", gap: 10, alignItems: "flex-start", maxWidth: "92%" }}>
                 <span style={{ width: 30, height: 30, borderRadius: 999, background: "var(--sage-100)", color: "var(--sage-700)", display: "grid", placeItems: "center", fontFamily: "var(--serif)", fontSize: 14, marginTop: 2, flexShrink: 0 }}>T</span>
                 <div className="card" style={{ flex: 1, padding: 18 }}>
-                  <div
-                    style={{ fontSize: 14, lineHeight: 1.55, color: "var(--ink-2)" }}
-                    className="[&_p]:m-0 [&_p:not(:last-child)]:mb-2 [&_ul]:m-1 [&_ul]:ml-4 [&_li]:mb-1 [&_strong]:font-semibold [&_strong]:text-[var(--ink)] [&_h1]:font-medium [&_h2]:font-medium [&_h3]:font-medium"
-                  >
-                    <ReactMarkdown>{msg.content || (msg.streaming ? "▍" : "")}</ReactMarkdown>
-                  </div>
+                  {msg.streaming && !msg.content ? (
+                    /* Typing indicator — shown while waiting for first token */
+                    <div style={{ display: "flex", gap: 6, alignItems: "center", padding: "4px 2px" }}>
+                      {[0, 1, 2].map(i => (
+                        <span key={i} style={{
+                          width: 9, height: 9, borderRadius: "50%",
+                          background: "var(--sage-400)",
+                          display: "inline-block",
+                          animation: "typingBounce 1.3s ease-in-out infinite",
+                          animationDelay: `${i * 0.18}s`,
+                        }} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div
+                      style={{ fontSize: 14, lineHeight: 1.55, color: "var(--ink-2)" }}
+                      className="[&_p]:m-0 [&_p:not(:last-child)]:mb-2 [&_ul]:m-1 [&_ul]:ml-4 [&_li]:mb-1 [&_strong]:font-semibold [&_strong]:text-[var(--ink)] [&_h1]:font-medium [&_h2]:font-medium [&_h3]:font-medium"
+                    >
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                  )}
                   {msg.content.includes("Source") && (
                     <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8, paddingTop: 12, borderTop: "1px solid var(--hairline)" }}>
                       <span className="eyebrow">Sources</span>
@@ -506,13 +521,6 @@ export default function ChatPage() {
             )
           ))}
 
-          {/* Loading indicator */}
-          {loading && (
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <span style={{ width: 30, height: 30, borderRadius: 999, background: "var(--sage-100)", color: "var(--sage-700)", display: "grid", placeItems: "center", fontFamily: "var(--serif)", fontSize: 14 }}>T</span>
-              <span style={{ color: "var(--ink-4)", fontSize: 20, letterSpacing: 4 }}>···</span>
-            </div>
-          )}
 
           {/* Question suggestion cards — only when profile is available */}
           {showResultCards && (
