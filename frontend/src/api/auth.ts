@@ -42,4 +42,11 @@ export const fetchProfile = async (): Promise<AuthUser | null> => {
 export const logout = () => {
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
+  // Clear profile and anon chat history so the next visitor (or anonymous user)
+  // never sees a previous user's data. The user-specific history key
+  // (taxwijs_chat_history_u{id}) is intentionally kept so it can be restored
+  // on the next login.
+  localStorage.removeItem("taxwijs_calc_input");
+  localStorage.removeItem("taxwijs_chat_history");
+  localStorage.removeItem("taxwijs_user_id");
 };

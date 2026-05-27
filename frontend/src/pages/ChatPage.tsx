@@ -157,6 +157,13 @@ export default function ChatPage() {
   const abortRef  = useRef<AbortController | null>(null);
   const inputRef  = useRef<HTMLTextAreaElement>(null);
 
+  // Per-user history key: logged-in users get their own slot so history survives
+  // logout/login. Anonymous users share the generic key (cleared on logout).
+  function historyKey(): string {
+    const uid = localStorage.getItem("taxwijs_user_id");
+    return uid ? `taxwijs_chat_history_u${uid}` : "taxwijs_chat_history";
+  }
+
   function startIntakeGreeting() {
     setMessages([{
       id: "intake-greeting",
@@ -169,8 +176,8 @@ export default function ChatPage() {
   // Persist messages to localStorage on every change (strip streaming flag so restore is clean)
   useEffect(() => {
     if (messages.length === 0) return;
-    localStorage.setItem("taxwijs_chat_history", JSON.stringify(messages));
-  }, [messages]);
+    localStorage.setItem(historyKey(), JSON.stringify(messages));
+  }, [messages]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // On mount: restore history first, then fall through to normal init if nothing saved
   useEffect(() => {
@@ -178,7 +185,7 @@ export default function ChatPage() {
 
     // 1. Try restoring a previous conversation
     try {
-      const raw = localStorage.getItem("taxwijs_chat_history");
+      const raw = localStorage.getItem(historyKey());
       if (raw) {
         const saved = (JSON.parse(raw) as ChatMsg[])
           .map(m => ({ ...m, streaming: false }))   // never restore a streaming state
@@ -607,7 +614,7 @@ export default function ChatPage() {
                   setAskedSet(new Set());
                   setShowCards(true);
                   setIntakeComplete(false);
-                  localStorage.removeItem("taxwijs_chat_history");
+                  localStorage.removeItem(historyKey());
                   if (!profile) startIntakeGreeting();
                 }}
               >

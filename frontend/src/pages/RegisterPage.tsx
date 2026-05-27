@@ -52,6 +52,7 @@ export default function RegisterPage() {
       await login({ username: email, password });
       const profile = await fetchProfile();
       setUser(profile);
+      if (profile?.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
       showToast(
         lang === "nl" ? "Account aangemaakt! Welkom bij TaxWijs." : lang === "fa" ? "حساب ایجاد شد! به TaxWijs خوش آمدید." : "Account created! Welcome to TaxWijs.",
         "success",
