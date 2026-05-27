@@ -1,7 +1,33 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 27 May 2026 — Phase 18 complete. Chat history persists across navigation via localStorage.
+> Last updated: 27 May 2026 — Phase 19 complete. Profile leak fix, per-user persistent chat history, glass navbar, smooth mobile menu, scroll-to-top button.
+
+---
+
+## Phase 19 — Profile Leak Fix + Per-User Chat History + UI Polish ✅ Complete
+
+### Bug: Profile visible to anonymous users after logout
+`logout()` removed JWT tokens but left `taxwijs_calc_input` (user profile) in localStorage. Any anonymous visitor saw the previous user's ZZP profile bar.
+- `api/auth.ts`: `logout()` now also removes `taxwijs_calc_input`, `taxwijs_chat_history`, `taxwijs_user_id`
+
+### Bug: Chat history lost after logout/login
+History was saved under a shared `taxwijs_chat_history` key — clearing it on logout wiped it permanently.
+- `LoginPage.tsx` / `RegisterPage.tsx`: write `taxwijs_user_id` to localStorage after successful auth
+- `ChatPage.tsx`: `historyKey()` returns `taxwijs_chat_history_u{id}` for logged-in users, `taxwijs_chat_history` for anonymous — user-specific keys survive logout and are restored on next login
+
+### Glass navbar on scroll
+- `TopNav.tsx`: `scrolled` state (scrollY > 8px) → header transitions to `rgba(255,255,255,0.78)` background + `backdrop-filter: blur(14px) saturate(160%)` + drop shadow
+- Smooth `transition: background .25s, box-shadow .25s`
+
+### Smooth mobile menu slide
+- Mobile menu panel is always mounted (not conditionally rendered) — visibility controlled by `opacity`, `transform: translateY`, and `pointerEvents`
+- Backdrop and panel both animate: slide down on open, slide up on close (`.22s cubic-bezier`)
+
+### Scroll-to-top button
+- Fixed button (bottom-right, 44px circle) fades in when scroll > 320px
+- Smooth `window.scrollTo({ top: 0, behavior: 'smooth' })` on click
+- Same fade+lift transition as the navbar glass effect
 
 ---
 

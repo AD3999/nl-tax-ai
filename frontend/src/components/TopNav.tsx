@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
@@ -45,7 +45,19 @@ export default function TopNav() {
   const isRtl = i18n.language === "fa";
   const isMobile = useMobile();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const navItems = user ? NAV_ITEMS_AUTH : NAV_ITEMS_GUEST;
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 8);
+      setShowScrollTop(y > 320);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   function handleLogout() {
     logout();
@@ -67,8 +79,12 @@ export default function TopNav() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          borderBottom: "1px solid var(--hairline)",
-          background: "var(--paper)",
+          borderBottom: scrolled ? "1px solid rgba(0,0,0,0.06)" : "1px solid var(--hairline)",
+          background: scrolled ? "rgba(255,255,255,0.78)" : "var(--paper)",
+          backdropFilter: scrolled ? "blur(14px) saturate(160%)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(14px) saturate(160%)" : "none",
+          boxShadow: scrolled ? "0 2px 20px rgba(0,0,0,0.07)" : "none",
+          transition: "background .25s, box-shadow .25s, border-color .25s",
           position: "sticky",
           top: 0,
           zIndex: 30,
@@ -170,8 +186,8 @@ export default function TopNav() {
         </div>
       </header>
 
-      {/* Mobile dropdown menu */}
-      {isMobile && menuOpen && (
+      {/* Mobile dropdown menu — always mounted, slide via CSS so exit is also smooth */}
+      {isMobile && (
         <>
           {/* Backdrop */}
           <div
@@ -182,6 +198,9 @@ export default function TopNav() {
               top: 64,
               zIndex: 25,
               background: "rgba(0,0,0,0.18)",
+              opacity: menuOpen ? 1 : 0,
+              pointerEvents: menuOpen ? "auto" : "none",
+              transition: "opacity .22s",
             }}
           />
           {/* Menu panel */}
@@ -197,6 +216,10 @@ export default function TopNav() {
               borderBottom: "1px solid var(--hairline)",
               padding: "12px 0 16px",
               boxShadow: "var(--shadow)",
+              transform: menuOpen ? "translateY(0)" : "translateY(-12px)",
+              opacity: menuOpen ? 1 : 0,
+              pointerEvents: menuOpen ? "auto" : "none",
+              transition: "transform .24s cubic-bezier(0.4,0,0.2,1), opacity .2s ease-out",
             }}
           >
             {/* Nav links */}
@@ -277,6 +300,35 @@ export default function TopNav() {
           </div>
         </>
       )}
+
+      {/* Scroll-to-top button — fades in after scrolling 320px */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        aria-label="Back to top"
+        style={{
+          position: "fixed",
+          bottom: 28,
+          right: 24,
+          zIndex: 40,
+          width: 44,
+          height: 44,
+          borderRadius: "50%",
+          background: "var(--ink)",
+          color: "var(--paper)",
+          border: "none",
+          cursor: "pointer",
+          display: "grid",
+          placeItems: "center",
+          fontSize: 18,
+          boxShadow: "0 4px 18px rgba(0,0,0,0.18)",
+          opacity: showScrollTop ? 1 : 0,
+          transform: showScrollTop ? "translateY(0)" : "translateY(10px)",
+          pointerEvents: showScrollTop ? "auto" : "none",
+          transition: "opacity .22s, transform .22s",
+        }}
+      >
+        ↑
+      </button>
     </>
   );
 }
