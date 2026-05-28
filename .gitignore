@@ -1,6 +1,12 @@
 # Claude Code local memory (not project code)
 .claude/
 
+# Internal docs — not for public repo
+CLAUDE.md
+PROGRESS.md
+design.md
+Design.md
+
 # Environment
 .env
 *.env.local
