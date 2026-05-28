@@ -5,7 +5,7 @@ export PYTHONPATH=/app/backend:${PYTHONPATH:-}
 cd /app/backend
 
 echo "==> Running migrations…"
-python manage.py migrate --noinput
+python3 manage.py migrate --noinput
 
 echo "==> Starting gunicorn…"
 exec gunicorn config.wsgi:application \
