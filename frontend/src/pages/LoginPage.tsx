@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useGoogleLogin } from "@react-oauth/google";
 import { login, googleAuth, fetchProfile } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 import Wordmark from "../components/Wordmark";
@@ -22,33 +21,45 @@ export default function LoginPage() {
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
 
-  const handleGoogle = useGoogleLogin({
-    onSuccess: async (resp) => {
-      setLoading(true);
-      setError("");
-      try {
-        await googleAuth(resp.access_token);
-        const profile = await fetchProfile();
-        setUser(profile);
-        if (profile?.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
-        showToast(
-          lang === "nl" ? "Ingelogd! Welkom terug." : lang === "fa" ? "وارد شدید! خوش آمدید." : "Logged in! Welcome back.",
-          "success",
-        );
-        navigate("/dashboard");
-      } catch {
-        const msg = lang === "nl" ? "Google-inloggen mislukt." : lang === "fa" ? "ورود با گوگل ناموفق بود." : "Google sign-in failed.";
-        setError(msg);
-        showToast(msg, "error");
-      } finally {
-        setLoading(false);
-      }
-    },
-    onError: () => {
-      const msg = lang === "nl" ? "Google-inloggen mislukt." : lang === "fa" ? "ورود با گوگل ناموفق بود." : "Google sign-in failed.";
+  const handleGoogle = () => {
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+    if (!clientId || !window.google) {
+      const msg = lang === "nl" ? "Google-inloggen niet beschikbaar." : lang === "fa" ? "ورود با گوگل در دسترس نیست." : "Google sign-in not available.";
       setError(msg);
-    },
-  });
+      return;
+    }
+    const client = window.google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: "email profile",
+      callback: async (resp) => {
+        if (resp.error) {
+          const msg = lang === "nl" ? "Google-inloggen mislukt." : lang === "fa" ? "ورود با گوگل ناموفق بود." : "Google sign-in failed.";
+          setError(msg);
+          return;
+        }
+        setLoading(true);
+        setError("");
+        try {
+          await googleAuth(resp.access_token);
+          const profile = await fetchProfile();
+          setUser(profile);
+          if (profile?.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
+          showToast(
+            lang === "nl" ? "Ingelogd! Welkom terug." : lang === "fa" ? "وارد شدید! خوش آمدید." : "Logged in! Welcome back.",
+            "success",
+          );
+          navigate("/dashboard");
+        } catch {
+          const msg = lang === "nl" ? "Google-inloggen mislukt." : lang === "fa" ? "ورود با گوگل ناموفق بود." : "Google sign-in failed.";
+          setError(msg);
+          showToast(msg, "error");
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
+    client.requestAccessToken();
+  };
 
   const LOGIN_ERR: Record<string, string> = {
     nl: "Onjuist e-mailadres of wachtwoord.",
