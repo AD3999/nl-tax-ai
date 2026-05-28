@@ -96,7 +96,34 @@ export default function LoginPage() {
   return (
     <div style={{ flex: 1, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.1fr 1fr", minHeight: "calc(100vh - 64px)" }}>
       {/* Left — form */}
-      <div style={{ padding: isMobile ? "28px 20px" : "36px 56px", display: "flex", flexDirection: "column", background: "var(--paper)", overflow: "auto" }}>
+      <div style={{ position: "relative", padding: isMobile ? "28px 20px" : "36px 56px", display: "flex", flexDirection: "column", background: "var(--paper)", overflow: "auto" }}>
+
+        {/* Loading overlay — left panel on desktop, full screen on mobile */}
+        {loading && (
+          <div style={{
+            position: isMobile ? "fixed" : "absolute",
+            inset: 0,
+            zIndex: 50,
+            background: "rgba(252, 251, 248, 0.88)",
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 16,
+          }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: "50%",
+              border: "3px solid var(--hairline-2)",
+              borderTopColor: "var(--sage-600)",
+              animation: "spin 0.7s linear infinite",
+            }} />
+            <span style={{ fontSize: 14, color: "var(--ink-3)", fontWeight: 500 }}>
+              {lang === "nl" ? "Inloggen…" : lang === "fa" ? "در حال ورود…" : "Signing in…"}
+            </span>
+          </div>
+        )}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Wordmark size={16} />
           <Link to="/" style={{ fontSize: 13, color: "var(--ink-3)" }}>← Back to home</Link>
@@ -130,7 +157,7 @@ export default function LoginPage() {
                 <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
                 <path fill="none" d="M0 0h48v48H0z"/>
               </svg>
-              {loading ? "…" : lang === "nl" ? "Doorgaan met Google" : lang === "fa" ? "ورود با گوگل" : "Continue with Google"}
+              {lang === "nl" ? "Doorgaan met Google" : lang === "fa" ? "ورود با گوگل" : "Continue with Google"}
             </button>
 
             {error && (
@@ -159,7 +186,7 @@ export default function LoginPage() {
               </div>
 
               <button className="btn btn-accent btn-lg" type="submit" disabled={loading} style={{ marginTop: 6 }}>
-                {loading ? "Logging in…" : <>{t("nav.login")} <Icon.arrow /></>}
+                {t("nav.login")} <Icon.arrow />
               </button>
             </form>
 
