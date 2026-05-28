@@ -102,26 +102,82 @@ export default function LoginPage() {
         {loading && (
           <div style={{
             position: isMobile ? "fixed" : "absolute",
-            inset: 0,
-            zIndex: 50,
-            background: "rgba(252, 251, 248, 0.88)",
-            backdropFilter: "blur(6px)",
-            WebkitBackdropFilter: "blur(6px)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 16,
+            inset: 0, zIndex: 50,
+            background: "var(--paper)",
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            gap: 22, overflow: "hidden",
           }}>
+            {/* Radial brand tint */}
             <div style={{
-              width: 40, height: 40, borderRadius: "50%",
-              border: "3px solid var(--hairline-2)",
-              borderTopColor: "var(--sage-600)",
-              animation: "spin 0.7s linear infinite",
+              position: "absolute", inset: 0, pointerEvents: "none",
+              background: [
+                "radial-gradient(60% 50% at 80% 0%, oklch(0.95 0.05 115 / 0.5), transparent 60%)",
+                "radial-gradient(50% 40% at 0% 100%, oklch(0.95 0.03 95 / 0.55), transparent 60%)",
+              ].join(", "),
             }} />
-            <span style={{ fontSize: 14, color: "var(--ink-3)", fontWeight: 500 }}>
+
+            {/* Shield with breathing rings */}
+            <div style={{ position: "relative", width: 72, height: 72, display: "grid", placeItems: "center" }}>
+              {[0, 1, 2].map(i => (
+                <div key={i} style={{
+                  position: "absolute", width: 72, height: 72, borderRadius: "50%",
+                  border: "1px solid oklch(0.79 0.110 117 / 0.4)",
+                  animation: `tw-breath 2.6s ease-out ${i * 0.6}s infinite`,
+                  opacity: 0,
+                }} />
+              ))}
+              <svg width={72} height={72} viewBox="0 0 64 64" fill="none">
+                <defs>
+                  <linearGradient id="lo-grad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="oklch(0.50 0.105 118)" />
+                    <stop offset="1" stopColor="oklch(0.40 0.085 118)" />
+                  </linearGradient>
+                </defs>
+                <path d="M32 4 L56 11 V32 C56 46 45.5 56.5 32 60 C18.5 56.5 8 46 8 32 V11 Z" fill="url(#lo-grad)" />
+                <path
+                  d="M20 32 L29 41 L46 22"
+                  stroke="white" strokeWidth="4.4" strokeLinecap="round" strokeLinejoin="round" fill="none"
+                  strokeDasharray="44" strokeDashoffset="44"
+                  style={{ animation: "tw-draw 2.4s ease-out forwards infinite" }}
+                />
+              </svg>
+            </div>
+
+            {/* Wordmark */}
+            <div style={{ fontFamily: "var(--serif)", fontSize: 24, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+              TaxWijs
+            </div>
+
+            {/* Status */}
+            <div style={{ fontSize: 13, color: "var(--ink-3)" }}>
               {lang === "nl" ? "Inloggen…" : lang === "fa" ? "در حال ورود…" : "Signing in…"}
-            </span>
+            </div>
+
+            {/* Sage progress bar at bottom */}
+            <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 3, background: "var(--paper-3)" }}>
+              <div style={{
+                height: "100%", width: "65%",
+                background: "var(--sage-600)",
+                animation: "tw-progress 1.8s ease-in-out infinite alternate",
+              }} />
+            </div>
+
+            <style>{`
+              @keyframes tw-breath {
+                0%   { transform: scale(.7); opacity: .7; }
+                80%  { opacity: 0; }
+                100% { transform: scale(2.0); opacity: 0; }
+              }
+              @keyframes tw-draw {
+                0%  { stroke-dashoffset: 44; }
+                60% { stroke-dashoffset: 0; }
+                100%{ stroke-dashoffset: 0; }
+              }
+              @keyframes tw-progress {
+                from { width: 20%; margin-left: 0; }
+                to   { width: 55%; margin-left: 45%; }
+              }
+            `}</style>
           </div>
         )}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
