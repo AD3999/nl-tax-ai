@@ -1,7 +1,53 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 27 May 2026 — Phase 21 complete. Animated typing indicator replaces blank streaming card in chat.
+> Last updated: 28 May 2026 — Phase 24 complete. Google OAuth, register page fix, brand-matched login loading overlay.
+
+---
+
+## Phase 24 — Brand-Matched Login Loading Overlay ✅ Complete
+
+### What was built
+`LoginPage.tsx`: when login is in progress, an overlay appears that matches the TaxWijs brand exactly:
+- Shield logo (72px) with the same sage gradient as the splash screen
+- 3 breathing sage rings (`tw-breath` animation) radiating outward from the shield
+- Checkmark draw animation (`tw-draw`) inside the shield
+- "TaxWijs" in the serif font
+- "Signing in…" status text (translated NL/EN/FA)
+- Animated sage-600 progress bar sliding along the bottom edge
+- Paper background with the same radial sage/warm gradient tint as the splash
+
+**Responsive behaviour:** on desktop the overlay covers only the left form column (`position: absolute`); on mobile it covers the full screen (`position: fixed`).
+
+---
+
+## Phase 23 — Register Page Blank Screen Fix ✅ Complete
+
+### Problem
+`@react-oauth/google` v0.13 is incompatible with React 19 — it threw a fatal render error that wiped the register and login pages completely white.
+
+### Fix
+- Uninstalled `@react-oauth/google` entirely.
+- Added Google Identity Services (GIS) script tag to `index.html` — no npm package needed.
+- Added `frontend/src/types/google.d.ts` with TypeScript declarations for `window.google.accounts.oauth2`.
+- Both `LoginPage.tsx` and `RegisterPage.tsx` now call `window.google.accounts.oauth2.initTokenClient()` directly.
+- Graceful error messages if `VITE_GOOGLE_CLIENT_ID` is not set or GIS hasn't loaded yet.
+- Removed `GoogleOAuthProvider` from `main.tsx`.
+
+---
+
+## Phase 22 — Google OAuth Sign-In ✅ Complete
+
+### What was built
+**Backend (`apps/users/views.py` + `urls.py`):**
+- `GoogleAuthView`: accepts a Google `access_token`, calls `https://www.googleapis.com/oauth2/v3/userinfo` to verify and fetch the email, creates or retrieves the Django user, returns a DRF JWT pair (`access`, `refresh`). No extra Python packages required.
+- New route: `POST /api/users/auth/google/`
+
+**Frontend:**
+- `api/auth.ts`: `googleAuth(accessToken, userType)` — POSTs to the new endpoint, stores JWT in localStorage.
+- `LoginPage.tsx` + `RegisterPage.tsx`: custom-styled Google button (official Google SVG logo, brand colors) as the primary CTA; email/password form kept as a fallback below an "or with email" divider.
+- `RegisterPage.tsx`: user selects their tax type (ZZP / Employee / Expat / DGA) before clicking Google — the type is passed to the backend so new Google accounts are set up correctly.
+- `frontend/.env.example` updated with `VITE_GOOGLE_CLIENT_ID` placeholder and setup instructions.
 
 ---
 
