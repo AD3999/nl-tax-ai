@@ -1,8 +1,11 @@
 [phases.setup]
-nixPkgs = ["nodejs_22", "python311"]
+nixPkgs = ["python311"]
+aptPkgs = ["gnupg"]
 
 [phases.install]
 cmds = [
+  "curl -fsSL https://deb.nodesource.com/setup_22.x | bash -",
+  "apt-get install -y nodejs",
   "curl -sS https://bootstrap.pypa.io/get-pip.py | python3 - --break-system-packages",
   "python3 -m pip install --break-system-packages -r backend/requirements.txt",
   "cd frontend && npm ci --legacy-peer-deps"
