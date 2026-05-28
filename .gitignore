@@ -45,8 +45,12 @@ build/
 .next/
 *.local
 
-# Docker
+# Docker (kept local, not deployed via Railway)
 .docker/
+Dockerfile*
+docker-compose*.yml
+docker-entrypoint.sh
+.dockerignore
 
 # IDEs
 .vscode/
