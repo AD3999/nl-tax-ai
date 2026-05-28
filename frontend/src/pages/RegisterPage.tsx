@@ -34,9 +34,12 @@ export default function RegisterPage() {
 
   const handleGoogle = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
-    if (!clientId || !window.google) {
-      const msg = lang === "nl" ? "Google-registratie niet beschikbaar." : lang === "fa" ? "ثبت‌نام با گوگل در دسترس نیست." : "Google sign-up not available.";
-      setError(msg);
+    if (!clientId) {
+      setError("Google Client ID not configured. Add VITE_GOOGLE_CLIENT_ID to frontend/.env and restart the dev server.");
+      return;
+    }
+    if (!window.google) {
+      setError("Google sign-in is still loading — please try again in a moment.");
       return;
     }
     const client = window.google.accounts.oauth2.initTokenClient({
