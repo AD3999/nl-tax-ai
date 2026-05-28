@@ -1,4 +1,4 @@
-django>=6.0,<7.0
+django>=5.0,<6.0
 djangorestframework>=3.15,<4.0
 django-cors-headers>=4.3,<5.0
 djangorestframework-simplejwt>=5.3,<6.0
@@ -12,9 +12,4 @@ anthropic>=0.28,<1.0
 openai>=1.0,<2.0
 gunicorn>=22.0,<23.0
 whitenoise>=6.6,<7.0
-# Phase 2 RAG pipeline — imported by backend views
-chromadb>=0.4.0
-sentence-transformers>=2.2.0
-tiktoken>=0.5.0
-numpy>=1.24.0
 stripe>=7.0.0
