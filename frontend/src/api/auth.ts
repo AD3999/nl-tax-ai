@@ -39,6 +39,16 @@ export const fetchProfile = async (): Promise<AuthUser | null> => {
   }
 };
 
+export const googleAuth = async (accessToken: string, userType = "zzp"): Promise<TokenPair> => {
+  const { data } = await client.post<TokenPair>("/users/auth/google/", {
+    access_token: accessToken,
+    user_type: userType,
+  });
+  localStorage.setItem("access_token", data.access);
+  localStorage.setItem("refresh_token", data.refresh);
+  return data;
+};
+
 export const logout = () => {
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
