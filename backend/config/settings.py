@@ -19,7 +19,9 @@ env = environ.Env(
     ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
 )
 
-environ.Env.read_env(BASE_DIR.parent / ".env")
+_env_file = BASE_DIR.parent / ".env"
+if _env_file.exists():
+    environ.Env.read_env(_env_file)
 
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="dev-secret-key-change-in-production")
 DEBUG = env("DEBUG")
@@ -50,6 +52,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -176,6 +179,18 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# ── WhiteNoise — serve React build + Django static files ─────────────────────
+
+# Serve the React dist folder (index.html, assets/, favicon) at the URL root.
+# WhiteNoise intercepts these before Django's URL router.
+WHITENOISE_ROOT = BASE_DIR.parent / "frontend" / "dist"
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

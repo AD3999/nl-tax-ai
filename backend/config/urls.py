@@ -1,6 +1,17 @@
+from pathlib import Path
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.http import HttpResponse, Http404
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+# Serve React's index.html for every non-API, non-admin route so that
+# React Router can handle client-side navigation on the deployed build.
+_FRONTEND_INDEX = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist" / "index.html"
+
+def spa_index(request):
+    if not _FRONTEND_INDEX.exists():
+        raise Http404("Frontend not built.")
+    return HttpResponse(_FRONTEND_INDEX.read_bytes(), content_type="text/html; charset=utf-8")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -13,4 +24,6 @@ urlpatterns = [
     path("api/chat/", include("apps.chat.urls")),
     path("api/calculator/", include("apps.calculator.urls")),
     path("api/payments/", include("apps.payments.urls")),
+    # SPA catch-all — must be last
+    re_path(r"^(?!api/|admin/).*$", spa_index),
 ]
