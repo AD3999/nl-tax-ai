@@ -18,9 +18,9 @@ const USER_TYPES = {
 } as const;
 
 const WHY_TEXT: Record<number, string> = {
-  1: "Your tax type changes everything — deductions, credits, even what questions the chat shows you.",
-  2: "Income drives every Box 1 calculation. We round to the cent on the official 2026 brackets.",
-  3: "Partner, kids, and Box 3 assets unlock IACK, heffingskorting transfers and the savings threshold.",
+  1: "Your tax type changes everything — deductions, credits, even what questions the chat shows you",
+  2: "Income drives every Box 1 calculation — we round to the cent on the official 2026 brackets",
+  3: "Partner, kids, and Box 3 assets unlock IACK, heffingskorting transfers and the savings threshold",
 };
 
 function StepDots({ step }: { step: number }) {
@@ -123,7 +123,7 @@ export default function IntakePage() {
     }
 
     showToast(
-      lang === "nl" ? "Profiel opgeslagen! U kunt nu vragen stellen." : lang === "fa" ? "پروفایل ذخیره شد! اکنون می‌توانید سؤال بپرسید." : "Profile saved! You can now ask questions.",
+      lang === "nl" ? "Profiel opgeslagen — u kunt nu vragen stellen" : lang === "fa" ? "پروفایل ذخیره شد — اکنون می‌توانید سؤال بپرسید" : "Profile saved — you can now ask questions",
       "success",
     );
     setLoading(false);
@@ -264,7 +264,7 @@ export default function IntakePage() {
                 {lang === "nl" ? " inkomen" : lang === "fa" ? "" : " income"}
               </h1>
               <p style={{ marginTop: "var(--sp-2)", color: "var(--ink-3)", fontSize: "var(--text-base)" }}>
-                {lang === "nl" ? "Getallen blijven op uw apparaat tot u een account aanmaakt." : lang === "fa" ? "اعداد روی دستگاه شما می‌مانند تا زمانی که حساب کاربری ایجاد کنید." : "Numbers stay on your device until you create an account."}
+                {lang === "nl" ? "Getallen blijven op uw apparaat tot u een account aanmaakt" : lang === "fa" ? "اعداد روی دستگاه شما می‌مانند تا زمانی که حساب کاربری ایجاد کنید" : "Numbers stay on your device until you create an account"}
               </p>
               <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 16 }}>
                 {userType === "zzp" && <>
@@ -370,10 +370,10 @@ export default function IntakePage() {
               <span className="eyebrow eyebrow-accent">{lang === "nl" ? "Wist u dat" : lang === "fa" ? "آیا می‌دانستید" : "Did you know"}</span>
               <p style={{ marginTop: "var(--sp-2)", color: "var(--ink-2)", fontSize: "var(--text-xs)", lineHeight: "var(--leading-relaxed)" }}>
                 {lang === "nl"
-                  ? "2026 is het laatste jaar van de startersaftrek (€2.123). De chat geeft aan of u hiervoor in aanmerking komt."
+                  ? "2026 is het laatste jaar van de startersaftrek (€2.123) — de chat geeft aan of u hiervoor in aanmerking komt"
                   : lang === "fa"
-                  ? "۲۰۲۶ آخرین سال startersaftrek (€۲,۱۲۳) است. چت اطلاع می‌دهد اگر واجد شرایط باشید."
-                  : "2026 is the last year of startersaftrek (€2,123). The chat will flag if you qualify."}
+                  ? "۲۰۲۶ آخرین سال startersaftrek (€۲,۱۲۳) است — چت اطلاع می‌دهد اگر واجد شرایط باشید"
+                  : "2026 is the last year of startersaftrek (€2,123) — the chat will flag if you qualify"}
               </p>
             </div>
           </aside>

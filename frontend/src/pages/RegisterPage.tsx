@@ -35,11 +35,11 @@ export default function RegisterPage() {
   const handleGoogle = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
     if (!clientId) {
-      setError("Google Client ID not configured. Add VITE_GOOGLE_CLIENT_ID to frontend/.env and restart the dev server.");
+      setError("Google Client ID not configured — add VITE_GOOGLE_CLIENT_ID to frontend/.env and restart");
       return;
     }
     if (!window.google) {
-      setError("Google sign-in is still loading — please try again in a moment.");
+      setError("Google sign-in is still loading — please try again in a moment");
       return;
     }
     const client = window.google.accounts.oauth2.initTokenClient({
@@ -47,7 +47,7 @@ export default function RegisterPage() {
       scope: "email profile",
       callback: async (resp) => {
         if (resp.error) {
-          const msg = lang === "nl" ? "Google-registratie mislukt." : lang === "fa" ? "ثبت‌نام با گوگل ناموفق بود." : "Google sign-up failed.";
+          const msg = lang === "nl" ? "Google-registratie mislukt" : lang === "fa" ? "ثبت‌نام با گوگل ناموفق بود" : "Google sign-up failed";
           setError(msg);
           return;
         }
@@ -59,12 +59,12 @@ export default function RegisterPage() {
           setUser(profile);
           if (profile?.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
           showToast(
-            lang === "nl" ? "Account aangemaakt! Welkom bij TaxWijs." : lang === "fa" ? "حساب ایجاد شد! به TaxWijs خوش آمدید." : "Account created! Welcome to TaxWijs.",
+            lang === "nl" ? "Account aangemaakt — welkom bij TaxWijs" : lang === "fa" ? "حساب ایجاد شد — به TaxWijs خوش آمدید" : "Account created — welcome to TaxWijs",
             "success",
           );
           navigate("/intake");
         } catch {
-          const msg = lang === "nl" ? "Google-registratie mislukt." : lang === "fa" ? "ثبت‌نام با گوگل ناموفق بود." : "Google sign-up failed.";
+          const msg = lang === "nl" ? "Google-registratie mislukt" : lang === "fa" ? "ثبت‌نام با گوگل ناموفق بود" : "Google sign-up failed";
           setError(msg);
           showToast(msg, "error");
         } finally {

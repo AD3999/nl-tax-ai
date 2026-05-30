@@ -57,9 +57,9 @@ export const SIMULATION_STEPS: SimStep[] = [
     icon: "👤",
     title: { nl: "Persoonlijke gegevens", en: "Personal details", fa: "اطلاعات شخصی" },
     subtitle: {
-      nl: "Net als op de echte aangifte controleren we eerst wie u bent en of u een fiscale partner heeft.",
-      en: "Just like the real return, we first check who you are and whether you have a fiscal partner.",
-      fa: "مانند اظهارنامه واقعی، ابتدا بررسی می‌کنیم شما کی هستید و آیا شریک مالی دارید.",
+      nl: "Net als op de echte aangifte controleren we eerst wie u bent en of u een fiscale partner heeft",
+      en: "Just like the real return, we first check who you are and whether you have a fiscal partner",
+      fa: "مانند اظهارنامه واقعی، ابتدا بررسی می‌کنیم شما کی هستید و آیا شریک مالی دارید",
     },
     sections: [
       {
@@ -71,9 +71,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "number",
             label: { nl: "Geboortejaar", en: "Year of birth", fa: "سال تولد" },
             help: {
-              nl: "Beïnvloedt of u de ouderenkorting en AOW-leeftijdskorting ontvangt (67+ in 2026).",
-              en: "Affects whether you receive the elderly tax credit (AOW age is 67 in 2026).",
-              fa: "تأثیر می‌گذارد که آیا تخفیف مالیاتی سالمندان دریافت می‌کنید (سن AOW در 2026 برابر 67 است).",
+              nl: "Beïnvloedt of u de ouderenkorting en AOW-leeftijdskorting ontvangt (67+ in 2026)",
+              en: "Affects whether you receive the elderly tax credit (AOW age is 67 in 2026)",
+              fa: "تأثیر می‌گذارد که آیا تخفیف مالیاتی سالمندان دریافت می‌کنید (سن AOW در 2026 برابر 67 است)",
             },
             claudeQ: {
               nl: "Wat is de ouderenkorting in 2026 en wanneer heb ik er recht op?",
@@ -87,9 +87,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "boolean",
             label: { nl: "Heeft u een fiscale partner?", en: "Do you have a fiscal partner?", fa: "آیا شریک مالیاتی دارید؟" },
             help: {
-              nl: "Een fiscale partner is uw echtgenoot/echtgenote of geregistreerd partner, of uw samenwonende partner die aan bepaalde voorwaarden voldoet.",
-              en: "A fiscal partner is your spouse, registered partner, or cohabiting partner meeting specific conditions.",
-              fa: "شریک مالیاتی همسر، شریک ثبت‌شده یا شریک همزیستی شماست که شرایط خاصی را دارد.",
+              nl: "Een fiscale partner is uw echtgenoot/echtgenote of geregistreerd partner, of uw samenwonende partner die aan bepaalde voorwaarden voldoet",
+              en: "A fiscal partner is your spouse, registered partner, or cohabiting partner meeting specific conditions",
+              fa: "شریک مالیاتی همسر، شریک ثبت‌شده یا شریک همزیستی شماست که شرایط خاصی را دارد",
             },
             claudeQ: {
               nl: "Wie telt als fiscale partner voor de belastingaangifte 2026?",
@@ -105,9 +105,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             label: { nl: "Inkomen fiscale partner (€)", en: "Fiscal partner income (€)", fa: "درآمد شریک مالیاتی (€)" },
             condition: (a) => bool(a, "has_partner"),
             help: {
-              nl: "Het totale belastbare inkomen van uw partner. Relevant voor het verdelen van aftrekposten.",
-              en: "Your partner's total taxable income. Relevant for allocating deductions.",
-              fa: "درآمد مشمول مالیات کل شریک شما. برای تخصیص کسورات مرتبط است.",
+              nl: "Het totale belastbare inkomen van uw partner. Relevant voor het verdelen van aftrekposten",
+              en: "Your partner's total taxable income. Relevant for allocating deductions",
+              fa: "درآمد مشمول مالیات کل شریک شما. برای تخصیص کسورات مرتبط است",
             },
             claudeQ: {
               nl: "Hoe werkt het verdelen van aftrekposten tussen fiscale partners?",
@@ -121,9 +121,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "number",
             label: { nl: "Kinderen jonger dan 12 jaar", en: "Children under 12", fa: "فرزندان زیر ۱۲ سال" },
             help: {
-              nl: "Relevant voor de Inkomensafhankelijke Combinatiekorting (IACK) — max €3.032 in 2026.",
-              en: "Relevant for the Income-dependent Combination Credit (IACK) — max €3,032 in 2026.",
-              fa: "مرتبط با تخفیف ترکیبی وابسته به درآمد (IACK) — حداکثر €3.032 در 2026.",
+              nl: "Relevant voor de Inkomensafhankelijke Combinatiekorting (IACK) — max €3.032 in 2026",
+              en: "Relevant for the Income-dependent Combination Credit (IACK) — max €3,032 in 2026",
+              fa: "مرتبط با تخفیف ترکیبی وابسته به درآمد (IACK) — حداکثر €3.032 در 2026",
             },
             claudeQ: {
               nl: "Wat is de IACK (inkomensafhankelijke combinatiekorting) in 2026?",
@@ -144,9 +144,9 @@ export const SIMULATION_STEPS: SimStep[] = [
     icon: "💼",
     title: { nl: "Soort inkomen", en: "Type of income", fa: "نوع درآمد" },
     subtitle: {
-      nl: "Geef aan welke soorten inkomen u in 2026 had. Alle relevante velden worden daarna getoond.",
-      en: "Indicate which types of income you had in 2026. All relevant fields will be shown next.",
-      fa: "مشخص کنید چه نوع درآمدهایی در 2026 داشتید. تمام فیلدهای مرتبط بعداً نمایش داده می‌شوند.",
+      nl: "Geef aan welke soorten inkomen u in 2026 had. Alle relevante velden worden daarna getoond",
+      en: "Indicate which types of income you had in 2026. All relevant fields will be shown next",
+      fa: "مشخص کنید چه نوع درآمدهایی در 2026 داشتید. تمام فیلدهای مرتبط بعداً نمایش داده می‌شوند",
     },
     sections: [
       {
@@ -158,9 +158,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "boolean",
             label: { nl: "Ik was in loondienst (werkgever)", en: "I was employed (employer)", fa: "من کارمند بودم (کارفرما)" },
             help: {
-              nl: "U heeft een jaaropgave ontvangen van uw werkgever.",
-              en: "You received an annual income statement (jaaropgave) from your employer.",
-              fa: "یک صورت درآمد سالانه (jaaropgave) از کارفرمای خود دریافت کرده‌اید.",
+              nl: "U heeft een jaaropgave ontvangen van uw werkgever",
+              en: "You received an annual income statement (jaaropgave) from your employer",
+              fa: "یک صورت درآمد سالانه (jaaropgave) از کارفرمای خود دریافت کرده‌اید",
             },
             claudeQ: {
               nl: "Wat moet ik invullen als ik in loondienst ben geweest in 2026?",
@@ -174,9 +174,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "boolean",
             label: { nl: "Ik was ondernemer / ZZP'er", en: "I was self-employed / ZZP", fa: "من کارآفرین / آزادکار بودم" },
             help: {
-              nl: "U werkte als zelfstandige en maakte winst uit onderneming.",
-              en: "You worked as a freelancer and earned profit from your business.",
-              fa: "به عنوان مستقل کار کردید و از کسب‌وکارتان سود کسب کردید.",
+              nl: "U werkte als zelfstandige en maakte winst uit onderneming",
+              en: "You worked as a freelancer and earned profit from your business",
+              fa: "به عنوان مستقل کار کردید و از کسب‌وکارتان سود کسب کردید",
             },
             claudeQ: {
               nl: "Wat zijn de belastingvoordelen voor ZZP'ers in 2026?",
@@ -190,9 +190,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "boolean",
             label: { nl: "Ik ontving een uitkering (WW, WIA, AOW, bijstand)", en: "I received benefits (WW, WIA, AOW, welfare)", fa: "من مقرری دریافت کردم (WW، WIA، AOW، کمک اجتماعی)" },
             help: {
-              nl: "Uitkeringen zijn belastbaar inkomen en moeten worden opgegeven.",
-              en: "Benefits are taxable income and must be declared.",
-              fa: "مقرری‌ها درآمد مشمول مالیات هستند و باید اعلام شوند.",
+              nl: "Uitkeringen zijn belastbaar inkomen en moeten worden opgegeven",
+              en: "Benefits are taxable income and must be declared",
+              fa: "مقرری‌ها درآمد مشمول مالیات هستند و باید اعلام شوند",
             },
             claudeQ: {
               nl: "Zijn WW en WIA uitkeringen belastbaar in 2026?",
@@ -222,9 +222,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "boolean",
             label: { nl: "Ik heb een aanmerkelijk belang (≥5% in een BV)", en: "I have a substantial interest (≥5% in a BV)", fa: "من سهم قابل توجه دارم (≥5٪ در BV)" },
             help: {
-              nl: "Als u minstens 5% van de aandelen of winstbewijzen in een BV bezit, valt dit in Box 2.",
-              en: "If you own at least 5% of shares or profit certificates in a BV, this falls in Box 2.",
-              fa: "اگر حداقل 5٪ سهام یا گواهی سود در BV دارید، این در Box 2 قرار می‌گیرد.",
+              nl: "Als u minstens 5% van de aandelen of winstbewijzen in een BV bezit, valt dit in Box 2",
+              en: "If you own at least 5% of shares or profit certificates in a BV, this falls in Box 2",
+              fa: "اگر حداقل 5٪ سهام یا گواهی سود در BV دارید، این در Box 2 قرار می‌گیرد",
             },
             claudeQ: {
               nl: "Wat is aanmerkelijk belang (Box 2) en welk tarief geldt in 2026?",
@@ -245,9 +245,9 @@ export const SIMULATION_STEPS: SimStep[] = [
     icon: "🏢",
     title: { nl: "Loon & uitkeringen", en: "Salary & benefits", fa: "حقوق و مقرری" },
     subtitle: {
-      nl: "Vul de gegevens in van uw jaaropgave. U vindt deze op MijnBelastingdienst of van uw werkgever.",
-      en: "Fill in the details from your annual income statement (jaaropgave) from your employer.",
-      fa: "اطلاعات را از صورت درآمد سالانه (jaaropgave) کارفرمای خود وارد کنید.",
+      nl: "Vul de gegevens in van uw jaaropgave. U vindt deze op MijnBelastingdienst of van uw werkgever",
+      en: "Fill in the details from your annual income statement (jaaropgave) from your employer",
+      fa: "اطلاعات را از صورت درآمد سالانه (jaaropgave) کارفرمای خود وارد کنید",
     },
     condition: (a) => bool(a, "is_employee") || bool(a, "has_benefits"),
     sections: [
@@ -262,9 +262,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Loon (Kolom 1 jaaropgave) (€)", en: "Salary (Column 1 jaaropgave) (€)", fa: "حقوق (ستون 1 jaaropgave) (€)" },
             help: {
-              nl: "Het bruto loon inclusief vakantiegeld en eventuele bonussen. Staat op uw jaaropgave in kolom 1.",
-              en: "Gross salary including holiday allowance and bonuses. Found on column 1 of your jaaropgave.",
-              fa: "حقوق ناخالص شامل حق تعطیلات و پاداش. در ستون 1 jaaropgave آمده است.",
+              nl: "Het bruto loon inclusief vakantiegeld en eventuele bonussen. Staat op uw jaaropgave in kolom 1",
+              en: "Gross salary including holiday allowance and bonuses. Found on column 1 of your jaaropgave",
+              fa: "حقوق ناخالص شامل حق تعطیلات و پاداش. در ستون 1 jaaropgave آمده است",
             },
             claudeQ: {
               nl: "Wat staat er in kolom 1 van de jaaropgave en waarom is het mijn bruto loon?",
@@ -279,9 +279,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Ingehouden loonbelasting (€)", en: "Withheld wage tax (€)", fa: "مالیات دستمزد کسر شده (€)" },
             help: {
-              nl: "De loonheffing die uw werkgever al heeft afgedragen. Dit vermindert uw nog te betalen belasting.",
-              en: "The wage tax already paid by your employer. This reduces your remaining tax bill.",
-              fa: "مالیات دستمزدی که کارفرمایتان قبلاً پرداخت کرده. این مبلغ از مالیات باقی‌مانده شما کسر می‌شود.",
+              nl: "De loonheffing die uw werkgever al heeft afgedragen. Dit vermindert uw nog te betalen belasting",
+              en: "The wage tax already paid by your employer. This reduces your remaining tax bill",
+              fa: "مالیات دستمزدی که کارفرمایتان قبلاً پرداخت کرده. این مبلغ از مالیات باقی‌مانده شما کسر می‌شود",
             },
             claudeQ: {
               nl: "Hoe vermindert ingehouden loonbelasting mijn aanslag?",
@@ -295,9 +295,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "boolean",
             label: { nl: "Maakt u gebruik van de 30%-regeling?", en: "Do you use the 30% ruling?", fa: "آیا از قانون ۳۰٪ استفاده می‌کنید؟" },
             help: {
-              nl: "De 30%-regeling is voor werknemers van buiten Nederland die aangeworven zijn vanwege specifieke expertise.",
-              en: "The 30% ruling is for employees from outside the Netherlands recruited for specific expertise.",
-              fa: "قانون ۳۰٪ برای کارمندانی از خارج از هلند است که برای تخصص خاص استخدام شده‌اند.",
+              nl: "De 30%-regeling is voor werknemers van buiten Nederland die aangeworven zijn vanwege specifieke expertise",
+              en: "The 30% ruling is for employees from outside the Netherlands recruited for specific expertise",
+              fa: "قانون ۳۰٪ برای کارمندانی از خارج از هلند است که برای تخصص خاص استخدام شده‌اند",
             },
             claudeQ: {
               nl: "Hoe werkt de 30%-regeling in 2026 en hoeveel belasting bespaar ik?",
@@ -317,9 +317,9 @@ export const SIMULATION_STEPS: SimStep[] = [
               { value: "5", label: { nl: "Jaar 5 (10%)", en: "Year 5 (10%)", fa: "سال ۵ (۱۰٪)" } },
             ],
             help: {
-              nl: "De regeling loopt max 5 jaar. Vanaf jaar 4 daalt het percentage.",
-              en: "The ruling runs max 5 years. From year 4 the percentage decreases.",
-              fa: "این قانون حداکثر ۵ سال اجرا می‌شود. از سال ۴ درصد کاهش می‌یابد.",
+              nl: "De regeling loopt max 5 jaar. Vanaf jaar 4 daalt het percentage",
+              en: "The ruling runs max 5 years. From year 4 the percentage decreases",
+              fa: "این قانون حداکثر ۵ سال اجرا می‌شود. از سال ۴ درصد کاهش می‌یابد",
             },
             claudeQ: {
               nl: "Wanneer eindigt mijn 30%-regeling en wat zijn de nieuwe percentages?",
@@ -347,9 +347,9 @@ export const SIMULATION_STEPS: SimStep[] = [
               { value: "other", label: { nl: "Anders", en: "Other", fa: "سایر" } },
             ],
             help: {
-              nl: "Alle uitkeringen zijn belastbaar. U ontvangt een jaaropgave van het uitkeringsorgaan.",
-              en: "All benefits are taxable. You receive an annual statement from the benefit authority.",
-              fa: "تمام مقرری‌ها مشمول مالیات هستند. یک صورت سالانه از مرجع مقرری دریافت می‌کنید.",
+              nl: "Alle uitkeringen zijn belastbaar. U ontvangt een jaaropgave van het uitkeringsorgaan",
+              en: "All benefits are taxable. You receive an annual statement from the benefit authority",
+              fa: "تمام مقرری‌ها مشمول مالیات هستند. یک صورت سالانه از مرجع مقرری دریافت می‌کنید",
             },
             claudeQ: {
               nl: "Welke uitkeringen zijn belastbaar en welke zijn vrijgesteld?",
@@ -364,9 +364,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Totale uitkering in 2026 (€)", en: "Total benefit in 2026 (€)", fa: "کل مقرری در 2026 (€)" },
             help: {
-              nl: "Het bruto bedrag van de uitkering over heel 2026.",
-              en: "The gross benefit amount over all of 2026.",
-              fa: "مبلغ ناخالص مقرری در تمام سال 2026.",
+              nl: "Het bruto bedrag van de uitkering over heel 2026",
+              en: "The gross benefit amount over all of 2026",
+              fa: "مبلغ ناخالص مقرری در تمام سال 2026",
             },
             claudeQ: {
               nl: "Hoe wordt mijn WW-uitkering belast in de aangifte?",
@@ -387,9 +387,9 @@ export const SIMULATION_STEPS: SimStep[] = [
     icon: "🏗️",
     title: { nl: "Winst uit onderneming", en: "Business profit", fa: "سود کسب‌وکار" },
     subtitle: {
-      nl: "Als ondernemer geeft u uw winst op en claimt u de ondernemersaftrekken waarvoor u in aanmerking komt.",
-      en: "As a self-employed person you declare your profit and claim the entrepreneur deductions you qualify for.",
-      fa: "به عنوان کارآفرین، سود خود را اعلام می‌کنید و کسورات کارآفرینی را که واجد شرایط آن هستید مطالبه می‌کنید.",
+      nl: "Als ondernemer geeft u uw winst op en claimt u de ondernemersaftrekken waarvoor u in aanmerking komt",
+      en: "As a self-employed person you declare your profit and claim the entrepreneur deductions you qualify for",
+      fa: "به عنوان کارآفرین، سود خود را اعلام می‌کنید و کسورات کارآفرینی را که واجد شرایط آن هستید مطالبه می‌کنید",
     },
     condition: (a) => bool(a, "is_zzp"),
     sections: [
@@ -403,9 +403,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Jaaromzet (€)", en: "Annual revenue (€)", fa: "درآمد سالانه (€)" },
             help: {
-              nl: "Uw totale omzet inclusief BTW-vrijgestelde omzet, exclusief BTW.",
-              en: "Your total revenue including VAT-exempt turnover, excluding VAT.",
-              fa: "درآمد کل شما شامل درآمد معاف از BTW، بدون BTW.",
+              nl: "Uw totale omzet inclusief BTW-vrijgestelde omzet, exclusief BTW",
+              en: "Your total revenue including VAT-exempt turnover, excluding VAT",
+              fa: "درآمد کل شما شامل درآمد معاف از BTW، بدون BTW",
             },
             claudeQ: {
               nl: "Wat reken ik tot mijn omzet als ZZP'er voor de IB-aangifte?",
@@ -420,9 +420,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Bedrijfskosten (€)", en: "Business expenses (€)", fa: "هزینه‌های کسب‌وکار (€)" },
             help: {
-              nl: "Aftrekbare kosten: kantoormateriaal, reiskosten zakelijk, abonnementen, opleidingen, etc.",
-              en: "Deductible costs: office supplies, business travel, subscriptions, training, etc.",
-              fa: "هزینه‌های کسر‌پذیر: لوازم اداری، سفر تجاری، اشتراک‌ها، آموزش و غیره.",
+              nl: "Aftrekbare kosten: kantoormateriaal, reiskosten zakelijk, abonnementen, opleidingen, etc",
+              en: "Deductible costs: office supplies, business travel, subscriptions, training, etc",
+              fa: "هزینه‌های کسر‌پذیر: لوازم اداری، سفر تجاری، اشتراک‌ها، آموزش و غیره",
             },
             claudeQ: {
               nl: "Welke kosten zijn aftrekbaar als ZZP'er in 2026?",
@@ -459,9 +459,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "boolean",
             label: { nl: "Ik ben starter (eerste 3 jaar als ondernemer)", en: "I am a starter (first 3 years as entrepreneur)", fa: "من استارتر هستم (اولین ۳ سال به عنوان کارآفرین)" },
             help: {
-              nl: "⚠️ Startersaftrek (€2.123) is 2026 het LAATSTE JAAR. Wordt afgeschaft per 2027.",
-              en: "⚠️ Starter deduction (€2,123) is 2026 the LAST YEAR. Abolished from 2027.",
-              fa: "⚠️ کسر استارتر (€2.123) سال 2026 آخرین سال است. از 2027 لغو می‌شود.",
+              nl: "⚠️ Startersaftrek (€2.123) is 2026 het LAATSTE JAAR. Wordt afgeschaft per 2027",
+              en: "⚠️ Starter deduction (€2,123) is 2026 the LAST YEAR. Abolished from 2027",
+              fa: "⚠️ کسر استارتر (€2.123) سال 2026 آخرین سال است. از 2027 لغو می‌شود",
             },
             claudeQ: {
               nl: "Wat is de startersaftrek en waarom is 2026 het laatste jaar?",
@@ -476,9 +476,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Investeringen voor KIA (€)", en: "KIA-eligible investments (€)", fa: "سرمایه‌گذاری‌های واجد شرایط KIA (€)" },
             help: {
-              nl: "Kleinschaligheidsinvesteringsaftrek: 28% aftrek op investeringen tussen €2.901 en €70.602.",
-              en: "Small-scale investment allowance: 28% deduction on investments between €2,901 and €70,602.",
-              fa: "کمک هزینه سرمایه‌گذاری کوچک: کسر ۲۸٪ برای سرمایه‌گذاری‌های بین €2.901 و €70.602.",
+              nl: "Kleinschaligheidsinvesteringsaftrek: 28% aftrek op investeringen tussen €2.901 en €70.602",
+              en: "Small-scale investment allowance: 28% deduction on investments between €2,901 and €70,602",
+              fa: "کمک هزینه سرمایه‌گذاری کوچک: کسر ۲۸٪ برای سرمایه‌گذاری‌های بین €2.901 و €70.602",
             },
             claudeQ: {
               nl: "Hoe werkt de KIA (kleinschaligheidsinvesteringsaftrek) in 2026?",
@@ -493,9 +493,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "%",
             label: { nl: "% inkomen van één opdrachtgever", en: "% income from one client", fa: "٪ درآمد از یک مشتری" },
             help: {
-              nl: "Wet DBA: bij 65%+ van één opdrachtgever is er een verhoogd risico op schijnzelfstandigheid.",
-              en: "Wet DBA: at 65%+ from one client there is increased risk of false self-employment.",
-              fa: "Wet DBA: در ۶۵٪+ از یک مشتری، خطر بیشتر خوداشتغالی کاذب وجود دارد.",
+              nl: "Wet DBA: bij 65%+ van één opdrachtgever is er een verhoogd risico op schijnzelfstandigheid",
+              en: "Wet DBA: at 65%+ from one client there is increased risk of false self-employment",
+              fa: "Wet DBA: در ۶۵٪+ از یک مشتری، خطر بیشتر خوداشتغالی کاذب وجود دارد",
             },
             claudeQ: {
               nl: "Wat is het risico op schijnzelfstandigheid (Wet DBA) als ik maar één opdrachtgever heb?",
@@ -516,9 +516,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Lijfrentepremie betaald in 2026 (€)", en: "Annuity premium paid in 2026 (€)", fa: "حق بیمه مستمری پرداخت شده در 2026 (€)" },
             help: {
-              nl: "Aftrekbaar via jaarruimte: 30% × (inkomen − €19.172). Max per jaar afhankelijk van inkomen.",
-              en: "Deductible via annual space: 30% × (income − €19,172). Max per year depends on income.",
-              fa: "قابل کسر از طریق فضای سالانه: ۳۰٪ × (درآمد − €19.172). حداکثر در سال به درآمد بستگی دارد.",
+              nl: "Aftrekbaar via jaarruimte: 30% × (inkomen − €19.172). Max per jaar afhankelijk van inkomen",
+              en: "Deductible via annual space: 30% × (income − €19,172). Max per year depends on income",
+              fa: "قابل کسر از طریق فضای سالانه: ۳۰٪ × (درآمد − €19.172). حداکثر در سال به درآمد بستگی دارد",
             },
             claudeQ: {
               nl: "Hoeveel lijfrentepremie kan ik aftrekken als ZZP'er in 2026?",
@@ -539,9 +539,9 @@ export const SIMULATION_STEPS: SimStep[] = [
     icon: "🏠",
     title: { nl: "Woning", en: "Your home", fa: "مسکن" },
     subtitle: {
-      nl: "Of u nu huurt of een eigen woning heeft — beide situaties hebben gevolgen voor uw aangifte.",
-      en: "Whether you rent or own — both situations affect your tax return.",
-      fa: "چه اجاره کنید چه خانه داشته باشید — هر دو وضعیت بر اظهارنامه مالیاتی شما تأثیر می‌گذارند.",
+      nl: "Of u nu huurt of een eigen woning heeft — beide situaties hebben gevolgen voor uw aangifte",
+      en: "Whether you rent or own — both situations affect your tax return",
+      fa: "چه اجاره کنید چه خانه داشته باشید — هر دو وضعیت بر اظهارنامه مالیاتی شما تأثیر می‌گذارند",
     },
     sections: [
       {
@@ -558,9 +558,9 @@ export const SIMULATION_STEPS: SimStep[] = [
               { value: "other", label: { nl: "Anders (inwonen, onderhuur)", en: "Other (living with family, subletting)", fa: "سایر (ساکن با خانواده، اجاره فرعی)" } },
             ],
             help: {
-              nl: "Een eigen woning leidt tot het eigenwoningforfait (bijtelling) én mogelijke renteaftrek.",
-              en: "An own home leads to imputed rental income (eigenwoningforfait) and possible interest deduction.",
-              fa: "خانه شخصی منجر به درآمد اجاره فرضی (eigenwoningforfait) و احتمال کسر بهره می‌شود.",
+              nl: "Een eigen woning leidt tot het eigenwoningforfait (bijtelling) én mogelijke renteaftrek",
+              en: "An own home leads to imputed rental income (eigenwoningforfait) and possible interest deduction",
+              fa: "خانه شخصی منجر به درآمد اجاره فرضی (eigenwoningforfait) و احتمال کسر بهره می‌شود",
             },
             claudeQ: {
               nl: "Wat zijn de fiscale gevolgen van een eigen woning in 2026?",
@@ -582,9 +582,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "WOZ-waarde (€)", en: "WOZ value (€)", fa: "ارزش WOZ (€)" },
             help: {
-              nl: "De WOZ-waarde staat op uw aanslagbiljet gemeentebelasting. Het eigenwoningforfait is 0,35% van de WOZ-waarde.",
-              en: "The WOZ value is on your municipal tax assessment. The imputed income is 0.35% of the WOZ value.",
-              fa: "ارزش WOZ روی برگ تشخیص مالیات شهرداری آمده است. درآمد فرضی ۰.۳۵٪ ارزش WOZ است.",
+              nl: "De WOZ-waarde staat op uw aanslagbiljet gemeentebelasting. Het eigenwoningforfait is 0,35% van de WOZ-waarde",
+              en: "The WOZ value is on your municipal tax assessment. The imputed income is 0.35% of the WOZ value",
+              fa: "ارزش WOZ روی برگ تشخیص مالیات شهرداری آمده است. درآمد فرضی ۰.۳۵٪ ارزش WOZ است",
             },
             claudeQ: {
               nl: "Wat is het eigenwoningforfait en hoe bereken ik het?",
@@ -598,9 +598,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "boolean",
             label: { nl: "Heeft u een hypotheek op deze woning?", en: "Do you have a mortgage on this home?", fa: "آیا برای این خانه وام مسکن دارید؟" },
             help: {
-              nl: "De hypotheekrente is aftrekbaar als de hypotheek voldoet aan de aflossingseis (annuïtair of lineair).",
-              en: "Mortgage interest is deductible if the mortgage meets the repayment requirement (annuity or linear).",
-              fa: "بهره وام مسکن قابل کسر است اگر وام الزامات بازپرداخت را داشته باشد (مستمری یا خطی).",
+              nl: "De hypotheekrente is aftrekbaar als de hypotheek voldoet aan de aflossingseis (annuïtair of lineair)",
+              en: "Mortgage interest is deductible if the mortgage meets the repayment requirement (annuity or linear)",
+              fa: "بهره وام مسکن قابل کسر است اگر وام الزامات بازپرداخت را داشته باشد (مستمری یا خطی)",
             },
             claudeQ: {
               nl: "Is mijn hypotheekrente nog aftrekbaar in 2026?",
@@ -616,9 +616,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             label: { nl: "Betaalde hypotheekrente in 2026 (€)", en: "Mortgage interest paid in 2026 (€)", fa: "بهره وام مسکن پرداخت شده در 2026 (€)" },
             condition: (a) => bool(a, "has_mortgage"),
             help: {
-              nl: "Het totale bedrag hypotheekrente betaald in 2026. Staat op uw jaaropgave van de geldverstrekker.",
-              en: "Total mortgage interest paid in 2026. Found on your annual statement from the lender.",
-              fa: "کل بهره وام مسکن پرداخت شده در 2026. روی صورت سالانه از وام‌دهنده آمده است.",
+              nl: "Het totale bedrag hypotheekrente betaald in 2026. Staat op uw jaaropgave van de geldverstrekker",
+              en: "Total mortgage interest paid in 2026. Found on your annual statement from the lender",
+              fa: "کل بهره وام مسکن پرداخت شده در 2026. روی صورت سالانه از وام‌دهنده آمده است",
             },
             claudeQ: {
               nl: "Hoe vul ik de hypotheekrente in op de aangifte 2026?",
@@ -639,9 +639,9 @@ export const SIMULATION_STEPS: SimStep[] = [
               { value: "mixed", label: { nl: "Gemengd", en: "Mixed", fa: "ترکیبی" } },
             ],
             help: {
-              nl: "Hypotheken afgesloten na 2013 moeten annuïtair of lineair zijn voor renteaftrek.",
-              en: "Mortgages taken out after 2013 must be annuity or linear for interest deduction.",
-              fa: "وام‌های مسکن گرفته شده بعد از 2013 باید مستمری یا خطی باشند تا بهره قابل کسر باشد.",
+              nl: "Hypotheken afgesloten na 2013 moeten annuïtair of lineair zijn voor renteaftrek",
+              en: "Mortgages taken out after 2013 must be annuity or linear for interest deduction",
+              fa: "وام‌های مسکن گرفته شده بعد از 2013 باید مستمری یا خطی باشند تا بهره قابل کسر باشد",
             },
             claudeQ: {
               nl: "Welk type hypotheek geeft recht op renteaftrek in 2026?",
@@ -662,9 +662,9 @@ export const SIMULATION_STEPS: SimStep[] = [
     icon: "✂️",
     title: { nl: "Aftrekposten", en: "Deductions", fa: "کسورات" },
     subtitle: {
-      nl: "Persoonlijke aftrekposten verminderen uw belastbaar inkomen. Controleer goed of u er recht op heeft.",
-      en: "Personal deductions reduce your taxable income. Check carefully which ones you qualify for.",
-      fa: "کسورات شخصی درآمد مشمول مالیات شما را کاهش می‌دهند. به دقت بررسی کنید که آیا واجد شرایط هستید.",
+      nl: "Persoonlijke aftrekposten verminderen uw belastbaar inkomen. Controleer goed of u er recht op heeft",
+      en: "Personal deductions reduce your taxable income. Check carefully which ones you qualify for",
+      fa: "کسورات شخصی درآمد مشمول مالیات شما را کاهش می‌دهند. به دقت بررسی کنید که آیا واجد شرایط هستید",
     },
     sections: [
       {
@@ -676,9 +676,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "boolean",
             label: { nl: "Betaalde u partneralimentatie?", en: "Did you pay partner alimony?", fa: "آیا نفقه شریک پرداختید؟" },
             help: {
-              nl: "Betaalde alimentatie aan uw ex-partner is aftrekbaar. Kinderalimentatie is NIET aftrekbaar.",
-              en: "Alimony paid to your ex-partner is deductible. Child support is NOT deductible.",
-              fa: "نفقه پرداخت شده به شریک سابق قابل کسر است. نفقه فرزند قابل کسر نیست.",
+              nl: "Betaalde alimentatie aan uw ex-partner is aftrekbaar. Kinderalimentatie is NIET aftrekbaar",
+              en: "Alimony paid to your ex-partner is deductible. Child support is NOT deductible",
+              fa: "نفقه پرداخت شده به شریک سابق قابل کسر است. نفقه فرزند قابل کسر نیست",
             },
             claudeQ: {
               nl: "Is alimentatie aftrekbaar en zo ja, hoeveel?",
@@ -694,9 +694,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             label: { nl: "Betaalde alimentatie in 2026 (€)", en: "Alimony paid in 2026 (€)", fa: "نفقه پرداخت شده در 2026 (€)" },
             condition: (a) => bool(a, "has_alimony_paid"),
             help: {
-              nl: "Alleen partneralimentatie — niet kinderalimentatie of levensonderhoud.",
-              en: "Only partner alimony — not child support or maintenance payments.",
-              fa: "فقط نفقه شریک — نه نفقه فرزند یا پرداخت‌های نگهداری.",
+              nl: "Alleen partneralimentatie — niet kinderalimentatie of levensonderhoud",
+              en: "Only partner alimony — not child support or maintenance payments",
+              fa: "فقط نفقه شریک — نه نفقه فرزند یا پرداخت‌های نگهداری",
             },
             claudeQ: {
               nl: "Hoe vul ik alimentatie in op mijn aangifte?",
@@ -716,9 +716,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "boolean",
             label: { nl: "Heeft u hoge, niet-vergoede zorgkosten?", en: "Did you have high, unreimbursed healthcare costs?", fa: "آیا هزینه‌های درمانی بالایی داشتید که جبران نشده؟" },
             help: {
-              nl: "Denk aan: hulpmiddelen, dieetkosten, vervoer naar arts. Er geldt een drempelbedrag (ca. 1,65% van inkomen).",
-              en: "Think: aids, diet costs, transport to doctor. A threshold applies (~1.65% of income).",
-              fa: "مانند: وسایل کمکی، هزینه رژیم غذایی، حمل‌ونقل به پزشک. آستانه‌ای اعمال می‌شود (~۱.۶۵٪ درآمد).",
+              nl: "Denk aan: hulpmiddelen, dieetkosten, vervoer naar arts. Er geldt een drempelbedrag (ca. 1,65% van inkomen)",
+              en: "Think: aids, diet costs, transport to doctor. A threshold applies (~1.65% of income)",
+              fa: "مانند: وسایل کمکی، هزینه رژیم غذایی، حمل‌ونقل به پزشک. آستانه‌ای اعمال می‌شود (~۱.۶۵٪ درآمد)",
             },
             claudeQ: {
               nl: "Welke zorgkosten kan ik aftrekken en hoeveel is de drempel in 2026?",
@@ -734,9 +734,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             label: { nl: "Totale eigen zorgkosten (€)", en: "Total own healthcare costs (€)", fa: "کل هزینه‌های درمانی شخصی (€)" },
             condition: (a) => bool(a, "has_medical_expenses"),
             help: {
-              nl: "Vul het totaal in voor de drempelberekening. Alleen het bedrag boven de drempel is aftrekbaar.",
-              en: "Enter the total for the threshold calculation. Only the amount above the threshold is deductible.",
-              fa: "کل را برای محاسبه آستانه وارد کنید. فقط مبلغ بالاتر از آستانه قابل کسر است.",
+              nl: "Vul het totaal in voor de drempelberekening. Alleen het bedrag boven de drempel is aftrekbaar",
+              en: "Enter the total for the threshold calculation. Only the amount above the threshold is deductible",
+              fa: "کل را برای محاسبه آستانه وارد کنید. فقط مبلغ بالاتر از آستانه قابل کسر است",
             },
             claudeQ: {
               nl: "Hoe bereken ik de aftrekbare zorgkosten boven de drempel?",
@@ -756,9 +756,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "boolean",
             label: { nl: "Deed u giften aan erkende goede doelen (ANBI)?", en: "Did you make donations to recognised charities (ANBI)?", fa: "آیا به خیریه‌های مجاز (ANBI) کمک کردید؟" },
             help: {
-              nl: "Giften aan ANBI-instellingen zijn aftrekbaar. Periodieke giften (notarieel vastgelegd) zijn onbeperkt aftrekbaar.",
-              en: "Donations to ANBI institutions are deductible. Periodic donations (notarised) are unlimited deductible.",
-              fa: "کمک‌ها به مؤسسات ANBI قابل کسر هستند. کمک‌های دوره‌ای (تأیید شده توسط دفتر اسناد) به‌طور نامحدود قابل کسر هستند.",
+              nl: "Giften aan ANBI-instellingen zijn aftrekbaar. Periodieke giften (notarieel vastgelegd) zijn onbeperkt aftrekbaar",
+              en: "Donations to ANBI institutions are deductible. Periodic donations (notarised) are unlimited deductible",
+              fa: "کمک‌ها به مؤسسات ANBI قابل کسر هستند. کمک‌های دوره‌ای (تأیید شده توسط دفتر اسناد) به‌طور نامحدود قابل کسر هستند",
             },
             claudeQ: {
               nl: "Hoeveel van mijn giften aan goede doelen kan ik aftrekken in 2026?",
@@ -774,9 +774,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             label: { nl: "Periodieke giften — notarieel (€)", en: "Periodic donations — notarised (€)", fa: "کمک‌های دوره‌ای — تأیید شده توسط دفتر اسناد (€)" },
             condition: (a) => bool(a, "has_gifts"),
             help: {
-              nl: "Volledig aftrekbaar — geen drempel, geen maximum. Moeten minimaal 5 jaar doorlopen.",
-              en: "Fully deductible — no threshold, no maximum. Must run for at least 5 years.",
-              fa: "به‌طور کامل قابل کسر — بدون آستانه، بدون حداکثر. باید حداقل ۵ سال ادامه داشته باشند.",
+              nl: "Volledig aftrekbaar — geen drempel, geen maximum. Moeten minimaal 5 jaar doorlopen",
+              en: "Fully deductible — no threshold, no maximum. Must run for at least 5 years",
+              fa: "به‌طور کامل قابل کسر — بدون آستانه، بدون حداکثر. باید حداقل ۵ سال ادامه داشته باشند",
             },
             claudeQ: {
               nl: "Wat is het verschil tussen periodieke en eenmalige giften voor de belasting?",
@@ -792,9 +792,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             label: { nl: "Eenmalige giften (€)", en: "One-time donations (€)", fa: "کمک‌های یک‌باره (€)" },
             condition: (a) => bool(a, "has_gifts"),
             help: {
-              nl: "Aftrekbaar boven 1% van drempelinkomen (min €60). Maximum: 10% van inkomen.",
-              en: "Deductible above 1% of threshold income (min €60). Maximum: 10% of income.",
-              fa: "بالاتر از ۱٪ درآمد آستانه (حداقل €60) قابل کسر است. حداکثر: ۱۰٪ درآمد.",
+              nl: "Aftrekbaar boven 1% van drempelinkomen (min €60). Maximum: 10% van inkomen",
+              en: "Deductible above 1% of threshold income (min €60). Maximum: 10% of income",
+              fa: "بالاتر از ۱٪ درآمد آستانه (حداقل €60) قابل کسر است. حداکثر: ۱۰٪ درآمد",
             },
             claudeQ: {
               nl: "Hoe bereken ik de drempel voor eenmalige giftenaftrek?",
@@ -815,9 +815,9 @@ export const SIMULATION_STEPS: SimStep[] = [
     icon: "✈️",
     title: { nl: "Inkomen uit buitenland", en: "Foreign income", fa: "درآمد از خارج" },
     subtitle: {
-      nl: "Nederland belast wereldwijd inkomen. Belastingverdragen voorkomen dubbele belasting.",
-      en: "The Netherlands taxes worldwide income. Tax treaties prevent double taxation.",
-      fa: "هلند درآمد جهانی را مشمول مالیات می‌کند. معاهدات مالیاتی از مالیات مضاعف جلوگیری می‌کنند.",
+      nl: "Nederland belast wereldwijd inkomen. Belastingverdragen voorkomen dubbele belasting",
+      en: "The Netherlands taxes worldwide income. Tax treaties prevent double taxation",
+      fa: "هلند درآمد جهانی را مشمول مالیات می‌کند. معاهدات مالیاتی از مالیات مضاعف جلوگیری می‌کنند",
     },
     condition: (a) => bool(a, "has_foreign_income"),
     sections: [
@@ -830,9 +830,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "text",
             label: { nl: "Land van herkomst inkomen", en: "Country of income source", fa: "کشور منشأ درآمد" },
             help: {
-              nl: "Vul het land in waar u het inkomen verdiende. Nederland heeft met de meeste landen een belastingverdrag.",
-              en: "Enter the country where you earned the income. The Netherlands has tax treaties with most countries.",
-              fa: "کشوری را که در آن درآمد کسب کردید وارد کنید. هلند با اکثر کشورها معاهده مالیاتی دارد.",
+              nl: "Vul het land in waar u het inkomen verdiende. Nederland heeft met de meeste landen een belastingverdrag",
+              en: "Enter the country where you earned the income. The Netherlands has tax treaties with most countries",
+              fa: "کشوری را که در آن درآمد کسب کردید وارد کنید. هلند با اکثر کشورها معاهده مالیاتی دارد",
             },
             claudeQ: {
               nl: "Heeft Nederland een belastingverdrag met Iran / mijn land?",
@@ -847,9 +847,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Bedrag buitenlands inkomen (€)", en: "Foreign income amount (€)", fa: "مبلغ درآمد خارجی (€)" },
             help: {
-              nl: "Omreken naar euro's op de datum van ontvangst (of jaargemiddelde wisselkoers).",
-              en: "Convert to euros at the date of receipt (or annual average exchange rate).",
-              fa: "به نرخ تاریخ دریافت (یا میانگین سالانه نرخ ارز) به یورو تبدیل کنید.",
+              nl: "Omreken naar euro's op de datum van ontvangst (of jaargemiddelde wisselkoers)",
+              en: "Convert to euros at the date of receipt (or annual average exchange rate)",
+              fa: "به نرخ تاریخ دریافت (یا میانگین سالانه نرخ ارز) به یورو تبدیل کنید",
             },
             claudeQ: {
               nl: "Tegen welke wisselkoers moet ik buitenlands inkomen omrekenen naar euro's?",
@@ -864,9 +864,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Belasting betaald in het buitenland (€)", en: "Tax paid abroad (€)", fa: "مالیات پرداخت شده در خارج (€)" },
             help: {
-              nl: "Dit kan worden verrekend met uw Nederlandse belasting via het verdrag of de voorkoming van dubbele belasting.",
-              en: "This can be offset against your Dutch tax via the treaty or double taxation prevention.",
-              fa: "این مبلغ می‌تواند از طریق معاهده یا پیشگیری از مالیات مضاعف با مالیات هلند شما تهاتر شود.",
+              nl: "Dit kan worden verrekend met uw Nederlandse belasting via het verdrag of de voorkoming van dubbele belasting",
+              en: "This can be offset against your Dutch tax via the treaty or double taxation prevention",
+              fa: "این مبلغ می‌تواند از طریق معاهده یا پیشگیری از مالیات مضاعف با مالیات هلند شما تهاتر شود",
             },
             claudeQ: {
               nl: "Hoe voorkom ik dubbele belasting op mijn buitenlandse inkomen?",
@@ -887,9 +887,9 @@ export const SIMULATION_STEPS: SimStep[] = [
     icon: "🏦",
     title: { nl: "Sparen & beleggen (Box 3)", en: "Savings & investments (Box 3)", fa: "پس‌انداز و سرمایه‌گذاری (Box 3)" },
     subtitle: {
-      nl: "Box 3 belast vermogen boven de vrijstelling (€59.357 per persoon) op basis van een fictief rendement.",
-      en: "Box 3 taxes assets above the exemption (€59,357 per person) based on a fictitious return.",
-      fa: "Box 3 دارایی‌های بالاتر از معافیت (€59.357 در هر نفر) را بر اساس بازده فرضی مشمول مالیات می‌کند.",
+      nl: "Box 3 belast vermogen boven de vrijstelling (€59.357 per persoon) op basis van een fictief rendement",
+      en: "Box 3 taxes assets above the exemption (€59,357 per person) based on a fictitious return",
+      fa: "Box 3 دارایی‌های بالاتر از معافیت (€59.357 در هر نفر) را بر اساس بازده فرضی مشمول مالیات می‌کند",
     },
     sections: [
       {
@@ -902,9 +902,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Saldo bankrekeningen (€)", en: "Bank account balance (€)", fa: "موجودی حساب بانکی (€)" },
             help: {
-              nl: "Het totale saldo van al uw Nederlandse en buitenlandse bankrekeningen op 1 januari 2026.",
-              en: "Total balance of all your Dutch and foreign bank accounts on 1 January 2026.",
-              fa: "موجودی کل تمام حساب‌های بانکی هلندی و خارجی شما در ۱ ژانویه ۲۰۲۶.",
+              nl: "Het totale saldo van al uw Nederlandse en buitenlandse bankrekeningen op 1 januari 2026",
+              en: "Total balance of all your Dutch and foreign bank accounts on 1 January 2026",
+              fa: "موجودی کل تمام حساب‌های بانکی هلندی و خارجی شما در ۱ ژانویه ۲۰۲۶",
             },
             claudeQ: {
               nl: "Welke spaartegoed moet ik opgeven in Box 3 en wat is het fictief rendement?",
@@ -919,9 +919,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Waarde beleggingen (aandelen, obligaties) (€)", en: "Value of investments (shares, bonds) (€)", fa: "ارزش سرمایه‌گذاری‌ها (سهام، اوراق) (€)" },
             help: {
-              nl: "Marktwaarde van aandelen, obligaties, fondsen op 1 januari 2026. Fictief rendement: 6,04%.",
-              en: "Market value of shares, bonds, funds on 1 January 2026. Fictitious return: 6.04%.",
-              fa: "ارزش بازار سهام، اوراق قرضه، صندوق‌ها در ۱ ژانویه ۲۰۲۶. بازده فرضی: ۶.۰۴٪.",
+              nl: "Marktwaarde van aandelen, obligaties, fondsen op 1 januari 2026. Fictief rendement: 6,04%",
+              en: "Market value of shares, bonds, funds on 1 January 2026. Fictitious return: 6.04%",
+              fa: "ارزش بازار سهام، اوراق قرضه، صندوق‌ها در ۱ ژانویه ۲۰۲۶. بازده فرضی: ۶.۰۴٪",
             },
             claudeQ: {
               nl: "Hoeveel belasting betaal ik over mijn beleggingen in Box 3 in 2026?",
@@ -936,9 +936,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Overige bezittingen (tweede huis, etc.) (€)", en: "Other assets (second home, etc.) (€)", fa: "سایر دارایی‌ها (خانه دوم و غیره) (€)" },
             help: {
-              nl: "Vakantiewoning, verhuurd vastgoed, kunst, boot. Waarde op 1 januari 2026.",
-              en: "Holiday home, rental property, art, boat. Value on 1 January 2026.",
-              fa: "خانه تعطیلات، ملک اجاری، هنر، قایق. ارزش در ۱ ژانویه ۲۰۲۶.",
+              nl: "Vakantiewoning, verhuurd vastgoed, kunst, boot. Waarde op 1 januari 2026",
+              en: "Holiday home, rental property, art, boat. Value on 1 January 2026",
+              fa: "خانه تعطیلات، ملک اجاری، هنر، قایق. ارزش در ۱ ژانویه ۲۰۲۶",
             },
             claudeQ: {
               nl: "Moet ik mijn tweede huis of vakantiewoning opgeven in Box 3?",
@@ -953,9 +953,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Groene beleggingen (€)", en: "Green investments (€)", fa: "سرمایه‌گذاری‌های سبز (€)" },
             help: {
-              nl: "Erkende groene beleggingen zijn vrijgesteld tot €71.251 (per persoon) in Box 3.",
-              en: "Recognised green investments are exempt up to €71,251 (per person) in Box 3.",
-              fa: "سرمایه‌گذاری‌های سبز مجاز تا €71.251 (در هر نفر) در Box 3 معاف هستند.",
+              nl: "Erkende groene beleggingen zijn vrijgesteld tot €71.251 (per persoon) in Box 3",
+              en: "Recognised green investments are exempt up to €71,251 (per person) in Box 3",
+              fa: "سرمایه‌گذاری‌های سبز مجاز تا €71.251 (در هر نفر) در Box 3 معاف هستند",
             },
             claudeQ: {
               nl: "Wat zijn groene beleggingen en welke zijn erkend voor de belastingvrijstelling?",
@@ -970,9 +970,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Schulden (niet hypotheek) (€)", en: "Debts (excluding mortgage) (€)", fa: "بدهی‌ها (به جز وام مسکن) (€)" },
             help: {
-              nl: "Consumptieve schulden, studieschuld. Drempel: €3.400 per persoon (schulden onder drempel tellen niet mee).",
-              en: "Consumer debts, student loans. Threshold: €3,400 per person (debts below threshold don't count).",
-              fa: "بدهی‌های مصرفی، وام دانشجویی. آستانه: €3.400 در هر نفر (بدهی‌های زیر آستانه محاسبه نمی‌شوند).",
+              nl: "Consumptieve schulden, studieschuld. Drempel: €3.400 per persoon (schulden onder drempel tellen niet mee)",
+              en: "Consumer debts, student loans. Threshold: €3,400 per person (debts below threshold don't count)",
+              fa: "بدهی‌های مصرفی، وام دانشجویی. آستانه: €3.400 در هر نفر (بدهی‌های زیر آستانه محاسبه نمی‌شوند)",
             },
             claudeQ: {
               nl: "Welke schulden mag ik aftrekken van mijn Box 3 vermogen?",
@@ -993,9 +993,9 @@ export const SIMULATION_STEPS: SimStep[] = [
     icon: "🏢",
     title: { nl: "Aanmerkelijk belang (Box 2)", en: "Substantial interest (Box 2)", fa: "سهم قابل توجه (Box 2)" },
     subtitle: {
-      nl: "Box 2 belast dividend en verkoopwinst op aandelen als u minstens 5% bezit in een BV.",
-      en: "Box 2 taxes dividends and sale profit on shares if you own at least 5% in a BV.",
-      fa: "Box 2 سود سهام و سود فروش سهام را مشمول مالیات می‌کند اگر حداقل ۵٪ از BV را داشته باشید.",
+      nl: "Box 2 belast dividend en verkoopwinst op aandelen als u minstens 5% bezit in een BV",
+      en: "Box 2 taxes dividends and sale profit on shares if you own at least 5% in a BV",
+      fa: "Box 2 سود سهام و سود فروش سهام را مشمول مالیات می‌کند اگر حداقل ۵٪ از BV را داشته باشید",
     },
     condition: (a) => bool(a, "has_substantial_interest"),
     sections: [
@@ -1009,9 +1009,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Ontvangen dividend uit BV (€)", en: "Dividend received from BV (€)", fa: "سود دریافتی از BV (€)" },
             help: {
-              nl: "Laag tarief: 24,5% over eerste €68.843. Hoog tarief: 31% daarboven. DGA gebruikelijk loon: min €56.000.",
-              en: "Low rate: 24.5% on first €68,843. High rate: 31% above. DGA customary salary: min €56,000.",
-              fa: "نرخ پایین: ۲۴.۵٪ بر اولین €68.843. نرخ بالا: ۳۱٪ بالاتر. حقوق معمول DGA: حداقل €56.000.",
+              nl: "Laag tarief: 24,5% over eerste €68.843. Hoog tarief: 31% daarboven. DGA gebruikelijk loon: min €56.000",
+              en: "Low rate: 24.5% on first €68,843. High rate: 31% above. DGA customary salary: min €56,000",
+              fa: "نرخ پایین: ۲۴.۵٪ بر اولین €68.843. نرخ بالا: ۳۱٪ بالاتر. حقوق معمول DGA: حداقل €56.000",
             },
             claudeQ: {
               nl: "Hoeveel dividend kan ik uitkeren als DGA zonder teveel belasting te betalen?",
@@ -1026,9 +1026,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             unit: "€",
             label: { nl: "Vervreemdingsvoordeel aandelen (€)", en: "Share disposal gain (€)", fa: "سود فروش سهام (€)" },
             help: {
-              nl: "De verkoopprijs min de verkrijgingsprijs van uw aandelen. Valt ook in Box 2.",
-              en: "The sale price minus the acquisition price of your shares. Also falls in Box 2.",
-              fa: "قیمت فروش منهای قیمت تملک سهام شما. این هم در Box 2 قرار می‌گیرد.",
+              nl: "De verkoopprijs min de verkrijgingsprijs van uw aandelen. Valt ook in Box 2",
+              en: "The sale price minus the acquisition price of your shares. Also falls in Box 2",
+              fa: "قیمت فروش منهای قیمت تملک سهام شما. این هم در Box 2 قرار می‌گیرد",
             },
             claudeQ: {
               nl: "Hoe wordt de winst op verkoop van aandelen in mijn BV belast?",
@@ -1049,9 +1049,9 @@ export const SIMULATION_STEPS: SimStep[] = [
     icon: "💳",
     title: { nl: "Heffingskortingen", en: "Tax credits", fa: "اعتبارات مالیاتی" },
     subtitle: {
-      nl: "Heffingskortingen worden automatisch toegepast. Hier ziet u welke op u van toepassing zijn.",
-      en: "Tax credits are applied automatically. Here you see which ones apply to you.",
-      fa: "اعتبارات مالیاتی به‌طور خودکار اعمال می‌شوند. اینجا می‌بینید کدام‌ها برای شما اعمال می‌شود.",
+      nl: "Heffingskortingen worden automatisch toegepast. Hier ziet u welke op u van toepassing zijn",
+      en: "Tax credits are applied automatically. Here you see which ones apply to you",
+      fa: "اعتبارات مالیاتی به‌طور خودکار اعمال می‌شوند. اینجا می‌بینید کدام‌ها برای شما اعمال می‌شود",
     },
     sections: [
       {
@@ -1083,9 +1083,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             type: "boolean",
             label: { nl: "Ontving u een voorlopige aanslag in 2026?", en: "Did you receive a provisional assessment in 2026?", fa: "آیا در 2026 برگ ارزیابی موقت دریافت کردید؟" },
             help: {
-              nl: "De voorlopige aanslag is een schatting die u maandelijks betaalt of terugkrijgt. Wordt verrekend in de definitieve aanslag.",
-              en: "The provisional assessment is an estimate paid or refunded monthly. Settled in the final assessment.",
-              fa: "برگ ارزیابی موقت یک تخمین است که ماهانه پرداخت یا بازپرداخت می‌شود. در ارزیابی نهایی تسویه می‌شود.",
+              nl: "De voorlopige aanslag is een schatting die u maandelijks betaalt of terugkrijgt. Wordt verrekend in de definitieve aanslag",
+              en: "The provisional assessment is an estimate paid or refunded monthly. Settled in the final assessment",
+              fa: "برگ ارزیابی موقت یک تخمین است که ماهانه پرداخت یا بازپرداخت می‌شود. در ارزیابی نهایی تسویه می‌شود",
             },
             claudeQ: {
               nl: "Wat is een voorlopige aanslag en hoe wordt die verrekend met mijn definitieve aanslag?",
@@ -1101,9 +1101,9 @@ export const SIMULATION_STEPS: SimStep[] = [
             label: { nl: "Bedrag voorlopige aanslag (€)", en: "Provisional assessment amount (€)", fa: "مبلغ برگ ارزیابی موقت (€)" },
             condition: (a) => bool(a, "had_voorlopige_aanslag"),
             help: {
-              nl: "Het totale bedrag dat u al heeft betaald of ontvangen via de voorlopige aanslag in 2026.",
-              en: "The total amount already paid or received via the provisional assessment in 2026.",
-              fa: "مبلغ کل که قبلاً از طریق برگ ارزیابی موقت در 2026 پرداخت یا دریافت شده است.",
+              nl: "Het totale bedrag dat u al heeft betaald of ontvangen via de voorlopige aanslag in 2026",
+              en: "The total amount already paid or received via the provisional assessment in 2026",
+              fa: "مبلغ کل که قبلاً از طریق برگ ارزیابی موقت در 2026 پرداخت یا دریافت شده است",
             },
             claudeQ: {
               nl: "Hoe kan ik mijn voorlopige aanslag aanpassen als mijn inkomen verandert?",
@@ -1124,9 +1124,9 @@ export const SIMULATION_STEPS: SimStep[] = [
     icon: "✅",
     title: { nl: "Overzicht & berekening", en: "Overview & calculation", fa: "خلاصه و محاسبه" },
     subtitle: {
-      nl: "Uw ingevulde aangifte. De calculator berekent uw geschatte belastingaanslag voor 2026.",
-      en: "Your completed return. The calculator estimates your 2026 tax assessment.",
-      fa: "اظهارنامه تکمیل‌شده شما. ماشین‌حساب برآورد ارزیابی مالیاتی 2026 شما را محاسبه می‌کند.",
+      nl: "Uw ingevulde aangifte. De calculator berekent uw geschatte belastingaanslag voor 2026",
+      en: "Your completed return. The calculator estimates your 2026 tax assessment",
+      fa: "اظهارنامه تکمیل‌شده شما. ماشین‌حساب برآورد ارزیابی مالیاتی 2026 شما را محاسبه می‌کند",
     },
     sections: [],
   },

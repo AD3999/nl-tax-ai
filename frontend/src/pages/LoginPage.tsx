@@ -24,11 +24,11 @@ export default function LoginPage() {
   const handleGoogle = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
     if (!clientId) {
-      setError("Google Client ID not configured. Add VITE_GOOGLE_CLIENT_ID to frontend/.env and restart the dev server.");
+      setError("Google Client ID not configured — add VITE_GOOGLE_CLIENT_ID to frontend/.env and restart");
       return;
     }
     if (!window.google) {
-      setError("Google sign-in is still loading — please try again in a moment.");
+      setError("Google sign-in is still loading — please try again in a moment");
       return;
     }
     const client = window.google.accounts.oauth2.initTokenClient({
@@ -36,7 +36,7 @@ export default function LoginPage() {
       scope: "email profile",
       callback: async (resp) => {
         if (resp.error) {
-          const msg = lang === "nl" ? "Google-inloggen mislukt." : lang === "fa" ? "ورود با گوگل ناموفق بود." : "Google sign-in failed.";
+          const msg = lang === "nl" ? "Google-inloggen mislukt" : lang === "fa" ? "ورود با گوگل ناموفق بود" : "Google sign-in failed";
           setError(msg);
           return;
         }
@@ -48,12 +48,12 @@ export default function LoginPage() {
           setUser(profile);
           if (profile?.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
           showToast(
-            lang === "nl" ? "Ingelogd! Welkom terug." : lang === "fa" ? "وارد شدید! خوش آمدید." : "Logged in! Welcome back.",
+            lang === "nl" ? "Ingelogd — welkom terug" : lang === "fa" ? "وارد شدید — خوش آمدید" : "Logged in — welcome back",
             "success",
           );
           navigate("/dashboard");
         } catch {
-          const msg = lang === "nl" ? "Google-inloggen mislukt." : lang === "fa" ? "ورود با گوگل ناموفق بود." : "Google sign-in failed.";
+          const msg = lang === "nl" ? "Google-inloggen mislukt" : lang === "fa" ? "ورود با گوگل ناموفق بود" : "Google sign-in failed";
           setError(msg);
           showToast(msg, "error");
         } finally {
@@ -65,9 +65,9 @@ export default function LoginPage() {
   };
 
   const LOGIN_ERR: Record<string, string> = {
-    nl: "Onjuist e-mailadres of wachtwoord.",
-    en: "Incorrect email address or password.",
-    fa: "آدرس ایمیل یا رمز عبور اشتباه است.",
+    nl: "Onjuist e-mailadres of wachtwoord",
+    en: "Incorrect email address or password",
+    fa: "آدرس ایمیل یا رمز عبور اشتباه است",
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -292,10 +292,10 @@ export default function LoginPage() {
         <div>
           <span className="pill" style={{ background: "rgba(255,255,255,0.18)", color: "var(--ink-2)" }}>Today's tip</span>
           <h2 style={{ marginTop: 16, color: "var(--ink)", fontFamily: "var(--serif)", fontWeight: 400, fontSize: 32, lineHeight: 1.12, letterSpacing: "-0.015em" }}>
-            "Startersaftrek runs out at the end of <em>2026</em> — last call for the €2,123 deduction."
+            "Startersaftrek runs out at end of <em>2026</em> — last call for the €2,123 deduction"
           </h2>
-          <p style={{ marginTop: 16, color: "var(--ink-3)", fontSize: 13, maxWidth: 360 }}>
-            One of 28 verified 2026 rules in your knowledge base.
+          <p style={{ marginTop: 16, color: "var(--ink-3)", fontSize: "var(--text-sm)", maxWidth: 360 }}>
+            One of 28 verified 2026 rules in your knowledge base
           </p>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>

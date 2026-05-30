@@ -210,7 +210,7 @@ export default function LandingPage() {
             {lang === "nl" ? "Doe 2026 aangifte met een tweede paar ogen" : lang === "fa" ? "اظهارنامه ۲۰۲۶ را با یک جفت چشم دوم تکمیل کنید" : "File 2026 with a second pair of eyes"}
           </h2>
           <p style={{ marginTop: "var(--sp-3)", color: "var(--ink-3)", fontSize: "var(--text-md)" }}>
-            {lang === "nl" ? "Gratis te proberen · upgrade als u onbeperkt wilt." : lang === "fa" ? "رایگان امتحان کنید · در صورت نیاز به نامحدود ارتقا دهید." : "Free to try · upgrade only if you want unlimited."}
+            {lang === "nl" ? "Gratis te proberen · upgrade als u onbeperkt wilt" : lang === "fa" ? "رایگان امتحان کنید · در صورت نیاز به نامحدود ارتقا دهید" : "Free to try · upgrade only if you want unlimited"}
           </p>
           <div style={{ marginTop: "var(--sp-5)", display: "inline-flex", flexWrap: "wrap", gap: "var(--sp-3)", justifyContent: "center" }}>
             <button className="btn btn-accent btn-lg" onClick={() => navigate("/register")}>

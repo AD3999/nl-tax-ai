@@ -6,18 +6,18 @@ const L = {
   terms:       { nl: "Algemene voorwaarden",    en: "Terms of Service", fa: "شرایط خدمات" },
   contact:     { nl: "Contact",                 en: "Contact",          fa: "تماس" },
   disclaimer:  {
-    nl: "TaxWijs geeft geen officieel belastingadvies. Raadpleeg altijd een belastingadviseur voor uw persoonlijke situatie.",
-    en: "TaxWijs does not provide official tax advice. Always consult a qualified tax advisor for your personal situation.",
-    fa: "TaxWijs مشاوره مالیاتی رسمی ارائه نمی‌دهد. همیشه با یک مشاور مالیاتی مجاز برای وضعیت خود مشورت کنید.",
+    nl: "TaxWijs geeft geen officieel belastingadvies — raadpleeg altijd een belastingadviseur voor uw persoonlijke situatie",
+    en: "TaxWijs does not provide official tax advice — always consult a qualified tax advisor for your personal situation",
+    fa: "TaxWijs مشاوره مالیاتی رسمی ارائه نمی‌دهد — همیشه با یک مشاور مالیاتی مجاز مشورت کنید",
   },
   rights:   { nl: "Alle rechten voorbehouden", en: "All rights reserved", fa: "تمام حقوق محفوظ است" },
   legal:    { nl: "Juridisch",                  en: "Legal",              fa: "حقوقی" },
   company:  { nl: "Bedrijf",                    en: "Company",            fa: "شرکت" },
   kvk:      { nl: "KvK-nummer",                 en: "KvK number",         fa: "شماره KvK" },
   gdpr:     {
-    nl: "Uw gegevens worden beschermd conform de AVG (GDPR).",
-    en: "Your data is protected under GDPR / AVG.",
-    fa: "اطلاعات شما طبق GDPR محافظت می‌شود.",
+    nl: "Uw gegevens worden beschermd conform de AVG (GDPR)",
+    en: "Your data is protected under GDPR / AVG",
+    fa: "اطلاعات شما طبق GDPR محافظت می‌شود",
   },
 };
 

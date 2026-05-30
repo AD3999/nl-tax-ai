@@ -348,7 +348,7 @@ export default function ChatPage() {
         }
 
         showToast(
-          lang === "nl" ? "Profiel aangemaakt! Uw belasting wordt berekend." : lang === "fa" ? "پروفایل ایجاد شد! در حال محاسبه مالیات شما." : "Profile created! Calculating your taxes.",
+          lang === "nl" ? "Profiel aangemaakt — belasting wordt berekend" : lang === "fa" ? "پروفایل ایجاد شد — در حال محاسبه مالیات شما" : "Profile created — calculating your taxes",
           "success",
         );
 
@@ -386,7 +386,7 @@ export default function ChatPage() {
       }
     } catch (err: unknown) {
       if (err instanceof Error && err.name !== "AbortError") {
-        const errMsg = lang === "nl" ? "Er is een fout opgetreden. Probeer het opnieuw." : lang === "fa" ? "خطایی رخ داد. دوباره تلاش کنید." : "Something went wrong. Please try again.";
+        const errMsg = lang === "nl" ? "Er is een fout opgetreden — probeer het opnieuw" : lang === "fa" ? "خطایی رخ داد — دوباره تلاش کنید" : "Something went wrong — please try again";
         setMessages(prev => prev.map(m => m.id === aid ? { ...m, content: t("chat.error"), streaming: false } : m));
         showToast(errMsg, "error");
       }
