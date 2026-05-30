@@ -1,7 +1,34 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 30 May 2026 — Phase 26 complete. Full UX audit: formal type scale, WCAG AA, mobile responsiveness, form accessibility.
+> Last updated: 30 May 2026 — Phase 27 complete. Trailing dot removal across all 3 languages + Railway build fix.
+
+---
+
+## Phase 27 — Trailing Dot Removal + Railway Build Fix ✅ Complete
+
+### Trailing period cleanup (all 3 languages)
+
+Removed every trailing `.` from display text across `en.json`, `nl.json`, `fa.json` and 5 TSX files. Rule: display strings (headlines, subtitles, descriptions, notes) have no trailing period. Loading `...` indicators are unchanged.
+
+**i18n strings cleaned (same keys in NL/EN/FA):** `headline_2`, `welcome_subtitle`, `ready_subtitle`, `disclaimer_results`, `session_limit_msg`, `gate_subtitle`, `gate_note`, IB `subtitle`, intake `step1/2/3_subtitle`, auth `login_error` / `register_error`, phase2 `subtitle` + `no_results`, upgrade `subheadline_register` / `subheadline_upgrade` / `error`, pricing `subheadline` + all 3 FAQ answers.
+
+**Inline TSX cleaned:** `IBGuidePage` ("in plain language"), `LandingPage` (footer CTA heading), `LoginPage` ("tax workspace"), `IntakePage` ("Two minutes. One tax brain."), `PricingPage` (4 FAQ answer strings).
+
+### Railway build fix
+
+**Error:** `TS2304: Cannot find name 'lang'` in `LandingPage.tsx` at lines 159, 209, 212, 216.
+
+**Root cause:** During UX/copy edits, `lang`-conditional strings were added to the footer CTA and features section of `LandingPage.tsx`, but the `const lang = i18n.language` declaration was never added to the component. Locally this was masked because the TypeScript project config had already-compiled cache — Railway's clean build caught it.
+
+**Fix:** Added `const lang = i18n.language as "nl" | "en" | "fa"` and destructured `i18n` from `useTranslation()` in `LandingPage.tsx`.
+
+**TypeScript check:** `npx tsc --noEmit` — 0 errors before push.
+
+| Commit | Description |
+|--------|-------------|
+| `ff104b4` | fix(copy): remove all trailing periods from display text across NL/EN/FA |
+| `2b66b3d` | fix(build): declare lang variable in LandingPage — fixes Railway TS build error |
 
 ---
 
