@@ -205,16 +205,42 @@ export default function RegisterPage() {
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
-                <div className="tw-label" style={{ marginBottom: 6 }}>{t("auth.email")}</div>
-                <input className="tw-input" type="email" placeholder="you@example.nl" value={email} onChange={e => setEmail(e.target.value)} required />
+                <label htmlFor="reg-email" className="tw-label">{t("auth.email")}</label>
+                <input
+                  id="reg-email"
+                  className="tw-input"
+                  type="email"
+                  placeholder="you@example.nl"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  autoComplete="email"
+                  required
+                  aria-required="true"
+                  style={{ fontSize: 16 }}
+                />
               </div>
               <div>
-                <div className="tw-label" style={{ marginBottom: 6 }}>{t("auth.password")}</div>
-                <input className="tw-input" type="password" placeholder="At least 8 characters" value={password} onChange={e => setPassword(e.target.value)} minLength={8} required />
+                <label htmlFor="reg-password" className="tw-label">{t("auth.password")}</label>
+                <input
+                  id="reg-password"
+                  className="tw-input"
+                  type="password"
+                  placeholder={lang === "nl" ? "Minimaal 8 tekens" : lang === "fa" ? "حداقل ۸ کاراکتر" : "At least 8 characters"}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                  aria-required="true"
+                  style={{ fontSize: 16 }}
+                />
               </div>
 
               <button className="btn btn-accent btn-lg" type="submit" disabled={loading} style={{ marginTop: 6 }}>
-                {loading ? "Creating…" : <>Continue <Icon.arrow /></>}
+                {loading
+                  ? (lang === "nl" ? "Bezig…" : lang === "fa" ? "در حال ثبت‌نام…" : "Creating account…")
+                  : <>{lang === "nl" ? "Doorgaan" : lang === "fa" ? "ادامه" : "Continue"} <Icon.arrow /></>
+                }
               </button>
             </form>
 
@@ -227,9 +253,9 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <div style={{ fontSize: 11, color: "var(--ink-4)", display: "flex", justifyContent: "space-between" }}>
-          <span>© 2026 TaxWijs</span>
-          <span>Privacy · Terms</span>
+        <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", display: "flex", justifyContent: "space-between", paddingTop: "var(--sp-4)" }}>
+          <span>© {new Date().getFullYear()} TaxWijs</span>
+          <span><a href="/privacy" style={{ color: "inherit" }}>Privacy</a> · <a href="/terms" style={{ color: "inherit" }}>Terms</a></span>
         </div>
       </div>
 

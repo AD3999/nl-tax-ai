@@ -7,8 +7,8 @@ import LangSwitch from "./LangSwitch";
 import { useMobile } from "../hooks/useMobile";
 
 const NAV_ITEMS_GUEST = [
-  { to: "/chat",       labelKey: "nav.chat" },
-  { to: "/pricing",    labelKey: "nav.pricing" },
+  { to: "/chat",    labelKey: "nav.chat" },
+  { to: "/pricing", labelKey: "nav.pricing" },
 ] as const;
 
 const NAV_ITEMS_AUTH = [
@@ -21,17 +21,17 @@ const NAV_ITEMS_AUTH = [
 
 function HamburgerIcon({ open }: { open: boolean }) {
   return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
       {open ? (
         <>
-          <line x1="4" y1="4" x2="18" y2="18" />
-          <line x1="18" y1="4" x2="4" y2="18" />
+          <line x1="3" y1="3" x2="17" y2="17" />
+          <line x1="17" y1="3" x2="3" y2="17" />
         </>
       ) : (
         <>
-          <line x1="3" y1="7" x2="19" y2="7" />
-          <line x1="3" y1="11" x2="19" y2="11" />
-          <line x1="3" y1="15" x2="19" y2="15" />
+          <line x1="2" y1="6"  x2="18" y2="6" />
+          <line x1="2" y1="10" x2="18" y2="10" />
+          <line x1="2" y1="14" x2="18" y2="14" />
         </>
       )}
     </svg>
@@ -49,10 +49,15 @@ export default function TopNav() {
   const navItems = user ? NAV_ITEMS_AUTH : NAV_ITEMS_GUEST;
 
   useEffect(() => {
-    const onScroll = () => { setScrolled(window.scrollY > 8); };
+    const onScroll = () => setScrolled(window.scrollY > 8);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Close menu on navigation
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [i18n.language]);
 
   function handleLogout() {
     logout();
@@ -60,9 +65,21 @@ export default function TopNav() {
     setMenuOpen(false);
   }
 
-  function closeMenu() {
-    setMenuOpen(false);
-  }
+  function closeMenu() { setMenuOpen(false); }
+
+  const navLinkStyle = ({ isActive }: { isActive: boolean }) => ({
+    display: "inline-flex",
+    alignItems: "center",
+    height: 44,
+    padding: "0 8px",
+    fontSize: "var(--text-sm)" as string,
+    fontWeight: isActive ? 600 : 500,
+    color: isActive ? "var(--ink)" : "var(--ink-3)",
+    borderBottom: isActive ? "2px solid var(--ink)" : "2px solid transparent",
+    textDecoration: "none",
+    transition: "color .15s, border-color .15s",
+    letterSpacing: "-0.01em",
+  });
 
   return (
     <>
@@ -70,15 +87,15 @@ export default function TopNav() {
         dir={isRtl ? "rtl" : "ltr"}
         style={{
           height: 64,
-          padding: isMobile ? "0 16px" : "0 28px",
+          padding: isMobile ? "0 var(--sp-4)" : "0 var(--sp-8)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
           borderBottom: scrolled ? "1px solid rgba(0,0,0,0.06)" : "1px solid var(--hairline)",
-          background: scrolled ? "rgba(255,255,255,0.78)" : "var(--paper)",
-          backdropFilter: scrolled ? "blur(14px) saturate(160%)" : "none",
-          WebkitBackdropFilter: scrolled ? "blur(14px) saturate(160%)" : "none",
-          boxShadow: scrolled ? "0 2px 20px rgba(0,0,0,0.07)" : "none",
+          background: scrolled ? "rgba(252,251,249,0.88)" : "var(--paper)",
+          backdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
+          boxShadow: scrolled ? "0 2px 16px rgba(0,0,0,0.06)" : "none",
           transition: "background .25s, box-shadow .25s, border-color .25s",
           position: "sticky",
           top: 0,
@@ -86,27 +103,16 @@ export default function TopNav() {
           flexShrink: 0,
         }}
       >
-        {/* Left: wordmark + nav links (links hidden on mobile) */}
-        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 0 : 32 }}>
-          <NavLink to="/" style={{ textDecoration: "none" }} onClick={closeMenu}>
+        {/* Left: wordmark + nav links */}
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 0 : 4 }}>
+          <NavLink to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", marginRight: isMobile ? 0 : 20 }} onClick={closeMenu}>
             <Wordmark size={16} />
           </NavLink>
+
           {!isMobile && (
-            <nav style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            <nav aria-label="Main navigation" style={{ display: "flex", alignItems: "center" }}>
               {navItems.map(item => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  style={({ isActive }) => ({
-                    fontSize: 13.5,
-                    fontWeight: 500,
-                    color: isActive ? "var(--ink)" : "var(--ink-3)",
-                    borderBottom: isActive ? "1px solid var(--ink)" : "1px solid transparent",
-                    paddingBottom: 2,
-                    textDecoration: "none",
-                    transition: "color .15s",
-                  })}
-                >
+                <NavLink key={item.to} to={item.to} style={navLinkStyle}>
                   {t(item.labelKey)}
                 </NavLink>
               ))}
@@ -114,12 +120,8 @@ export default function TopNav() {
                 <NavLink
                   to="/admin"
                   style={({ isActive }) => ({
-                    fontSize: 13.5,
-                    fontWeight: 500,
+                    ...navLinkStyle({ isActive }),
                     color: isActive ? "var(--ink)" : "var(--ink-4)",
-                    borderBottom: isActive ? "1px solid var(--ink)" : "1px solid transparent",
-                    paddingBottom: 2,
-                    textDecoration: "none",
                   })}
                 >
                   Admin
@@ -130,14 +132,15 @@ export default function TopNav() {
         </div>
 
         {/* Right: lang switch + auth + hamburger */}
-        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
           <LangSwitch />
+
           {!isMobile && user ? (
             <>
               {user.plan === "premium" && (
                 <span className="pill pill-accent">⚡ Premium</span>
               )}
-              <span style={{ fontSize: 13, color: "var(--ink-3)", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {user.email}
               </span>
               <button onClick={handleLogout} className="btn btn-ghost btn-sm">
@@ -146,10 +149,7 @@ export default function TopNav() {
             </>
           ) : !isMobile ? (
             <>
-              <NavLink
-                to="/login"
-                style={{ fontSize: 13, color: "var(--ink-3)", textDecoration: "none" }}
-              >
+              <NavLink to="/login" style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", textDecoration: "none", padding: "0 8px", height: 44, display: "inline-flex", alignItems: "center" }}>
                 {t("nav.login")}
               </NavLink>
               <NavLink to="/register" className="btn btn-accent btn-sm" style={{ textDecoration: "none" }}>
@@ -158,22 +158,25 @@ export default function TopNav() {
             </>
           ) : null}
 
-          {/* Hamburger button — mobile only */}
+          {/* Hamburger — mobile only */}
           {isMobile && (
             <button
               onClick={() => setMenuOpen(o => !o)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
+              aria-controls="mobile-nav"
               style={{
                 background: "none",
                 border: "1px solid var(--hairline-2)",
                 borderRadius: "var(--r-sm)",
-                width: 36,
-                height: 36,
+                width: 44,
+                height: 44,
                 display: "grid",
                 placeItems: "center",
                 cursor: "pointer",
                 color: "var(--ink)",
+                flexShrink: 0,
               }}
-              aria-label="Menu"
             >
               <HamburgerIcon open={menuOpen} />
             </button>
@@ -181,26 +184,29 @@ export default function TopNav() {
         </div>
       </header>
 
-      {/* Mobile dropdown menu — always mounted, slide via CSS so exit is also smooth */}
+      {/* Mobile dropdown — always mounted so slide animation works */}
       {isMobile && (
         <>
-          {/* Backdrop */}
           <div
+            id="mobile-nav-backdrop"
             onClick={closeMenu}
+            aria-hidden="true"
             style={{
               position: "fixed",
               inset: 0,
               top: 64,
               zIndex: 25,
-              background: "rgba(0,0,0,0.18)",
+              background: "rgba(0,0,0,0.20)",
               opacity: menuOpen ? 1 : 0,
               pointerEvents: menuOpen ? "auto" : "none",
               transition: "opacity .22s",
             }}
           />
-          {/* Menu panel */}
-          <div
+          <nav
+            id="mobile-nav"
             dir={isRtl ? "rtl" : "ltr"}
+            aria-label="Mobile navigation"
+            role="navigation"
             style={{
               position: "fixed",
               top: 64,
@@ -209,28 +215,30 @@ export default function TopNav() {
               zIndex: 26,
               background: "var(--paper)",
               borderBottom: "1px solid var(--hairline)",
-              padding: "12px 0 16px",
+              paddingBottom: 16,
               boxShadow: "var(--shadow)",
-              transform: menuOpen ? "translateY(0)" : "translateY(-12px)",
+              transform: menuOpen ? "translateY(0)" : "translateY(-10px)",
               opacity: menuOpen ? 1 : 0,
               pointerEvents: menuOpen ? "auto" : "none",
-              transition: "transform .24s cubic-bezier(0.4,0,0.2,1), opacity .2s ease-out",
+              transition: "transform .24s cubic-bezier(0.4,0,0.2,1), opacity .2s",
             }}
           >
-            {/* Nav links */}
             {navItems.map(item => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 onClick={closeMenu}
                 style={({ isActive }) => ({
-                  display: "block",
-                  padding: "12px 20px",
-                  fontSize: 15,
-                  fontWeight: 500,
+                  display: "flex",
+                  alignItems: "center",
+                  height: 52,
+                  padding: "0 var(--sp-5)",
+                  fontSize: "var(--text-md)",
+                  fontWeight: isActive ? 600 : 500,
                   color: isActive ? "var(--sage-700)" : "var(--ink-2)",
                   textDecoration: "none",
                   background: isActive ? "var(--accent-soft)" : "transparent",
+                  borderLeft: isActive ? "3px solid var(--sage-600)" : "3px solid transparent",
                 })}
               >
                 {t(item.labelKey)}
@@ -242,9 +250,11 @@ export default function TopNav() {
                 to="/admin"
                 onClick={closeMenu}
                 style={({ isActive }) => ({
-                  display: "block",
-                  padding: "12px 20px",
-                  fontSize: 15,
+                  display: "flex",
+                  alignItems: "center",
+                  height: 52,
+                  padding: "0 var(--sp-5)",
+                  fontSize: "var(--text-md)",
                   fontWeight: 500,
                   color: isActive ? "var(--sage-700)" : "var(--ink-3)",
                   textDecoration: "none",
@@ -254,18 +264,16 @@ export default function TopNav() {
               </NavLink>
             )}
 
-            {/* Divider */}
-            <div style={{ margin: "10px 20px", height: 1, background: "var(--hairline)" }} />
+            <div style={{ margin: "10px var(--sp-5)", height: 1, background: "var(--hairline)" }} />
 
-            {/* Auth area */}
             {user ? (
-              <div style={{ padding: "6px 20px" }}>
+              <div style={{ padding: "6px var(--sp-5)" }}>
                 {user.plan === "premium" && (
-                  <div style={{ marginBottom: 8 }}>
+                  <div style={{ marginBottom: 10 }}>
                     <span className="pill pill-accent">⚡ Premium</span>
                   </div>
                 )}
-                <div style={{ fontSize: 13, color: "var(--ink-3)", marginBottom: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginBottom: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {user.email}
                 </div>
                 <button onClick={handleLogout} className="btn btn-ghost btn-sm">
@@ -273,29 +281,18 @@ export default function TopNav() {
                 </button>
               </div>
             ) : (
-              <div style={{ padding: "6px 20px", display: "flex", gap: 10 }}>
-                <NavLink
-                  to="/login"
-                  onClick={closeMenu}
-                  className="btn btn-ghost btn-sm"
-                  style={{ textDecoration: "none" }}
-                >
+              <div style={{ padding: "6px var(--sp-5)", display: "flex", gap: 10 }}>
+                <NavLink to="/login" onClick={closeMenu} className="btn btn-ghost btn-sm" style={{ textDecoration: "none" }}>
                   {t("nav.login")}
                 </NavLink>
-                <NavLink
-                  to="/register"
-                  onClick={closeMenu}
-                  className="btn btn-accent btn-sm"
-                  style={{ textDecoration: "none" }}
-                >
+                <NavLink to="/register" onClick={closeMenu} className="btn btn-accent btn-sm" style={{ textDecoration: "none" }}>
                   {t("auth.register")}
                 </NavLink>
               </div>
             )}
-          </div>
+          </nav>
         </>
       )}
-
     </>
   );
 }

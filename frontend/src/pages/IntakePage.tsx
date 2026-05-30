@@ -6,6 +6,7 @@ import type { CalcInput } from "../api/calculator";
 import { Icon } from "../components/Icon";
 import { useToast } from "../context/ToastContext";
 import { useAuth } from "../context/AuthContext";
+import { useMobile } from "../hooks/useMobile";
 
 type UserType = "zzp" | "employee" | "expat" | "dga";
 
@@ -32,16 +33,28 @@ function StepDots({ step }: { step: number }) {
   );
 }
 
+let _uid = 0;
 function UnitInput({ label, unit, value, onChange, placeholder, hint }: { label: string; unit: string; value: string; onChange: (v: string) => void; placeholder?: string; hint?: string }) {
+  const [id] = useState(() => `unit-input-${++_uid}`);
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-        <span className="tw-label">{label}</span>
-        {hint && <span style={{ fontSize: 10.5, color: "var(--ink-4)" }}>{hint}</span>}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "var(--sp-2)" }}>
+        <label htmlFor={id} className="tw-label" style={{ marginBottom: 0 }}>{label}</label>
+        {hint && <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>{hint}</span>}
       </div>
       <div style={{ position: "relative" }}>
-        <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--ink-4)", fontSize: 14 }}>{unit}</span>
-        <input className="tw-input" type="number" min="0" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={{ paddingLeft: 32 }} />
+        <span aria-hidden="true" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--ink-4)", fontSize: "var(--text-base)" }}>{unit}</span>
+        <input
+          id={id}
+          className="tw-input"
+          type="number"
+          inputMode="decimal"
+          min="0"
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          style={{ paddingLeft: 32, fontSize: 16 }}
+        />
       </div>
     </div>
   );
@@ -55,6 +68,7 @@ export default function IntakePage() {
   const lang = i18n.language as "nl" | "en" | "fa";
   const isRtl = lang === "fa";
 
+  const isMobile = useMobile();
   const [step, setStep]         = useState<1 | 2 | 3>(1);
   const [userType, setUserType] = useState<UserType>("zzp");
   const [loading, setLoading]   = useState(false);
@@ -118,10 +132,28 @@ export default function IntakePage() {
 
   return (
     <div className="grain" style={{ flex: 1 }} dir={isRtl ? "rtl" : "ltr"}>
-      <div style={{ display: "grid", gridTemplateColumns: "300px 1fr 300px", maxWidth: 1160, margin: "0 auto", padding: "32px 40px 56px", gap: 40, alignItems: "flex-start" }}>
+      {/* Mobile step indicator strip */}
+      {isMobile && (
+        <div style={{ padding: "var(--sp-4) var(--sp-4) 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <StepDots step={step} />
+          <span className="eyebrow">
+            {lang === "nl" ? `Stap ${step} van 3` : lang === "fa" ? `مرحله ${step} از ۳` : `Step ${step} of 3`}
+          </span>
+        </div>
+      )}
 
-        {/* Left rail */}
-        <aside style={{ position: "sticky", top: 92 }}>
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: isMobile ? "1fr" : "300px 1fr 300px",
+        maxWidth: 1160,
+        margin: "0 auto",
+        padding: isMobile ? "var(--sp-4) var(--sp-4) var(--sp-12)" : "var(--sp-8) var(--sp-10) var(--sp-16)",
+        gap: isMobile ? "var(--sp-5)" : "var(--sp-10)",
+        alignItems: "flex-start",
+      }}>
+
+        {/* Left rail — hidden on mobile */}
+        {!isMobile && <aside style={{ position: "sticky", top: 92 }}>
           <div className="eyebrow eyebrow-accent">Profile intake</div>
           <h2 style={{ marginTop: 6, fontFamily: "var(--serif)", fontSize: 30, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
             Two minutes.<br />One tax brain.
@@ -162,26 +194,32 @@ export default function IntakePage() {
 
           <div style={{ marginTop: 24, padding: 14, border: "1px dashed var(--hairline-2)", borderRadius: "var(--r)" }}>
             <div className="eyebrow">{t("intake.estimate_label", { defaultValue: "Estimate so far" })}</div>
-            <div className="font-mono" style={{ marginTop: 6, fontSize: 22, color: "var(--ink)", letterSpacing: "-0.01em" }}>€ —</div>
-            <div style={{ fontSize: 11.5, color: "var(--ink-3)" }}>updates on finish</div>
+            <div className="font-mono" style={{ marginTop: 6, fontSize: "var(--text-xl)", color: "var(--ink)", letterSpacing: "-0.01em" }}>€ —</div>
+            <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>
+              {lang === "nl" ? "bijgewerkt na afronden" : lang === "fa" ? "بعد از پایان به‌روز می‌شود" : "updates on finish"}
+            </div>
           </div>
-        </aside>
+        </aside>}
 
         {/* Center card */}
-        <main className="card" style={{ padding: 36, borderRadius: "var(--r-xl)", boxShadow: "var(--shadow)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <StepDots step={step} />
-            <span className="eyebrow">Step {step} of 3</span>
-          </div>
+        <main className="card" style={{ padding: isMobile ? "var(--sp-5)" : "var(--sp-8)", borderRadius: "var(--r-xl)", boxShadow: isMobile ? "none" : "var(--shadow)" }}>
+          {!isMobile && (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <StepDots step={step} />
+              <span className="eyebrow">
+                {lang === "nl" ? `Stap ${step} van 3` : lang === "fa" ? `مرحله ${step} از ۳` : `Step ${step} of 3`}
+              </span>
+            </div>
+          )}
 
           {/* Step 1 */}
           {step === 1 && (
-            <div style={{ marginTop: 24 }}>
-              <h1 style={{ fontFamily: "var(--serif)", fontSize: 34, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+            <div style={{ marginTop: "var(--sp-6)" }}>
+              <h1 style={{ fontFamily: "var(--serif)", fontSize: isMobile ? "var(--text-3xl)" : "var(--text-4xl)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
                 {t("intake.step1_title")}
               </h1>
-              <p style={{ marginTop: 8, color: "var(--ink-3)", fontSize: 14 }}>{t("intake.step1_subtitle")}</p>
-              <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <p style={{ marginTop: "var(--sp-2)", color: "var(--ink-3)", fontSize: "var(--text-base)" }}>{t("intake.step1_subtitle")}</p>
+              <div style={{ marginTop: "var(--sp-6)", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
                 {(Object.entries(USER_TYPES) as [UserType, typeof USER_TYPES[UserType]][]).map(([k, v]) => {
                   const on = userType === k;
                   return (
@@ -219,11 +257,15 @@ export default function IntakePage() {
 
           {/* Step 2 */}
           {step === 2 && (
-            <div style={{ marginTop: 24 }}>
-              <h1 style={{ fontFamily: "var(--serif)", fontSize: 34, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-                Your <span style={{ color: "var(--sage-700)", fontStyle: "italic" }}>{USER_TYPES[userType].label}</span> income.
+            <div style={{ marginTop: "var(--sp-6)" }}>
+              <h1 style={{ fontFamily: "var(--serif)", fontSize: isMobile ? "var(--text-3xl)" : "var(--text-4xl)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+                {lang === "nl" ? "Uw " : lang === "fa" ? "درآمد " : "Your "}
+                <span style={{ color: "var(--sage-700)", fontStyle: "italic" }}>{USER_TYPES[userType].label}</span>
+                {lang === "nl" ? " inkomen" : lang === "fa" ? "" : " income"}
               </h1>
-              <p style={{ marginTop: 8, color: "var(--ink-3)", fontSize: 14 }}>Numbers stay on your device until you create an account.</p>
+              <p style={{ marginTop: "var(--sp-2)", color: "var(--ink-3)", fontSize: "var(--text-base)" }}>
+                {lang === "nl" ? "Getallen blijven op uw apparaat tot u een account aanmaakt." : lang === "fa" ? "اعداد روی دستگاه شما می‌مانند تا زمانی که حساب کاربری ایجاد کنید." : "Numbers stay on your device until you create an account."}
+              </p>
               <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 16 }}>
                 {userType === "zzp" && <>
                   <UnitInput label={t("intake.revenue")} unit="€" value={revenue} onChange={setRevenue} placeholder="72000" hint="Gross before expenses" />
@@ -243,8 +285,8 @@ export default function IntakePage() {
                 {userType === "expat" && <>
                   <UnitInput label={t("intake.salary")} unit="€" value={salary} onChange={setSalary} placeholder="90000" />
                   <div>
-                    <div className="tw-label" style={{ marginBottom: 6 }}>{t("intake.ruling_year")}</div>
-                    <select className="tw-input" value={rulingYear} onChange={e => setRulingYear(e.target.value)}>
+                    <label htmlFor="intake-ruling-year" className="tw-label">{t("intake.ruling_year")}</label>
+                    <select id="intake-ruling-year" className="tw-input" value={rulingYear} onChange={e => setRulingYear(e.target.value)} style={{ fontSize: 16 }}>
                       {[1, 2, 3, 4, 5].map(y => <option key={y} value={y}>{t("intake.year_n", { n: y })}</option>)}
                     </select>
                   </div>
@@ -255,12 +297,12 @@ export default function IntakePage() {
 
           {/* Step 3 */}
           {step === 3 && (
-            <div style={{ marginTop: 24 }}>
-              <h1 style={{ fontFamily: "var(--serif)", fontSize: 34, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+            <div style={{ marginTop: "var(--sp-6)" }}>
+              <h1 style={{ fontFamily: "var(--serif)", fontSize: isMobile ? "var(--text-3xl)" : "var(--text-4xl)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
                 {t("intake.step3_title")}
               </h1>
-              <p style={{ marginTop: 8, color: "var(--ink-3)", fontSize: 14 }}>{t("intake.step3_subtitle")}</p>
-              <div style={{ marginTop: 24, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <p style={{ marginTop: "var(--sp-2)", color: "var(--ink-3)", fontSize: "var(--text-base)" }}>{t("intake.step3_subtitle")}</p>
+              <div style={{ marginTop: "var(--sp-6)", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
                 <div style={{ gridColumn: "1 / -1" }}>
                   <div className="tw-label" style={{ marginBottom: 6 }}>{t("intake.has_partner")}</div>
                   <div style={{ display: "flex", border: "1px solid var(--hairline-2)", borderRadius: "var(--r-sm)", overflow: "hidden" }}>
@@ -280,8 +322,8 @@ export default function IntakePage() {
                   </div>
                 )}
                 <div>
-                  <div className="tw-label" style={{ marginBottom: 6 }}>{t("intake.children")}</div>
-                  <select className="tw-input" value={children} onChange={e => setChildren(e.target.value)}>
+                  <label htmlFor="intake-children" className="tw-label">{t("intake.children")}</label>
+                  <select id="intake-children" className="tw-input" value={children} onChange={e => setChildren(e.target.value)} style={{ fontSize: 16 }}>
                     <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3+</option>
                   </select>
                 </div>
@@ -313,21 +355,29 @@ export default function IntakePage() {
           </div>
         </main>
 
-        {/* Right tip */}
-        <aside style={{ position: "sticky", top: 92 }}>
-          <div className="card" style={{ padding: 18, background: "var(--ink)", color: "var(--paper)", border: "none" }}>
-            <span className="eyebrow" style={{ color: "var(--sage-300)" }}>Why we ask</span>
-            <p style={{ marginTop: 10, fontSize: 13.5, lineHeight: 1.5, color: "oklch(0.88 0.01 95)" }}>
-              {WHY_TEXT[step]}
-            </p>
-          </div>
-          <div style={{ marginTop: 14, padding: 14, fontSize: 12, color: "var(--ink-3)", border: "1px solid var(--hairline)", borderRadius: "var(--r)" }}>
-            <span className="eyebrow eyebrow-accent">Did you know</span>
-            <p style={{ marginTop: 6, color: "var(--ink-2)", fontSize: 12.5, lineHeight: 1.5 }}>
-              2026 is the <em>last year</em> of startersaftrek (€2,123). The chat will flag if you qualify.
-            </p>
-          </div>
-        </aside>
+        {/* Right tip — hidden on mobile */}
+        {!isMobile && (
+          <aside style={{ position: "sticky", top: 92 }}>
+            <div className="card" style={{ padding: "var(--sp-5)", background: "var(--ink)", color: "var(--paper)", border: "none" }}>
+              <span className="eyebrow" style={{ color: "var(--sage-300)" }}>
+                {lang === "nl" ? "Waarom vragen we dit" : lang === "fa" ? "چرا می‌پرسیم" : "Why we ask"}
+              </span>
+              <p style={{ marginTop: "var(--sp-3)", fontSize: "var(--text-sm)", lineHeight: "var(--leading-relaxed)", color: "oklch(0.88 0.01 95)" }}>
+                {WHY_TEXT[step]}
+              </p>
+            </div>
+            <div style={{ marginTop: 14, padding: 14, color: "var(--ink-3)", border: "1px solid var(--hairline)", borderRadius: "var(--r)" }}>
+              <span className="eyebrow eyebrow-accent">{lang === "nl" ? "Wist u dat" : lang === "fa" ? "آیا می‌دانستید" : "Did you know"}</span>
+              <p style={{ marginTop: "var(--sp-2)", color: "var(--ink-2)", fontSize: "var(--text-xs)", lineHeight: "var(--leading-relaxed)" }}>
+                {lang === "nl"
+                  ? "2026 is het laatste jaar van de startersaftrek (€2.123). De chat geeft aan of u hiervoor in aanmerking komt."
+                  : lang === "fa"
+                  ? "۲۰۲۶ آخرین سال startersaftrek (€۲,۱۲۳) است. چت اطلاع می‌دهد اگر واجد شرایط باشید."
+                  : "2026 is the last year of startersaftrek (€2,123). The chat will flag if you qualify."}
+              </p>
+            </div>
+          </aside>
+        )}
       </div>
     </div>
   );

@@ -32,24 +32,33 @@ export default function LandingPage() {
     <main style={{ background: "var(--paper)", flex: 1 }}>
 
       {/* ── HERO ── */}
-      <section className="grain" style={{ padding: isMobile ? "48px 20px 40px" : "72px 56px 56px", borderBottom: "1px solid var(--hairline)" }}>
-        <div style={{ maxWidth: 1140, margin: "0 auto", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.15fr 1fr", gap: isMobile ? 32 : 56, alignItems: "center" }}>
+      <section className="grain" style={{ padding: isMobile ? "var(--sp-10) var(--sp-4) var(--sp-8)" : "var(--sp-16) var(--sp-16) var(--sp-12)", borderBottom: "1px solid var(--hairline)" }}>
+        <div style={{ maxWidth: 1140, margin: "0 auto", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.15fr 1fr", gap: isMobile ? "var(--sp-8)" : "var(--sp-16)", alignItems: "center" }}>
           <div>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 11px", borderRadius: 999, background: "var(--paper)", border: "1px solid var(--accent-line)" }}>
               <span style={{ width: 6, height: 6, borderRadius: 999, background: "var(--sage-600)" }} />
               <span className="eyebrow eyebrow-accent">Dutch Tax AI · 2026</span>
             </div>
 
-            <h1 style={{ marginTop: 22, fontSize: 64, lineHeight: 1.02, color: "var(--ink)", fontWeight: 400, fontFamily: "var(--serif)", letterSpacing: "-0.025em" }}>
+            {/* Hero headline — fluid type size prevents overflow at 320px */}
+            <h1 style={{
+              marginTop: "var(--sp-5)",
+              fontSize: isMobile ? "clamp(2rem, 10vw, 3.5rem)" : "var(--text-6xl)",
+              lineHeight: "var(--leading-tight)",
+              color: "var(--ink)",
+              fontWeight: 400,
+              fontFamily: "var(--serif)",
+              letterSpacing: "-0.025em",
+            }}>
               {t("landing.headline_1")}<br />
               <span style={{ fontStyle: "italic", color: "var(--sage-700)" }}>{t("landing.headline_2")}</span>
             </h1>
 
-            <p style={{ marginTop: 18, fontSize: 17, lineHeight: 1.5, color: "var(--ink-2)", maxWidth: 520 }}>
+            <p style={{ marginTop: "var(--sp-4)", fontSize: "var(--text-lg)", lineHeight: "var(--leading-normal)", color: "var(--ink-2)", maxWidth: 520 }}>
               {t("landing.subheadline")}
             </p>
 
-            <div style={{ marginTop: 28, display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ marginTop: "var(--sp-6)", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "var(--sp-3)" }}>
               <button className="btn btn-accent btn-lg" onClick={() => navigate("/intake")}>
                 {t("landing.cta_primary")} <Icon.arrow />
               </button>
@@ -58,11 +67,11 @@ export default function LandingPage() {
               </button>
             </div>
 
-            <div style={{ marginTop: 18, display: "flex", alignItems: "center", gap: 14, color: "var(--ink-3)", fontSize: 12.5 }}>
+            <div style={{ marginTop: "var(--sp-4)", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "var(--sp-3)", color: "var(--ink-3)", fontSize: "var(--text-xs)" }}>
               <span>{t("landing.no_account_needed")}</span>
-              <span style={{ color: "var(--hairline-2)" }}>|</span>
+              <span aria-hidden="true" style={{ color: "var(--hairline-2)" }}>|</span>
               <span>2026 rules verified</span>
-              <span style={{ color: "var(--hairline-2)" }}>|</span>
+              <span aria-hidden="true" style={{ color: "var(--hairline-2)" }}>|</span>
               <span>Sources on every answer</span>
             </div>
           </div>
@@ -142,12 +151,12 @@ export default function LandingPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 1, background: "var(--hairline)", border: "1px solid var(--hairline)", borderRadius: "var(--r-lg)", overflow: "hidden" }}>
             {FEATURES.map(f => (
-              <div key={f.kbd} style={{ padding: "28px 22px 30px", background: "var(--paper)", display: "flex", flexDirection: "column", gap: 14, minHeight: 220 }}>
+              <div key={f.kbd} style={{ padding: "var(--sp-6) var(--sp-5) var(--sp-8)", background: "var(--paper)", display: "flex", flexDirection: "column", gap: "var(--sp-3)", minHeight: 200 }}>
                 <span className="eyebrow">{f.kbd}</span>
-                <h3 style={{ fontFamily: "var(--serif)", fontSize: 26, fontWeight: 400, color: "var(--ink)" }}>{f.title}</h3>
-                <p style={{ fontSize: 13.5, color: "var(--ink-3)", lineHeight: 1.55 }}>{f.body}</p>
-                <span style={{ marginTop: "auto", display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: "var(--sage-700)" }}>
-                  Open <Icon.arrow />
+                <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-2xl)", fontWeight: 400, color: "var(--ink)" }}>{f.title}</h3>
+                <p style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", lineHeight: "var(--leading-relaxed)" }}>{f.body}</p>
+                <span style={{ marginTop: "auto", display: "inline-flex", alignItems: "center", gap: 6, fontSize: "var(--text-xs)", color: "var(--sage-700)", fontWeight: 500 }}>
+                  {lang === "nl" ? "Openen" : lang === "fa" ? "باز کردن" : "Open"} <Icon.arrow />
                 </span>
               </div>
             ))}
@@ -194,20 +203,22 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER CTA ── */}
-      <section style={{ padding: isMobile ? "56px 20px" : "80px 56px" }}>
+      <section style={{ padding: isMobile ? "var(--sp-12) var(--sp-4)" : "var(--sp-16) var(--sp-16)" }}>
         <div style={{ maxWidth: 880, margin: "0 auto", textAlign: "center" }}>
-          <h2 style={{ fontSize: 46, fontFamily: "var(--serif)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em", lineHeight: 1.05 }}>
-            File 2026 with a second pair of eyes.
+          <h2 style={{ fontSize: isMobile ? "var(--text-3xl)" : "var(--text-5xl)", fontFamily: "var(--serif)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em", lineHeight: "var(--leading-snug)" }}>
+            {lang === "nl" ? "Doe 2026 aangifte met een tweede paar ogen." : lang === "fa" ? "اظهارنامه ۲۰۲۶ را با یک جفت چشم دوم تکمیل کنید." : "File 2026 with a second pair of eyes."}
           </h2>
-          <p style={{ marginTop: 14, color: "var(--ink-3)", fontSize: 15 }}>
-            Free to try · upgrade only if you want unlimited.
+          <p style={{ marginTop: "var(--sp-3)", color: "var(--ink-3)", fontSize: "var(--text-md)" }}>
+            {lang === "nl" ? "Gratis te proberen · upgrade als u onbeperkt wilt." : lang === "fa" ? "رایگان امتحان کنید · در صورت نیاز به نامحدود ارتقا دهید." : "Free to try · upgrade only if you want unlimited."}
           </p>
-          <div style={{ marginTop: 22, display: "inline-flex", gap: 10 }}>
-            <button className="btn btn-accent btn-lg" onClick={() => navigate("/register")}>Start free</button>
+          <div style={{ marginTop: "var(--sp-5)", display: "inline-flex", flexWrap: "wrap", gap: "var(--sp-3)", justifyContent: "center" }}>
+            <button className="btn btn-accent btn-lg" onClick={() => navigate("/register")}>
+              {lang === "nl" ? "Gratis beginnen" : lang === "fa" ? "شروع رایگان" : "Start free"}
+            </button>
             <button className="btn btn-ghost btn-lg" onClick={() => navigate("/pricing")}>{t("nav.pricing")}</button>
           </div>
-          <p style={{ marginTop: 40, fontSize: 11.5, color: "var(--ink-4)" }}>
-            TaxWijs provides general information — not official tax advice.
+          <p style={{ marginTop: "var(--sp-10)", fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>
+            {t("chat.disclaimer")}
           </p>
         </div>
       </section>

@@ -49,12 +49,47 @@
   --shadow-lg:    0 2px 4px rgba(34,30,20,0.05), 0 24px 60px -20px rgba(34,30,20,0.18);
 
   /* Radii */
-  --r-xs: 6px;
-  --r-sm: 8px;
-  --r:    12px;
-  --r-lg: 16px;
-  --r-xl: 22px;
+  --r-xs:  6px;
+  --r-sm:  8px;
+  --r:     12px;
+  --r-lg:  16px;
+  --r-xl:  22px;
   --r-2xl: 28px;
+
+  /* ── Typography scale (formal, replaces arbitrary inline sizes) ── */
+  --text-2xs:  11px;   /* eyebrow labels, legal fine print       */
+  --text-xs:   12px;   /* helper text, captions, small metadata  */
+  --text-sm:   13px;   /* secondary body, card subtitles         */
+  --text-base: 14px;   /* primary body — root default            */
+  --text-md:   15px;   /* emphasized body, subheadings           */
+  --text-lg:   17px;   /* large body / small section heading     */
+  --text-xl:   20px;   /* section heading                        */
+  --text-2xl:  26px;   /* card / panel heading                   */
+  --text-3xl:  32px;   /* page heading                           */
+  --text-4xl:  38px;   /* hero heading                           */
+  --text-5xl:  48px;   /* display small                          */
+  --text-6xl:  64px;   /* display large (hero)                   */
+
+  /* ── Line-height tokens ─────────────────────────────────────── */
+  --leading-tight:   1.1;
+  --leading-snug:    1.25;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.65;
+
+  /* ── Spacing scale ───────────────────────────────────────────── */
+  --sp-1:   4px;
+  --sp-2:   8px;
+  --sp-3:   12px;
+  --sp-4:   16px;
+  --sp-5:   20px;
+  --sp-6:   24px;
+  --sp-8:   32px;
+  --sp-10:  40px;
+  --sp-12:  48px;
+  --sp-16:  64px;
+
+  /* ── Touch target minimum ────────────────────────────────────── */
+  --touch-min: 44px;
 
   /* Typography */
   --sans:  "Geist", ui-sans-serif, system-ui, sans-serif;
@@ -62,8 +97,8 @@
   --mono:  "Geist Mono", ui-monospace, monospace;
 
   font-family: var(--sans);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
   letter-spacing: -0.005em;
   color: var(--ink-2);
   background: var(--paper);
@@ -91,16 +126,55 @@ h1, h2, h3, h4 {
   letter-spacing: -0.02em;
   margin: 0;
 }
-p { margin: 0; }
-a { color: inherit; text-decoration: none; }
+p  { margin: 0; }
+a  { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
 input, textarea, select { font-family: inherit; }
 
+/* ─── Accessibility: visible focus rings ────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--sage-600);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+/* Override for inputs — ring applied via box-shadow to not clash with border */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: var(--sage-600) !important;
+  box-shadow: 0 0 0 3px oklch(0.92 0.07 115);
+}
+
+/* ─── High-contrast mode support ────────────────────────────── */
+@media (prefers-contrast: more) {
+  :root {
+    --ink:       oklch(0.10 0.010 90);
+    --ink-2:     oklch(0.20 0.010 90);
+    --ink-3:     oklch(0.35 0.010 90);
+    --hairline:  oklch(0.65 0.010 90);
+    --hairline-2:oklch(0.50 0.010 90);
+  }
+  .btn-accent   { outline: 2px solid var(--sage-800); }
+  .card         { border-color: var(--hairline-2); }
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* ─── Global utility atoms ──────────────────────────────────── */
 @layer components {
+
+  /* ── Eyebrow labels ───────────────────────────────────────── */
   .eyebrow {
     font-family: var(--mono);
-    font-size: 10.5px;
+    font-size: var(--text-2xs);
     font-weight: 500;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -108,15 +182,27 @@ input, textarea, select { font-family: inherit; }
   }
   .eyebrow-accent { color: var(--sage-700); }
 
+  /* ── Font helpers ──────────────────────────────────────────── */
   .font-serif { font-family: var(--serif); font-weight: 400; letter-spacing: -0.01em; }
   .font-mono  { font-family: var(--mono); font-feature-settings: "tnum"; }
   .num        { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; }
 
-  /* Pills */
+  /* ── Type-scale helpers (tw- prefix to avoid Tailwind collisions) */
+  .tw-text-2xs  { font-size: var(--text-2xs); }
+  .tw-text-xs   { font-size: var(--text-xs); }
+  .tw-text-sm   { font-size: var(--text-sm); }
+  .tw-text-base { font-size: var(--text-base); }
+  .tw-text-md   { font-size: var(--text-md); }
+  .tw-text-lg   { font-size: var(--text-lg); }
+  .tw-text-xl   { font-size: var(--text-xl); }
+
+  /* ── Pills ──────────────────────────────────────────────────── */
   .pill {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 4px 10px; border-radius: 999px;
-    font-size: 11px; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase;
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 999px;
+    font-size: var(--text-2xs); font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    line-height: 1.4;
   }
   .pill-accent  { background: var(--accent-soft); color: var(--sage-700); }
   .pill-ink     { background: var(--ink); color: var(--paper); }
@@ -124,7 +210,7 @@ input, textarea, select { font-family: inherit; }
   .pill-warn    { background: var(--warn-soft); color: oklch(0.45 0.15 75); }
   .pill-danger  { background: var(--danger-soft); color: var(--danger); }
 
-  /* Dividers */
+  /* ── Dividers ───────────────────────────────────────────────── */
   .hair   { height: 1px; background: var(--hairline); }
   .hair-v { width: 1px;  background: var(--hairline); }
   .dots {
@@ -134,43 +220,74 @@ input, textarea, select { font-family: inherit; }
     background-repeat: repeat-x;
   }
 
-  /* Buttons */
+  /* ── Buttons ────────────────────────────────────────────────── */
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    height: 40px; padding: 0 18px; border-radius: var(--r-sm);
-    font-weight: 500; font-size: 14px; border: 1px solid transparent;
-    transition: all .15s ease; cursor: pointer;
+    min-height: var(--touch-min);   /* WCAG 2.5.5 touch target */
+    height: 40px;
+    padding: 0 18px; border-radius: var(--r-sm);
+    font-weight: 500; font-size: var(--text-base);
+    border: 1px solid transparent;
+    transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+    cursor: pointer;
+    white-space: nowrap;
   }
   .btn-primary { background: var(--ink); color: var(--paper); }
   .btn-primary:hover { background: oklch(0.27 0.012 90); }
   .btn-accent  { background: var(--sage-600); color: white; border-color: transparent; }
-  .btn-accent:hover { background: var(--sage-700); }
+  .btn-accent:hover  { background: var(--sage-700); }
+  .btn-accent:focus-visible { box-shadow: 0 0 0 3px oklch(0.79 0.110 117 / 0.4); }
   .btn-ghost   { background: transparent; color: var(--ink); border-color: var(--hairline-2); }
-  .btn-ghost:hover { border-color: var(--ink); }
+  .btn-ghost:hover { border-color: var(--ink); background: var(--paper-2); }
   .btn-soft    { background: var(--accent-soft); color: var(--sage-700); border-color: transparent; }
   .btn-soft:hover { background: oklch(0.92 0.06 115); }
-  .btn-sm  { height: 32px; padding: 0 12px; font-size: 13px; }
-  .btn-lg  { height: 48px; padding: 0 22px; font-size: 15px; }
-  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  /* btn-sm: 36px height — 44px achieved via min-height on parent or padding */
+  .btn-sm  { height: 36px; min-height: 36px; padding: 0 13px; font-size: var(--text-sm); }
+  .btn-lg  { height: 48px; min-height: 48px; padding: 0 22px; font-size: var(--text-md); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
 
-  /* Form inputs */
+  /* ── Form inputs ────────────────────────────────────────────── */
   .tw-input {
-    width: 100%; height: 42px; padding: 0 12px;
-    border: 1px solid var(--hairline-2); background: var(--paper);
-    border-radius: var(--r-sm); color: var(--ink); font-size: 14px;
-    outline: none; transition: border-color .15s; font-family: var(--sans);
+    width: 100%;
+    height: 44px;              /* matches touch-min for mobile */
+    padding: 0 var(--sp-3);
+    border: 1px solid var(--hairline-2);
+    background: var(--paper);
+    border-radius: var(--r-sm);
+    color: var(--ink);
+    font-size: var(--text-base);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    font-family: var(--sans);
   }
-  .tw-input:focus { border-color: var(--sage-600); box-shadow: 0 0 0 3px oklch(0.92 0.07 115); }
-  .tw-label { font-size: 12px; font-weight: 500; color: var(--ink-2); letter-spacing: 0.01em; }
+  .tw-input:focus {
+    border-color: var(--sage-600);
+    box-shadow: 0 0 0 3px oklch(0.92 0.07 115);
+  }
+  .tw-input::placeholder { color: var(--ink-4); }
+  .tw-label {
+    display: block;
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--ink-2);
+    letter-spacing: 0.01em;
+    margin-bottom: var(--sp-2);
+  }
 
-  /* Card */
+  /* ── Card ────────────────────────────────────────────────────── */
   .card {
     background: var(--paper-2);
     border: 1px solid var(--hairline);
     border-radius: var(--r-lg);
   }
+  .card-ink {
+    background: var(--ink);
+    border: none;
+    border-radius: var(--r-lg);
+    color: var(--paper);
+  }
 
-  /* Hero grain background */
+  /* ── Hero grain background ───────────────────────────────────── */
   .grain {
     background:
       radial-gradient(80% 60% at 80% 0%, oklch(0.95 0.04 115 / 0.55), transparent 60%),
@@ -178,12 +295,15 @@ input, textarea, select { font-family: inherit; }
       var(--paper);
   }
 
-  /* Admin isolation */
+  /* ── Admin isolation ─────────────────────────────────────────── */
   .admin-root { all: initial; }
   .rtl-field  { direction: rtl; }
   .admin-scrollbar::-webkit-scrollbar { width: 8px; }
   .admin-scrollbar::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
   .admin-scrollbar::-webkit-scrollbar-track { background: transparent; }
+
+  /* ── RTL helpers ─────────────────────────────────────────────── */
+  [dir="rtl"] .flip-rtl { transform: scaleX(-1); }
 }
 
 /* ─── Animations ────────────────────────────────────────────── */
@@ -209,3 +329,14 @@ input, textarea, select { font-family: inherit; }
 
 .animate-card-in { animation: cardIn .35s ease-out both; }
 .animate-fade-in { animation: fadeIn .2s ease-out both; }
+
+/* ─── Responsive container ───────────────────────────────────── */
+.page-container {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 var(--sp-4);
+}
+@media (min-width: 768px) {
+  .page-container { padding: 0 var(--sp-8); }
+}

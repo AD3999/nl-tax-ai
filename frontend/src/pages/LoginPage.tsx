@@ -230,19 +230,44 @@ export default function LoginPage() {
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
-                <div className="tw-label" style={{ marginBottom: 6 }}>{t("auth.email")}</div>
-                <input className="tw-input" type="email" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" required />
+                <label htmlFor="login-email" className="tw-label">{t("auth.email")}</label>
+                <input
+                  id="login-email"
+                  className="tw-input"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  autoComplete="email"
+                  required
+                  aria-required="true"
+                  style={{ fontSize: 16 }}
+                />
               </div>
               <div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span className="tw-label">{t("auth.password")}</span>
-                  <span style={{ fontSize: 11.5, color: "var(--sage-700)", cursor: "pointer" }}>Forgot?</span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--sp-2)" }}>
+                  <label htmlFor="login-password" className="tw-label" style={{ marginBottom: 0 }}>{t("auth.password")}</label>
+                  <span role="button" tabIndex={0} style={{ fontSize: "var(--text-xs)", color: "var(--sage-700)", cursor: "pointer" }}>
+                    {lang === "nl" ? "Wachtwoord vergeten?" : lang === "fa" ? "رمز فراموش کردید؟" : "Forgot password?"}
+                  </span>
                 </div>
-                <input className="tw-input" type="password" value={password} onChange={e => setPassword(e.target.value)} autoComplete="current-password" required />
+                <input
+                  id="login-password"
+                  className="tw-input"
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                  aria-required="true"
+                  style={{ fontSize: 16 }}
+                />
               </div>
 
               <button className="btn btn-accent btn-lg" type="submit" disabled={loading} style={{ marginTop: 6 }}>
-                {t("nav.login")} <Icon.arrow />
+                {loading
+                  ? (lang === "nl" ? "Bezig…" : lang === "fa" ? "در حال ورود…" : "Signing in…")
+                  : <>{t("nav.login")} <Icon.arrow /></>
+                }
               </button>
             </form>
 
@@ -255,9 +280,9 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div style={{ fontSize: 11, color: "var(--ink-4)", display: "flex", justifyContent: "space-between" }}>
-          <span>© 2026 TaxWijs</span>
-          <span>Privacy · Terms</span>
+        <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", display: "flex", justifyContent: "space-between", paddingTop: "var(--sp-4)" }}>
+          <span>© {new Date().getFullYear()} TaxWijs</span>
+          <span><a href="/privacy" style={{ color: "inherit" }}>Privacy</a> · <a href="/terms" style={{ color: "inherit" }}>Terms</a></span>
         </div>
       </div>
 

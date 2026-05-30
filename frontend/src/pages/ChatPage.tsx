@@ -405,8 +405,18 @@ export default function ChatPage() {
   const hasRealMessages = messages.some(m => m.id !== "intake-greeting");
   const showResultCards = !!profile && showCards && !sessionLimitReached && cardsToShow.length > 0 && !loading;
 
+  // Single counter value — show what's left, not two different numbers
+  const counterLabel = user?.plan === "premium"
+    ? null
+    : user
+      ? `${user.daily_message_count ?? 0} / 10`
+      : `${sessionCount} / ${ANON_SESSION_LIMIT}`;
+
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "calc(100vh - 64px)" }} dir={isRtl ? "rtl" : "ltr"}>
+    <div
+      style={{ flex: 1, display: "flex", flexDirection: "column", height: "calc(100vh - 64px)", overflow: "hidden" }}
+      dir={isRtl ? "rtl" : "ltr"}
+    >
       {upgradeModal && <UpgradeModal reason={upgradeModal.reason} onClose={() => setUpgradeModal(null)} />}
 
       {/* Profile bar — only when profile exists */}
@@ -422,26 +432,21 @@ export default function ChatPage() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {user?.plan === "premium" ? (
-              <span className="pill pill-accent">⚡ Premium · unlimited</span>
-            ) : user ? (
+              <span className="pill pill-accent">⚡ Premium</span>
+            ) : counterLabel ? (
               <>
-                <span style={{ fontSize: 12, color: "var(--ink-3)" }}>
-                  <span className="font-mono" style={{ color: "var(--ink)" }}>{user.daily_message_count}</span> / 10 {t("chat.today", { defaultValue: "today" })}
+                <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>
+                  <span className="font-mono" style={{ color: "var(--ink)" }}>{counterLabel}</span>
+                  {" "}{lang === "nl" ? "vragen" : lang === "fa" ? "سؤال" : "questions"}
                 </span>
-                <button onClick={() => navigate("/pricing")} style={{ background: "none", border: "none", fontSize: 12, color: "var(--sage-700)", fontWeight: 500, cursor: "pointer" }}>
-                  Upgrade →
-                </button>
-              </>
-            ) : (
-              <>
-                <span style={{ fontSize: 12, color: "var(--ink-3)" }}>
-                  <span className="font-mono" style={{ color: "var(--ink)" }}>{sessionCount}</span> / {ANON_SESSION_LIMIT}
-                </span>
-                <button onClick={() => setUpgradeModal({ reason: "register" })} style={{ background: "none", border: "none", fontSize: 12, color: "var(--sage-700)", fontWeight: 500, cursor: "pointer" }}>
+                <button
+                  onClick={() => user ? navigate("/pricing") : setUpgradeModal({ reason: "register" })}
+                  style={{ background: "none", border: "none", fontSize: "var(--text-xs)", color: "var(--sage-700)", fontWeight: 500, cursor: "pointer", padding: 0 }}
+                >
                   {t("chat.upgrade_cta")} →
                 </button>
               </>
-            )}
+            ) : null}
             <button
               onClick={() => navigate("/intake")}
               title="Update profile"
@@ -453,8 +458,13 @@ export default function ChatPage() {
         </div>
       )}
 
-      {/* Messages area */}
-      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "20px 14px 16px" : "32px 28px 24px" }}>
+      {/* Messages area — aria-live so screen readers announce new messages */}
+      <div
+        role="log"
+        aria-live="polite"
+        aria-label={lang === "nl" ? "Chatberichten" : lang === "fa" ? "پیام‌های چت" : "Chat messages"}
+        style={{ flex: 1, overflowY: "auto", padding: isMobile ? "var(--sp-5) var(--sp-3) var(--sp-4)" : "var(--sp-8) var(--sp-7) var(--sp-6)" }}
+      >
         <div style={{ maxWidth: 880, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
 
           {/* Loading profile from server */}
@@ -529,7 +539,6 @@ export default function ChatPage() {
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
                   <span className="eyebrow eyebrow-accent">{t("chat.result_questions", { defaultValue: "Ask a follow-up" })}</span>
                   <span className="hair" style={{ flex: 1 }} />
-                  <span style={{ fontSize: 11, color: "var(--ink-4)" }}>{remainingCards.length} remaining</span>
                 </div>
               )}
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
@@ -564,8 +573,19 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* Input area — always visible */}
-      <div style={{ borderTop: "1px solid var(--hairline)", padding: isMobile ? "10px 14px" : "12px 28px", flexShrink: 0, background: "var(--paper)" }}>
+      {/* Input area — position sticky so it never scrolls away on any browser */}
+      <div
+        role="form"
+        aria-label={lang === "nl" ? "Stuur een bericht" : lang === "fa" ? "ارسال پیام" : "Send a message"}
+        style={{
+          borderTop: "1px solid var(--hairline)",
+          padding: isMobile ? "var(--sp-3) var(--sp-3)" : "var(--sp-3) var(--sp-7)",
+          flexShrink: 0,
+          background: "var(--paper)",
+          position: "sticky",
+          bottom: 0,
+        }}
+      >
         <div style={{ maxWidth: 880, margin: "0 auto" }}>
           {sessionLimitReached ? (
             <div style={{ textAlign: "center", padding: "10px 0" }}>
@@ -581,6 +601,10 @@ export default function ChatPage() {
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 disabled={loading}
+                aria-label={profile
+                  ? (lang === "nl" ? "Stel een vraag over uw belasting" : lang === "fa" ? "سؤالی درباره مالیات بپرسید" : "Ask a tax question")
+                  : (lang === "nl" ? "Typ uw antwoord" : lang === "fa" ? "پاسخ خود را بنویسید" : "Type your answer")
+                }
                 placeholder={profile
                   ? (lang === "nl" ? "Stel een vraag over uw belasting…" : lang === "fa" ? "سؤالی درباره مالیات خود بپرسید…" : "Ask a question about your taxes…")
                   : (lang === "nl" ? "Typ uw antwoord…" : lang === "fa" ? "پاسخ خود را بنویسید…" : "Type your answer…")
@@ -593,7 +617,7 @@ export default function ChatPage() {
                   borderRadius: "var(--r)",
                   border: "1px solid var(--hairline-2)",
                   background: "var(--paper-2)",
-                  fontSize: 14,
+                  fontSize: 16,
                   color: "var(--ink)",
                   fontFamily: "var(--sans)",
                   outline: "none",
@@ -602,8 +626,8 @@ export default function ChatPage() {
                   maxHeight: 140,
                   overflowY: "auto",
                 }}
-                onFocus={e => { e.currentTarget.style.borderColor = "var(--sage-600)"; }}
-                onBlur={e => { e.currentTarget.style.borderColor = "var(--hairline-2)"; }}
+                onFocus={e => { e.currentTarget.style.borderColor = "var(--sage-600)"; e.currentTarget.style.boxShadow = "0 0 0 3px oklch(0.92 0.07 115)"; }}
+                onBlur={e => { e.currentTarget.style.borderColor = "var(--hairline-2)"; e.currentTarget.style.boxShadow = "none"; }}
               />
               <button
                 onClick={() => void handleTextSubmit()}
