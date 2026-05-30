@@ -46,15 +46,10 @@ export default function TopNav() {
   const isMobile = useMobile();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
   const navItems = user ? NAV_ITEMS_AUTH : NAV_ITEMS_GUEST;
 
   useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY;
-      setScrolled(y > 8);
-      setShowScrollTop(y > 320);
-    };
+    const onScroll = () => { setScrolled(window.scrollY > 8); };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -301,34 +296,6 @@ export default function TopNav() {
         </>
       )}
 
-      {/* Scroll-to-top button — fades in after scrolling 320px */}
-      <button
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        aria-label="Back to top"
-        style={{
-          position: "fixed",
-          bottom: 28,
-          right: 24,
-          zIndex: 40,
-          width: 44,
-          height: 44,
-          borderRadius: "50%",
-          background: "var(--ink)",
-          color: "var(--paper)",
-          border: "none",
-          cursor: "pointer",
-          display: "grid",
-          placeItems: "center",
-          fontSize: 18,
-          boxShadow: "0 4px 18px rgba(0,0,0,0.18)",
-          opacity: showScrollTop ? 1 : 0,
-          transform: showScrollTop ? "translateY(0)" : "translateY(10px)",
-          pointerEvents: showScrollTop ? "auto" : "none",
-          transition: "opacity .22s, transform .22s",
-        }}
-      >
-        ↑
-      </button>
     </>
   );
 }

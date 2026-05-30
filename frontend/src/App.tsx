@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import TopNav from "./components/TopNav";
+import Footer from "./components/Footer";
 import LoadingScreen from "./components/LoadingScreen";
 import { useAuth } from "./context/AuthContext";
 
@@ -35,7 +36,10 @@ const SPLASH_FADE     = 500;  // ms for the fade-out transition
 
 function App() {
   const { i18n } = useTranslation();
+  const location = useLocation();
   const isRtl = i18n.language === "fa";
+  // Footer hidden on chat (full viewport) and admin pages
+  const hideFooter = location.pathname === "/chat" || location.pathname.startsWith("/admin");
 
   const [splashFading, setSplashFading] = useState(false);
   const [splashDone,   setSplashDone]   = useState(false);
@@ -73,6 +77,7 @@ function App() {
           <Route path="*"            element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+      {!hideFooter && <Footer />}
 
       {/* Initial splash — rendered as overlay so the app hydrates behind it */}
       {!splashDone && (

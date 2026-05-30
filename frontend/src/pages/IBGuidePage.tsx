@@ -140,10 +140,16 @@ export default function IBGuidePage() {
   const lang = i18n.language as Lang;
   const isRtl = lang === "fa";
 
+  const IB_STORAGE_KEY = "taxwijs_ib_guide_progress";
+
   const [fields, setFields]             = useState<IBField[]>([]);
   const [loading, setLoading]           = useState(true);
-  const [values, setValues]             = useState<FieldValues>({});
+  const [values, setValues]             = useState<FieldValues>(() => {
+    try { const r = localStorage.getItem(IB_STORAGE_KEY); return r ? (JSON.parse(r) as FieldValues) : {}; }
+    catch { return {}; }
+  });
   const [openMistakes, setOpenMistakes] = useState<Record<string, boolean>>({});
+  const [savedAt, setSavedAt]           = useState<Date | null>(null);
 
   const userType = (() => {
     try {
@@ -156,6 +162,13 @@ export default function IBGuidePage() {
     fetchIBFields(userType)
       .then(setFields).catch(() => setFields([])).finally(() => setLoading(false));
   }, [userType]);
+
+  // Autosave values to localStorage whenever they change
+  useEffect(() => {
+    if (Object.keys(values).length === 0) return;
+    localStorage.setItem(IB_STORAGE_KEY, JSON.stringify(values));
+    setSavedAt(new Date());
+  }, [values]);
 
   const setValue = (code: string, val: string | boolean) =>
     setValues(v => ({ ...v, [code]: val }));
@@ -201,8 +214,15 @@ export default function IBGuidePage() {
         <div style={{ marginTop: 32, padding: "20px 24px", background: "var(--paper-2)", border: "1px solid var(--hairline)", borderRadius: "var(--r-lg)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <div className="eyebrow eyebrow-accent">Progress</div>
-            <div style={{ fontSize: 13, color: "var(--ink-3)" }}>
-              <span className="font-mono" style={{ color: "var(--ink)" }}>{answeredCount}</span> of {fields.length} fields answered
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {savedAt && (
+                <span style={{ fontSize: 11, color: "var(--ok)", display: "flex", alignItems: "center", gap: 4 }}>
+                  ✓ Autosaved {savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
+              <div style={{ fontSize: 13, color: "var(--ink-3)" }}>
+                <span className="font-mono" style={{ color: "var(--ink)" }}>{answeredCount}</span> of {fields.length} fields answered
+              </div>
             </div>
           </div>
           <div style={{ display: "flex", gap: 4 }}>

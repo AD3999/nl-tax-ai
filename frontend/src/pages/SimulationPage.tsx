@@ -298,8 +298,18 @@ export default function SimulationPage() {
   const isMobile = useMobile();
   const lang = (i18n.language.startsWith("fa") ? "fa" : i18n.language.startsWith("nl") ? "nl" : "en") as Lang;
 
-  const [answers, setAnswers] = useState<Answers>({});
-  const [stepIdx, setStepIdx] = useState(0);
+  const SIM_KEY   = "taxwijs_simulation_answers";
+  const STEP_KEY  = "taxwijs_simulation_step";
+
+  const [answers, setAnswers] = useState<Answers>(() => {
+    try { const r = localStorage.getItem(SIM_KEY); return r ? (JSON.parse(r) as Answers) : {}; }
+    catch { return {}; }
+  });
+  const [stepIdx, setStepIdx] = useState(() => {
+    try { return parseInt(localStorage.getItem(STEP_KEY) ?? "0", 10) || 0; }
+    catch { return 0; }
+  });
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
 
   const steps = visibleSteps(answers);
   const currentStep = steps[stepIdx];
@@ -318,6 +328,17 @@ export default function SimulationPage() {
     const newSteps = visibleSteps(answers);
     if (stepIdx >= newSteps.length) setStepIdx(newSteps.length - 1);
   }, [answers, stepIdx]);
+
+  // Autosave answers and step to localStorage
+  useEffect(() => {
+    if (Object.keys(answers).length === 0) return;
+    localStorage.setItem(SIM_KEY, JSON.stringify(answers));
+    setSavedAt(new Date());
+  }, [answers]);
+
+  useEffect(() => {
+    localStorage.setItem(STEP_KEY, String(stepIdx));
+  }, [stepIdx]);
 
   const goNext = () => setStepIdx(i => Math.min(i + 1, steps.length - 1));
   const goPrev = () => setStepIdx(i => Math.max(i - 1, 0));
@@ -374,12 +395,17 @@ export default function SimulationPage() {
             })}
           </nav>
 
-          {/* Running estimate */}
+          {/* Running estimate + autosave indicator */}
           <div style={{ marginTop: 18, padding: 14, border: "1px dashed var(--hairline-2)", borderRadius: "var(--r)" }}>
             <div className="eyebrow">Running estimate</div>
             <div className="font-mono" style={{ marginTop: 4, fontSize: 20, color: "var(--ink)" }}>—</div>
             <div style={{ fontSize: 11, color: "var(--ink-3)" }}>complete step 11 to see</div>
           </div>
+          {savedAt && (
+            <div style={{ marginTop: 10, fontSize: 11, color: "var(--ok)", textAlign: "center" }}>
+              ✓ Progress saved {savedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </div>
+          )}
         </aside>}
 
         {/* Main content */}

@@ -156,9 +156,10 @@ STRIPE_PRICE_ID = env("STRIPE_PRICE_ID", default="")   # monthly premium price I
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
 
 # ── Premium limits ────────────────────────────────────────────────────────────
-
-FREE_DAILY_LIMIT = 10       # questions/day for free authenticated users
-ANON_SESSION_LIMIT = 5      # questions/session for anonymous users
+# Set DISABLE_CHAT_LIMITS=true in .env to remove all limits (e.g., during dev/testing)
+DISABLE_CHAT_LIMITS = env.bool("DISABLE_CHAT_LIMITS", default=True)
+FREE_DAILY_LIMIT = 9999 if DISABLE_CHAT_LIMITS else 10
+ANON_SESSION_LIMIT = 9999 if DISABLE_CHAT_LIMITS else 5
 
 # ── Internationalisation ──────────────────────────────────────────────────────
 

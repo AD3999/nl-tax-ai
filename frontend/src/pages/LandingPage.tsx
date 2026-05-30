@@ -11,10 +11,10 @@ const USER_TYPE_DOTS = [
 ];
 
 const FEATURES = [
-  { kbd: "01", title: "Chat",           body: "Plain-language tax answers in NL, EN, or FA — grounded in 2026 rules and your own numbers." },
-  { kbd: "02", title: "Calculator",     body: "Box 1 · 2 · 3, ZZP deductions, credits and Wet DBA — calculated, not estimated." },
-  { kbd: "03", title: "IB Return",      body: "Field-by-field walkthrough of the official aangifte with explanations and traps." },
-  { kbd: "04", title: "Three languages",body: "Dutch, English and Persian — first class, with full RTL layout." },
+  { kbd: "01", title: "Chat",           body: "Plain-language tax answers in NL, EN, or FA — grounded in 2026 rules and your own numbers" },
+  { kbd: "02", title: "Calculator",     body: "Box 1, 2 & 3, ZZP deductions, credits and Wet DBA — calculated, not estimated" },
+  { kbd: "03", title: "IB Return",      body: "Field-by-field walkthrough of the official aangifte with explanations and traps" },
+  { kbd: "04", title: "Three languages",body: "Dutch, English and Persian — first class, with full RTL layout" },
 ];
 
 const PROOF_ROWS = [
@@ -59,9 +59,11 @@ export default function LandingPage() {
             </div>
 
             <div style={{ marginTop: 18, display: "flex", alignItems: "center", gap: 14, color: "var(--ink-3)", fontSize: 12.5 }}>
-              <span>· {t("landing.no_account_needed")}</span>
-              <span>· 2026 rules verified</span>
-              <span>· Sources on every answer</span>
+              <span>{t("landing.no_account_needed")}</span>
+              <span style={{ color: "var(--hairline-2)" }}>|</span>
+              <span>2026 rules verified</span>
+              <span style={{ color: "var(--hairline-2)" }}>|</span>
+              <span>Sources on every answer</span>
             </div>
           </div>
 

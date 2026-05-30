@@ -3,8 +3,61 @@ from rest_framework import generics, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from config.authentication import SoftJWTAuthentication
 from .models import User
 from .serializers import UserSerializer, RegisterSerializer
+from .alerts import generate_alerts
+
+
+class HealthView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        return Response({"status": "ok"})
+
+
+class AlertsView(APIView):
+    """
+    GET /api/users/alerts/?lang=en
+    Returns proactive tax alerts derived from the user's intake profile.
+    Works for authenticated users (reads from DB profile) and anonymous
+    users if they POST a profile in the request body.
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        lang = request.query_params.get("lang", "en")
+        profile = None
+        calc_result = {}
+
+        if request.user.is_authenticated and request.user.intake_profile:
+            profile = request.user.intake_profile
+            # Run calculator silently
+            try:
+                from apps.calculator.engine import calculate
+                calc_result = calculate(profile)
+            except Exception:
+                pass
+
+        if not profile:
+            return Response([])
+
+        alerts = generate_alerts(profile, calc_result, lang)
+        return Response(alerts)
+
+    def post(self, request):
+        """Accept profile in body for anonymous preview."""
+        lang = request.data.get("lang", "en")
+        profile = request.data.get("profile") or {}
+        calc_result = {}
+        if profile:
+            try:
+                from apps.calculator.engine import calculate
+                calc_result = calculate(profile)
+            except Exception:
+                pass
+        return Response(generate_alerts(profile, calc_result, lang))
 
 
 class RegisterView(generics.CreateAPIView):
