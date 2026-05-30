@@ -24,9 +24,10 @@ const PROOF_ROWS = [
 ];
 
 export default function LandingPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const isMobile = useMobile();
+  const lang = i18n.language as "nl" | "en" | "fa";
 
   return (
     <main style={{ background: "var(--paper)", flex: 1 }}>
