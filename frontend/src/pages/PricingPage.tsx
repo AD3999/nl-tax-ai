@@ -47,10 +47,10 @@ function PricingList({ rows, accent = false }: { rows: [string, string][]; accen
 }
 
 const FAQ_ITEMS = [
-  ["Can I cancel anytime?",       "Yes — managed by Stripe. Cancel from your billing portal, no email required. Active until the end of the billing period."],
-  ["Is my tax data stored?",      "Anonymous use stays in your browser. Logged-in profiles are encrypted at rest in EU-region Postgres. We never sell or share."],
-  ["What payment methods?",       "Credit card, iDEAL, SEPA direct debit, Apple Pay and Google Pay — all via Stripe Checkout."],
-  ["Do you do my actual return?", "No. TaxWijs is decision support. You file via Mijn Belastingdienst — we generate the numbers and walk you through every field."],
+  ["Can I cancel anytime?",       "Yes — managed by Stripe. Cancel from your billing portal, no email required. Active until the end of the billing period"],
+  ["Is my tax data stored?",      "Anonymous use stays in your browser. Logged-in profiles are encrypted at rest in EU-region Postgres — we never sell or share"],
+  ["What payment methods?",       "Credit card, iDEAL, SEPA direct debit, Apple Pay and Google Pay — all via Stripe Checkout"],
+  ["Do you do my actual return?", "No — TaxWijs is decision support. You file via Mijn Belastingdienst. We generate the numbers and walk you through every field"],
 ] as const;
 
 export default function PricingPage() {

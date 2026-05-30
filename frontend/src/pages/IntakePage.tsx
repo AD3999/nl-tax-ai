@@ -156,7 +156,7 @@ export default function IntakePage() {
         {!isMobile && <aside style={{ position: "sticky", top: 92 }}>
           <div className="eyebrow eyebrow-accent">Profile intake</div>
           <h2 style={{ marginTop: 6, fontFamily: "var(--serif)", fontSize: 30, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
-            Two minutes.<br />One tax brain.
+            Two minutes —<br />one tax brain
           </h2>
           <p style={{ marginTop: 12, fontSize: 13.5, color: "var(--ink-3)", lineHeight: 1.55 }}>
             Your answers personalise the assistant. They never leave your browser unless you create an account.

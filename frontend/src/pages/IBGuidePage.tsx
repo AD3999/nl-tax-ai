@@ -195,7 +195,7 @@ export default function IBGuidePage() {
         <div>
           <div className="eyebrow eyebrow-accent">IB Return · 2026</div>
           <h1 style={{ marginTop: 6, fontFamily: "var(--serif)", fontSize: 42, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-            The fields that matter,<br />in plain language.
+            The fields that matter,<br />in plain language
           </h1>
           <p style={{ marginTop: 8, color: "var(--ink-3)", fontSize: 14 }}>
             {t("ib.subtitle")}

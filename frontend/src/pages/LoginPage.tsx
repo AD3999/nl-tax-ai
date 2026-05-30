@@ -189,7 +189,7 @@ export default function LoginPage() {
           <div style={{ width: "100%", maxWidth: 380 }}>
             <div className="eyebrow eyebrow-accent">Welcome back</div>
             <h1 style={{ marginTop: 8, fontSize: 36, fontFamily: "var(--serif)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-              Log in to your<br />tax workspace.
+              Log in to your<br />tax workspace
             </h1>
 
             {/* Google sign-in — primary CTA */}
