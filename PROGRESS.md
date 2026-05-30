@@ -1,7 +1,34 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 30 May 2026 — Phase 27 complete. Trailing dot removal across all 3 languages + Railway build fix.
+> Last updated: 30 May 2026 — Phase 28 complete. Comprehensive dot removal across every user-visible string in the codebase.
+
+---
+
+## Phase 28 — Comprehensive Dot Removal (All User-Visible Strings) ✅ Complete
+
+### What was fixed
+
+A full second pass across every `.tsx`, `.ts`, and i18n file to remove trailing periods from all user-visible strings. Previous pass only covered i18n files and a few inline strings — this pass caught everything else.
+
+**Files changed:**
+
+| File | What was cleaned |
+|------|-----------------|
+| `Footer.tsx` | Disclaimer (2 sentences → em-dash joined), GDPR line |
+| `DashboardPage.tsx` | `noProfileBody` text, `noAlertsBody` text |
+| `ChatPage.tsx` | Intake success toast (NL/EN/FA), error toast (NL/EN/FA) |
+| `IntakePage.tsx` | All 3 `WHY_TEXT` sidebar strings, success toast, "Numbers stay on your device" line, "Did you know" tip (NL/EN/FA) |
+| `LandingPage.tsx` | Footer CTA subline (NL/EN/FA) |
+| `LoginPage.tsx` | Google error/success messages, `LOGIN_ERR` map, right-panel tip quote and sub-text |
+| `RegisterPage.tsx` | Google error/success messages, account created toast |
+| `simulationSteps.ts` | All 50+ field `help_text`, `subtitle`, and description strings — automated regex pass |
+
+**Rule applied:** Trailing `.` removed from display strings. `...` loading indicators kept. Em-dash `—` used instead of `.` where two clauses were joined by a period.
+
+| Commit | Description |
+|--------|-------------|
+| `a044542` | fix(copy): comprehensive dot removal — all user-visible strings across every file |
 
 ---
 
