@@ -1,7 +1,30 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 31 May 2026 — Phase 30 complete. Full proactive spec audit, all remaining gaps closed, critical bug fixes applied.
+> Last updated: 31 May 2026 — Build fix: 4 TypeScript errors in DashboardPage resolved, Railway deploy unblocked.
+
+---
+
+## Build Fix — Railway Deploy (31 May 2026) ✅ Complete
+
+### Problem
+
+Railway deployment failed at the `npm run build` step with 4 TypeScript errors in `frontend/src/pages/DashboardPage.tsx`.
+
+### Errors fixed
+
+| Error | Location | Fix |
+|-------|----------|-----|
+| TS6133 — `alertIsSnoozed` declared but never read | Line 97 | Deleted dead function (replaced in Phase 29 by `isSnoozed` from `api/actions.ts`) |
+| TS2339 — `total_tax_due` not on `{}` | Line 401 | Cast `?? {}` fallback to `{} as CalcResult["result"]` |
+| TS2339 — `monthly_reserve_needed` not on `{}` | Line 402 | Same cast as above |
+| TS2741 — `lang` prop missing on `AlertCard` | Line 1075 | Added `lang={lang}` to the rule-changes section (only occurrence without it) |
+
+### File changed
+
+| File | Change |
+|------|--------|
+| `frontend/src/pages/DashboardPage.tsx` | Removed unused `alertIsSnoozed`, fixed type cast, added `lang` prop |
 
 ---
 
