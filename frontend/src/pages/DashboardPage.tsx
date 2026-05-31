@@ -91,16 +91,8 @@ const STATIC_DEADLINES = [
   { date: "31 Oct 2026", label: { nl: "BTW Q3 aangifte", en: "VAT Q3 return", fa: "اظهارنامه Q3" }, urgency: "ok" as const },
 ];
 
-// ── Helper: is snoozed (for alerts, stored separately) ───────────────────────
+// ── Helper: snooze alerts (stored separately) ────────────────────────────────
 const ALERT_SNOOZE_KEY = "taxwijs_alert_snoozed_until";
-
-function alertIsSnoozed(id: string): boolean {
-  try {
-    const map = JSON.parse(localStorage.getItem(ALERT_SNOOZE_KEY) ?? "{}") as Record<string, string>;
-    const until = map[id];
-    return !!until && new Date(until) > new Date();
-  } catch { return false; }
-}
 
 function snoozeAlert(id: string, days: number): void {
   try {
@@ -376,7 +368,7 @@ function FinancialOverviewCard({
 }: { calcResult: CalcResult | null; loading: boolean; userType: string; lang: string }) {
   if (!calcResult && !loading) return null;
   const c = calcResult?.calculation ?? {};
-  const r = calcResult?.result ?? {};
+  const r = calcResult?.result ?? ({} as CalcResult["result"]);
   const isZzp = userType === "zzp";
   const income = isZzp ? (c.gross_profit ?? 0) : (c.taxable_income ?? 0);
   const deductions = isZzp ? ((c.ondernemersaftrek ?? 0) + (c.mkb_winstvrijstelling ?? 0)) : 0;
@@ -1075,7 +1067,7 @@ export default function DashboardPage() {
                   <AlertCard key={a.id} alert={a}
                     onDismiss={dismissAlert} onExplain={explainAlert}
                     onSnooze={handleSnoozeAlert} onMarkDone={markAlertDone}
-                    isDone={doneAlerts.has(a.id)} />
+                    isDone={doneAlerts.has(a.id)} lang={lang} />
                 ))}
               </div>
             </div>
