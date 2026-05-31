@@ -81,7 +81,9 @@ function delay(ms = 80): Promise<void> {
 async function tryRealApi<T>(fn: () => Promise<T>, fallback: () => Promise<T>): Promise<T> {
   try {
     return await fn();
-  } catch {
+  } catch (err) {
+    // Log so developers can see the real error — never silently hide API failures
+    console.warn("[TaxRules] Backend unreachable, using mock data:", err);
     return fallback();
   }
 }

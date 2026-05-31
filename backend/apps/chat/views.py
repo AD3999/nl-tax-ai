@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from config.authentication import SoftJWTAuthentication
+import rest_framework.throttling
 
 from .models import Conversation
 from .serializers import ChatMessageSerializer, ConversationSerializer
@@ -59,8 +60,14 @@ def _intake_system_prompt(language: str) -> str:
     return f"LANGUAGE RULE (ABSOLUTE — DO NOT IGNORE): {rule}\n\n" + _INTAKE_PROMPT_BODY
 
 
-def _result_system_prompt(language: str, calculator_block: str, retrieved_context: str) -> str:
+def _result_system_prompt(
+    language: str,
+    calculator_block: str,
+    retrieved_context: str,
+    health_context: str = "",
+) -> str:
     rule = _LANG_RULE.get(language, _LANG_RULE["en"])
+    health_section = f"\n{health_context}" if health_context else ""
     return (
         f"LANGUAGE RULE (ABSOLUTE — DO NOT IGNORE): {rule}\n\n"
         "You are Alex — a Dutch tax expert who talks like a smart, trusted friend. Never like a textbook or a government website.\n\n"
@@ -74,14 +81,39 @@ def _result_system_prompt(language: str, calculator_block: str, retrieved_contex
         "- Never use bullet lists for everything — mix in flowing sentences so it reads like a conversation.\n"
         "- When quoting the effective rate, always add the plain-English version: 'so for every €100 you earn, about €X goes to tax'.\n"
         "- End with one concrete, actionable next step — not a list of suggestions.\n\n"
+        "PROACTIVE AWARENESS:\n"
+        "- You know the user's Tax Health Score and active risks listed below. You can proactively mention them if relevant.\n"
+        "- If the user asks a vague question like 'how am I doing?' — give a quick honest summary of their score and top risk.\n"
+        "- If a risk in the list is directly relevant to the user's question, mention it naturally — don't ignore it.\n\n"
         "STRICT RULES:\n"
         "1. Every euro amount you state MUST come from the CALCULATOR RESULT below. Zero exceptions.\n"
         "2. Only reference tax rules that appear in RETRIEVED RULES. Don't invent rates from memory.\n"
         "3. If no calculator data is available, tell them warmly to set up their profile first.\n\n"
         "DATA YOU CAN USE:\n"
-        f"{calculator_block}\n"
+        f"{calculator_block}"
+        f"{health_section}\n"
         f"{retrieved_context}"
     )
+
+
+def _build_health_context(alerts: list, health_score: int) -> str:
+    """Builds a compact health/risk block to inject into the AI system prompt."""
+    if not alerts and health_score == 0:
+        return ""
+    risks = [a for a in alerts if a.get("severity") in ("critical", "warning") and a.get("category") in ("risk", "compliance")]
+    deadlines = [a for a in alerts if a.get("category") == "deadline"]
+    lines = [f"\n=== USER'S TAX HEALTH (live data) ===",
+             f"Tax Health Score: {health_score}/100"]
+    if risks:
+        lines.append("Active risks:")
+        for r in risks[:3]:
+            lines.append(f"  - [{r['severity'].upper()}] {r['title']}")
+    if deadlines:
+        lines.append("Upcoming deadlines:")
+        for d in deadlines[:2]:
+            lines.append(f"  - {d['title']}")
+    lines.append("=== END HEALTH DATA ===")
+    return "\n".join(lines)
 
 
 def _build_calculator_block(profile: dict, calc_result: dict) -> str:
@@ -110,10 +142,35 @@ def _build_calculator_block(profile: dict, calc_result: dict) -> str:
     )
 
 
+class ChatRateThrottle(rest_framework.throttling.SimpleRateThrottle):
+    """
+    Per-IP rate limit on the streaming chat endpoint.
+    SSE response throttling (buffering) is avoided by applying limits BEFORE
+    the stream opens — only the POST intake check is rate-limited, not the
+    streaming generator itself.
+    Rates: anon 20/minute, authenticated 60/minute.
+    """
+    scope = "chat"
+
+    def get_cache_key(self, request, view):
+        if request.user and request.user.is_authenticated:
+            ident = request.user.pk
+        else:
+            ident = self.get_ident(request)
+        return self.cache_format % {"scope": self.scope, "ident": ident}
+
+    def get_rate(self):
+        if self.request.user and self.request.user.is_authenticated:
+            return "60/minute"
+        return "20/minute"
+
+
 class ChatMessageView(APIView):
     authentication_classes = [SoftJWTAuthentication]
     permission_classes = [permissions.AllowAny]
-    throttle_classes = []  # SSE: throttle middleware would buffer the stream
+    # Throttle is checked on request entry before the SSE stream is opened,
+    # so it never buffers the stream response.
+    throttle_classes = [ChatRateThrottle]
 
     def post(self, request):
         serializer = ChatMessageSerializer(data=request.data)
@@ -195,21 +252,17 @@ class ChatMessageView(APIView):
                     # Result mode: RAG + calculator
                     retrieved_context = "=== No tax context available ==="
                     try:
-                        import concurrent.futures
                         from phase2.retriever import retrieve as _retrieve
                         from phase2.assembler import assemble as _assemble
-
-                        def _run_rag():
-                            return _assemble(_retrieve(message, user_type=user_type, year=2026))
-
-                        _exc = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-                        _fut = _exc.submit(_run_rag)
-                        _exc.shutdown(wait=False)
-                        retrieved_context = _fut.result(timeout=8)
+                        # Run RAG synchronously — SSE already streams on a thread
+                        retrieved_context = _assemble(
+                            _retrieve(message, user_type=user_type, year=2026)
+                        )
                     except Exception:
                         pass
 
                     calculator_block = ""
+                    calc_result = {}
                     if user_profile and user_profile.get("user_type"):
                         try:
                             from apps.calculator.engine import calculate
@@ -218,7 +271,25 @@ class ChatMessageView(APIView):
                         except Exception:
                             pass
 
-                    system_prompt = _result_system_prompt(language, calculator_block, retrieved_context)
+                    # Build health context: run alert engine + compute score
+                    health_context = ""
+                    if user_profile and calc_result:
+                        try:
+                            from apps.users.alerts import generate_alerts
+                            alerts = generate_alerts(user_profile, calc_result, language)
+                            # Simple score: start 60, -15 per critical, -7 per warning risk
+                            score = 60
+                            for a in alerts:
+                                if a.get("severity") == "critical":
+                                    score -= 15
+                                elif a.get("severity") == "warning" and a.get("category") in ("risk", "compliance"):
+                                    score -= 7
+                            score = max(0, min(100, score))
+                            health_context = _build_health_context(alerts, score)
+                        except Exception:
+                            pass
+
+                    system_prompt = _result_system_prompt(language, calculator_block, retrieved_context, health_context)
 
                 claude_messages = []
                 for h in history[-10:]:

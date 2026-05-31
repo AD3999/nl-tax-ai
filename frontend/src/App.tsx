@@ -1,10 +1,54 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState, Component, type ReactNode } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import TopNav from "./components/TopNav";
 import Footer from "./components/Footer";
 import LoadingScreen from "./components/LoadingScreen";
 import { useAuth } from "./context/AuthContext";
+
+// ── Error Boundary — prevents a rendering crash from blank-screening the app ──
+class ErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean; message: string }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, message: "" };
+  }
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, message: error.message };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          minHeight: "60vh", gap: 16, padding: 32, textAlign: "center",
+        }}>
+          <div style={{ fontSize: 32 }}>⚠️</div>
+          <h2 style={{ fontFamily: "var(--serif)", fontSize: 22, color: "var(--ink)", margin: 0 }}>
+            Something went wrong
+          </h2>
+          <p style={{ fontSize: 14, color: "var(--ink-3)", maxWidth: 400, margin: 0 }}>
+            An unexpected error occurred. Please refresh the page to continue.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="btn btn-accent btn-sm"
+          >
+            Refresh page
+          </button>
+          {import.meta.env.DEV && (
+            <pre style={{ fontSize: 11, color: "var(--danger)", textAlign: "left", maxWidth: 600, overflow: "auto" }}>
+              {this.state.message}
+            </pre>
+          )}
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const CalculatorPage  = lazy(() => import("./pages/CalculatorPage"));
 const ChatPage        = lazy(() => import("./pages/ChatPage"));
@@ -53,6 +97,7 @@ function App() {
   return (
     <div dir={isRtl ? "rtl" : "ltr"} style={{ display: "flex", flexDirection: "column", minHeight: "100svh" }}>
       <TopNav />
+      <ErrorBoundary>
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/"            element={<LandingPage />} />
@@ -77,6 +122,7 @@ function App() {
           <Route path="*"            element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
+      </ErrorBoundary>
       {!hideFooter && <Footer />}
 
       {/* Initial splash — rendered as overlay so the app hydrates behind it */}

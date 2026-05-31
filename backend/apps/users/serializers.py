@@ -13,7 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             "id", "email", "username", "user_type", "preferred_language",
             "tax_year", "plan", "daily_message_count", "daily_message_date", "is_admin",
-            "intake_profile",
+            "intake_profile", "ib_guide_answers", "simulation_state",
         ]
         read_only_fields = ["id", "email", "plan", "daily_message_count", "daily_message_date", "is_admin"]
 

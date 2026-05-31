@@ -1,8 +1,10 @@
 import json
 import os
 import time
+from datetime import timedelta
 
 from django.conf import settings
+from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -181,6 +183,101 @@ class TaxRuleImportView(APIView):
             return Response({"created": created, "updated": updated, "total": TaxRule.objects.count()})
         except Exception as exc:
             return Response({"error": str(exc)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class RecentRuleChangesView(APIView):
+    """
+    GET /api/tax/rules/changes/?user_type=zzp&days=30
+    Returns verified tax rules that were updated in the last N days.
+    Used by the dashboard "Recent Rule Changes" section.
+    Public endpoint — anyone can see recently changed rules.
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        days = min(int(request.query_params.get("days", 30)), 90)
+        user_type = request.query_params.get("user_type", "")
+        since = timezone.now() - timedelta(days=days)
+
+        qs = TaxRule.objects.filter(
+            verification_status="verified",
+            updated_at__gte=since,
+            year=2026,
+        ).order_by("-updated_at")
+
+        if user_type:
+            # Filter rules that apply to this user type or to all users
+            matching_ids = [
+                r.pk for r in qs
+                if not r.user_types or user_type in r.user_types
+            ]
+            qs = qs.filter(pk__in=matching_ids)
+
+        results = [
+            {
+                "rule_id": r.rule_id,
+                "topic": r.topic,
+                "category": r.category,
+                "plain_en": r.plain_en[:200] + ("…" if len(r.plain_en) > 200 else ""),
+                "plain_nl": r.plain_nl[:200] + ("…" if len(r.plain_nl) > 200 else ""),
+                "plain_fa": r.plain_fa[:200] + ("…" if len(r.plain_fa) > 200 else ""),
+                "source_url": r.source_url,
+                "updated_at": r.updated_at.date().isoformat(),
+                "updated_by": r.updated_by or "admin",
+                "user_types": r.user_types,
+            }
+            for r in qs[:10]
+        ]
+        return Response(results)
+
+
+class AdminRuleImpactView(APIView):
+    """
+    GET /api/tax/rules/<rule_id>/impact/
+    Returns impact analysis for a specific rule: how many users are affected,
+    broken down by user type. Staff only.
+
+    This powers the Rule Change Alert System — when an admin updates a rule,
+    they can see immediately which users will be affected.
+    """
+    permission_classes = [IsStaffUser]
+
+    def get(self, request, rule_id: str):
+        try:
+            rule = TaxRule.objects.get(rule_id=rule_id)
+        except TaxRule.DoesNotExist:
+            return Response({"error": "Rule not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        from apps.users.models import User
+        affected_user_types = rule.user_types or []
+        total_users = User.objects.filter(intake_profile__isnull=False).count()
+
+        # Count users whose intake_profile user_type matches this rule
+        if affected_user_types:
+            affected_count = 0
+            for ut in affected_user_types:
+                affected_count += User.objects.filter(
+                    intake_profile__user_type=ut
+                ).count()
+        else:
+            affected_count = total_users  # rule affects all users
+
+        return Response({
+            "rule_id": rule.rule_id,
+            "topic": rule.topic,
+            "affected_user_types": affected_user_types or ["all"],
+            "affected_users_estimate": affected_count,
+            "total_users_with_profile": total_users,
+            "last_updated": rule.updated_at.date().isoformat(),
+            "updated_by": rule.updated_by or "unknown",
+            "verification_status": rule.verification_status,
+            "recommended_action": (
+                "Notify affected users via rule_change alert"
+                if rule.verification_status == "verified"
+                else "Rule must be verified before notifying users"
+            ),
+        })
 
 
 class AdminStatsView(APIView):

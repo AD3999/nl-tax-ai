@@ -11,6 +11,7 @@ import {
   type Lang,
 } from "../data/simulationSteps";
 import { calculateTax, type CalcResult } from "../api/calculator";
+import { authHeader } from "../api/client";
 import { Icon } from "../components/Icon";
 
 function t3(field: { nl: string; en: string; fa: string }, lang: Lang) {
@@ -311,6 +312,25 @@ export default function SimulationPage() {
   });
   const [savedAt, setSavedAt] = useState<Date | null>(null);
 
+  // authHeader imported from api/client.ts
+
+  // On mount: if authenticated, restore simulation state from server
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+    fetch("/api/users/profile/", { headers: authHeader() })
+      .then(r => r.ok ? r.json() as Promise<{ simulation_state?: { answers: Answers; stepIdx: number } | null }> : null)
+      .then(data => {
+        if (data?.simulation_state?.answers && Object.keys(data.simulation_state.answers).length > 0) {
+          setAnswers(data.simulation_state.answers);
+          setStepIdx(data.simulation_state.stepIdx ?? 0);
+          localStorage.setItem(SIM_KEY, JSON.stringify(data.simulation_state.answers));
+          localStorage.setItem(STEP_KEY, String(data.simulation_state.stepIdx ?? 0));
+        }
+      })
+      .catch(() => null);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const steps = visibleSteps(answers);
   const currentStep = steps[stepIdx];
   const isLast = stepIdx === steps.length - 1;
@@ -329,12 +349,19 @@ export default function SimulationPage() {
     if (stepIdx >= newSteps.length) setStepIdx(newSteps.length - 1);
   }, [answers, stepIdx]);
 
-  // Autosave answers and step to localStorage
+  // Autosave answers to localStorage + server (authenticated users)
   useEffect(() => {
     if (Object.keys(answers).length === 0) return;
     localStorage.setItem(SIM_KEY, JSON.stringify(answers));
     setSavedAt(new Date());
-  }, [answers]);
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+    fetch("/api/users/profile/", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeader() },
+      body: JSON.stringify({ simulation_state: { answers, stepIdx } }),
+    }).catch(() => null);
+  }, [answers]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     localStorage.setItem(STEP_KEY, String(stepIdx));

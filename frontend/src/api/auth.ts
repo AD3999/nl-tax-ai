@@ -49,14 +49,31 @@ export const googleAuth = async (accessToken: string, userType = "zzp"): Promise
   return data;
 };
 
+/** All localStorage keys that belong to the authenticated session.
+ *  Must be cleared on logout so user A's data never leaks to user B
+ *  on a shared device. Add new keys here whenever a new feature writes
+ *  user-specific data to localStorage. */
+const SESSION_KEYS = [
+  "access_token",
+  "refresh_token",
+  // Profile / calculator
+  "taxwijs_calc_input",
+  "taxwijs_user_id",
+  // Chat history
+  "taxwijs_chat_history",
+  // IB Guide + Simulation progress
+  "taxwijs_ib_guide_progress",
+  "taxwijs_simulation_answers",
+  "taxwijs_simulation_step",
+  // Alert states
+  "taxwijs_dismissed_alerts",
+  "taxwijs_done_alerts",
+  "taxwijs_alert_snoozed_until",
+  // Action states
+  "taxwijs_action_states",
+  "taxwijs_snoozed_until",
+] as const;
+
 export const logout = () => {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
-  // Clear profile and anon chat history so the next visitor (or anonymous user)
-  // never sees a previous user's data. The user-specific history key
-  // (taxwijs_chat_history_u{id}) is intentionally kept so it can be restored
-  // on the next login.
-  localStorage.removeItem("taxwijs_calc_input");
-  localStorage.removeItem("taxwijs_chat_history");
-  localStorage.removeItem("taxwijs_user_id");
+  SESSION_KEYS.forEach(key => localStorage.removeItem(key));
 };

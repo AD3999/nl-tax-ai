@@ -1,7 +1,158 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 30 May 2026 — Phase 28 complete. Comprehensive dot removal across every user-visible string in the codebase.
+> Last updated: 31 May 2026 — Phase 30 complete. Full proactive spec audit, all remaining gaps closed, critical bug fixes applied.
+
+---
+
+## Phase 30 — Full Spec Compliance + Expert Bug Review ✅ Complete
+
+### Proactive Spec — remaining gaps closed
+
+| Gap | Fix Applied |
+|-----|-------------|
+| `rule_change` alert category not rendered in feed | Added "Regelwijzigingen" section to main dashboard feed |
+| Health score missing reserve/hours/deduction factors | Rewritten: scores hours, buffer adequacy, deductions, KIA, pension |
+| Health score baseline broken for non-ZZP | ZZP baseline 55, all others 62 — avoids false "Needs attention" |
+| IB Guide: no backend persistence for auth users | PATCH `/api/users/profile/` on every answer change, restore on mount |
+| Simulation: no backend persistence for auth users | Same pattern — server state restored on mount |
+| Alert done/dismissed/snoozed — missing `done` | `markAlertDone` + `doneAlerts` set, `ALERT_DONE_KEY` in localStorage |
+| `rule_change` category missing from `generate_alerts` | DB-queried via `AlertsView._rule_change_alerts()` + merged into response |
+| DGA compliance risk not detected | `_check_dga_compliance()` — flags salary below €56k gebruikelijk loon |
+| MKB opportunity not detected | `_check_mkb_opportunity()` — shows ~€X saving when MKB not applied |
+| Partner optimization not detected | `_check_partner_optimization()` — missing income + income-gap scenarios |
+| Admin impact analysis — UI missing | Impact panel in AdminRuleEditorPage with affected-user count + verification workflow |
+| NotificationPreference — no API | `GET/PATCH /api/users/notifications/` — channel flags for future email/WhatsApp/SMS |
+| TaxYearSnapshot — no API | `GET/POST /api/users/snapshots/` �� auto-calcs on create, multi-year ready |
+
+### Critical bugs fixed
+
+| Bug | Severity | Fix |
+|-----|----------|-----|
+| **Logout data leak** — 8 localStorage keys not cleared on sign-out | 🔴 Privacy | `SESSION_KEYS` constant in `auth.ts`, all keys cleared on logout |
+| **Hardcoded `ANON_SESSION_LIMIT = 5`** in ChatPage — overrides backend flag | 🔴 Feature | Reads `VITE_ANON_SESSION_LIMIT` env var from `api/client.ts` |
+| **ThreadPoolExecutor leak** — new executor per SSE message | 🔴 Resource | Removed executor; RAG runs synchronously inside SSE thread |
+| **No React ErrorBoundary** — rendering crash = blank white screen | 🔴 UX | `ErrorBoundary` class component wraps all routes in `App.tsx` |
+| **`throttle_classes = []`** on Claude API endpoint — no rate limit | 🔴 Cost | `ChatRateThrottle`: anon 20/min, auth 60/min |
+| **`authHeader()` defined 4 times** across pages | 🟠 DRY | Moved to `api/client.ts`, all pages import it |
+| **Admin mock fallback silent** — errors swallowed, admin edits mock data | 🟠 Debug | `console.warn` logs backend error before falling back |
+| **20+ hardcoded English strings** in DashboardPage — Persian users see English | ��� i18n | All strings in `AlertCard` + `TaxHealthScoreCard` now trilingual via lookup tables |
+| **`computeHealthScore` not memoized** — recomputes on every state update | 🟡 Perf | Wrapped in `useMemo` |
+
+### New APIs registered
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `GET/PATCH /api/users/notifications/` | Auth | NotificationPreference — email/WhatsApp/SMS/calendar flags |
+| `GET/POST /api/users/snapshots/` | Auth | TaxYearSnapshot — Future Memory Foundation |
+| `GET /api/users/snapshots/<year>/` | Auth | Retrieve specific year snapshot |
+| `GET /api/tax/rules/<id>/impact/` | Staff | Admin rule impact analysis |
+| `GET /api/tax/rules/changes/` | Public | Recently updated verified rules |
+
+### New DB models migrated
+
+| Model | Migration | Purpose |
+|-------|-----------|---------|
+| `NotificationPreference` | `0005` | Reminder channel preferences per user |
+| `TaxYearSnapshot` | `0004` | Yearly profile + calc snapshots |
+| `User.ib_guide_answers` | `0005` | Backend persistence for IB Guide |
+| `User.simulation_state` | `0005` | Backend persistence for Simulation |
+
+---
+
+## Phase 29 — Proactive Tax Operating System ✅ Complete
+
+### Gap analysis performed against proactive.md spec
+
+| Spec Item | Was | Now |
+|-----------|-----|-----|
+| Personal Tax Action Feed | ❌ Missing | ✅ Built |
+| Dashboard: categorized sections | 🟡 Mixed feed | ✅ Risks / Deadlines / Opportunities split |
+| Dashboard: Financial Overview | ❌ Missing | ✅ Built (sidebar card) |
+| Health Score factor breakdown | 🟡 Score only | ✅ Expandable factors list |
+| Pension jaarruimte opportunity | ❌ Missing | ✅ In alerts + actions |
+| KIA investment opportunity | ❌ Missing | ✅ In alerts |
+| Voorlopige aanslag opportunity | ❌ Missing | ✅ In alerts + actions |
+| Alert → Chat "Explain this" | ❌ Missing | ✅ "Ask AI →" on every alert |
+| Action states (open/done/dismissed) | ❌ Missing | ✅ localStorage persistence |
+
+### Files created
+
+| File | Purpose |
+|------|---------|
+| `backend/apps/users/actions.py` | Tax Action Engine — 10 action types across 5 categories |
+| `frontend/src/api/actions.ts` | TypeScript client for `/api/users/actions/` + localStorage state |
+
+### Files modified
+
+| File | Change |
+|------|--------|
+| `backend/apps/users/alerts.py` | Added 3 opportunity checks: pension jaarruimte, KIA, voorlopige aanslag |
+| `backend/apps/users/views.py` | Added `ActionsView` (GET authenticated / POST anonymous) |
+| `backend/apps/users/urls.py` | Registered `actions/` endpoint |
+| `frontend/src/pages/DashboardPage.tsx` | Full Tax Command Center rewrite |
+
+### New Action Engine (`actions.py`)
+
+10 action types across 5 categories:
+
+| Category | Actions |
+|----------|---------|
+| Filing | BTW Q1/Q2/Q3/Q4 (date-aware, 45-day window), IB return (60-day window) |
+| Compliance | Start tracking hours, Add missing hours (shows exact shortfall) |
+| Optimization | Request voorlopige aanslag (>€1,500/mo reserve), Pension jaarruimte |
+| Review | Review toeslagen income cliff, Review Box 3 reference date |
+| Preparation | Set aside monthly reserve, Complete profile (lists missing fields), Collect quarterly receipts |
+
+### Extended Opportunities in `alerts.py`
+
+Three new opportunity checks added:
+- **`_check_pension_opportunity`** — triggers when ZZP/employee has pension=0 and income > €19,172. Shows exact jaarruimte (30% × income − €19,172).
+- **`_check_kia_opportunity`** — triggers when ZZP has no KIA investments declared. Explains 28% deduction on €2,901–€70,602.
+- **`_check_voorlopige_opportunity`** — triggers when total tax > €500 and monthly reserve > €800. Explains zero-cost provisional assessment option.
+
+### New Dashboard: Tax Command Center
+
+Layout: Summary grid (4 cards) → 2-column main layout
+
+**Left column sections (top to bottom):**
+1. **Your Actions** — ActionCard with check-toggle (open ↔ done), done actions collapsed in `<details>`. Priority badges (HIGH/MEDIUM/LOW) color-coded.
+2. **Risks** — risk + compliance alerts only. Section badge turns red on critical alerts.
+3. **Upcoming Deadlines** — deadline alerts from the live alert engine (only near-term).
+4. **Opportunities** — opportunity + cashflow + missing_data alerts.
+5. **Quick Actions** — 4 navigation shortcuts.
+6. **History** — last 5 calculations.
+
+**Right sidebar:**
+1. **Tax Health Score** — SVG gauge + "See factors ↓" expandable breakdown showing each contributing factor with +/− delta.
+2. **Financial Overview** — Tax waterfall card: income → deductions → box1 tax → credits → ZVW → total.
+3. **Profile card** — key profile values + edit button.
+4. **Static deadlines** — hardcoded calendar year deadlines.
+5. **Account card** — plan badge + upgrade link.
+
+**"Ask AI →" on every alert** — navigates to `/chat` with a pre-filled question in the user's current language. Uses `location.state.question` (same mechanism as IB guide).
+
+**Action states** persist in `localStorage["taxwijs_action_states"]` as `{ [id]: "open" | "done" | "dismissed" }`.
+
+### New API endpoint
+
+```
+POST /api/users/actions/
+Content-Type: application/json
+
+{ "profile": { ... }, "lang": "en" }
+
+→ [{ id, category, priority, title, body, action_label, action_url, due_date }, ...]
+```
+
+Also works authenticated via `GET /api/users/actions/?lang=en`.
+
+### Verification
+
+- `python -c "from apps.users.actions import generate_actions; ..."` — imports OK
+- `python manage.py check` — 0 issues
+- `npx tsc --noEmit` — 0 TypeScript errors
+- Smoke test: ZZP €72k profile → 3 actions + 8 alerts (4 opportunities) ✅
 
 ---
 

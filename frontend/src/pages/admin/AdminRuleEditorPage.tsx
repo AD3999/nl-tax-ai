@@ -69,6 +69,18 @@ export default function AdminRuleEditorPage() {
   const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
   const [tagsInput, setTagsInput] = useState("");
 
+  // Impact analysis — spec: "admin impact analysis and verification workflow support"
+  const [impact, setImpact] = useState<{
+    affected_users_estimate: number;
+    total_users_with_profile: number;
+    affected_user_types: string[];
+    last_updated: string;
+    updated_by: string;
+    verification_status: string;
+    recommended_action: string;
+  } | null>(null);
+  const [impactLoading, setImpactLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -113,6 +125,23 @@ export default function AdminRuleEditorPage() {
     setValue("tags", tags, { shouldDirty: true });
   }
 
+  function fetchImpact(ruleId: string) {
+    setImpactLoading(true);
+    const token = localStorage.getItem("access_token") ?? "";
+    fetch(`/api/tax/rules/${ruleId}/impact/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setImpact(data); })
+      .catch(() => null)
+      .finally(() => setImpactLoading(false));
+  }
+
+  // Load impact on mount for existing rules
+  useEffect(() => {
+    if (!isNew && id) fetchImpact(id);
+  }, [id, isNew]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const onSubmit = async (data: TaxRuleFormValues) => {
     setSaving(true);
     setServerError(null);
@@ -129,6 +158,8 @@ export default function AdminRuleEditorPage() {
         setTimeout(() => setSuccessMsg(null), 3000);
         const log = await getAuditLog(id!);
         setAuditLog(log);
+        // Refresh impact analysis after save
+        fetchImpact(id!);
       }
     } catch (e) {
       setServerError(e instanceof Error ? e.message : "Save failed");
@@ -591,6 +622,71 @@ export default function AdminRuleEditorPage() {
               </CardBody>
             </Card>
           </div>
+        )}
+
+        {/* ── Impact Analysis Panel — spec: "admin impact analysis and verification workflow" */}
+        {!isNew && (
+          <Card className="border-amber-200 bg-amber-50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                Impact Analysis
+                {impactLoading && <Spinner className="w-3 h-3 ml-1" />}
+              </CardTitle>
+            </CardHeader>
+            <CardBody className="pt-0 pb-4">
+              {!impact ? (
+                <p className="text-xs text-gray-500">Loading impact data…</p>
+              ) : (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-white rounded-lg p-3 border border-amber-100 text-center">
+                      <div className="text-2xl font-semibold text-amber-700">{impact.affected_users_estimate}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">Affected users</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-amber-100 text-center">
+                      <div className="text-2xl font-semibold text-gray-700">{impact.total_users_with_profile}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">Total with profile</div>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border border-amber-100 text-center">
+                      <div className="text-sm font-semibold text-gray-700 leading-tight mt-1">
+                        {impact.affected_user_types.join(", ")}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">User types</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2 p-3 bg-white rounded-lg border border-amber-100">
+                    <div className="flex-1 text-xs text-gray-600">{impact.recommended_action}</div>
+                    <Badge variant={impact.verification_status === "verified" ? "success" : "warning"} className="text-xs">
+                      {impact.verification_status}
+                    </Badge>
+                  </div>
+
+                  <div className="text-xs text-gray-400">
+                    Last updated: {impact.last_updated} by {impact.updated_by}
+                  </div>
+
+                  {/* Verification workflow — promote from draft → pending_review → verified */}
+                  {impact.verification_status !== "verified" && (
+                    <div className="p-3 bg-white rounded-lg border border-amber-100">
+                      <p className="text-xs font-medium text-gray-700 mb-2">Verification workflow</p>
+                      <div className="flex items-center gap-1 text-xs">
+                        <span className={`px-2 py-0.5 rounded-full ${impact.verification_status === "draft" ? "bg-gray-200 text-gray-700 font-semibold" : "bg-gray-100 text-gray-400"}`}>Draft</span>
+                        <span className="text-gray-300">→</span>
+                        <span className={`px-2 py-0.5 rounded-full ${impact.verification_status === "pending_review" ? "bg-amber-200 text-amber-800 font-semibold" : "bg-gray-100 text-gray-400"}`}>Pending review</span>
+                        <span className="text-gray-300">→</span>
+                        <span className={`px-2 py-0.5 rounded-full ${impact.verification_status === "verified" ? "bg-green-200 text-green-800 font-semibold" : "bg-gray-100 text-gray-400"}`}>Verified</span>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">
+                        Set status to <strong>verified</strong> to make this rule live and notify affected users via their next alert refresh.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardBody>
+          </Card>
         )}
 
         {/* ── Tab: Audit History ───────────────────────────────────────────── */}

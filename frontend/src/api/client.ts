@@ -4,6 +4,26 @@ import axios from "axios";
 // In production, set VITE_API_URL to the deployed API origin (e.g. https://api.taxwijs.nl).
 const API_BASE = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : "/api";
 
+/**
+ * Shared auth header for raw fetch() calls.
+ * All pages must import this instead of duplicating the pattern.
+ * The axios client handles this automatically via interceptor below.
+ */
+export function authHeader(): Record<string, string> {
+  const token = localStorage.getItem("access_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+/**
+ * Anonymous session message limit.
+ * Reads from VITE_ANON_SESSION_LIMIT env var so it stays in sync with
+ * the backend DISABLE_CHAT_LIMITS flag. Set to 9999 in .env to disable.
+ * Default: 5 for production builds.
+ */
+export const ANON_SESSION_LIMIT: number = Number(
+  import.meta.env.VITE_ANON_SESSION_LIMIT ?? 5
+);
+
 export const client = axios.create({
   baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },

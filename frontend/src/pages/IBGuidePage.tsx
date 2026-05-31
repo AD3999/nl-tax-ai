@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchIBFields } from "../api/ib";
+import { authHeader } from "../api/client";
 import type { IBField } from "../api/ib";
 import { Icon } from "../components/Icon";
 import { useMobile } from "../hooks/useMobile";
@@ -158,17 +159,41 @@ export default function IBGuidePage() {
     } catch { return undefined; }
   })();
 
+  // authHeader imported from api/client.ts
+
+  // On mount: if authenticated, restore from server (server wins over localStorage)
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+    fetch("/api/users/profile/", { headers: authHeader() })
+      .then(r => r.ok ? r.json() as Promise<{ ib_guide_answers?: FieldValues | null }> : null)
+      .then(data => {
+        if (data?.ib_guide_answers && Object.keys(data.ib_guide_answers).length > 0) {
+          setValues(data.ib_guide_answers);
+          localStorage.setItem(IB_STORAGE_KEY, JSON.stringify(data.ib_guide_answers));
+        }
+      })
+      .catch(() => null);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     fetchIBFields(userType)
       .then(setFields).catch(() => setFields([])).finally(() => setLoading(false));
   }, [userType]);
 
-  // Autosave values to localStorage whenever they change
+  // Autosave to localStorage + server (authenticated users) whenever values change
   useEffect(() => {
     if (Object.keys(values).length === 0) return;
     localStorage.setItem(IB_STORAGE_KEY, JSON.stringify(values));
     setSavedAt(new Date());
-  }, [values]);
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+    fetch("/api/users/profile/", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...authHeader() },
+      body: JSON.stringify({ ib_guide_answers: values }),
+    }).catch(() => null);
+  }, [values]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setValue = (code: string, val: string | boolean) =>
     setValues(v => ({ ...v, [code]: val }));

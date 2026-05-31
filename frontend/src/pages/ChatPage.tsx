@@ -3,14 +3,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { useTranslation } from "react-i18next";
 import { sendMessage } from "../api/chat";
+import { ANON_SESSION_LIMIT } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import UpgradeModal from "../components/UpgradeModal";
 import { Icon } from "../components/Icon";
 import { useMobile } from "../hooks/useMobile";
 import { useToast } from "../context/ToastContext";
 import { Skeleton } from "../components/Skeleton";
-
-const ANON_SESSION_LIMIT = 5;
 
 interface ChatMsg {
   id: string;
