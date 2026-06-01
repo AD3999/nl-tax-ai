@@ -1,7 +1,61 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 1 Jun 2026 — Phase 32 complete: all non-premium TASKS.md tasks done + session auto-logout.
+> Last updated: 2 Jun 2026 — Admin dashboard, Persian formalisation, auth fixes, Railway CLI.
+
+---
+
+## Session — 2 Jun 2026 ✅ Complete
+
+### Persian formalisation (fa.json + backend)
+
+Complete rewrite of all Persian UI strings to formal register. Informal imperatives replaced (`توضیح بده` → `توضیح دهید`), informal vocabulary replaced (`فریلنسر` → `آزادکار`, `اکسپت` → `مهاجر خارجی`, `کی هستید` → `وضعیت شغلی شما`), spelling corrected (`بروزرسانی` → `به‌روزرسانی`) in `alerts.py` and `actions.py`.
+
+**Files changed:** `frontend/src/i18n/locales/fa.json`, `backend/apps/users/alerts.py`, `backend/apps/users/actions.py`
+
+---
+
+### Auth fixes
+
+| Fix | Detail |
+|-----|--------|
+| Email login for superusers | Added `EmailOrUsernameTokenSerializer` — JWT endpoint now accepts email OR username. Superusers created via `createsuperuser` can log in with their email address. |
+| Django admin language | `LANGUAGE_CODE` changed from `nl-nl` to `en-us` — admin panel now defaults to English. |
+
+**Files changed:** `backend/config/serializers.py` (new), `backend/config/urls.py`, `backend/config/settings.py`
+
+---
+
+### Admin dashboard (merged from `feature/admin-dashboard`)
+
+Full React admin panel at `/admin`, protected by `is_admin`. Navbar shows **Admin** link for staff/superusers.
+
+#### New backend endpoints (all staff-only)
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/users/admin/list/` | GET | All users — search by email/username, filter by plan/user_type |
+| `/api/users/admin/<id>/` | GET | Full user detail including intake_profile + tax_memory |
+| `/api/users/admin/<id>/` | PATCH | Edit plan, user_type, is_active, is_staff |
+| `/api/chat/admin/logs/` | GET | All conversations across all users — search + language filter |
+| `/api/chat/admin/logs/<id>/` | GET | Full message thread for one conversation |
+
+**Files changed:** `backend/apps/users/admin_views.py` (new), `backend/apps/chat/admin_views.py` (new), `backend/apps/users/urls.py`, `backend/apps/chat/urls.py`
+
+#### New frontend pages
+
+| Page | Route | What it does |
+|------|-------|------|
+| AdminUsersPage | `/admin/users` | Searchable/sortable user table; slide-out drawer to view profile + edit plan/type/active/staff |
+| AdminChatLogsPage | `/admin/chat-logs` | All conversations list; click any row to expand full message thread inline |
+
+**Files changed:** `frontend/src/pages/admin/AdminUsersPage.tsx` (new), `frontend/src/pages/admin/AdminChatLogsPage.tsx` (new), `frontend/src/lib/admin/api.ts` (new), `frontend/src/components/admin/AdminSidebar.tsx`, `frontend/src/App.tsx`, `frontend/src/components/TopNav.tsx`
+
+---
+
+### Railway CLI installation
+
+Installed Railway CLI v4.66.0 to `C:\Users\Diako999\AppData\Local\railway\railway.exe` (added to user PATH). npm and winget both had network failures; installed directly from GitHub releases binary.
 
 ---
 
