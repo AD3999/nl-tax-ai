@@ -68,6 +68,8 @@ const TaxCalendarPage      = lazy(() => import("./pages/TaxCalendarPage"));
 const AccountantPage       = lazy(() => import("./pages/AccountantPage"));
 
 const AdminDashboard       = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminUsersPage       = lazy(() => import("./pages/admin/AdminUsersPage"));
+const AdminChatLogsPage    = lazy(() => import("./pages/admin/AdminChatLogsPage"));
 const AdminRulesPage       = lazy(() => import("./pages/admin/AdminRulesPage"));
 const AdminRuleEditorPage  = lazy(() => import("./pages/admin/AdminRuleEditorPage"));
 const AdminCalcPreviewPage = lazy(() => import("./pages/admin/AdminCalculatorPreviewPage"));
@@ -130,6 +132,8 @@ function App() {
           <Route path="/calculator"          element={<CalculatorPage />} />
           {/* Admin routes — redirect to home if not staff */}
           <Route path="/admin"                    element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/users"              element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+          <Route path="/admin/chat-logs"          element={<AdminRoute><AdminChatLogsPage /></AdminRoute>} />
           <Route path="/admin/rules"              element={<AdminRoute><AdminRulesPage /></AdminRoute>} />
           <Route path="/admin/rules/new"          element={<AdminRoute><AdminRuleEditorPage /></AdminRoute>} />
           <Route path="/admin/rules/:id"          element={<AdminRoute><AdminRuleEditorPage /></AdminRoute>} />

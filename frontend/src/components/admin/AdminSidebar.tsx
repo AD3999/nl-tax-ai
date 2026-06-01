@@ -8,10 +8,14 @@ import {
   Settings,
   ChevronLeft,
   Shield,
+  Users,
+  MessageSquare,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { to: "/admin",                   icon: LayoutDashboard, label: "Overview",            exact: true  },
+  { to: "/admin/users",             icon: Users,           label: "Users",               exact: false },
+  { to: "/admin/chat-logs",         icon: MessageSquare,   label: "Chat Logs",           exact: false },
   { to: "/admin/rules",             icon: ScrollText,      label: "Tax Rules",           exact: false },
   { to: "/admin/calculator-preview",icon: Calculator,      label: "Calculator Preview",  exact: false },
   { to: "/admin/rag-preview",       icon: Search,          label: "RAG Preview",         exact: false },

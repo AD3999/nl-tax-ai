@@ -7,6 +7,7 @@ from .views import (
     ChatHistoryView, ICSCalendarView, AccountantView,
     PDFReportView,
 )
+from .admin_views import AdminUserListView, AdminUserDetailView
 
 urlpatterns = [
     path("health/",           HealthView.as_view(),            name="health"),
@@ -28,4 +29,7 @@ urlpatterns = [
     path("accountant/clients/",        AccountantView.as_view(), name="accountant-clients"),
     path("accountant/clients/<int:pk>/", AccountantView.as_view(), name="accountant-client-detail"),
     path("report/",                    PDFReportView.as_view(),   name="pdf-report"),
+    # Admin-only user management
+    path("admin/list/",              AdminUserListView.as_view(),   name="admin-user-list"),
+    path("admin/<int:pk>/",          AdminUserDetailView.as_view(), name="admin-user-detail"),
 ]

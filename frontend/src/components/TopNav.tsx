@@ -118,15 +118,16 @@ export default function TopNav() {
                 </NavLink>
               ))}
               {user?.is_admin && (
-                <a
-                  href="/admin/"
-                  style={{
-                    ...navLinkStyle({ isActive: false }),
-                    color: "var(--ink-4)",
-                  }}
+                <NavLink
+                  to="/admin"
+                  end
+                  style={({ isActive }) => ({
+                    ...navLinkStyle({ isActive }),
+                    color: isActive ? "var(--ink)" : "var(--ink-4)",
+                  })}
                 >
                   Admin
-                </a>
+                </NavLink>
               )}
             </nav>
           )}
@@ -247,22 +248,24 @@ export default function TopNav() {
             ))}
 
             {user?.is_admin && (
-              <a
-                href="/admin/"
+              <NavLink
+                to="/admin"
                 onClick={closeMenu}
-                style={{
+                style={({ isActive }) => ({
                   display: "flex",
                   alignItems: "center",
                   height: 52,
                   padding: "0 var(--sp-5)",
                   fontSize: "var(--text-md)",
                   fontWeight: 500,
-                  color: "var(--ink-3)",
+                  color: isActive ? "var(--sage-700)" : "var(--ink-3)",
                   textDecoration: "none",
-                }}
+                  background: isActive ? "var(--accent-soft)" : "transparent",
+                  borderInlineStart: isActive ? "3px solid var(--sage-600)" : "3px solid transparent",
+                })}
               >
                 Admin
-              </a>
+              </NavLink>
             )}
 
             <div style={{ margin: "10px var(--sp-5)", height: 1, background: "var(--hairline)" }} />
