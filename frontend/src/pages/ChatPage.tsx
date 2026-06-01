@@ -187,7 +187,7 @@ export default function ChatPage() {
   useEffect(() => {
     const locState = location.state as { question?: string; explain_alert?: ExplainAlert } | null;
     const q = locState?.question;
-    const explainAlertFromNav = locState?.explain_alert ?? null;
+    const _explainAlertFromNav = locState?.explain_alert ?? null;
 
     // 1. Try restoring a previous conversation
     try {

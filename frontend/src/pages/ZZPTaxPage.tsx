@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { useMobile } from "../hooks/useMobile";
 
 const SECTIONS = [
@@ -122,7 +121,6 @@ const FAQ = [
 
 export default function ZZPTaxPage() {
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
   const isMobile = useMobile();
 
   return (

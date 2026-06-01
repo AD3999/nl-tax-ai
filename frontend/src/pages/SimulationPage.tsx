@@ -153,6 +153,7 @@ function OverviewStep({ answers, lang, onGoToChat }: {
   lang: Lang;
   onGoToChat: (q: string) => void;
 }) {
+  const isMobile = useMobile();
   const [result, setResult] = useState<CalcResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
