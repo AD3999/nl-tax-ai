@@ -1,3 +1,5 @@
+import { authHeader } from "./client";
+
 export interface TaxAction {
   id: string;
   category: "filing" | "preparation" | "review" | "optimization" | "compliance";
@@ -11,13 +13,13 @@ export interface TaxAction {
 
 export type ActionState = "open" | "done" | "dismissed" | "snoozed";
 
+export interface ServerItemStates {
+  alerts:  Record<string, { state: ActionState; snoozed_until: string | null }>;
+  actions: Record<string, { state: ActionState; snoozed_until: string | null }>;
+}
+
 const STORAGE_KEY = "taxwijs_action_states";
 const SNOOZE_KEY  = "taxwijs_snoozed_until"; // { [id]: ISO date string }
-
-function authHeader(): Record<string, string> {
-  const t = localStorage.getItem("access_token");
-  return t ? { Authorization: `Bearer ${t}` } : {};
-}
 
 export async function fetchActions(
   profile: Record<string, unknown> | null,
@@ -36,6 +38,45 @@ export async function fetchActions(
     return [];
   }
 }
+
+// ── Backend state sync (authenticated users only) ────────────────────────────
+
+/** Fetch all alert/action states from the server and merge into localStorage. */
+export async function fetchServerStates(): Promise<ServerItemStates | null> {
+  const token = localStorage.getItem("access_token");
+  if (!token) return null;
+  try {
+    const res = await fetch("/api/users/item-states/", {
+      headers: { ...authHeader() },
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as ServerItemStates;
+  } catch {
+    return null;
+  }
+}
+
+/** Persist a single state change to the server (fire-and-forget for UX speed). */
+export async function persistStateToServer(
+  item_type: "alert" | "action",
+  item_id: string,
+  state: ActionState,
+  snoozed_until?: string | null,
+): Promise<void> {
+  const token = localStorage.getItem("access_token");
+  if (!token) return;
+  try {
+    await fetch("/api/users/item-states/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeader() },
+      body: JSON.stringify({ item_type, item_id, state, snoozed_until: snoozed_until ?? null }),
+    });
+  } catch {
+    // Non-critical: localStorage already updated; server sync is best-effort
+  }
+}
+
+// ── localStorage helpers ──────────────────────────────────────────────────────
 
 export function loadActionStates(): Record<string, ActionState> {
   try {
@@ -63,11 +104,11 @@ export function snoozeItem(id: string, daysFromNow: number): void {
   const until = new Date();
   until.setDate(until.getDate() + daysFromNow);
   const map = loadSnoozeMap();
-  map[id] = until.toISOString().slice(0, 10); // YYYY-MM-DD
+  map[id] = until.toISOString().slice(0, 10);
   localStorage.setItem(SNOOZE_KEY, JSON.stringify(map));
 }
 
-/** Returns true if the item is currently snoozed (snooze date is in the future). */
+/** Returns true if the item is currently snoozed. */
 export function isSnoozed(id: string): boolean {
   const map = loadSnoozeMap();
   const until = map[id];
@@ -75,7 +116,7 @@ export function isSnoozed(id: string): boolean {
   return new Date(until) > new Date();
 }
 
-/** Remove an existing snooze (unsnoozed). */
+/** Remove an existing snooze. */
 export function unsnooze(id: string): void {
   const map = loadSnoozeMap();
   delete map[id];

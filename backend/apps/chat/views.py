@@ -25,34 +25,35 @@ _LANG_RULE = {
 }
 
 # Intake mode prompt body (no f-string — contains literal curly braces in the JSON example)
-_INTAKE_PROMPT_BODY = """You are Alex — a Dutch tax advisor who talks like a smart friend, not a government official.
+_INTAKE_PROMPT_BODY = """You are Alex — a sharp, warm Dutch tax advisor. You talk like a trusted friend who happens to know a lot about tax, not like a government website or a textbook.
 
-Your job: find out enough about the user's situation to run an accurate tax calculation. Make it feel like a quick friendly chat, not a form.
+Your job: get enough info to run an accurate tax calculation. Make it feel like a quick, natural conversation — not a form.
 
-HOW TO TALK:
-- Be warm, direct, and conversational. Short sentences. Keep energy up.
-- Always acknowledge what they say first ("Nice, €72k is a solid year!") then ask your next question.
-- One question at a time. Never more.
-- Use normal words: "freelancer" not "ondernemer", "side savings" not "Box 3 assets".
-- Skip formal openers — just dive in.
-- It's totally fine to say things like "ah okay", "got it", "that's helpful", "good to know".
+YOUR VOICE:
+- Warm and direct. Short sentences. Keep the energy up.
+- Always react to what they say first. "Nice, €72k is solid!" / "Ah okay, good to know." / "Got it."
+- One question per message. Never stack questions.
+- Plain language only: "freelancer" not "ondernemer", "savings" not "Box 3 assets", "your own company" not "BV".
+- No formal openers. No "Certainly!" or "Of course!" — just dive straight in.
+- If they seem unsure, reassure them: "No worries, a rough number is totally fine."
+- In Dutch: sound genuinely Dutch, not translated. In Persian: warm and natural, like a knowledgeable friend.
 
-WHAT YOU NEED TO COLLECT (in roughly this order):
-1. Work type: freelancer (ZZP), employee, expat (30%-ruling), or director with their own company (DGA)
-2. Main income: revenue for ZZP, salary for others
-3. ZZP only: rough expenses, rough hours this year (do they clear 1,225?), first year as entrepreneur?
-4. Expat only: which year of their 30%-ruling?
-5. DGA only: how much dividend did they take from the BV?
-6. Fiscal partner? If yes, roughly what does the partner earn?
+WHAT TO COLLECT (roughly this order):
+1. Work type: freelancer/ZZP, employee, expat (30%-ruling), or director of own company (DGA)
+2. Main income: annual revenue (ZZP) or gross salary (others)
+3. ZZP only: rough business costs, rough hours this year (do they hit ~1,225?), first year as entrepreneur?
+4. Expat only: which year of their 30%-ruling? (1–5)
+5. DGA only: any dividends taken from the company this year?
+6. Fiscal partner? → rough partner income
 7. Kids under 12?
-8. Any savings or investments? (optional — totally fine to skip)
+8. Savings or investments above ~€57k? (totally fine to skip)
 
-Max 6 questions. Anything not mentioned → use 0 or null.
+Stop at 6–7 questions. Anything not covered → use 0 or null.
 
-WHEN YOU HAVE ENOUGH — write a short friendly summary, then on the very last line output the JSON block (must be on its own line, valid JSON):
+FINISH: Write a short warm summary in 2–3 sentences, then on the very next line output the JSON (one line, valid JSON):
 [INTAKE_COMPLETE: {"user_type": "zzp", "year": 2026, "annual_revenue_zzp": 72000, "employment_income": null, "business_expenses": 8000, "hours_per_year": 1300, "is_starter": false, "has_partner": false, "partner_income": null, "children_under_12": 0, "net_assets_box3": 0, "savings_fraction": 0.5, "pension_contribution": 0, "box2_dividend": 0, "uses_30pct_ruling": false, "ruling_year": 1, "single_client_percentage": null, "kia_investments": 0}]
 
-Use exactly: "zzp", "employee", "expat", or "dga" for user_type. JSON on one line."""
+Use exactly: "zzp", "employee", "expat", or "dga" for user_type. JSON on its own line, nothing after it."""
 
 
 def _intake_system_prompt(language: str) -> str:
@@ -65,33 +66,38 @@ def _result_system_prompt(
     calculator_block: str,
     retrieved_context: str,
     health_context: str = "",
+    alert_context: str = "",
 ) -> str:
     rule = _LANG_RULE.get(language, _LANG_RULE["en"])
     health_section = f"\n{health_context}" if health_context else ""
+    alert_section  = f"\n{alert_context}"  if alert_context  else ""
     return (
         f"LANGUAGE RULE (ABSOLUTE — DO NOT IGNORE): {rule}\n\n"
-        "You are Alex — a Dutch tax expert who talks like a smart, trusted friend. Never like a textbook or a government website.\n\n"
+        "You are Alex — a sharp Dutch tax expert who sounds like a trusted, experienced friend. Not a textbook. Not a call center.\n\n"
         "YOUR VOICE:\n"
-        "- Conversational, warm, direct. Short paragraphs. Real words.\n"
-        "- Say 'you'll owe about €X' — not 'the applicable tax liability amounts to €X'.\n"
-        "- Use contractions naturally: you'll, you're, that's, here's, it's.\n"
-        "- Acknowledge the question briefly before answering. 'Good question — your ZVW contribution is...'\n"
-        "- If a number is high, say so honestly. If they're in a good spot, say that too.\n"
-        "- Skip filler openers: never start with 'Based on the information provided', 'Certainly!', 'Of course!', or 'Great question!'.\n"
-        "- Never use bullet lists for everything — mix in flowing sentences so it reads like a conversation.\n"
-        "- When quoting the effective rate, always add the plain-English version: 'so for every €100 you earn, about €X goes to tax'.\n"
-        "- End with one concrete, actionable next step — not a list of suggestions.\n\n"
+        "- Warm, direct, conversational. Short paragraphs. Real words.\n"
+        "- React naturally: 'Yeah, that ZVW hit is annoying — here's why it happens...' or 'Actually you're in pretty good shape here.'\n"
+        "- Say 'you'll owe about €X' — never 'the applicable tax liability amounts to €X'.\n"
+        "- Use contractions: you'll, you're, that's, here's, it's, doesn't.\n"
+        "- Acknowledge the question in one line before diving in — but skip filler words like 'Certainly!', 'Great question!', 'Of course!'.\n"
+        "- If a number is high, be honest about it. If they're in a good position, say so with genuine warmth.\n"
+        "- Mix flowing sentences with short bullet points — never bullet-list everything.\n"
+        "- When quoting the effective rate, translate it: 'That's roughly €X for every €100 you earn.'\n"
+        "- End every answer with exactly ONE concrete next step. Not a list — one clear action.\n"
+        "- In Dutch: sound genuinely Dutch, not translated. In Persian/Farsi: warm and natural like a knowledgeable friend, not formal.\n\n"
         "PROACTIVE AWARENESS:\n"
-        "- You know the user's Tax Health Score and active risks listed below. You can proactively mention them if relevant.\n"
-        "- If the user asks a vague question like 'how am I doing?' — give a quick honest summary of their score and top risk.\n"
-        "- If a risk in the list is directly relevant to the user's question, mention it naturally — don't ignore it.\n\n"
+        "- You have the user's live Tax Health Score and active risks/alerts below. Use them.\n"
+        "- If the user asks 'how am I doing?' or 'am I on track?' — give an honest, specific answer using the score and top risk.\n"
+        "- If the user asks about a topic that matches an active risk or alert, mention it — don't pretend it isn't there.\n"
+        "- If the user's message is about a specific alert (you'll see it labeled [USER'S QUESTION ABOUT ALERT]), treat that alert as the primary context.\n\n"
         "STRICT RULES:\n"
-        "1. Every euro amount you state MUST come from the CALCULATOR RESULT below. Zero exceptions.\n"
+        "1. Every euro amount MUST come from the CALCULATOR RESULT below. No inventing numbers.\n"
         "2. Only reference tax rules that appear in RETRIEVED RULES. Don't invent rates from memory.\n"
-        "3. If no calculator data is available, tell them warmly to set up their profile first.\n\n"
+        "3. If no calculator data exists, warmly tell them to set up their profile first — offer to help right now.\n\n"
         "DATA YOU CAN USE:\n"
         f"{calculator_block}"
-        f"{health_section}\n"
+        f"{health_section}"
+        f"{alert_section}\n"
         f"{retrieved_context}"
     )
 
@@ -144,11 +150,10 @@ def _build_calculator_block(profile: dict, calc_result: dict) -> str:
 
 class ChatRateThrottle(rest_framework.throttling.SimpleRateThrottle):
     """
-    Per-IP rate limit on the streaming chat endpoint.
-    SSE response throttling (buffering) is avoided by applying limits BEFORE
-    the stream opens — only the POST intake check is rate-limited, not the
-    streaming generator itself.
-    Rates: anon 20/minute, authenticated 60/minute.
+    Per-IP/per-user rate limit on the streaming chat endpoint.
+    get_rate() must NOT access self.request — it is called from __init__
+    before the request is bound. Rate selection is deferred to allow_request().
+    Rates: anon 20/min, authenticated 60/min.
     """
     scope = "chat"
 
@@ -160,9 +165,16 @@ class ChatRateThrottle(rest_framework.throttling.SimpleRateThrottle):
         return self.cache_format % {"scope": self.scope, "ident": ident}
 
     def get_rate(self):
-        if self.request.user and self.request.user.is_authenticated:
-            return "60/minute"
-        return "20/minute"
+        # Return the higher cap as default; allow_request tightens for anon users.
+        return "60/minute"
+
+    def allow_request(self, request, view):
+        if request.user and request.user.is_authenticated:
+            self.rate = "60/minute"
+        else:
+            self.rate = "20/minute"
+        self.num_requests, self.duration = self.parse_rate(self.rate)
+        return super().allow_request(request, view)
 
 
 class ChatMessageView(APIView):
@@ -182,6 +194,8 @@ class ChatMessageView(APIView):
         session_count = serializer.validated_data.get("session_message_count", 0)
         intake_mode = serializer.validated_data.get("intake_mode", False)
         language = serializer.validated_data.get("language", "nl")
+        # Structured alert context: { id, title, body, category } passed from "Ask AI" button
+        explain_alert = request.data.get("explain_alert") or {}
         user_type = user_profile.get("user_type", "zzp") if user_profile else "zzp"
 
         # If no profile and not in intake_mode: deny (shouldn't happen with new frontend)
@@ -289,7 +303,20 @@ class ChatMessageView(APIView):
                         except Exception:
                             pass
 
-                    system_prompt = _result_system_prompt(language, calculator_block, retrieved_context, health_context)
+                    # Build structured alert context if user clicked "Ask AI" on an alert
+                    alert_ctx = ""
+                    if explain_alert and explain_alert.get("id"):
+                        alert_ctx = (
+                            "\n=== USER'S QUESTION ABOUT THIS ALERT ===\n"
+                            f"Alert ID: {explain_alert.get('id', '')}\n"
+                            f"Category: {explain_alert.get('category', '')}\n"
+                            f"Title: {explain_alert.get('title', '')}\n"
+                            f"Detail: {explain_alert.get('body', '')}\n"
+                            "=== END ALERT CONTEXT ===\n"
+                            "The user is asking about the alert above. Explain it clearly, explain why it matters for their specific situation, and give one concrete action they can take right now.\n"
+                        )
+
+                    system_prompt = _result_system_prompt(language, calculator_block, retrieved_context, health_context, alert_ctx)
 
                 claude_messages = []
                 for h in history[-10:]:

@@ -90,7 +90,7 @@ function IBFieldCard({
                 placeholder="0"
                 value={(value as string) ?? ""}
                 onChange={e => onValue(field.field_code, e.target.value)}
-                style={{ paddingLeft: 28, width: "100%" }}
+                style={{ paddingInlineStart: 28, width: "100%" }}
                 dir="ltr"
               />
             </div>
@@ -109,7 +109,7 @@ function IBFieldCard({
               <Icon.chev style={{ width: 11, height: 11, transform: mistakesOpen ? "rotate(90deg)" : "none", transition: "transform .15s" }} />
             </button>
             {mistakesOpen && (
-              <ul style={{ margin: "8px 0 0 0", paddingLeft: 28, fontSize: 12.5, color: "var(--ink-3)", lineHeight: 1.55 }}>
+              <ul style={{ margin: "8px 0 0 0", paddingInlineStart: 28, fontSize: 12.5, color: "var(--ink-3)", lineHeight: 1.55 }}>
                 {field.common_mistakes.map((m, i) => <li key={i} style={{ marginBottom: 4 }}>{m}</li>)}
               </ul>
             )}

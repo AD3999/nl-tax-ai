@@ -7,16 +7,15 @@ import LangSwitch from "./LangSwitch";
 import { useMobile } from "../hooks/useMobile";
 
 const NAV_ITEMS_GUEST = [
-  { to: "/chat",    labelKey: "nav.chat" },
-  { to: "/pricing", labelKey: "nav.pricing" },
+  { to: "/chat", labelKey: "nav.chat" },
 ] as const;
 
 const NAV_ITEMS_AUTH = [
-  { to: "/dashboard",  labelKey: "nav.dashboard" },
-  { to: "/chat",       labelKey: "nav.chat" },
-  { to: "/ib-guide",   labelKey: "ib.nav" },
-  { to: "/simulation", labelKey: "nav.simulation" },
-  { to: "/pricing",    labelKey: "nav.pricing" },
+  { to: "/dashboard",   labelKey: "nav.dashboard" },
+  { to: "/chat",        labelKey: "nav.chat" },
+  { to: "/ib-guide",    labelKey: "ib.nav" },
+  { to: "/simulation",  labelKey: "nav.simulation" },
+  { to: "/tax-history", labelKey: "nav.tax_history" },
 ] as const;
 
 function HamburgerIcon({ open }: { open: boolean }) {
@@ -105,7 +104,7 @@ export default function TopNav() {
       >
         {/* Left: wordmark + nav links */}
         <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 0 : 4 }}>
-          <NavLink to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", marginRight: isMobile ? 0 : 20 }} onClick={closeMenu}>
+          <NavLink to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", marginInlineEnd: isMobile ? 0 : 20 }} onClick={closeMenu}>
             <Wordmark size={16} />
           </NavLink>
 
@@ -238,7 +237,7 @@ export default function TopNav() {
                   color: isActive ? "var(--sage-700)" : "var(--ink-2)",
                   textDecoration: "none",
                   background: isActive ? "var(--accent-soft)" : "transparent",
-                  borderLeft: isActive ? "3px solid var(--sage-600)" : "3px solid transparent",
+                  borderInlineStart: isActive ? "3px solid var(--sage-600)" : "3px solid transparent",
                 })}
               >
                 {t(item.labelKey)}

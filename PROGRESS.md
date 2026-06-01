@@ -1,7 +1,89 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 31 May 2026 — Build fix: 4 TypeScript errors in DashboardPage resolved, Railway deploy unblocked.
+> Last updated: 1 Jun 2026 — Phase 31 complete: logical CSS, Persian rewrite, multi-year comparison UI.
+
+---
+
+## Phase 31 — RTL CSS / Persian Rewrite / Multi-Year Comparison (1 Jun 2026) ✅ Complete
+
+### Task 1: Replace physical CSS with logical CSS for RTL Persian support
+
+Replaced all physical directional CSS properties with CSS Logical Properties across 8 files. These auto-flip in RTL (Persian) mode without needing `[dir="rtl"]` overrides.
+
+| Property replaced | Logical equivalent | Files |
+|-------------------|--------------------|-------|
+| `marginRight` | `marginInlineEnd` | TopNav.tsx |
+| `borderLeft` | `borderInlineStart` | TopNav.tsx, LoginPage.tsx, RegisterPage.tsx |
+| `borderRight` | `borderInlineEnd` | SimulationPage.tsx |
+| `paddingLeft` | `paddingInlineStart` | CalculatorPage.tsx, IBGuidePage.tsx, IntakePage.tsx, SimulationPage.tsx |
+| `left: N` (absolute icon) | `insetInlineStart` | CalculatorPage.tsx, IntakePage.tsx, SimulationPage.tsx |
+| `right: N` (absolute check) | `insetInlineEnd` | IntakePage.tsx |
+| `textAlign: "left"` | `textAlign: "start"` | ChatPage.tsx, DashboardPage.tsx, IntakePage.tsx, RegisterPage.tsx, SimulationPage.tsx |
+| `textAlign: "right"` (numeric column) | `textAlign: "end"` | DashboardPage.tsx, CalculatorPage.tsx |
+
+Note: `.num` class in `index.css` keeps `text-align: right` — numbers are inherently LTR and stay right-aligned even in RTL layouts (correct financial convention).
+
+---
+
+### Task 2: Rewrite Persian (FA) translations — natural, modern, non-bookish
+
+Full rewrite of `frontend/src/i18n/locales/fa.json`. Key changes applied throughout:
+
+| Pattern replaced | Example before | Example after |
+|-----------------|----------------|---------------|
+| `خود را` (formal "your") | `پروفایل خود را تکمیل کنید` | `پروفایل‌تان را کامل کنید` |
+| `بروزرسانی` → `به‌روزرسانی` | `بروزرسانی پروفایل` | `به‌روزرسانی پروفایل` |
+| Long run-on subtitles | multi-clause sentences | shorter, punchy phrasing |
+| `ابتدا` (formal "first") | `ابتدا پروفایل را تکمیل کنید` | `اول پروفایل‌تان را کامل کنید` |
+| FAQ questions | overly formal phrasing | natural question forms |
+| `قیمت‌گذاری` (nav) | verbose | `قیمت‌ها` |
+| upgrade strings | `استفاده شد` | `تمام شد` |
+
+Also added `nav.tax_history` key: `تاریخچه مالیاتی`
+
+---
+
+### Task 3: Multi-year comparison UI using TaxYearSnapshot
+
+Built a complete tax history comparison page wired to the existing `GET/POST /api/users/snapshots/` API from Phase 30.
+
+**New files:**
+
+| File | Purpose |
+|------|---------|
+| `frontend/src/api/snapshots.ts` | `fetchSnapshots()` + `saveSnapshot()` typed API client |
+| `frontend/src/pages/TaxHistoryPage.tsx` | Full comparison page |
+
+**Modified files:**
+
+| File | Change |
+|------|--------|
+| `frontend/src/App.tsx` | Lazy-loaded `TaxHistoryPage`, added `/tax-history` route |
+| `frontend/src/components/TopNav.tsx` | Added `nav.tax_history` to `NAV_ITEMS_AUTH` |
+| `en.json` / `nl.json` / `fa.json` | Added `nav.tax_history` key |
+
+**Page features:**
+- Auth-gated (shows login CTA if not signed in)
+- Fetches all snapshots, sorted newest → oldest
+- Each `SnapshotCard` shows: year + user type, total tax, effective rate, monthly reserve
+- Year-over-year delta chips (▲/▼ with % change) vs. prior year card
+- `is_final` badge on confirmed snapshots
+- "Save 2026 snapshot" button — calls `POST /api/users/snapshots/` with current profile, shows toast
+- Empty state with CTA to `/intake` if no snapshots yet
+- Fully trilingual (NL/EN/FA) via inline lookup table
+- Mobile-responsive grid: 1 column on mobile, auto-fill ≥280px on desktop
+
+---
+
+### Extra: Persian tagline on landing page hero
+
+When `lang === "fa"`, the hero badge (previously "Dutch Tax AI · 2026") now reads:
+**شفاف‌سازی مالیات در هلند**
+
+In NL mode it reads "Belasting AI · 2026". In EN mode: "Dutch Tax AI · 2026".
+
+Change: one conditional in `LandingPage.tsx` hero badge span.
 
 ---
 

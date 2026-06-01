@@ -83,6 +83,13 @@ def generate_alerts(profile: dict[str, Any], calc_result: dict[str, Any], lang: 
     # ── 16. Partner income optimization ──────────────────────────────────────────
     _check_partner_optimization(alerts, profile, income, lang)
 
+    # ── 17. Year-end tax optimization window (Q4 only) ───────────────────────────
+    _check_year_end_opportunities(alerts, profile, calc, result, today, lang)
+
+    # ── 18. Deductible expenses likely missing ────────────────────────────────────
+    if user_type in ("zzp", "dga"):
+        _check_deductible_expenses(alerts, profile, lang)
+
     return alerts
 
 
@@ -428,3 +435,122 @@ def _check_partner_optimization(alerts, profile, income, lang):
             "action_label": {"nl": "Fiscaal partnerschap", "en": "Fiscal partnership", "fa": "شراکت مالی"}.get(lang),
             "action_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/relatie_familie_en_gezin/fiscaal_partnerschap/",
         })
+
+
+def _check_year_end_opportunities(alerts, profile, calc, result, today, lang):
+    """
+    Year-end tax optimization window — shown only in Q4 (Oct 1–Dec 31).
+    Reminds users of actions that must happen before 31 December to count for the current tax year.
+    """
+    if today.month < 10:
+        return  # irrelevant outside Q4
+
+    days_left = (date(today.year, 12, 31) - today).days
+    user_type = profile.get("user_type", "")
+    income = float(profile.get("annual_revenue_zzp") or profile.get("employment_income") or 0)
+
+    # 1. Unused pension jaarruimte — contributions made before 31 Dec still count
+    pension = float(profile.get("pension_contribution") or 0)
+    if income > 19172 and pension == 0:
+        jaarruimte = round((income - 19172) * 0.30)
+        alerts.append({
+            "id": "year-end-pension",
+            "category": "opportunity",
+            "severity": "warning",
+            "title": {
+                "nl": f"Nog {days_left} dagen om pensioen fiscaal af te trekken",
+                "en": f"{days_left} days left to make a tax-deductible pension contribution",
+                "fa": f"{days_left} روز برای واریز بازنشستگی معاف از مالیات باقی مانده",
+            }.get(lang),
+            "body": {
+                "nl": f"Uw jaarruimte voor {today.year} is ~€{jaarruimte:,}. Storten vóór 31 december telt mee voor dit belastingjaar en bespaart u belasting in box 1.",
+                "en": f"Your pension margin (jaarruimte) for {today.year} is ~€{jaarruimte:,}. Any contribution made before 31 December counts for this tax year and reduces your Box 1 income.",
+                "fa": f"سهمیه بازنشستگی (jaarruimte) شما برای {today.year} حدود €{jaarruimte:,} است. واریز قبل از ۳۱ دسامبر درآمد مشمول مالیات جعبه ۱ را کاهش می‌دهد.",
+            }.get(lang),
+            "action_label": {"nl": "Jaarruimte berekenen", "en": "Calculate jaarruimte", "fa": "محاسبه jaarruimte"}.get(lang),
+            "action_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/aftrek_en_kortingen/lijfrente_en_pensioen/",
+        })
+
+    # 2. Box 3 reference date — assets on 1 January determine the tax
+    assets = float(profile.get("net_assets_box3") or 0)
+    BOX3_EXEMPT = 57000
+    if assets > BOX3_EXEMPT:
+        excess = round(assets - BOX3_EXEMPT)
+        estimated_saving = round(excess * 0.06 * 0.36)  # fictitious return × 36% rate
+        alerts.append({
+            "id": "year-end-box3",
+            "category": "opportunity",
+            "severity": "info",
+            "title": {
+                "nl": f"Box 3 peildatum: {days_left} dagen om vermogen te verlagen",
+                "en": f"Box 3 reference date: {days_left} days to reduce your assets",
+                "fa": f"تاریخ مرجع باکس ۳: {days_left} روز برای کاهش دارایی",
+            }.get(lang),
+            "body": {
+                "nl": f"Box 3 belasting wordt berekend over uw vermogen op 1 januari. Met €{excess:,} boven de vrijstelling betaalt u ~€{estimated_saving:,} belasting. Overweeg aflossen van schulden of pensioen vóór 31 december.",
+                "en": f"Box 3 tax is calculated on your assets as at 1 January. With €{excess:,} above the exemption you pay ~€{estimated_saving:,}. Consider paying off debt or making pension contributions before 31 December.",
+                "fa": f"مالیات باکس ۳ بر اساس دارایی‌های تاریخ ۱ ژانویه محاسبه می‌شود. با €{excess:,} بالاتر از معافیت، حدود €{estimated_saving:,} مالیات می‌پردازید.",
+            }.get(lang),
+            "action_label": {"nl": "Box 3 uitleg", "en": "Box 3 explained", "fa": "توضیح باکس ۳"}.get(lang),
+            "action_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/vermogen/",
+        })
+
+    # 3. ZZP: KIA window — investments placed before 31 Dec qualify
+    if user_type == "zzp":
+        kia = float(profile.get("kia_investments") or 0)
+        revenue = float(profile.get("annual_revenue_zzp") or 0)
+        if kia == 0 and revenue > 20000:
+            alerts.append({
+                "id": "year-end-kia",
+                "category": "opportunity",
+                "severity": "info",
+                "title": {
+                    "nl": f"KIA-investering voor {today.year}: nog {days_left} dagen",
+                    "en": f"KIA investment window for {today.year}: {days_left} days left",
+                    "fa": f"فرصت سرمایه‌گذاری KIA برای {today.year}: {days_left} روز مانده",
+                }.get(lang),
+                "body": {
+                    "nl": "Zakelijke aankopen boven €2.901 die u vóór 31 december doet, leveren 28% KIA aftrek op dit belastingjaar. Denk aan apparatuur, software of bedrijfsmiddelen.",
+                    "en": "Business purchases above €2,901 made before 31 December qualify for a 28% KIA deduction in this tax year. Think equipment, software, or tools.",
+                    "fa": "خریدهای تجاری بالای €۲,۹۰۱ که قبل از ۳۱ دسامبر انجام دهید، ۲۸٪ کسر KIA در همین سال مالیاتی دریافت می‌کنند.",
+                }.get(lang),
+                "action_label": {"nl": "KIA info", "en": "KIA details", "fa": "اطلاعات KIA"}.get(lang),
+                "action_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/kleinschaligheidsinvesteringsaftrek/",
+            })
+
+
+def _check_deductible_expenses(alerts, profile, lang):
+    """
+    Nudge ZZP / DGA users who have declared zero or suspiciously low business expenses.
+    Most freelancers underreport costs — this is a clear optimization opportunity.
+    """
+    user_type = profile.get("user_type", "")
+    revenue = float(profile.get("annual_revenue_zzp") or 0)
+    expenses = float(profile.get("business_expenses") or 0)
+
+    # Only trigger for meaningful revenue with no or very low expenses
+    if revenue < 15000:
+        return
+    expense_ratio = expenses / revenue if revenue else 0
+    if expenses > 0 and expense_ratio >= 0.05:
+        return  # already declaring reasonable costs
+
+    typical_savings = round(revenue * 0.05 * 0.35)  # rough: 5% expenses × ~35% effective rate
+
+    alerts.append({
+        "id": "deductible-expenses",
+        "category": "opportunity",
+        "severity": "info",
+        "title": {
+            "nl": "Aftrekbare kosten mogelijk niet volledig opgegeven",
+            "en": "Deductible business expenses may be missing",
+            "fa": "هزینه‌های کسر مالیاتی احتمالاً کامل وارد نشده",
+        }.get(lang),
+        "body": {
+            "nl": f"U heeft {'geen' if expenses == 0 else 'weinig'} zakelijke kosten opgegeven. Denk aan telefoon, internet, software, werkruimte, reiskosten en vakliteratuur. Volledig opgeven bespaart gemiddeld ~€{typical_savings:,} per jaar.",
+            "en": f"You have declared {'no' if expenses == 0 else 'very few'} business expenses. Phone, internet, software, home office, travel, and professional subscriptions are all deductible. Declaring them could save ~€{typical_savings:,} on average.",
+            "fa": f"هزینه‌های تجاری {'هیچ' if expenses == 0 else 'بسیار کمی'} وارد کردید. تلفن، اینترنت، نرم‌افزار، دفتر خانگی، سفر، و اشتراک‌های حرفه‌ای همه قابل کسر هستند. می‌تواند ~€{typical_savings:,} صرفه‌جویی کند.",
+        }.get(lang),
+        "action_label": {"nl": "Kosten toevoegen", "en": "Add expenses", "fa": "افزودن هزینه‌ها"}.get(lang),
+        "action_url": "/intake",
+    })

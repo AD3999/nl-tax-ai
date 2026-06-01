@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { calculateTax } from "../api/calculator";
 import type { CalcInput, CalcResult } from "../api/calculator";
 import { Icon } from "../components/Icon";
+import { useMobile } from "../hooks/useMobile";
 
 type UserType = "zzp" | "employee" | "expat" | "dga";
 
@@ -40,11 +41,11 @@ function CalcField({ label, k, form, set, placeholder, unit, hint }: {
         {hint && <span style={{ fontSize: 10.5, color: "var(--ink-4)" }}>{hint}</span>}
       </div>
       <div style={{ position: "relative" }}>
-        {unit && <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--ink-4)", fontSize: 13 }}>{unit}</span>}
+        {unit && <span style={{ position: "absolute", insetInlineStart: 12, top: "50%", transform: "translateY(-50%)", color: "var(--ink-4)", fontSize: 13 }}>{unit}</span>}
         <input className="tw-input" type="number" min="0"
           value={form[k] as string} onChange={e => set(k, e.target.value)}
           placeholder={placeholder}
-          style={{ paddingLeft: unit ? 28 : undefined }} />
+          style={{ paddingInlineStart: unit ? 28 : undefined }} />
       </div>
     </div>
   );
@@ -83,6 +84,7 @@ function SummaryCard({ label, value, kind }: { label: string; value: string; kin
 
 export default function CalculatorPage() {
   const navigate = useNavigate();
+  const isMobile = useMobile();
   const [userType, setUserType] = useState<UserType>("zzp");
   const [form, setForm]         = useState<FormState>(DEFAULT_FORM);
   const [result, setResult]     = useState<CalcResult | null>(null);
@@ -169,13 +171,13 @@ export default function CalculatorPage() {
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1.05fr", gap: 24, alignItems: "flex-start" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1.05fr", gap: isMobile ? 16 : 24, alignItems: "flex-start" }}>
             {/* Form card */}
             <div className="card" style={{ padding: 26 }}>
               <div className="eyebrow eyebrow-accent">Inputs</div>
               <h2 style={{ marginTop: 4, fontSize: 18, color: "var(--ink)", fontWeight: 500 }}>Your situation</h2>
 
-              <div style={{ marginTop: 18, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div style={{ marginTop: 18, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
                 {userType === "zzp" && <>
                   <CalcField label="Annual revenue" k="annual_revenue_zzp" form={form} set={set} unit="€" placeholder="72000" />
                   <CalcField label="Business expenses" k="business_expenses" form={form} set={set} unit="€" placeholder="9500" />
@@ -200,7 +202,7 @@ export default function CalculatorPage() {
 
               <div className="dots" style={{ margin: "22px 0" }} />
               <div className="eyebrow">Household</div>
-              <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
                 <CalcField label="Pension contribution" k="pension_contribution" form={form} set={set} unit="€" placeholder="0" />
                 <CalcField label="Net assets Box 3" k="net_assets_box3" form={form} set={set} unit="€" placeholder="0" />
                 <CalcField label="Savings fraction %" k="savings_fraction" form={form} set={set} unit="%" placeholder="50" />
@@ -223,7 +225,7 @@ export default function CalculatorPage() {
             {/* Results */}
             {result && c && r ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
                   <SummaryCard kind="primary" label="Total tax due 2026" value={EUR(r.total_tax_due)} />
                   <SummaryCard kind="ink" label="Effective rate" value={PCT(r.effective_rate)} />
                   {r.monthly_reserve_needed > 0 && <SummaryCard label="Monthly reserve" value={EUR(r.monthly_reserve_needed)} />}
@@ -243,10 +245,10 @@ export default function CalculatorPage() {
                     <div style={{ width: "35%", background: "var(--sage-600)" }} />
                     <div style={{ width: "5%", background: "var(--ink)" }} />
                   </div>
-                  <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", fontSize: 11.5, color: "var(--ink-3)" }}>
+                  <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 4, fontSize: 11.5, color: "var(--ink-3)" }}>
                     <span>35.75% · up to €38,883</span>
                     <span style={{ textAlign: "center" }}>37.07% · AOW only</span>
-                    <span style={{ textAlign: "right" }}>49.50% · €78,426+</span>
+                    <span style={{ textAlign: "end" }}>49.50% · €78,426+</span>
                   </div>
                 </div>
 

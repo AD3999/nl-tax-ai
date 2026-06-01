@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { useTranslation } from "react-i18next";
-import { sendMessage } from "../api/chat";
+import { sendMessage, type ExplainAlert } from "../api/chat";
 import { ANON_SESSION_LIMIT } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import UpgradeModal from "../components/UpgradeModal";
@@ -156,6 +156,10 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef  = useRef<AbortController | null>(null);
   const inputRef  = useRef<HTMLTextAreaElement>(null);
+  // Holds the structured alert context passed from Dashboard "Ask AI" button
+  const pendingAlertRef = useRef<ExplainAlert | null>(
+    (location.state as { explain_alert?: ExplainAlert } | null)?.explain_alert ?? null
+  );
 
   // Per-user history key: logged-in users get their own slot so history survives
   // logout/login. Anonymous users share the generic key (cleared on logout).
@@ -181,7 +185,9 @@ export default function ChatPage() {
 
   // On mount: restore history first, then fall through to normal init if nothing saved
   useEffect(() => {
-    const q = (location.state as { question?: string } | null)?.question;
+    const locState = location.state as { question?: string; explain_alert?: ExplainAlert } | null;
+    const q = locState?.question;
+    const explainAlertFromNav = locState?.explain_alert ?? null;
 
     // 1. Try restoring a previous conversation
     try {
@@ -305,6 +311,10 @@ export default function ChatPage() {
       // Determine if we're in intake mode (no profile yet)
       const isIntakeMode = !profile && !intakeComplete;
 
+      // Consume the pending alert context (only used on the first message after navigation)
+      const alertCtx = pendingAlertRef.current;
+      pendingAlertRef.current = null;
+
       await sendMessage(
         question,
         history,
@@ -323,6 +333,7 @@ export default function ChatPage() {
         newCount,
         isIntakeMode,
         lang,
+        alertCtx,
       );
 
       // Check if intake profile was embedded in the response
@@ -547,7 +558,7 @@ export default function ChatPage() {
                     onClick={() => void submit(c.q)}
                     disabled={loading}
                     style={{
-                      textAlign: "left", padding: "16px 16px", background: "var(--paper)",
+                      textAlign: "start", padding: "16px 16px", background: "var(--paper)",
                       border: "1px solid var(--hairline)", borderRadius: "var(--r-lg)",
                       display: "flex", flexDirection: "column", gap: 8, cursor: "pointer",
                       animation: "cardIn .35s ease-out both",

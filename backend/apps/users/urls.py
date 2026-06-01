@@ -3,6 +3,7 @@ from .views import (
     RegisterView, ProfileView, GoogleAuthView,
     AlertsView, ActionsView, HealthView,
     NotificationPrefsView, YearSnapshotView,
+    ItemStatesView,
 )
 
 urlpatterns = [
@@ -12,6 +13,8 @@ urlpatterns = [
     path("auth/google/",     GoogleAuthView.as_view(),         name="google_auth"),
     path("alerts/",          AlertsView.as_view(),             name="alerts"),
     path("actions/",         ActionsView.as_view(),            name="actions"),
+    # Alert/Action state persistence (authenticated users)
+    path("item-states/",     ItemStatesView.as_view(),         name="item-states"),
     # Smart Calendar / Reminder Engine
     path("notifications/",   NotificationPrefsView.as_view(),  name="notification-prefs"),
     # Future Memory Foundation

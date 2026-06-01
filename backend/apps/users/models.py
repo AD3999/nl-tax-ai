@@ -139,3 +139,34 @@ class TaxYearSnapshot(models.Model):
 
     def __str__(self):
         return f"{self.user_id} / {self.tax_year} ({'final' if self.is_final else 'draft'})"
+
+
+class UserItemState(models.Model):
+    """
+    Persists per-user dismiss / snooze / done states for alerts and actions
+    on the backend so states survive browser clears and device switches.
+
+    Synced for authenticated users only; anonymous users continue to use
+    localStorage (no account = no server state).
+    """
+    ITEM_TYPES = [("alert", "Alert"), ("action", "Action")]
+    STATE_CHOICES = [
+        ("open",      "Open"),
+        ("done",      "Done"),
+        ("dismissed", "Dismissed"),
+        ("snoozed",   "Snoozed"),
+    ]
+
+    user         = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="item_states")
+    item_type    = models.CharField(max_length=10, choices=ITEM_TYPES)
+    item_id      = models.CharField(max_length=120)
+    state        = models.CharField(max_length=20, choices=STATE_CHOICES, default="open")
+    snoozed_until = models.DateField(null=True, blank=True)
+    updated_at   = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "user_item_states"
+        unique_together = [("user", "item_type", "item_id")]
+
+    def __str__(self):
+        return f"{self.user_id} / {self.item_type} / {self.item_id} → {self.state}"

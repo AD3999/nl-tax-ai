@@ -9,7 +9,8 @@
     "profile": "Profiel",
     "dashboard": "Dashboard",
     "login": "Inloggen",
-    "logout": "Uitloggen"
+    "logout": "Uitloggen",
+    "tax_history": "Belastinggeschiedenis"
   },
   "chat": {
     "placeholder": "Stel uw belastingvraag... (Enter om te verzenden)",

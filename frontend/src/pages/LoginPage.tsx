@@ -287,7 +287,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right — editorial side (hidden on mobile) */}
-      {!isMobile && <div className="grain" style={{ padding: 36, borderLeft: "1px solid var(--hairline)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      {!isMobile && <div className="grain" style={{ padding: 36, borderInlineStart: "1px solid var(--hairline)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
         <Wordmark size={14} />
         <div>
           <span className="pill" style={{ background: "rgba(255,255,255,0.18)", color: "var(--ink-2)" }}>Today's tip</span>

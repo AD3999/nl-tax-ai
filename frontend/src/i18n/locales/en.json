@@ -9,7 +9,8 @@
     "profile": "Profile",
     "dashboard": "Dashboard",
     "login": "Log in",
-    "logout": "Log out"
+    "logout": "Log out",
+    "tax_history": "Tax History"
   },
   "chat": {
     "placeholder": "Ask your tax question... (Enter to send)",

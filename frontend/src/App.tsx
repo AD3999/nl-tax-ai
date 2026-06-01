@@ -58,8 +58,9 @@ const SimulationPage  = lazy(() => import("./pages/SimulationPage"));
 const LandingPage     = lazy(() => import("./pages/LandingPage"));
 const LoginPage       = lazy(() => import("./pages/LoginPage"));
 const RegisterPage    = lazy(() => import("./pages/RegisterPage"));
-const PricingPage     = lazy(() => import("./pages/PricingPage"));
+// PricingPage removed — site is fully free during current phase
 const DashboardPage   = lazy(() => import("./pages/DashboardPage"));
+const TaxHistoryPage  = lazy(() => import("./pages/TaxHistoryPage"));
 
 const AdminDashboard       = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminRulesPage       = lazy(() => import("./pages/admin/AdminRulesPage"));
@@ -107,8 +108,9 @@ function App() {
           <Route path="/intake"      element={<IntakePage />} />
           <Route path="/ib-guide"    element={<IBGuidePage />} />
           <Route path="/simulation"  element={<SimulationPage />} />
-          <Route path="/pricing"     element={<PricingPage />} />
+          <Route path="/pricing"     element={<Navigate to="/" replace />} />
           <Route path="/dashboard"   element={<DashboardPage />} />
+          <Route path="/tax-history" element={<TaxHistoryPage />} />
           {/* Calculator: kept at URL but hidden from user nav */}
           <Route path="/calculator"  element={<CalculatorPage />} />
           {/* Admin routes — redirect to home if not staff */}

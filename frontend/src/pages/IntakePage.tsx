@@ -43,7 +43,7 @@ function UnitInput({ label, unit, value, onChange, placeholder, hint }: { label:
         {hint && <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>{hint}</span>}
       </div>
       <div style={{ position: "relative" }}>
-        <span aria-hidden="true" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "var(--ink-4)", fontSize: "var(--text-base)" }}>{unit}</span>
+        <span aria-hidden="true" style={{ position: "absolute", insetInlineStart: 14, top: "50%", transform: "translateY(-50%)", color: "var(--ink-4)", fontSize: "var(--text-base)" }}>{unit}</span>
         <input
           id={id}
           className="tw-input"
@@ -53,7 +53,7 @@ function UnitInput({ label, unit, value, onChange, placeholder, hint }: { label:
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
-          style={{ paddingLeft: 32, fontSize: 16 }}
+          style={{ paddingInlineStart: 32, fontSize: 16 }}
         />
       </div>
     </div>
@@ -171,7 +171,7 @@ export default function IntakePage() {
               const done = s.i < step, active = s.i === step;
               return (
                 <button key={s.i} onClick={() => setStep(s.i as 1|2|3)} style={{
-                  textAlign: "left", padding: "12px 14px", border: "none",
+                  textAlign: "start", padding: "12px 14px", border: "none",
                   background: active ? "var(--accent-soft)" : "transparent",
                   borderRadius: "var(--r)", display: "flex", gap: 12, alignItems: "center", cursor: "pointer",
                 }}>
@@ -224,13 +224,13 @@ export default function IntakePage() {
                   const on = userType === k;
                   return (
                     <button key={k} onClick={() => setUserType(k)} style={{
-                      textAlign: "left", padding: "18px 20px", borderRadius: "var(--r)",
+                      textAlign: "start", padding: "18px 20px", borderRadius: "var(--r)",
                       border: `1px solid ${on ? "var(--sage-600)" : "var(--hairline-2)"}`,
                       background: on ? "var(--accent-soft)" : "var(--paper)",
                       display: "flex", flexDirection: "column", gap: 12, cursor: "pointer", minHeight: 150, position: "relative",
                     }}>
                       {on && (
-                        <span style={{ position: "absolute", top: 14, right: 14, width: 18, height: 18, borderRadius: 999, background: "var(--sage-600)", color: "white", display: "grid", placeItems: "center" }}>
+                        <span style={{ position: "absolute", top: 14, insetInlineEnd: 14, width: 18, height: 18, borderRadius: 999, background: "var(--sage-600)", color: "white", display: "grid", placeItems: "center" }}>
                           <Icon.check style={{ width: 10, height: 10 }} />
                         </span>
                       )}

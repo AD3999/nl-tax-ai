@@ -308,3 +308,58 @@ class YearSnapshotView(APIView):
             "created": created,
             "total_tax_due": snapshot.calc_snapshot.get("result", {}).get("total_tax_due") if snapshot.calc_snapshot else None,
         }, status=201 if created else 200)
+
+
+class ItemStatesView(APIView):
+    """
+    GET  /api/users/item-states/
+         Returns { alerts: {id: {state, snoozed_until}}, actions: {id: {state, snoozed_until}} }
+
+    POST /api/users/item-states/
+         Body: { item_type: "alert"|"action", item_id: str, state: str, snoozed_until?: "YYYY-MM-DD"|null }
+         Upserts a single state record. Returns the saved record.
+
+    Authenticated users only. Anonymous users keep localStorage as their store.
+    This endpoint is called:
+      - on mount: GET to hydrate client state from server
+      - on each dismiss/snooze/done change: POST to persist
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from .models import UserItemState
+        qs = UserItemState.objects.filter(user=request.user)
+        result = {"alerts": {}, "actions": {}}
+        for obj in qs:
+            bucket = "alerts" if obj.item_type == "alert" else "actions"
+            result[bucket][obj.item_id] = {
+                "state": obj.state,
+                "snoozed_until": obj.snoozed_until.isoformat() if obj.snoozed_until else None,
+            }
+        return Response(result)
+
+    def post(self, request):
+        from .models import UserItemState
+        item_type = request.data.get("item_type")
+        item_id   = request.data.get("item_id")
+        state     = request.data.get("state", "open")
+        snoozed_until = request.data.get("snoozed_until") or None
+
+        if item_type not in ("alert", "action") or not item_id:
+            return Response({"error": "item_type and item_id required"}, status=400)
+        if state not in ("open", "done", "dismissed", "snoozed"):
+            return Response({"error": "invalid state"}, status=400)
+
+        obj, _ = UserItemState.objects.update_or_create(
+            user=request.user,
+            item_type=item_type,
+            item_id=item_id,
+            defaults={"state": state, "snoozed_until": snoozed_until},
+        )
+        return Response({
+            "item_type": obj.item_type,
+            "item_id": obj.item_id,
+            "state": obj.state,
+            "snoozed_until": obj.snoozed_until.isoformat() if obj.snoozed_until else None,
+        })

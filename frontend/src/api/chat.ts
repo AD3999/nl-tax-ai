@@ -34,6 +34,13 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
+export interface ExplainAlert {
+  id: string;
+  title: string;
+  body: string;
+  category: string;
+}
+
 export async function sendMessage(
   message: string,
   conversationHistory: Array<{ role: "user" | "assistant"; content: string }>,
@@ -43,6 +50,7 @@ export async function sendMessage(
   sessionMessageCount = 0,
   intakeMode = false,
   language: "nl" | "en" | "fa" = "nl",
+  explainAlert?: ExplainAlert | null,
 ): Promise<void> {
   let token = localStorage.getItem("access_token");
 
@@ -53,6 +61,7 @@ export async function sendMessage(
     intake_mode: intakeMode,
     language,
     ...(userProfile ? { user_profile: userProfile } : {}),
+    ...(explainAlert?.id ? { explain_alert: explainAlert } : {}),
   });
 
   const makeRequest = (authToken: string | null) =>

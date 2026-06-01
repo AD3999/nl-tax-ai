@@ -38,7 +38,9 @@ export default function LandingPage() {
           <div>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 11px", borderRadius: 999, background: "var(--paper)", border: "1px solid var(--accent-line)" }}>
               <span style={{ width: 6, height: 6, borderRadius: 999, background: "var(--sage-600)" }} />
-              <span className="eyebrow eyebrow-accent">Dutch Tax AI · 2026</span>
+              <span className="eyebrow eyebrow-accent">
+                {lang === "fa" ? "شفاف‌سازی مالیات در هلند" : lang === "nl" ? "Belasting AI · 2026" : "Dutch Tax AI · 2026"}
+              </span>
             </div>
 
             {/* Hero headline — fluid type size prevents overflow at 320px */}
@@ -216,7 +218,9 @@ export default function LandingPage() {
             <button className="btn btn-accent btn-lg" onClick={() => navigate("/register")}>
               {lang === "nl" ? "Gratis beginnen" : lang === "fa" ? "شروع رایگان" : "Start free"}
             </button>
-            <button className="btn btn-ghost btn-lg" onClick={() => navigate("/pricing")}>{t("nav.pricing")}</button>
+            <button className="btn btn-ghost btn-lg" onClick={() => navigate("/chat")}>
+              {lang === "nl" ? "Probeer gratis" : lang === "fa" ? "امتحان کن" : "Try it free"}
+            </button>
           </div>
           <p style={{ marginTop: "var(--sp-10)", fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>
             {t("chat.disclaimer")}

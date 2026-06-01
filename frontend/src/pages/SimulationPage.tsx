@@ -95,7 +95,7 @@ function FieldRow({
       {field.type === "number" && (
         <div style={{ position: "relative" }}>
           {field.unit && (
-            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--ink-4)", fontSize: 13 }}>
+            <span style={{ position: "absolute", insetInlineStart: 12, top: "50%", transform: "translateY(-50%)", color: "var(--ink-4)", fontSize: 13 }}>
               {field.unit}
             </span>
           )}
@@ -106,7 +106,7 @@ function FieldRow({
             placeholder="0"
             value={value === undefined ? "" : String(value)}
             onChange={e => onChange(field.id, e.target.value === "" ? undefined : Number(e.target.value))}
-            style={{ paddingLeft: field.unit ? 28 : 12 }}
+            style={{ paddingInlineStart: field.unit ? 28 : 12 }}
             dir="ltr"
           />
         </div>
@@ -194,9 +194,9 @@ function OverviewStep({ answers, lang, onGoToChat }: {
       )}
 
       {result && (
-        <div className="card" style={{ marginTop: 36, padding: 0, overflow: "hidden", textAlign: "left" }}>
+        <div className="card" style={{ marginTop: 36, padding: 0, overflow: "hidden", textAlign: "start" }}>
           {/* Dark header */}
-          <div style={{ padding: "32px 32px 28px", background: "var(--ink)", color: "var(--paper)", display: "grid", gridTemplateColumns: "1fr 1fr", alignItems: "center", gap: 24 }}>
+          <div style={{ padding: isMobile ? "24px 20px 20px" : "32px 32px 28px", background: "var(--ink)", color: "var(--paper)", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", alignItems: "center", gap: isMobile ? 16 : 24 }}>
             <div>
               <div className="eyebrow" style={{ color: "var(--sage-300)" }}>
                 {hadVoorlopige && voorlopige > 0 ? "Net to pay / refund" : "Total tax due"}
@@ -212,7 +212,7 @@ function OverviewStep({ answers, lang, onGoToChat }: {
                 </div>
               )}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr", gap: 12 }}>
               {[
                 [lang === "nl" ? "Totale belasting" : lang === "fa" ? "کل مالیات" : "Total tax due",
                   `€ ${result.result.total_tax_due.toLocaleString("nl-NL")}`],
@@ -384,7 +384,7 @@ export default function SimulationPage() {
 
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "280px 1fr", flex: 1, minHeight: 0 }}>
         {/* Sidebar — hidden on mobile (progress bar replaces it) */}
-        {!isMobile && <aside style={{ borderRight: "1px solid var(--hairline)", padding: "26px 18px", overflowY: "auto", background: "var(--paper)", display: "flex", flexDirection: "column" }}>
+        {!isMobile && <aside style={{ borderInlineEnd: "1px solid var(--hairline)", padding: "26px 18px", overflowY: "auto", background: "var(--paper)", display: "flex", flexDirection: "column" }}>
           <div className="eyebrow eyebrow-accent">Aangifte 2026</div>
           <div style={{ marginTop: 6, fontFamily: "var(--serif)", fontSize: 22, color: "var(--ink)" }}>Simulation</div>
 
@@ -398,7 +398,7 @@ export default function SimulationPage() {
                   type="button"
                   onClick={() => setStepIdx(idx)}
                   style={{
-                    textAlign: "left", padding: "10px 12px", borderRadius: "var(--r-sm)", border: "none",
+                    textAlign: "start", padding: "10px 12px", borderRadius: "var(--r-sm)", border: "none",
                     background: active ? "var(--accent-soft)" : "transparent", cursor: "pointer",
                     display: "flex", alignItems: "center", gap: 10,
                   }}
@@ -461,7 +461,7 @@ export default function SimulationPage() {
                     return (
                       <div key={section.id}>
                         <div className="eyebrow" style={{ marginBottom: 12 }}>{t3(section.title, lang)}</div>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
                           {section.fields.map(field => {
                             if (field.condition && !field.condition(answers)) return null;
                             return (

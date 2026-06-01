@@ -149,7 +149,7 @@ export default function RegisterPage() {
                   const on = userType === k;
                   return (
                     <button key={k} type="button" onClick={() => setUserType(k)} style={{
-                      textAlign: "left", padding: "12px 14px", borderRadius: "var(--r-sm)",
+                      textAlign: "start", padding: "12px 14px", borderRadius: "var(--r-sm)",
                       border: `1px solid ${on ? "var(--sage-600)" : "var(--hairline-2)"}`,
                       background: on ? "var(--accent-soft)" : "var(--paper)",
                       display: "flex", alignItems: "center", gap: 12, cursor: "pointer", transition: "all .15s",
@@ -260,7 +260,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Right — editorial side (hidden on mobile) */}
-      {!isMobile && <div className="grain" style={{ padding: 36, borderLeft: "1px solid var(--hairline)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+      {!isMobile && <div className="grain" style={{ padding: 36, borderInlineStart: "1px solid var(--hairline)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
         <Wordmark size={14} />
         <div>
           <span className="pill pill-accent">For {t2.label.toLowerCase()}s</span>

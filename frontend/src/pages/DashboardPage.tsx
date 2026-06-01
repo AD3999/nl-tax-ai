@@ -11,6 +11,8 @@ import {
   saveActionState,
   snoozeItem,
   isSnoozed,
+  fetchServerStates,
+  persistStateToServer,
   type TaxAction,
   type ActionState,
 } from "../api/actions";
@@ -546,7 +548,7 @@ function AlertCard({
 }: {
   alert: Alert;
   onDismiss: (id: string) => void;
-  onExplain: (title: string, body: string) => void;
+  onExplain: (title: string, body: string, alertId?: string, category?: string) => void;
   onSnooze: (id: string, days: number) => void;
   onMarkDone: (id: string) => void;
   isDone: boolean;
@@ -597,7 +599,7 @@ function AlertCard({
               color: isDone ? "var(--ok)" : "var(--ink-3)", cursor: "pointer", padding: 0, fontWeight: isDone ? 600 : 400 }}>
             {isDone ? T.done[lk] : T.markDone[lk]}
           </button>
-          <button onClick={() => onExplain(alert.title, alert.body)}
+          <button onClick={() => onExplain(alert.title, alert.body, alert.id, alert.category)}
             style={{ background: "none", border: "none", fontSize: 11.5, color: "var(--ink-3)", cursor: "pointer", padding: 0 }}>
             {T.askAI[lk]}
           </button>
@@ -617,7 +619,7 @@ function AlertCard({
                 {([1, 7, 30] as const).map(d => (
                   <button key={d}
                     onClick={() => { onSnooze(alert.id, d); setShowSnoozeMenu(false); }}
-                    style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none",
+                    style={{ display: "block", width: "100%", textAlign: "start", background: "none", border: "none",
                       padding: "6px 14px", fontSize: 12, color: "var(--ink)", cursor: "pointer" }}>
                     {d === 1 ? T.tomorrow[lk] : d === 7 ? T.oneWeek[lk] : T.oneMonth[lk]}
                   </button>
@@ -696,7 +698,7 @@ function ActionCard({
                 }}>
                   {[1, 7, 30].map(d => (
                     <button key={d} onClick={() => { onSnooze(action.id, d); setShowSnoozeMenu(false); }}
-                      style={{ display: "block", width: "100%", textAlign: "left", background: "none", border: "none",
+                      style={{ display: "block", width: "100%", textAlign: "start", background: "none", border: "none",
                         padding: "6px 14px", fontSize: 12, color: "var(--ink)", cursor: "pointer" }}>
                       {d === 1 ? "Tomorrow" : d === 7 ? "1 week" : "1 month"}
                     </button>
@@ -790,13 +792,14 @@ export default function DashboardPage() {
 
   // authHeader imported from api/client.ts — do not re-declare here
 
-  const explainAlert = useCallback((title: string, body: string) => {
+  const explainAlert = useCallback((title: string, body: string, alertId?: string, category?: string) => {
     const q = lang === "nl"
-      ? `Kun je uitleggen wat dit betekent voor mij: "${title}" — ${body}`
+      ? `Kun je uitleggen wat dit betekent voor mij: "${title}"`
       : lang === "fa"
-      ? `می‌توانی توضیح دهی که این برای من چه معنایی دارد: "${title}" — ${body}`
-      : `Can you explain what this means for me: "${title}" — ${body}`;
-    navigate("/chat", { state: { question: q } });
+      ? `می‌توانی توضیح دهی که این برای من چه معنایی دارد: "${title}"`
+      : `Can you explain what this means for me: "${title}"`;
+    // Pass structured alert so the backend injects it into the system prompt
+    navigate("/chat", { state: { question: q, explain_alert: { id: alertId ?? "", title, body, category: category ?? "" } } });
   }, [lang, navigate]);
 
   // ── Data loading ───────────────────────────────────────────────────────────
@@ -818,7 +821,17 @@ export default function DashboardPage() {
     setLoadingCalc(true);
     fetch("/api/calculator/calculate/", {
       method: "POST", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify(profile),
-    }).then(r => r.json() as Promise<CalcResult>).then(setCalcResult).catch(() => null).finally(() => setLoadingCalc(false));
+    }).then(r => r.json() as Promise<CalcResult>).then(result => {
+      setCalcResult(result);
+      // Persist snapshot to backend for authenticated users (health score history)
+      if (user) {
+        fetch("/api/users/snapshots/", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...authHeader() },
+          body: JSON.stringify({ tax_year: 2026, profile_snapshot: profile, calc_snapshot: result, source: "auto", is_final: false }),
+        }).catch(() => null);
+      }
+    }).catch(() => null).finally(() => setLoadingCalc(false));
   }, [profile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -839,6 +852,51 @@ export default function DashboardPage() {
     fetchActions(profile, lang).then(setActions).catch(() => setActions([])).finally(() => setLoadingActions(false));
   }, [profile, lang]);
 
+  // ── Server state hydration (authenticated users) ───────────────────────────
+  // On mount, pull persisted states from backend and merge into local state.
+  // This ensures dismiss/snooze/done survive browser clears and device switches.
+  useEffect(() => {
+    if (!user) return;
+    fetchServerStates().then(server => {
+      if (!server) return;
+      const now = new Date();
+
+      // Alerts: merge server state into local sets
+      const donSet   = new Set(loadDoneAlerts());
+      const dismissSet = new Set<string>();
+      const snoozeMap: Record<string, string> = {};
+
+      Object.entries(server.alerts).forEach(([id, { state, snoozed_until }]) => {
+        if (state === "done")      donSet.add(id);
+        if (state === "dismissed") dismissSet.add(id);
+        if (state === "snoozed" && snoozed_until) snoozeMap[id] = snoozed_until;
+      });
+      setDoneAlerts(donSet);
+      setDismissedAlerts(prev => new Set([...prev, ...dismissSet]));
+      setSnoozedAlerts(prev => {
+        const next = new Set(prev);
+        Object.entries(snoozeMap).forEach(([id, d]) => { if (new Date(d) > now) next.add(id); });
+        return next;
+      });
+      localStorage.setItem("taxwijs_dismissed_alerts", JSON.stringify([...dismissSet]));
+      localStorage.setItem("taxwijs_alert_snoozed_until", JSON.stringify(snoozeMap));
+
+      // Actions: merge server state into actionStates map
+      const actionMap: Record<string, ActionState> = { ...loadActionStates() };
+      const actionSnoozeMap: Record<string, string> = {};
+      Object.entries(server.actions).forEach(([id, { state, snoozed_until }]) => {
+        actionMap[id] = state;
+        if (state === "snoozed" && snoozed_until) actionSnoozeMap[id] = snoozed_until;
+      });
+      setActionStates(actionMap);
+      localStorage.setItem("taxwijs_action_states", JSON.stringify(actionMap));
+      if (Object.keys(actionSnoozeMap).length) {
+        const existing = JSON.parse(localStorage.getItem("taxwijs_snoozed_until") ?? "{}") as Record<string, string>;
+        localStorage.setItem("taxwijs_snoozed_until", JSON.stringify({ ...existing, ...actionSnoozeMap }));
+      }
+    });
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!profile) return;
     const userType = String(profile.user_type ?? "");
@@ -856,17 +914,24 @@ export default function DashboardPage() {
     if (isDone) next.delete(id); else next.add(id);
     setDoneAlerts(next);
     persistDoneAlerts(next);
+    const newState = isDone ? "open" : "done";
+    persistStateToServer("alert", id, newState);
   }
 
   function dismissAlert(id: string) {
     const next = new Set([...dismissedAlerts, id]);
     setDismissedAlerts(next);
     localStorage.setItem("taxwijs_dismissed_alerts", JSON.stringify([...next]));
+    persistStateToServer("alert", id, "dismissed");
   }
 
   function handleSnoozeAlert(id: string, days: number) {
+    const until = new Date();
+    until.setDate(until.getDate() + days);
+    const untilStr = until.toISOString().slice(0, 10);
     snoozeAlert(id, days);
     setSnoozedAlerts(prev => new Set([...prev, id]));
+    persistStateToServer("alert", id, "snoozed", untilStr);
   }
 
   function markActionDone(id: string) {
@@ -874,19 +939,24 @@ export default function DashboardPage() {
     const updated = { ...actionStates, [id]: next as ActionState };
     setActionStates(updated);
     saveActionState(id, next as ActionState);
+    persistStateToServer("action", id, next as ActionState);
   }
 
   function dismissAction(id: string) {
     const updated = { ...actionStates, [id]: "dismissed" as ActionState };
     setActionStates(updated);
     saveActionState(id, "dismissed");
+    persistStateToServer("action", id, "dismissed");
   }
 
   function handleSnoozeAction(id: string, days: number) {
+    const until = new Date();
+    until.setDate(until.getDate() + days);
+    const untilStr = until.toISOString().slice(0, 10);
     snoozeItem(id, days);
     snoozedActions.current.add(id);
-    // Force re-render
     setActionStates(prev => ({ ...prev }));
+    persistStateToServer("action", id, "snoozed", untilStr);
   }
 
   // ── Derived ────────────────────────────────────────────────────────────────
@@ -1085,7 +1155,7 @@ export default function DashboardPage() {
               ].map(action => (
                 <button key={action.to} onClick={() => navigate(action.to)}
                   className={action.primary ? "btn btn-accent" : "btn btn-soft btn-sm"}
-                  style={{ justifyContent: "flex-start", gap: 8, textAlign: "left" }}>
+                  style={{ justifyContent: "flex-start", gap: 8, textAlign: "start" }}>
                   {action.icon === "spark" && <Icon.spark />}
                   {action.icon === "edit"  && <Icon.edit />}
                   {action.icon === "info"  && <Icon.info />}
@@ -1106,7 +1176,7 @@ export default function DashboardPage() {
                     <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>{String(item.input_snapshot?.user_type ?? "").toUpperCase()} · {item.tax_year}</div>
                     <div style={{ fontSize: 11.5, color: "var(--ink-3)", marginTop: 2 }}>{new Date(item.created_at).toLocaleDateString(lang === "nl" ? "nl-NL" : lang === "fa" ? "fa-IR" : "en-GB")}</div>
                   </div>
-                  <div style={{ textAlign: "right" }}>
+                  <div style={{ textAlign: "end" }}>
                     <div className="font-mono" style={{ fontSize: 14, color: "var(--ink)", fontWeight: 600 }}>€{Math.round(item.total_tax_due).toLocaleString("nl-NL")}</div>
                     <div style={{ fontSize: 11.5, color: "var(--ink-3)" }}>{(item.effective_rate * 100).toFixed(1)}%</div>
                   </div>
