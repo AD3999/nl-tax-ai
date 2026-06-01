@@ -3,6 +3,7 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.http import HttpResponse, Http404
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from config.serializers import EmailOrUsernameTokenSerializer
 
 # Serve React's index.html for every non-API, non-admin route so that
 # React Router can handle client-side navigation on the deployed build.
@@ -16,7 +17,7 @@ def spa_index(request):
 urlpatterns = [
     path("admin/", admin.site.urls),
     # JWT auth
-    path("api/auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/auth/token/", TokenObtainPairView.as_view(serializer_class=EmailOrUsernameTokenSerializer), name="token_obtain_pair"),
     path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     # App routers
     path("api/users/", include("apps.users.urls")),
