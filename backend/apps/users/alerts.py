@@ -229,7 +229,7 @@ def _check_profile_completeness(alerts, profile, lang):
             "id": "missing-box3", "category": "missing_data", "severity": "info",
             "title": {"nl": "Box 3 gegevens ontbreken", "en": "Box 3 data missing", "fa": "اطلاعات باکس ۳ وارد نشده"}.get(lang),
             "body": {"nl": "Heeft u spaargeld of beleggingen boven de vrijstelling van €59.357? Voeg uw Box 3 vermogen toe voor een volledige berekening.", "en": "Do you have savings or investments above €59,357? Add your Box 3 assets for a complete tax calculation.", "fa": "آیا پس‌انداز یا سرمایه‌گذاری بیش از €۵۹,۳۵۷ دارید؟ دارایی‌های باکس ۳ را اضافه کنید."}.get(lang),
-            "action_label": {"nl": "Profiel bijwerken", "en": "Update profile", "fa": "بروزرسانی پروفایل"}.get(lang),
+            "action_label": {"nl": "Profiel bijwerken", "en": "Update profile", "fa": "به‌روزرسانی پروفایل"}.get(lang),
             "action_url": "/intake",
         })
 
@@ -412,7 +412,7 @@ def _check_partner_optimization(alerts, profile, income, lang):
                 "en": "You have a fiscal partner but no partner income declared. This affects your tax calculation and toeslagen eligibility. Add it for an accurate result.",
                 "fa": "شریک مالی دارید اما درآمد شریک وارد نشده. این روی محاسبه مالیات و toeslagen تأثیر می‌گذارد.",
             }.get(lang),
-            "action_label": {"nl": "Profiel bijwerken", "en": "Update profile", "fa": "بروزرسانی"}.get(lang),
+            "action_label": {"nl": "Profiel bijwerken", "en": "Update profile", "fa": "به‌روزرسانی پروفایل"}.get(lang),
             "action_url": "/intake",
         })
         return

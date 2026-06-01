@@ -171,7 +171,7 @@ def _urencriterium(actions, profile, user_type, lang):
             "action_label": {
                 "nl": "Profiel bijwerken",
                 "en": "Update profile",
-                "fa": "بروزرسانی پروفایل",
+                "fa": "به‌روزرسانی پروفایل",
             }.get(lang),
             "action_url": "/intake",
             "due_date": f"{date.today().year}-12-31",
@@ -367,7 +367,7 @@ def _profile_completion(actions, profile, lang):
         "action_label": {
             "nl": "Profiel bijwerken",
             "en": "Update profile",
-            "fa": "بروزرسانی پروفایل",
+            "fa": "به‌روزرسانی پروفایل",
         }.get(lang),
         "action_url": "/intake",
         "due_date": None,
