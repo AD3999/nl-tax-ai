@@ -156,11 +156,9 @@ STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 STRIPE_PRICE_ID = env("STRIPE_PRICE_ID", default="")   # monthly premium price ID
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
 
-# ── Premium limits ────────────────────────────────────────────────────────────
-# Set DISABLE_CHAT_LIMITS=true in .env to remove all limits (e.g., during dev/testing)
-DISABLE_CHAT_LIMITS = env.bool("DISABLE_CHAT_LIMITS", default=True)
-FREE_DAILY_LIMIT = 9999 if DISABLE_CHAT_LIMITS else 10
-ANON_SESSION_LIMIT = 9999 if DISABLE_CHAT_LIMITS else 5
+# ── Chat limits — fully disabled (site is free, no premium gates) ─────────────
+FREE_DAILY_LIMIT = 9999
+ANON_SESSION_LIMIT = 9999
 
 # ── Internationalisation ──────────────────────────────────────────────────────
 

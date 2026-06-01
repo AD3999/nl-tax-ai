@@ -22,7 +22,7 @@ export function authHeader(): Record<string, string> {
  * Default: 5 for production builds.
  */
 export const ANON_SESSION_LIMIT: number = Number(
-  import.meta.env.VITE_ANON_SESSION_LIMIT ?? 5
+  import.meta.env.VITE_ANON_SESSION_LIMIT ?? 9999
 );
 
 export const client = axios.create({
