@@ -363,3 +363,346 @@ class ItemStatesView(APIView):
             "state": obj.state,
             "snoozed_until": obj.snoozed_until.isoformat() if obj.snoozed_until else None,
         })
+
+
+class PDFReportView(APIView):
+    """
+    GET /api/users/report/?lang=en
+    Generates and streams a PDF Tax Health Report for the authenticated user.
+    Also works for anonymous users if a profile is POSTed in the body (preview mode).
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from django.http import HttpResponse
+        lang = request.query_params.get("lang", "en")
+        profile = None
+        calc_result = {}
+        alerts = []
+
+        if request.user.is_authenticated and request.user.intake_profile:
+            profile = request.user.intake_profile
+        if not profile:
+            return Response({"error": "No profile found. Complete your tax profile first."}, status=400)
+
+        try:
+            from apps.calculator.engine import calculate
+            calc_result = calculate(profile)
+        except Exception:
+            pass
+
+        try:
+            from .alerts import generate_alerts
+            alerts = generate_alerts(profile, calc_result, lang)
+        except Exception:
+            pass
+
+        try:
+            from .pdf_report import generate_report
+            pdf_bytes = generate_report(
+                user=request.user if request.user.is_authenticated else None,
+                profile=profile,
+                calc_result=calc_result,
+                alerts=alerts,
+                lang=lang,
+            )
+        except Exception as e:
+            return Response({"error": f"PDF generation failed: {e}"}, status=500)
+
+        name = "taxwijs-report-2026"
+        response = HttpResponse(pdf_bytes, content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="{name}.pdf"'
+        response["Content-Length"] = len(pdf_bytes)
+        return response
+
+    def post(self, request):
+        """Anonymous preview — accepts profile in body."""
+        from django.http import HttpResponse
+        lang = request.data.get("lang", "en")
+        profile = request.data.get("profile") or {}
+        if not profile:
+            return Response({"error": "profile required"}, status=400)
+        calc_result, alerts = {}, []
+        try:
+            from apps.calculator.engine import calculate
+            calc_result = calculate(profile)
+        except Exception:
+            pass
+        try:
+            from .alerts import generate_alerts
+            alerts = generate_alerts(profile, calc_result, lang)
+        except Exception:
+            pass
+        try:
+            from .pdf_report import generate_report
+            pdf_bytes = generate_report(user=None, profile=profile, calc_result=calc_result, alerts=alerts, lang=lang)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        response = HttpResponse(pdf_bytes, content_type="application/pdf")
+        response["Content-Disposition"] = 'attachment; filename="taxwijs-report-2026.pdf"'
+        return response
+
+
+class EmailCaptureView(APIView):
+    """
+    POST /api/users/email-capture/
+    Stores an anonymous email lead. No auth required.
+    Body: { email, user_type?, source_page? }
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        from .models import EmailCapture
+        email = request.data.get("email", "").strip()
+        if not email or "@" not in email:
+            return Response({"error": "valid email required"}, status=400)
+        EmailCapture.objects.get_or_create(
+            email=email,
+            defaults={
+                "user_type": request.data.get("user_type", ""),
+                "source_page": request.data.get("source_page", "landing"),
+            },
+        )
+        return Response({"status": "ok"})
+
+
+class RemindersView(APIView):
+    """
+    GET /api/users/reminders/?lang=en&days=60
+    Returns upcoming TaxReminders relevant to this user's profile.
+    Works for authenticated users (filters by user_type) and anonymous (returns all).
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from .models import TaxReminder
+        from datetime import date, timedelta
+        lang = request.query_params.get("lang", "en")
+        days = int(request.query_params.get("days", 90))
+        today = date.today()
+        cutoff = today + timedelta(days=days)
+
+        qs = TaxReminder.objects.filter(
+            verification_status="verified",
+            tax_year=2026,
+            due_date__gte=today,
+            due_date__lte=cutoff,
+        )
+
+        user_type = None
+        if request.user.is_authenticated and request.user.intake_profile:
+            user_type = request.user.intake_profile.get("user_type")
+
+        result = []
+        for r in qs:
+            if user_type and r.user_types and user_type not in r.user_types:
+                continue
+            days_until = (r.due_date - today).days
+            result.append({
+                "id": r.id,
+                "title": r.title(lang),
+                "description": r.description(lang),
+                "category": r.category,
+                "due_date": r.due_date.isoformat(),
+                "days_until": days_until,
+                "action_type": r.action_type,
+                "source_url": r.source_url,
+                "user_types": r.user_types,
+                "reminder_offsets": r.reminder_offsets,
+            })
+        return Response(result)
+
+
+class ChatHistoryView(APIView):
+    """
+    GET /api/chat/history/        — last 10 conversations with first question + count
+    GET /api/chat/history/<id>/   — full message list for a conversation
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk=None):
+        from apps.chat.models import Conversation, Message
+        if pk:
+            try:
+                conv = Conversation.objects.get(pk=pk, user=request.user)
+            except Conversation.DoesNotExist:
+                return Response({"error": "not found"}, status=404)
+            messages = [
+                {"role": m.role, "content": m.content, "created_at": m.created_at.isoformat()}
+                for m in conv.messages.all()
+            ]
+            return Response({"id": conv.id, "summary": conv.summary, "messages": messages})
+
+        convs = Conversation.objects.filter(user=request.user).order_by("-updated_at")[:10]
+        result = []
+        for c in convs:
+            first_msg = c.messages.filter(role="user").first()
+            result.append({
+                "id": c.id,
+                "summary": c.summary or (first_msg.content[:120] if first_msg else ""),
+                "message_count": c.message_count,
+                "language": c.language,
+                "created_at": c.created_at.isoformat(),
+                "updated_at": c.updated_at.isoformat(),
+            })
+        return Response(result)
+
+
+class ICSCalendarView(APIView):
+    """
+    GET /api/users/calendar.ics
+    Returns an iCal feed of all upcoming TaxReminders for this user.
+    No auth required — anonymous users get generic reminders.
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from .models import TaxReminder
+        from datetime import date, timedelta
+        from django.http import HttpResponse
+        today = date.today()
+        cutoff = today + timedelta(days=366)
+
+        qs = TaxReminder.objects.filter(
+            verification_status="verified",
+            tax_year=2026,
+            due_date__gte=today,
+            due_date__lte=cutoff,
+        )
+
+        user_type = None
+        if request.user.is_authenticated and request.user.intake_profile:
+            user_type = request.user.intake_profile.get("user_type")
+
+        lines = [
+            "BEGIN:VCALENDAR",
+            "VERSION:2.0",
+            "PRODID:-//TaxWijs//NL Tax Calendar 2026//EN",
+            "CALSCALE:GREGORIAN",
+            "METHOD:PUBLISH",
+            "X-WR-CALNAME:TaxWijs — Dutch Tax Calendar 2026",
+            "X-WR-CALDESC:Dutch tax deadlines and reminders for 2026",
+            "X-WR-TIMEZONE:Europe/Amsterdam",
+        ]
+
+        for r in qs:
+            if user_type and r.user_types and user_type not in r.user_types:
+                continue
+            uid = f"taxwijs-{r.id}-2026@taxwijs.nl"
+            dtstart = r.due_date.strftime("%Y%m%d")
+            dtend = (r.due_date + timedelta(days=1)).strftime("%Y%m%d")
+            summary = r.title_en.replace(",", "\\,").replace("\n", "\\n")
+            description = r.description_en.replace(",", "\\,").replace("\n", "\\n")[:500]
+            lines += [
+                "BEGIN:VEVENT",
+                f"UID:{uid}",
+                f"DTSTART;VALUE=DATE:{dtstart}",
+                f"DTEND;VALUE=DATE:{dtend}",
+                f"SUMMARY:{summary}",
+                f"DESCRIPTION:{description}",
+                f"URL:{r.source_url or 'https://www.belastingdienst.nl'}",
+                "STATUS:CONFIRMED",
+                "BEGIN:VALARM",
+                "TRIGGER:-P7D",
+                "ACTION:DISPLAY",
+                f"DESCRIPTION:Reminder: {summary} in 7 days",
+                "END:VALARM",
+                "BEGIN:VALARM",
+                "TRIGGER:-P1D",
+                "ACTION:DISPLAY",
+                f"DESCRIPTION:Tomorrow: {summary}",
+                "END:VALARM",
+                "END:VEVENT",
+            ]
+
+        lines.append("END:VCALENDAR")
+        content = "\r\n".join(lines)
+        return HttpResponse(content, content_type="text/calendar; charset=utf-8")
+
+
+class AccountantView(APIView):
+    """
+    GET  /api/users/accountant/clients/         — list accountant's clients
+    POST /api/users/accountant/clients/         — add a client
+    GET  /api/users/accountant/clients/<pk>/    — client alerts + reminders
+    DELETE /api/users/accountant/clients/<pk>/  — remove client
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _get_profile(self, request):
+        from .models import AccountantProfile
+        profile, _ = AccountantProfile.objects.get_or_create(user=request.user)
+        return profile
+
+    def get(self, request, pk=None):
+        from .models import AccountantClient, TaxReminder
+        from datetime import date, timedelta
+        profile = self._get_profile(request)
+
+        if pk:
+            try:
+                link = AccountantClient.objects.get(pk=pk, accountant=profile)
+            except AccountantClient.DoesNotExist:
+                return Response({"error": "not found"}, status=404)
+            client_user = link.client_user
+            alerts, reminders = [], []
+            if client_user and client_user.intake_profile:
+                try:
+                    from apps.calculator.engine import calculate
+                    calc = calculate(client_user.intake_profile)
+                    alerts = generate_alerts(client_user.intake_profile, calc, "en")
+                except Exception:
+                    pass
+                today = date.today()
+                cutoff = today + timedelta(days=60)
+                user_type = client_user.intake_profile.get("user_type", "")
+                for r in TaxReminder.objects.filter(verification_status="verified", due_date__gte=today, due_date__lte=cutoff):
+                    if user_type and r.user_types and user_type not in r.user_types:
+                        continue
+                    reminders.append({"title": r.title_en, "due_date": r.due_date.isoformat(), "category": r.category})
+            return Response({
+                "id": link.id,
+                "nickname": link.nickname,
+                "notes": link.notes,
+                "user_type": client_user.intake_profile.get("user_type") if client_user and client_user.intake_profile else None,
+                "alerts": alerts[:5],
+                "upcoming_reminders": reminders,
+            })
+
+        clients = profile.clients.select_related("client_user").all()
+        return Response([
+            {
+                "id": c.id,
+                "nickname": c.nickname or (c.client_user.email if c.client_user else "Unknown"),
+                "user_type": c.client_user.intake_profile.get("user_type") if c.client_user and c.client_user.intake_profile else None,
+                "alert_count": 0,
+                "created_at": c.created_at.date().isoformat(),
+            }
+            for c in clients
+        ])
+
+    def post(self, request):
+        from .models import AccountantClient
+        profile = self._get_profile(request)
+        nickname = request.data.get("nickname", "")
+        client_email = request.data.get("email", "")
+        notes = request.data.get("notes", "")
+        client_user = None
+        if client_email:
+            try:
+                client_user = User.objects.get(email__iexact=client_email)
+            except User.DoesNotExist:
+                pass
+        link = AccountantClient.objects.create(accountant=profile, client_user=client_user, nickname=nickname, notes=notes)
+        return Response({"id": link.id, "nickname": link.nickname}, status=201)
+
+    def delete(self, request, pk=None):
+        from .models import AccountantClient
+        profile = self._get_profile(request)
+        AccountantClient.objects.filter(pk=pk, accountant=profile).delete()
+        return Response(status=204)

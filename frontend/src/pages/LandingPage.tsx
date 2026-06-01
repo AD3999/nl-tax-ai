@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Icon } from "../components/Icon";
 import { useMobile } from "../hooks/useMobile";
+import { apiBase } from "../api/client";
 
 const USER_TYPE_DOTS = [
   { label: "ZZP",      color: "var(--sage-600)" },
@@ -11,10 +13,10 @@ const USER_TYPE_DOTS = [
 ];
 
 const FEATURES = [
-  { kbd: "01", title: "Chat",           body: "Plain-language tax answers in NL, EN, or FA — grounded in 2026 rules and your own numbers" },
-  { kbd: "02", title: "Calculator",     body: "Box 1, 2 & 3, ZZP deductions, credits and Wet DBA — calculated, not estimated" },
-  { kbd: "03", title: "IB Return",      body: "Field-by-field walkthrough of the official aangifte with explanations and traps" },
-  { kbd: "04", title: "Three languages",body: "Dutch, English and Persian — first class, with full RTL layout" },
+  { kbd: "01", title: "Deduction Checker", body: "Find out which Dutch tax deductions you qualify for — zelfstandigenaftrek, MKB, KIA and more — in 60 seconds", to: "/deduction-checker" },
+  { kbd: "02", title: "Chat",              body: "Plain-language tax answers in NL, EN, or FA — grounded in 2026 rules and your own numbers", to: "/chat" },
+  { kbd: "03", title: "Calculator",        body: "Box 1, 2 & 3, ZZP deductions, credits and Wet DBA — calculated, not estimated", to: "/intake" },
+  { kbd: "04", title: "IB Return",         body: "Field-by-field walkthrough of the official aangifte with explanations and traps", to: "/ib-guide" },
 ];
 
 const PROOF_ROWS = [
@@ -22,6 +24,61 @@ const PROOF_ROWS = [
   ["Employee · 30% ruling",  "€95,000", "RULING YEAR 2"],
   ["DGA · BV salary + div",  "€56,000", "DIVIDEND €12k"],
 ];
+
+function EmailCaptureBar({ lang, apiBase }: { lang: "nl" | "en" | "fa"; apiBase: string }) {
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const label = { nl: "Ontvang 2026 ZZP belastingtips", en: "Get 2026 ZZP tax tips", fa: "دریافت نکات مالیاتی ZZP 2026" }[lang];
+  const placeholder = { nl: "uw@emailadres.nl", en: "your@email.com", fa: "ایمیل شما" }[lang];
+  const btnLabel = { nl: "Stuur mij tips", en: "Send me tips", fa: "ارسال" }[lang];
+  const thanksMsg = { nl: "Bedankt! We sturen u snel belastingtips.", en: "Thanks! Tax tips are on their way.", fa: "ممنون! نکات مالیاتی برای شما ارسال می‌شود." }[lang];
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email || loading) return;
+    setLoading(true);
+    try {
+      await fetch(`${apiBase}/users/email-capture/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source_page: "landing" }),
+      });
+      setSent(true);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <section style={{ padding: "40px 56px", background: "var(--paper-tint)", borderTop: "1px solid var(--hairline)", borderBottom: "1px solid var(--hairline)" }}>
+      <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center" }}>
+        {sent ? (
+          <p style={{ color: "var(--sage-700)", fontWeight: 500 }}>{thanksMsg}</p>
+        ) : (
+          <>
+            <p style={{ color: "var(--ink-2)", fontSize: "var(--text-sm)", marginBottom: 14, fontWeight: 500 }}>{label}</p>
+            <form onSubmit={submit} style={{ display: "flex", gap: 8, maxWidth: 420, margin: "0 auto", flexWrap: "wrap" }}>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder={placeholder}
+                required
+                className="tw-input"
+                style={{ flex: 1, minWidth: 200, fontSize: 16 }}
+              />
+              <button type="submit" className="btn btn-accent" disabled={loading}>
+                {loading ? "..." : btnLabel}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
 
 export default function LandingPage() {
   const { t, i18n } = useTranslation();
@@ -62,11 +119,16 @@ export default function LandingPage() {
             </p>
 
             <div style={{ marginTop: "var(--sp-6)", display: "flex", flexWrap: "wrap", alignItems: "center", gap: "var(--sp-3)" }}>
-              <button className="btn btn-accent btn-lg" onClick={() => navigate("/intake")}>
+              <button className="btn btn-accent btn-lg" onClick={() => navigate("/deduction-checker")}>
                 {t("landing.cta_primary")} <Icon.arrow />
               </button>
-              <button className="btn btn-ghost btn-lg" onClick={() => navigate("/chat")}>
+              <button className="btn btn-ghost btn-lg" onClick={() => navigate("/intake")}>
                 {t("landing.cta_secondary")}
+              </button>
+            </div>
+            <div style={{ marginTop: "var(--sp-3)" }}>
+              <button className="btn btn-ghost btn-sm" style={{ color: "var(--ink-3)", fontSize: "var(--text-xs)" }} onClick={() => navigate("/chat")}>
+                {t("landing.cta_tertiary")} →
               </button>
             </div>
 
@@ -154,7 +216,9 @@ export default function LandingPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 1, background: "var(--hairline)", border: "1px solid var(--hairline)", borderRadius: "var(--r-lg)", overflow: "hidden" }}>
             {FEATURES.map(f => (
-              <div key={f.kbd} style={{ padding: "var(--sp-6) var(--sp-5) var(--sp-8)", background: "var(--paper)", display: "flex", flexDirection: "column", gap: "var(--sp-3)", minHeight: 200 }}>
+              <div key={f.kbd} onClick={() => navigate(f.to)} style={{ padding: "var(--sp-6) var(--sp-5) var(--sp-8)", background: "var(--paper)", display: "flex", flexDirection: "column", gap: "var(--sp-3)", minHeight: 200, cursor: "pointer", transition: "background .15s" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "var(--paper-3)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "var(--paper)")}>
                 <span className="eyebrow">{f.kbd}</span>
                 <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-2xl)", fontWeight: 400, color: "var(--ink)" }}>{f.title}</h3>
                 <p style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", lineHeight: "var(--leading-relaxed)" }}>{f.body}</p>
@@ -204,6 +268,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── EMAIL CAPTURE ── */}
+      <EmailCaptureBar lang={lang} apiBase={apiBase} />
 
       {/* ── FOOTER CTA ── */}
       <section style={{ padding: isMobile ? "var(--sp-12) var(--sp-4)" : "var(--sp-16) var(--sp-16)" }}>

@@ -10,7 +10,12 @@
     "dashboard": "Dashboard",
     "login": "Inloggen",
     "logout": "Uitloggen",
-    "tax_history": "Belastinggeschiedenis"
+    "tax_history": "Belastinggeschiedenis",
+    "deduction_checker": "Aftrekposten",
+    "zzp_guide": "ZZP Belastinggids",
+    "expat_guide": "Expat Belastinggids",
+    "tax_calendar": "Belastingkalender",
+    "history": "Geschiedenis"
   },
   "chat": {
     "placeholder": "Stel uw belastingvraag... (Enter om te verzenden)",
@@ -59,8 +64,9 @@
     "headline_1": "Belasting in Nederland,",
     "headline_2": "helder uitgelegd",
     "subheadline": "TaxWijs beantwoordt uw belastingvragen in het Nederlands, Engels of Farsi — persoonlijk berekend op basis van uw situatie",
-    "cta_primary": "Profiel instellen en beginnen",
-    "cta_secondary": "Direct vragen stellen",
+    "cta_primary": "Controleer mijn aftrekposten — gratis",
+    "cta_secondary": "Bereken mijn belasting",
+    "cta_tertiary": "Vraag de belasting-AI",
     "no_account_needed": "Geen account vereist om te beginnen",
     "feature_chat_title": "AI-belastingassistent",
     "feature_chat_desc": "Stel vragen in uw eigen taal — Claude legt regels uit en citeert altijd de bron",

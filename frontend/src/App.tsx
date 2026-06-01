@@ -5,6 +5,7 @@ import TopNav from "./components/TopNav";
 import Footer from "./components/Footer";
 import LoadingScreen from "./components/LoadingScreen";
 import { useAuth } from "./context/AuthContext";
+import { trackPageView } from "./lib/analytics";
 
 // ── Error Boundary — prevents a rendering crash from blank-screening the app ──
 class ErrorBoundary extends Component<
@@ -50,17 +51,21 @@ class ErrorBoundary extends Component<
   }
 }
 
-const CalculatorPage  = lazy(() => import("./pages/CalculatorPage"));
-const ChatPage        = lazy(() => import("./pages/ChatPage"));
-const IntakePage      = lazy(() => import("./pages/IntakePage"));
-const IBGuidePage     = lazy(() => import("./pages/IBGuidePage"));
-const SimulationPage  = lazy(() => import("./pages/SimulationPage"));
-const LandingPage     = lazy(() => import("./pages/LandingPage"));
-const LoginPage       = lazy(() => import("./pages/LoginPage"));
-const RegisterPage    = lazy(() => import("./pages/RegisterPage"));
-// PricingPage removed — site is fully free during current phase
-const DashboardPage   = lazy(() => import("./pages/DashboardPage"));
-const TaxHistoryPage  = lazy(() => import("./pages/TaxHistoryPage"));
+const CalculatorPage       = lazy(() => import("./pages/CalculatorPage"));
+const ChatPage             = lazy(() => import("./pages/ChatPage"));
+const IntakePage           = lazy(() => import("./pages/IntakePage"));
+const IBGuidePage          = lazy(() => import("./pages/IBGuidePage"));
+const SimulationPage       = lazy(() => import("./pages/SimulationPage"));
+const LandingPage          = lazy(() => import("./pages/LandingPage"));
+const LoginPage            = lazy(() => import("./pages/LoginPage"));
+const RegisterPage         = lazy(() => import("./pages/RegisterPage"));
+const DashboardPage        = lazy(() => import("./pages/DashboardPage"));
+const TaxHistoryPage       = lazy(() => import("./pages/TaxHistoryPage"));
+const DeductionCheckerPage = lazy(() => import("./pages/DeductionCheckerPage"));
+const ZZPTaxPage           = lazy(() => import("./pages/ZZPTaxPage"));
+const ExpatTaxPage         = lazy(() => import("./pages/ExpatTaxPage"));
+const TaxCalendarPage      = lazy(() => import("./pages/TaxCalendarPage"));
+const AccountantPage       = lazy(() => import("./pages/AccountantPage"));
 
 const AdminDashboard       = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminRulesPage       = lazy(() => import("./pages/admin/AdminRulesPage"));
@@ -95,24 +100,34 @@ function App() {
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
+  // Track page views on route change
+  useEffect(() => {
+    trackPageView(location.pathname);
+  }, [location.pathname]);
+
   return (
     <div dir={isRtl ? "rtl" : "ltr"} style={{ display: "flex", flexDirection: "column", minHeight: "100svh" }}>
       <TopNav />
       <ErrorBoundary>
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
-          <Route path="/"            element={<LandingPage />} />
-          <Route path="/login"       element={<LoginPage />} />
-          <Route path="/register"    element={<RegisterPage />} />
-          <Route path="/chat"        element={<ChatPage />} />
-          <Route path="/intake"      element={<IntakePage />} />
-          <Route path="/ib-guide"    element={<IBGuidePage />} />
-          <Route path="/simulation"  element={<SimulationPage />} />
-          <Route path="/pricing"     element={<Navigate to="/" replace />} />
-          <Route path="/dashboard"   element={<DashboardPage />} />
-          <Route path="/tax-history" element={<TaxHistoryPage />} />
+          <Route path="/"                      element={<LandingPage />} />
+          <Route path="/login"               element={<LoginPage />} />
+          <Route path="/register"            element={<RegisterPage />} />
+          <Route path="/chat"                element={<ChatPage />} />
+          <Route path="/intake"              element={<IntakePage />} />
+          <Route path="/ib-guide"            element={<IBGuidePage />} />
+          <Route path="/simulation"          element={<SimulationPage />} />
+          <Route path="/pricing"             element={<Navigate to="/" replace />} />
+          <Route path="/dashboard"           element={<DashboardPage />} />
+          <Route path="/tax-history"         element={<TaxHistoryPage />} />
+          <Route path="/deduction-checker"   element={<DeductionCheckerPage />} />
+          <Route path="/zzp-tax-netherlands" element={<ZZPTaxPage />} />
+          <Route path="/expat-tax-netherlands" element={<ExpatTaxPage />} />
+          <Route path="/tax-calendar"        element={<TaxCalendarPage />} />
+          <Route path="/accountant"          element={<AccountantPage />} />
           {/* Calculator: kept at URL but hidden from user nav */}
-          <Route path="/calculator"  element={<CalculatorPage />} />
+          <Route path="/calculator"          element={<CalculatorPage />} />
           {/* Admin routes — redirect to home if not staff */}
           <Route path="/admin"                    element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/rules"              element={<AdminRoute><AdminRulesPage /></AdminRoute>} />

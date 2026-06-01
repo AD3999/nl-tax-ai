@@ -16,7 +16,7 @@ import {
   type TaxAction,
   type ActionState,
 } from "../api/actions";
-import { authHeader } from "../api/client";
+import { apiBase, authHeader } from "../api/client";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -291,6 +291,79 @@ function computeHealthScore(
   }
 
   return { score: Math.max(0, Math.min(100, Math.round(score))), factors };
+}
+
+// ── PDF Download Card ─────────────────────────────────────────────────────────
+function PDFDownloadCard({ lang }: { lang: "nl" | "en" | "fa" }) {
+  const { i18n } = useTranslation();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const L = (nl: string, en: string, fa: string) =>
+    lang === "nl" ? nl : lang === "fa" ? fa : en;
+
+  async function downloadReport() {
+    setLoading(true);
+    setError("");
+    try {
+      const resp = await fetch(`${apiBase}/users/report/?lang=${i18n.language}`, {
+        headers: authHeader(),
+      });
+      if (!resp.ok) {
+        const data = await resp.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to generate report");
+      }
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "taxwijs-report-2026.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Error generating PDF");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="card" style={{ padding: "18px 20px", background: "var(--accent-soft)", border: "1px solid var(--accent-line)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+        <span style={{ fontSize: 20 }}>📊</span>
+        <div>
+          <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ink)" }}>
+            {L("Belastingrapport PDF", "Tax Health Report PDF", "گزارش سلامت مالیاتی PDF")}
+          </div>
+          <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: 2 }}>
+            {L("Uw complete 2026 belastingoverzicht", "Your complete 2026 tax overview", "نمای کلی مالیاتی کامل ۲۰۲۶ شما")}
+          </div>
+        </div>
+      </div>
+      <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginBottom: 12, lineHeight: 1.5 }}>
+        {L(
+          "Bevat: belastingberekening, aftrekposten, risico's, deadlines, optimalisatietips en bronvermelding.",
+          "Includes: tax calculation, deductions, risks, deadlines, optimization tips and source citations.",
+          "شامل: محاسبه مالیات، کسورات، ریسک‌ها، مهلت‌ها، نکات بهینه‌سازی و منابع.",
+        )}
+      </div>
+      {error && (
+        <div style={{ fontSize: "var(--text-xs)", color: "var(--danger)", marginBottom: 8 }}>{error}</div>
+      )}
+      <button
+        className="btn btn-accent btn-sm"
+        style={{ width: "100%" }}
+        onClick={downloadReport}
+        disabled={loading}
+      >
+        {loading
+          ? L("Rapport genereren...", "Generating report...", "در حال ایجاد گزارش...")
+          : L("Download PDF rapport", "Download PDF report", "دانلود گزارش PDF")}
+      </button>
+    </div>
+  );
 }
 
 function TaxHealthScoreCard({
@@ -1190,6 +1263,9 @@ export default function DashboardPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
           <TaxHealthScoreCard score={healthScore} loading={loadingCalc || loadingAlerts} factors={healthFactors} lang={lang} />
+
+          {/* PDF Tax Health Report download */}
+          {profile && <PDFDownloadCard lang={lang} />}
 
           <FinancialOverviewCard calcResult={calcResult} loading={loadingCalc} userType={userType} lang={lang} />
 

@@ -7,15 +7,17 @@ import LangSwitch from "./LangSwitch";
 import { useMobile } from "../hooks/useMobile";
 
 const NAV_ITEMS_GUEST = [
-  { to: "/chat", labelKey: "nav.chat" },
+  { to: "/deduction-checker", labelKey: "nav.deduction_checker" },
+  { to: "/chat",              labelKey: "nav.chat" },
 ] as const;
 
 const NAV_ITEMS_AUTH = [
-  { to: "/dashboard",   labelKey: "nav.dashboard" },
-  { to: "/chat",        labelKey: "nav.chat" },
-  { to: "/ib-guide",    labelKey: "ib.nav" },
-  { to: "/simulation",  labelKey: "nav.simulation" },
-  { to: "/tax-history", labelKey: "nav.tax_history" },
+  { to: "/dashboard",         labelKey: "nav.dashboard" },
+  { to: "/chat",              labelKey: "nav.chat" },
+  { to: "/ib-guide",          labelKey: "ib.nav" },
+  { to: "/simulation",        labelKey: "nav.simulation" },
+  { to: "/tax-calendar",      labelKey: "nav.tax_calendar" },
+  { to: "/tax-history",       labelKey: "nav.tax_history" },
 ] as const;
 
 function HamburgerIcon({ open }: { open: boolean }) {

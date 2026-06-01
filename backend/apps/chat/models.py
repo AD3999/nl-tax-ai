@@ -10,6 +10,8 @@ class Conversation(models.Model):
     )
     language = models.CharField(max_length=5, choices=LANGUAGES, default="nl")
     tax_year = models.PositiveIntegerField(default=2026)
+    summary = models.CharField(max_length=300, blank=True)
+    message_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

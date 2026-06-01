@@ -316,7 +316,44 @@ class ChatMessageView(APIView):
                             "The user is asking about the alert above. Explain it clearly, explain why it matters for their specific situation, and give one concrete action they can take right now.\n"
                         )
 
-                    system_prompt = _result_system_prompt(language, calculator_block, retrieved_context, health_context, alert_ctx)
+                    # Inject AI tax memory for authenticated users
+                    memory_ctx = ""
+                    if request.user.is_authenticated and request.user.tax_memory:
+                        m = request.user.tax_memory
+                        memory_lines = ["\n=== USER'S TAX MEMORY (known facts from prior sessions) ==="]
+                        if m.get("user_type"): memory_lines.append(f"Type: {m['user_type']}")
+                        if m.get("income"): memory_lines.append(f"Income: €{m['income']:,}")
+                        if m.get("hours_worked"): memory_lines.append(f"Hours worked: {m['hours_worked']}")
+                        if m.get("known_deductions"): memory_lines.append(f"Deductions claimed: {', '.join(m['known_deductions'])}")
+                        if m.get("last_calc_total"): memory_lines.append(f"Last calculated total tax: €{m['last_calc_total']:,}")
+                        if m.get("open_questions"): memory_lines.append(f"Open questions: {'; '.join(m['open_questions'])}")
+                        memory_lines.append("=== END MEMORY ===")
+                        memory_ctx = "\n".join(memory_lines)
+
+                    # Update tax_memory after successful calculation
+                    if request.user.is_authenticated and user_profile and calc_result:
+                        try:
+                            r_data = calc_result.get("result", {})
+                            c_data = calc_result.get("calculation", {})
+                            deductions = []
+                            if c_data.get("zelfstandigenaftrek", 0) > 0: deductions.append("zelfstandigenaftrek")
+                            if c_data.get("startersaftrek", 0) > 0: deductions.append("startersaftrek")
+                            if c_data.get("mkb_winstvrijstelling", 0) > 0: deductions.append("mkb")
+                            if c_data.get("kia_deduction", 0) > 0: deductions.append("kia")
+                            mem = {
+                                "user_type": user_profile.get("user_type"),
+                                "income": c_data.get("gross_profit") or c_data.get("gross_revenue") or user_profile.get("annual_revenue_zzp") or user_profile.get("employment_income"),
+                                "hours_worked": user_profile.get("hours_per_year"),
+                                "known_deductions": deductions,
+                                "last_calc_total": r_data.get("total_tax_due"),
+                                "open_questions": request.user.tax_memory.get("open_questions", []) if request.user.tax_memory else [],
+                            }
+                            request.user.tax_memory = mem
+                            request.user.save(update_fields=["tax_memory"])
+                        except Exception:
+                            pass
+
+                    system_prompt = _result_system_prompt(language, calculator_block, retrieved_context, health_context, alert_ctx + memory_ctx)
 
                 claude_messages = []
                 for h in history[-10:]:

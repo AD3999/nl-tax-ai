@@ -34,6 +34,10 @@ class User(AbstractUser):
     ib_guide_answers    = models.JSONField(null=True, blank=True)
     simulation_state    = models.JSONField(null=True, blank=True)  # { answers, stepIdx }
 
+    # AI Tax Memory — injected into Claude system prompt for paid/logged-in users
+    # Keys: user_type, income, hours_worked, known_deductions, last_calc_result, open_questions
+    tax_memory          = models.JSONField(null=True, blank=True)
+
     class Meta:
         db_table = "users"
 
@@ -139,6 +143,143 @@ class TaxYearSnapshot(models.Model):
 
     def __str__(self):
         return f"{self.user_id} / {self.tax_year} ({'final' if self.is_final else 'draft'})"
+
+
+class AccountantProfile(models.Model):
+    """B2B tier — accountants who manage multiple client accounts."""
+    user = models.OneToOneField("users.User", on_delete=models.CASCADE, related_name="accountant_profile")
+    firm_name = models.CharField(max_length=200, blank=True)
+    client_limit = models.PositiveIntegerField(default=10)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "accountant_profiles"
+
+    def __str__(self):
+        return f"{self.user_id} — {self.firm_name or 'Accountant'}"
+
+
+class AccountantClient(models.Model):
+    """Relationship between an accountant and a client user."""
+    accountant = models.ForeignKey("users.AccountantProfile", on_delete=models.CASCADE, related_name="clients")
+    client_user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="accountant_links", null=True, blank=True)
+    nickname = models.CharField(max_length=100, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "accountant_clients"
+
+    def __str__(self):
+        return f"{self.accountant_id} → {self.nickname or self.client_user_id}"
+
+
+class EmailCapture(models.Model):
+    """Anonymous email captures from landing page and deduction checker."""
+    email = models.EmailField()
+    user_type = models.CharField(max_length=20, blank=True)
+    source_page = models.CharField(max_length=80, default="landing")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "email_captures"
+
+    def __str__(self):
+        return f"{self.email} ({self.source_page})"
+
+
+class TaxReminder(models.Model):
+    """
+    Smart Calendar / Reminder Engine — a single tax event / deadline.
+
+    Covers all 21 reminder categories from the spec:
+    income_tax, vat, payroll, corporate_tax, dividend_tax, toeslagen,
+    provisional_assessment, box3, expat, admin, documents, zzp_admin.
+
+    Seeded via management command seed_reminders. Admin can add/edit.
+    Frontend reads via GET /api/users/reminders/.
+    """
+    CATEGORY_CHOICES = [
+        ("income_tax",            "Income Tax"),
+        ("vat",                   "VAT / BTW"),
+        ("payroll",               "Payroll"),
+        ("corporate_tax",         "Corporate Tax"),
+        ("dividend_tax",          "Dividend Tax"),
+        ("toeslagen",             "Toeslagen"),
+        ("provisional_assessment","Voorlopige Aanslag"),
+        ("box3",                  "Box 3"),
+        ("expat",                 "Expat"),
+        ("admin",                 "Admin"),
+        ("documents",             "Documents"),
+        ("zzp_admin",             "ZZP Admin"),
+        ("dga",                   "DGA"),
+    ]
+    SOURCE_STATUS_CHOICES = [
+        ("official",     "Official Belastingdienst source"),
+        ("estimated",    "Estimated / typical date"),
+        ("user_defined", "User-defined"),
+    ]
+    ACTION_TYPE_CHOICES = [
+        ("file_return",        "File return"),
+        ("pay_tax",            "Pay tax"),
+        ("update_income",      "Update income estimate"),
+        ("upload_document",    "Upload document"),
+        ("check_eligibility",  "Check eligibility"),
+        ("review_rule",        "Review rule"),
+        ("book_consultation",  "Book consultation"),
+        ("log_hours",          "Log hours"),
+        ("log_expenses",       "Log expenses"),
+        ("review_deadline",    "Review deadline"),
+    ]
+    VERIFICATION_CHOICES = [
+        ("draft",          "Draft"),
+        ("pending_review", "Pending review"),
+        ("verified",       "Verified"),
+        ("expired",        "Expired"),
+    ]
+    RECURRENCE_CHOICES = [
+        ("monthly",   "Monthly"),
+        ("quarterly", "Quarterly"),
+        ("yearly",    "Yearly"),
+        ("custom",    "Custom"),
+    ]
+
+    title_nl = models.CharField(max_length=200)
+    title_en = models.CharField(max_length=200)
+    title_fa = models.CharField(max_length=200)
+    description_nl = models.TextField(blank=True)
+    description_en = models.TextField(blank=True)
+    description_fa = models.TextField(blank=True)
+
+    category   = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
+    user_types = models.JSONField(default=list)  # ["zzp"], ["employee","expat"], etc.
+
+    tax_year = models.PositiveIntegerField(default=2026)
+    due_date = models.DateField()
+    recurrence = models.CharField(max_length=20, choices=RECURRENCE_CHOICES, null=True, blank=True)
+    reminder_offsets = models.JSONField(default=list)  # [30, 14, 7, 1] days before due_date
+
+    source_url    = models.URLField(blank=True)
+    source_status = models.CharField(max_length=20, choices=SOURCE_STATUS_CHOICES, default="official")
+
+    verification_status = models.CharField(max_length=20, choices=VERIFICATION_CHOICES, default="verified")
+    action_type         = models.CharField(max_length=30, choices=ACTION_TYPE_CHOICES, default="review_deadline")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "tax_reminders"
+        ordering = ["due_date"]
+
+    def __str__(self):
+        return f"{self.title_en} ({self.due_date})"
+
+    def title(self, lang: str) -> str:
+        return getattr(self, f"title_{lang}", self.title_en) or self.title_en
+
+    def description(self, lang: str) -> str:
+        return getattr(self, f"description_{lang}", self.description_en) or self.description_en
 
 
 class UserItemState(models.Model):

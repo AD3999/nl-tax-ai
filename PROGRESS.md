@@ -1,7 +1,133 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 1 Jun 2026 — Phase 31 complete: logical CSS, Persian rewrite, multi-year comparison UI.
+> Last updated: 1 Jun 2026 — Phase 32 complete: all non-premium TASKS.md tasks done + session auto-logout.
+
+---
+
+## Phase 32 — Full TASKS.md Non-Premium Implementation (1 Jun 2026) ✅ Complete
+
+All non-premium tasks from TASKS.md executed. Zero TypeScript errors. Django check clean. Migrations applied.
+
+### What was built
+
+| Task | What | Status |
+|------|------|--------|
+| T2-4 | Landing page CTAs: primary → `/deduction-checker`, secondary → `/intake`, tertiary → `/chat` | ✅ |
+| T2-1 | `DeductionCheckerPage.tsx` — 6-question wizard, trilingual, computes qualifying deductions | ✅ |
+| T2-2 | `ZZPTaxPage.tsx` — SEO guide at `/zzp-tax-netherlands`, 7 sections, FAQ, structured source citations | ✅ |
+| T2-3 | `ExpatTaxPage.tsx` — SEO guide at `/expat-tax-netherlands`, 7 sections on 30% ruling, M-form, Box 3 | ✅ |
+| T2-5 | `EmailCapture` model + `POST /api/users/email-capture/` + inline form on LandingPage | ✅ |
+| T3-1 | `TaxReminder` model with full spec fields (category, user_types, due_date, offsets, recurrence, ICS support) | ✅ |
+| T3-2 | All 4 BTW quarterly deadlines seeded as verified TaxReminder records (data-driven, not hardcoded) | ✅ |
+| T4-1 | 4 IB reminders: filing open, deadline, extension request, bezwaar window | ✅ |
+| T4-2 | 3 Toeslagen reminders: zorgtoeslag income check, huurtoeslag reform, definitive toeslagen | ✅ |
+| T4-3 | 3 ZZP admin reminders: Q4 urencriterium warning, year-end checklist, quarterly expense log | ✅ |
+| T4-4 | 2 Voorlopige aanslag reminders: request + revise after income change | ✅ |
+| T4-5 | 4 DGA/BV reminders: gebruikelijk loon, Vpb deadline, Box 2 dividend warning, loonheffingen monthly | ✅ |
+| T4-6 | 5 Expat reminders: 30% ruling apply, phase-down year 4, M-form, Box 3 reference date, residency | ✅ |
+| T5-3 | `TaxCalendarPage.tsx` at `/tax-calendar` — category filter pills, days-until urgency, "Ask AI" per reminder, **Google Calendar link + .ics download** | ✅ |
+| T5-3 | `GET /api/users/calendar.ics` — full iCal feed of user-relevant reminders with 7-day + 1-day VALARM | ✅ |
+| T3-3 | Conversation history: `summary/message_count` on Conversation model, `GET /api/users/chat-history/`, `reminders.ts` API client | ✅ |
+| T3-4 | AI Tax Memory: `User.tax_memory` JSONField, injected into system prompt for auth users, auto-updated on each calculation | ✅ |
+| T3-5 | PostHog analytics: `lib/analytics.ts`, page_view on every route, events for intake/calc/chat/deduction-checker/alerts | ✅ |
+| T5-4 | Admin Belastingplan Calendar section in AdminDashboard — 5 annual cycle steps, current month highlighted | ✅ |
+| T5-1 | `AccountantPage.tsx` at `/accountant` + `AccountantProfile/AccountantClient` models + `GET/POST/DELETE /api/users/accountant/clients/` | ✅ |
+| — | Session auto-logout after 1hr inactivity — activity events reset timer, interval checks every 60s | ✅ |
+
+### New models (migration 0007)
+
+| Model | App | Purpose |
+|-------|-----|---------|
+| `TaxReminder` | users | Smart Calendar — all 2026 deadlines/events, data-driven |
+| `EmailCapture` | users | Anonymous email leads from landing/deduction-checker |
+| `AccountantProfile` | users | B2B accountant metadata |
+| `AccountantClient` | users | Accountant ↔ client user link |
+| `User.tax_memory` | users | JSONField for cross-session AI memory |
+| `Conversation.summary` | chat | First-question summary for history list |
+| `Conversation.message_count` | chat | Count for history preview |
+
+### New API endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/users/email-capture/` | POST | Capture email (anon) |
+| `/api/users/reminders/` | GET | Upcoming TaxReminders for user |
+| `/api/users/calendar.ics` | GET | iCal feed for Google/Apple/Outlook |
+| `/api/users/chat-history/` | GET | Last 10 conversations |
+| `/api/users/chat-history/<id>/` | GET | Full message list |
+| `/api/users/accountant/clients/` | GET/POST | Accountant client management |
+| `/api/users/accountant/clients/<id>/` | GET/DELETE | Client detail + remove |
+
+### Seed data
+
+- `python manage.py seed_reminders` — 25 verified TaxReminder records covering all 7 categories
+- Run with `--reset` to wipe and re-seed
+
+### Session inactivity timeout
+
+- `AuthContext.tsx`: tracks `taxwijs_last_active` timestamp in localStorage
+- Activity events (click, keydown, touchstart, scroll, mousedown) reset the timer
+- Interval checks every 60s; logs out automatically after 1hr of no activity
+- Timer cleaned up on logout or component unmount
+
+### Verification
+
+- `npx tsc --noEmit` → 0 errors
+- `python manage.py check` → 0 issues
+- `python manage.py migrate` → all 3 new migrations applied cleanly
+- `python manage.py seed_reminders` → 25 created, 0 updated
+
+---
+
+---
+
+## Gap Analysis + Product Backlog (1 Jun 2026) ✅ Complete
+
+### What was done
+
+Read and decoded three ChatGPT strategy conversations (Persian) line by line:
+- **Doc 1**: Full MVP → Growth Strategy (product positioning, free/paid features, pricing tiers, acquisition funnel, site structure, KPIs, 30-day plan)
+- **Docs 2 & 3**: Full Tax Compliance Calendar + Smart Reminder Engine spec (21 reminder categories, ~60 distinct events, `TaxReminder` TypeScript type)
+
+Performed a line-by-line expert gap analysis comparing every requirement in the spec against the current build.
+
+### Key findings
+
+| Area | Built | Partial | Missing |
+|------|-------|---------|---------|
+| Core AI & calculator | 8 | 2 | 0 |
+| Free tools & acquisition | 3 | 2 | 2 |
+| Paid features & monetization | 0 | 2 | 5 |
+| Payment / Stripe | 0 | 0 | 1 |
+| SEO content pages | 0 | 0 | 4 |
+| User dashboard | 4 | 1 | 2 |
+| Admin dashboard | 6 | 0 | 0 |
+| Reminder engine (MVP v1) | 2 | 4 | 7 |
+| Analytics & KPI tracking | 0 | 0 | 8 |
+| Pricing / paywall | 0 | 0 | 5 |
+
+### 5 Most Critical Gaps (by revenue impact)
+
+1. **Stripe + €19 one-time PDF report** — zero revenue without it
+2. **SEO content pages** (`/zzp-tax-netherlands`, `/expat-tax-netherlands`) — no organic acquisition without them
+3. **PDF export of Tax Health Report** — health score already computed, just needs PDF rendering
+4. **Paywall / free-vs-paid gates** — everything that should be paid is currently free
+5. **Full TaxReminder calendar data model** — current alerts lack `due_date`, `recurrence`, `reminder_offsets`
+
+### Output
+
+Full prioritized backlog written to **`TASKS.md`** — 16 sessions, 20 tasks across 5 tiers.
+
+| Tier | Tasks | Focus |
+|------|-------|-------|
+| T1 (Revenue) | T1-1 to T1-4 | Pricing page, Stripe, PDF report, paywall gates |
+| T2 (Acquisition) | T2-1 to T2-5 | Deduction checker, SEO pages, landing CTA, email capture |
+| T3 (Quality) | T3-1 to T3-5 | TaxReminder model, BTW data-driven, conversation history, AI memory, analytics |
+| T4 (Advanced reminders) | T4-1 to T4-6 | IB/toeslagen/DGA/expat/voorlopige/ZZP admin reminder categories |
+| T5 (B2B & infra) | T5-1 to T5-4 | Accountant dashboard, WhatsApp/SMS, Google Calendar, Prinsjesdag admin |
+
+**Usage:** Tell Claude "do T1-1" (or any task number) and it will execute the full brief from `TASKS.md`.
 
 ---
 

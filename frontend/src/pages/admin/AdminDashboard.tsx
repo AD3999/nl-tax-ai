@@ -196,6 +196,68 @@ export default function AdminDashboard() {
           </Card>
         </div>
       </div>
+      {/* Belastingplan / Annual Tax Law Calendar */}
+      <BelastingplanCalendar />
     </AdminLayout>
+  );
+}
+
+const BELASTINGPLAN_EVENTS = [
+  { month: "September", icon: "📜", title: "Prinsjesdag — Belastingplan released", description: "The government publishes next year's tax plan on Prinsjesdag (3rd Tuesday of September). Review proposed changes that affect TaxWijs rules.", action: "Review Belastingplan docs", urgent: false },
+  { month: "Oct–Nov", icon: "📝", title: "Extract proposed rules", description: "Extract all new/changed rules from the Belastingplan document. Add them to the DB as 'draft' status with source citation.", action: "Create draft rules", urgent: false },
+  { month: "December", icon: "✅", title: "Final law adoption", description: "After parliamentary approval (typically December), mark rules as 'pending_review' then 'verified' once confirmed.", action: "Verify & publish rules", urgent: false },
+  { month: "January", icon: "🔄", title: "Activate new-year rules", description: "Set tax_year filter to new year. Archive expired rules (set verification_status='expired'). Run validate.py.", action: "Activate + archive rules", urgent: false },
+  { month: "March", icon: "🧮", title: "Aangifte season — full QA", description: "With filing season open, run all 6 ground-truth scenarios against the engine. Any discrepancy blocks the release.", action: "Run QA suite", urgent: false },
+];
+
+function BelastingplanCalendar() {
+  const currentMonth = new Date().getMonth() + 1; // 1–12
+  const isActive = (month: string) => {
+    if (month === "September" && currentMonth === 9) return true;
+    if (month === "Oct–Nov" && (currentMonth === 10 || currentMonth === 11)) return true;
+    if (month === "December" && currentMonth === 12) return true;
+    if (month === "January" && currentMonth === 1) return true;
+    if (month === "March" && currentMonth === 3) return true;
+    return false;
+  };
+
+  return (
+    <Card className="mt-6">
+      <CardHeader>
+        <CardTitle>📅 Annual Tax Law Calendar (Belastingplan Cycle)</CardTitle>
+      </CardHeader>
+      <CardBody>
+        <p className="text-sm text-gray-500 mb-4">
+          Internal admin reminders for the annual Dutch tax law update cycle. Active step is highlighted.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-3">
+          {BELASTINGPLAN_EVENTS.map(ev => {
+            const active = isActive(ev.month);
+            return (
+              <div
+                key={ev.month}
+                className={`rounded-lg border p-4 transition-colors ${active ? "border-green-400 bg-green-50" : "border-gray-100 bg-white"}`}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xl">{ev.icon}</span>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                    {ev.month}
+                  </span>
+                  {active && <span className="text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded-full">NOW</span>}
+                </div>
+                <p className="text-xs font-semibold text-gray-900 mb-1">{ev.title}</p>
+                <p className="text-xs text-gray-500 mb-3 leading-relaxed">{ev.description}</p>
+                <button
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                  onClick={() => alert(`Action: ${ev.action}\n\n${ev.description}`)}
+                >
+                  {ev.action} →
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </CardBody>
+    </Card>
   );
 }

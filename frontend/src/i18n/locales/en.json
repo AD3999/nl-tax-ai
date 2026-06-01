@@ -10,7 +10,12 @@
     "dashboard": "Dashboard",
     "login": "Log in",
     "logout": "Log out",
-    "tax_history": "Tax History"
+    "tax_history": "Tax History",
+    "deduction_checker": "Deductions",
+    "zzp_guide": "ZZP Tax Guide",
+    "expat_guide": "Expat Tax Guide",
+    "tax_calendar": "Tax Calendar",
+    "history": "History"
   },
   "chat": {
     "placeholder": "Ask your tax question... (Enter to send)",
@@ -105,8 +110,9 @@
     "headline_1": "Tax in the Netherlands,",
     "headline_2": "answered plainly",
     "subheadline": "TaxWijs answers your tax questions in Dutch, English, or Persian — personalised to your situation",
-    "cta_primary": "Set up profile & start",
-    "cta_secondary": "Ask directly",
+    "cta_primary": "Check my deductions — free",
+    "cta_secondary": "Calculate my tax",
+    "cta_tertiary": "Ask the tax AI",
     "no_account_needed": "No account required to get started",
     "feature_chat_title": "AI tax assistant",
     "feature_chat_desc": "Ask questions in your language — Claude explains rules and always cites the source",
