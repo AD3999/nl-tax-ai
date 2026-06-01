@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { Card, CardHeader, CardBody, CardTitle, Spinner, Button, Badge } from "@/components/ui/index";
+import { Card, CardBody, Spinner, Button } from "@/components/ui/index";
 import { getAdminUsers, updateAdminUser, getAdminUser } from "@/lib/admin/api";
 import type { AdminUser } from "@/lib/admin/api";
 import { Search, RefreshCw, ChevronDown, ChevronUp, Shield, User } from "lucide-react";
