@@ -366,7 +366,7 @@ class ChatMessageView(APIView):
                 try:
                     with client.messages.stream(
                         model="claude-sonnet-4-6",
-                        max_tokens=1024,
+                        max_tokens=2048,
                         system=system_prompt,
                         messages=claude_messages,
                     ) as stream:

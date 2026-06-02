@@ -1,7 +1,43 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 2 Jun 2026 — Admin dashboard, Persian formalisation, auth fixes, Railway CLI.
+> Last updated: 3 Jun 2026 — Brand loading multilingual, chat Persian fixes, chatbot max_tokens, Django admin English.
+
+---
+
+## Session — 3 Jun 2026 ✅ Complete
+
+### Brand loading screen — multilingual tips
+
+`LoadingScreen.tsx`: rotating tips were hardcoded in English. Now reads `i18n.language` and shows tips in NL/EN/FA.
+
+**File changed:** `frontend/src/components/LoadingScreen.tsx`
+
+---
+
+### Chat page — Persian greeting & hardcoded English strings fixed
+
+1. **Intake greeting (FA)**: "Employee"/"Expat" replaced with `کارمند` / `مهاجر خارجی`. Informal `فریلنسر` → formal `آزادکار / کارآفرین مستقل`.
+2. **Suggestion card "Ask" button**: NL → "Vraag", FA → "بپرسید", EN → "Ask".
+3. **Persian suggestion questions**: informal imperatives fixed (`توضیح بده` → `توضیح دهید` etc.).
+
+**File changed:** `frontend/src/pages/ChatPage.tsx`
+
+---
+
+### Chatbot "something went wrong" — max_tokens doubled
+
+`max_tokens` increased from 1024 → 2048. Longer conversations were hitting the output token ceiling mid-stream, causing the Anthropic SDK to throw and the frontend to show the generic error.
+
+**File changed:** `backend/apps/chat/views.py`
+
+---
+
+### Django admin — English by default
+
+`LANGUAGE_CODE` changed from `nl-nl` → `en-us`.
+
+**File changed:** `backend/config/settings.py`
 
 ---
 

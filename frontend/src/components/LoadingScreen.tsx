@@ -1,18 +1,36 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
-const TIPS = [
-  "Verifying 2026 tax rules…",
-  "Loading your profile…",
-  "Connecting calculator engine…",
-  "Almost there…",
-];
+const TIPS: Record<string, string[]> = {
+  nl: [
+    "2026 belastingregels verifiëren…",
+    "Uw profiel laden…",
+    "Calculatiemodule verbinden…",
+    "Bijna klaar…",
+  ],
+  en: [
+    "Verifying 2026 tax rules…",
+    "Loading your profile…",
+    "Connecting calculator engine…",
+    "Almost there…",
+  ],
+  fa: [
+    "در حال تأیید قوانین مالیاتی ۲۰۲۶…",
+    "در حال بارگذاری پروفایل شما…",
+    "اتصال به موتور محاسبه…",
+    "تقریباً آماده…",
+  ],
+};
 
 export default function LoadingScreen() {
+  const { i18n } = useTranslation();
+  const lang = (i18n.language as "nl" | "en" | "fa") in TIPS ? i18n.language as "nl" | "en" | "fa" : "en";
+  const tips = TIPS[lang];
   const [tip, setTip] = useState(0);
   const [pct, setPct] = useState(12);
 
   useEffect(() => {
-    const tipTimer = setInterval(() => setTip(t => (t + 1) % TIPS.length), 1700);
+    const tipTimer = setInterval(() => setTip(t => (t + 1) % tips.length), 1700);
     const pctTimer = setInterval(() => setPct(p => p < 88 ? p + Math.random() * 7 : p), 320);
     return () => { clearInterval(tipTimer); clearInterval(pctTimer); };
   }, []);
@@ -68,7 +86,7 @@ export default function LoadingScreen() {
 
         {/* Rotating tip */}
         <div style={{ height: 20, width: 260, position: "relative", overflow: "hidden" }}>
-          {TIPS.map((t, i) => (
+          {tips.map((t, i) => (
             <div key={i} style={{
               position: "absolute", inset: 0,
               fontSize: 13, color: "var(--ink-3)", textAlign: "center",

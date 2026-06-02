@@ -38,11 +38,11 @@ const RESULT_QUESTIONS: Record<string, Record<string, { q: string; tag: string }
       { q: "How does the 12.7% SME profit exemption work?",             tag: "Deduction" },
     ],
     fa: [
-      { q: "مجموع مالیات من را به زبان ساده توضیح بده",                tag: "خلاصه" },
+      { q: "مجموع مالیات من را به زبان ساده توضیح دهید",              tag: "خلاصه" },
       { q: "چرا ZVW می‌پردازم و دقیقاً چقدر است؟",                   tag: "ZVW" },
       { q: "هر ماه چقدر باید برای مالیات کنار بگذارم؟",               tag: "جریان نقدی" },
-      { q: "خطر Wet DBA من چقدر است؟",                                tag: "انطباق" },
-      { q: "کسر کارآفرینی چگونه مالیات من را کاهش داد؟",             tag: "کسر" },
+      { q: "سطح ریسک Wet DBA من چقدر است؟",                          tag: "انطباق" },
+      { q: "کسر کارآفرینی چگونه مالیات من را کاهش داده است؟",        tag: "کسر" },
       { q: "معافیت سود ۱۲.۷٪ چگونه اعمال می‌شود؟",                  tag: "کسر" },
     ],
   },
@@ -62,10 +62,10 @@ const RESULT_QUESTIONS: Record<string, Record<string, { q: string; tag: string }
       { q: "Do I qualify for the childcare credit (IACK) with children?",tag: "IACK" },
     ],
     fa: [
-      { q: "محاسبه مالیات من را به زبان ساده توضیح بده",              tag: "خلاصه" },
+      { q: "محاسبه مالیات من را به زبان ساده توضیح دهید",             tag: "خلاصه" },
       { q: "نرخ مؤثر مالیاتی من چقدر است؟",                          tag: "نرخ" },
-      { q: "تخفیف کار (arbeidskorting) چگونه به من کمک می‌کند؟",     tag: "تخفیف" },
-      { q: "آیا با این درآمد به کمک هزینه مراقبت بهداشتی حق دارم؟", tag: "کمک هزینه" },
+      { q: "اعتبار مالیاتی کار (arbeidskorting) چگونه به من کمک می‌کند؟", tag: "اعتبار" },
+      { q: "آیا با این درآمد مشمول کمک هزینه مراقبت بهداشتی می‌شوم؟", tag: "کمک هزینه" },
     ],
   },
   expat: {
@@ -82,8 +82,8 @@ const RESULT_QUESTIONS: Record<string, Record<string, { q: string; tag: string }
       { q: "How does the labour tax credit apply with the 30% ruling?", tag: "Credit" },
     ],
     fa: [
-      { q: "قانون ۳۰٪ چطور مالیات من را تحت تأثیر قرار می‌دهد؟",   tag: "قانون ۳۰٪" },
-      { q: "مجموع مالیات من را توضیح بده",                           tag: "خلاصه" },
+      { q: "قانون ۳۰٪ چگونه مالیات من را تحت تأثیر قرار می‌دهد؟",  tag: "قانون ۳۰٪" },
+      { q: "مجموع مالیات من را توضیح دهید",                          tag: "خلاصه" },
       { q: "در سال ۴ و ۵ قانون ۳۰٪ چه تغییری ایجاد می‌شود؟",       tag: "مرحله‌بندی" },
     ],
   },
@@ -101,9 +101,9 @@ const RESULT_QUESTIONS: Record<string, Record<string, { q: string; tag: string }
       { q: "What is the minimum DGA salary requirement for 2026?",       tag: "Salary" },
     ],
     fa: [
-      { q: "تفاوت بین مالیات Box 1 و Box 2 من را توضیح بده",         tag: "باکس ۱/۲" },
+      { q: "تفاوت بین مالیات Box 1 و Box 2 من را توضیح دهید",        tag: "باکس ۱/۲" },
       { q: "چرا مالیات سود سهام می‌پردازم و چقدر است؟",              tag: "سود سهام" },
-      { q: "مجموع مالیات من را به زبان ساده توضیح بده",              tag: "خلاصه" },
+      { q: "مجموع مالیات من را به زبان ساده توضیح دهید",             tag: "خلاصه" },
     ],
   },
 };
@@ -124,7 +124,7 @@ const USER_TYPE_META: Record<string, { color: string; glyph: string }> = {
 const INTAKE_GREETING: Record<string, string> = {
   nl: "Hallo! Ik ben TaxWijs, uw Nederlandse belastingassistent voor 2026.\n\nOm uw belastingsituatie te berekenen, stel ik u een paar korte vragen.\n\n**Wat is uw werksituatie?**\n- **ZZP** — Freelancer / zelfstandige\n- **Werknemer** — In loondienst\n- **Expat** — Met 30%-regeling\n- **DGA** — Directeur-grootaandeelhouder",
   en: "Hello! I'm TaxWijs, your Dutch tax assistant for 2026.\n\nTo calculate your tax situation, I'll ask you a few quick questions.\n\n**What is your work situation?**\n- **ZZP** — Freelancer / self-employed\n- **Employee** — Salaried employee\n- **Expat** — With 30% ruling\n- **DGA** — Director with own company",
-  fa: "سلام! من TaxWijs هستم، دستیار مالیاتی هلندی شما برای سال ۲۰۲۶.\n\nبرای محاسبه وضعیت مالیاتی شما، چند سؤال کوتاه می‌پرسم.\n\n**وضعیت کاری شما چیست؟**\n- **ZZP** — فریلنسر / خوداشتغال\n- **Employee** — کارمند حقوق‌بگیر\n- **Expat** — با قانون ۳۰٪\n- **DGA** — مدیر شرکت",
+  fa: "سلام! من TaxWijs هستم، دستیار مالیاتی هلندی شما برای سال ۲۰۲۶.\n\nبرای محاسبه وضعیت مالیاتی شما، چند سؤال کوتاه می‌پرسم.\n\n**وضعیت شغلی شما چیست؟**\n- **ZZP** — آزادکار / کارآفرین مستقل\n- **کارمند** — حقوق‌بگیر\n- **مهاجر خارجی** — مشمول قانون ۳۰٪\n- **DGA** — مدیرعامل شرکت",
 };
 
 export default function ChatPage() {
@@ -570,7 +570,7 @@ export default function ChatPage() {
                     <span className="eyebrow eyebrow-accent">{c.tag}</span>
                     <div style={{ fontSize: 14, color: "var(--ink)", lineHeight: 1.35 }}>{c.q}</div>
                     <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "var(--ink-3)" }}>
-                      Ask <Icon.arrow style={{ width: 11, height: 11 }} />
+                      {lang === "nl" ? "Vraag" : lang === "fa" ? "بپرسید" : "Ask"} <Icon.arrow style={{ width: 11, height: 11 }} />
                     </div>
                   </button>
                 ))}
