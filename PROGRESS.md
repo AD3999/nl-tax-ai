@@ -1,7 +1,47 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 3 Jun 2026 — Full trilingual site coverage: LandingPage, LoginPage, RegisterPage, CalculatorPage, trailing dot removal, Persian formalisation.
+> Last updated: 3 Jun 2026 — IB Guide + Tax Calendar bug-fix session (branch fix/ib-calendar-bugs).
+
+---
+
+## Session — 3 Jun 2026 (part 3) ✅ Complete
+
+### IB Guide + Tax Calendar — Validation, i18n, UX, and integration fixes
+
+Expert audit and full fix of 11 issues across `IBGuidePage.tsx`, `ChatPage.tsx`, and `TaxCalendarPage.tsx`.
+
+#### IB Return Page fixes
+
+| ID | Issue | Fix |
+|----|-------|-----|
+| IB-1 | Empty number inputs falsely marked as "answered" — card turned green, checkmark appeared, progress bar filled with no content | Added `isAnswered()` helper: returns `false` for `undefined`, `null`, and empty string. Applied to card border, checkmark, progress bar segments, `answeredCount`, and `answeredFields` |
+| IB-2 | "Common mistakes" button label hardcoded English | Added to `CARD_TX` lookup: NL "Veelgemaakte fouten" · FA "اشتباهات رایج" |
+| IB-3 | "Ask TaxWijs" button hardcoded English | NL "Vraag TaxWijs" · FA "از TaxWijs بپرسید" via `CARD_TX` |
+| IB-4 | "Open in chat" sidebar button hardcoded English | NL "Open in chat" · FA "باز کردن در چت" via `CARD_TX` |
+| IB-5 | `location.state.question` silently dropped when chat history exists | In `ChatPage.tsx`: after restoring saved history, if an incoming `q` is present, `submit(q)` is now called — the question joins the restored conversation instead of being discarded |
+| IB-6 | "Open in chat" passed no context to chatbot | `openInChat()` now composes a structured message listing all answered field codes, labels, and values in the user's language, passed as `location.state.question` |
+| IB-7 | Page header, progress strip, and sidebar strings hardcoded English | Added `CARD_TX` with `headline_1/2`, `progress`, `fields_answered`, `autosaved`, `summary_title`, `summary_empty`, `when_to_file`, `when_to_file_body` — full NL/EN/FA |
+
+Also fixed: Yes/No boolean buttons now render Ja/Nee · Yes/No · بله/خیر based on `lang`.
+
+#### Tax Calendar Page fixes
+
+| ID | Issue | Fix |
+|----|-------|-----|
+| CAL-1 | "Add to Google Calendar" and ".ics" buttons always active, even with 0 reminders | Buttons are now only rendered when `hasReminders` is true; replaced with a muted "nothing to sync" label while loading or empty |
+| CAL-2 | Google Calendar subscription URL used `window.location.origin` (frontend host) instead of the API host | `googleUrl` now uses `icsUrl` which already correctly uses `apiBase` — works on both dev proxy and production multi-domain deploys |
+| CAL-3 | Category filter pill labels hardcoded English | `CATEGORY_META` now has `label: { nl, en, fa }` per category; pills read `meta.label[lang]` |
+| CAL-4 | API failure silently rendered as "no reminders found" — user couldn't tell the difference | Added `error` state: `.catch()` sets `error=true`; a red error card is shown instead of the empty state. Also added `r.ok` check before calling `r.json()` so HTTP errors don't parse as bad JSON |
+| CAL-5 | No way to add a single reminder to Google Calendar | `googleEventUrl(r)` builds a `calendar.google.com/render?action=TEMPLATE` URL for each reminder; a small "📅 Add event" link now appears under each card's date/source row |
+
+#### Architecture note — Google Calendar subscription vs single-event add
+
+The top-level "Subscribe" button (using `cid=`) subscribes Google Calendar to the full iCal feed — Google re-fetches it periodically to stay in sync. This is the right long-term approach for "subscribe to all Dutch tax deadlines." It only works when the API URL is publicly accessible (production). The per-reminder "Add event" links (using `action=TEMPLATE`) work everywhere including localhost — they open a pre-filled event creation form in Google Calendar.
+
+**Files changed:** `frontend/src/pages/IBGuidePage.tsx`, `frontend/src/pages/ChatPage.tsx`, `frontend/src/pages/TaxCalendarPage.tsx`
+
+**TypeScript:** 0 errors after all changes.
 
 ---
 

@@ -16,36 +16,60 @@ type Reminder = {
   user_types: string[];
 };
 
-const CATEGORY_META: Record<string, { label: string; color: string; icon: string }> = {
-  income_tax:            { label: "Income Tax",     color: "var(--sage-600)",   icon: "📄" },
-  vat:                   { label: "BTW / VAT",      color: "oklch(0.55 0.14 230)", icon: "🧾" },
-  toeslagen:             { label: "Toeslagen",      color: "oklch(0.55 0.12 50)",  icon: "🏠" },
-  provisional_assessment:{ label: "Voorlopige",     color: "oklch(0.52 0.13 290)", icon: "📊" },
-  expat:                 { label: "Expat",          color: "oklch(0.62 0.13 50)",  icon: "✈️" },
-  dga:                   { label: "DGA / BV",       color: "oklch(0.55 0.10 290)", icon: "🏢" },
-  box3:                  { label: "Box 3",          color: "oklch(0.55 0.08 160)", icon: "💰" },
-  zzp_admin:             { label: "ZZP Admin",      color: "var(--sage-700)",   icon: "⏱️" },
-  corporate_tax:         { label: "Vpb",            color: "oklch(0.48 0.12 290)", icon: "🏭" },
-  payroll:               { label: "Payroll",        color: "oklch(0.50 0.14 170)", icon: "💼" },
-  dividend_tax:          { label: "Dividend",       color: "oklch(0.55 0.15 50)",  icon: "💹" },
+type Lang = "nl" | "en" | "fa";
+
+// Category meta — labels are now per-language (CAL-3)
+const CATEGORY_META: Record<string, { icon: string; color: string; label: Record<Lang, string> }> = {
+  income_tax:             { icon: "📄", color: "var(--sage-600)",        label: { nl: "Inkomstenbelasting", en: "Income Tax",      fa: "مالیات بر درآمد" } },
+  vat:                    { icon: "🧾", color: "oklch(0.55 0.14 230)",   label: { nl: "BTW / OB",           en: "BTW / VAT",       fa: "مالیات بر ارزش افزوده" } },
+  toeslagen:              { icon: "🏠", color: "oklch(0.55 0.12 50)",    label: { nl: "Toeslagen",          en: "Toeslagen",       fa: "یارانه‌ها" } },
+  provisional_assessment: { icon: "📊", color: "oklch(0.52 0.13 290)",   label: { nl: "Voorlopige aanslag", en: "Provisional",     fa: "ارزیابی اولیه" } },
+  expat:                  { icon: "✈️", color: "oklch(0.62 0.13 50)",    label: { nl: "Expat",              en: "Expat",           fa: "اکسپت" } },
+  dga:                    { icon: "🏢", color: "oklch(0.55 0.10 290)",   label: { nl: "DGA / BV",           en: "DGA / BV",        fa: "DGA / BV" } },
+  box3:                   { icon: "💰", color: "oklch(0.55 0.08 160)",   label: { nl: "Box 3",              en: "Box 3",           fa: "جعبه ۳" } },
+  zzp_admin:              { icon: "⏱️", color: "var(--sage-700)",        label: { nl: "ZZP Admin",          en: "ZZP Admin",       fa: "مدیریت ZZP" } },
+  corporate_tax:          { icon: "🏭", color: "oklch(0.48 0.12 290)",   label: { nl: "Vpb",                en: "Corp. Tax",       fa: "مالیات شرکتی" } },
+  payroll:                { icon: "💼", color: "oklch(0.50 0.14 170)",   label: { nl: "Loonheffing",        en: "Payroll",         fa: "مالیات حقوق" } },
+  dividend_tax:           { icon: "💹", color: "oklch(0.55 0.15 50)",    label: { nl: "Dividend",           en: "Dividend",        fa: "سود سهام" } },
 };
 
-const TX: Record<string, Record<string, string>> = {
+const TX: Record<Lang, {
+  title: string;
+  subtitle: string;
+  badge: string;
+  loading: string;
+  empty: string;
+  error: string;
+  days_until: string;
+  today: string;
+  past: string;
+  source: string;
+  add_google: string;
+  download_ics: string;
+  filter_all: string;
+  ask_ai: string;
+  categories: string;
+  add_event: string;
+  no_reminders_to_sync: string;
+}> = {
   nl: {
     title: "Belastingkalender 2026",
     subtitle: "Alle deadlines en herinneringen op één plek",
     badge: "Smart kalender",
     loading: "Reminders laden...",
     empty: "Geen aankomende reminders gevonden",
+    error: "Reminders konden niet worden geladen — probeer de pagina te vernieuwen",
     days_until: "over {{n}} dag(en)",
     today: "Vandaag",
     past: "Verlopen",
     source: "Bron",
-    add_google: "Toevoegen aan Google Calendar",
+    add_google: "Abonneren op Google Calendar",
     download_ics: "Download .ics (Apple / Outlook)",
     filter_all: "Alle",
     ask_ai: "Vraag de AI →",
     categories: "Categorieën",
+    add_event: "📅 Toevoegen",
+    no_reminders_to_sync: "Geen reminders om te synchroniseren",
   },
   en: {
     title: "Tax Calendar 2026",
@@ -53,15 +77,18 @@ const TX: Record<string, Record<string, string>> = {
     badge: "Smart calendar",
     loading: "Loading reminders...",
     empty: "No upcoming reminders found",
+    error: "Could not load reminders — try refreshing the page",
     days_until: "in {{n}} day(s)",
     today: "Today",
     past: "Overdue",
     source: "Source",
-    add_google: "Add to Google Calendar",
+    add_google: "Subscribe in Google Calendar",
     download_ics: "Download .ics (Apple / Outlook)",
     filter_all: "All",
     ask_ai: "Ask the AI →",
     categories: "Categories",
+    add_event: "📅 Add event",
+    no_reminders_to_sync: "No reminders to sync",
   },
   fa: {
     title: "تقویم مالیاتی ۲۰۲۶",
@@ -69,57 +96,87 @@ const TX: Record<string, Record<string, string>> = {
     badge: "تقویم هوشمند",
     loading: "در حال بارگذاری یادآوری‌ها...",
     empty: "یادآوری آینده‌ای یافت نشد",
+    error: "یادآوری‌ها بارگذاری نشد — صفحه را تازه‌سازی کنید",
     days_until: "{{n}} روز دیگر",
     today: "امروز",
     past: "منقضی",
     source: "منبع",
-    add_google: "افزودن به Google Calendar",
+    add_google: "اشتراک در Google Calendar",
     download_ics: "دانلود .ics (Apple / Outlook)",
     filter_all: "همه",
     ask_ai: "از هوش مصنوعی بپرس ←",
     categories: "دسته‌بندی‌ها",
+    add_event: "📅 افزودن رویداد",
+    no_reminders_to_sync: "یادآوری‌ای برای همگام‌سازی وجود ندارد",
   },
 };
 
-function daysLabel(days: number, tx: Record<string, string>): { text: string; urgent: boolean } {
+function daysLabel(days: number, tx: (typeof TX)[Lang]): { text: string; urgent: boolean } {
   if (days === 0) return { text: tx.today, urgent: true };
-  if (days < 0) return { text: tx.past, urgent: true };
+  if (days < 0)  return { text: tx.past,  urgent: true };
   return {
     text: tx.days_until.replace("{{n}}", String(days)),
     urgent: days <= 7,
   };
 }
 
+/** Build a Google Calendar single-event "add" URL for one reminder (CAL-5). */
+function googleEventUrl(r: Reminder): string {
+  const d = r.due_date.replace(/-/g, ""); // YYYYMMDD
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: r.title,
+    dates: `${d}/${d}`,
+    details: r.description + (r.source_url ? `\n\nSource: ${r.source_url}` : ""),
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
 export default function TaxCalendarPage() {
   const { i18n } = useTranslation();
   const navigate = useNavigate();
   const isMobile = useMobile();
-  const lang = (i18n.language === "nl" || i18n.language === "fa") ? i18n.language : "en";
+  const lang = (i18n.language === "nl" || i18n.language === "fa") ? i18n.language as Lang : "en";
   const tx = TX[lang];
+  const isRtl = lang === "fa";
 
   const [reminders, setReminders] = useState<Reminder[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(false);
+  const [filter, setFilter]       = useState("all");
 
   useEffect(() => {
     setLoading(true);
+    setError(false);
     fetch(`${apiBase}/users/reminders/?lang=${lang}&days=366`, {
       headers: authHeader(),
     })
-      .then(r => r.json())
-      .then((data: Reminder[]) => { setReminders(data); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json() as Promise<Reminder[]>;
+      })
+      .then(data => {
+        setReminders(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError(true);
+        setLoading(false);
+      });
   }, [lang]);
 
   const categories = ["all", ...Array.from(new Set(reminders.map(r => r.category)))];
+  const filtered   = filter === "all" ? reminders : reminders.filter(r => r.category === filter);
 
-  const filtered = filter === "all" ? reminders : reminders.filter(r => r.category === filter);
+  // iCal feed URL (uses apiBase — correct for both dev and production)
+  const icsUrl    = `${apiBase}/users/calendar.ics`;
+  // Google Calendar feed subscription (same base as icsUrl — CAL-2 fix)
+  const googleUrl = `https://www.google.com/calendar/render?cid=${encodeURIComponent(icsUrl)}`;
 
-  const icsUrl = `${apiBase}/users/calendar.ics`;
-  const googleUrl = `https://www.google.com/calendar/render?cid=${encodeURIComponent(window.location.origin + "/api/users/calendar.ics")}`;
+  const hasReminders = !loading && !error && reminders.length > 0;
 
   return (
-    <main style={{ background: "var(--paper)", flex: 1 }}>
+    <main style={{ background: "var(--paper)", flex: 1 }} dir={isRtl ? "rtl" : "ltr"}>
       <div style={{ maxWidth: 900, margin: "0 auto", padding: isMobile ? "var(--sp-6) var(--sp-4)" : "var(--sp-10) var(--sp-8)" }}>
 
         {/* Header */}
@@ -132,49 +189,66 @@ export default function TaxCalendarPage() {
               </h1>
               <p style={{ color: "var(--ink-3)", fontSize: "var(--text-sm)", marginTop: "var(--sp-1)" }}>{tx.subtitle}</p>
             </div>
-            {/* Calendar sync buttons */}
+
+            {/* Calendar sync buttons — disabled when there are no reminders (CAL-1) */}
             <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)", flexShrink: 0 }}>
-              <a
-                href={googleUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-accent btn-sm"
-                style={{ textDecoration: "none", textAlign: "center" }}
-              >
-                📅 {tx.add_google}
-              </a>
-              <a
-                href={icsUrl}
-                download="taxwijs-2026.ics"
-                className="btn btn-ghost btn-sm"
-                style={{ textDecoration: "none", textAlign: "center" }}
-              >
-                ⬇️ {tx.download_ics}
-              </a>
+              {hasReminders ? (
+                <>
+                  <a
+                    href={googleUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-accent btn-sm"
+                    style={{ textDecoration: "none", textAlign: "center" }}
+                    title={tx.add_google}
+                  >
+                    📅 {tx.add_google}
+                  </a>
+                  <a
+                    href={icsUrl}
+                    download="taxwijs-2026.ics"
+                    className="btn btn-ghost btn-sm"
+                    style={{ textDecoration: "none", textAlign: "center" }}
+                  >
+                    ⬇️ {tx.download_ics}
+                  </a>
+                </>
+              ) : (
+                <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", padding: "var(--sp-2) 0" }}>
+                  {loading ? "" : tx.no_reminders_to_sync}
+                </span>
+              )}
             </div>
           </div>
         </div>
 
         {/* Category filter pills */}
-        <div style={{ display: "flex", gap: "var(--sp-2)", flexWrap: "wrap", marginBottom: "var(--sp-5)" }}>
-          {categories.map(cat => {
-            const meta = CATEGORY_META[cat];
-            return (
-              <button
-                key={cat}
-                onClick={() => setFilter(cat)}
-                className={`pill ${filter === cat ? "pill-accent" : ""}`}
-                style={{ cursor: "pointer", border: "1px solid var(--hairline-2)", background: filter === cat ? undefined : "var(--paper)" }}
-              >
-                {cat === "all" ? tx.filter_all : (meta ? `${meta.icon} ${meta.label}` : cat)}
-              </button>
-            );
-          })}
-        </div>
+        {!loading && !error && reminders.length > 0 && (
+          <div style={{ display: "flex", gap: "var(--sp-2)", flexWrap: "wrap", marginBottom: "var(--sp-5)" }}>
+            {categories.map(cat => {
+              const meta = CATEGORY_META[cat];
+              const label = cat === "all" ? tx.filter_all : (meta ? `${meta.icon} ${meta.label[lang]}` : cat);
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setFilter(cat)}
+                  className={`pill ${filter === cat ? "pill-accent" : ""}`}
+                  style={{ cursor: "pointer", border: "1px solid var(--hairline-2)", background: filter === cat ? undefined : "var(--paper)" }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
-        {/* Reminder list */}
+        {/* Content area */}
         {loading ? (
           <div style={{ textAlign: "center", padding: "var(--sp-10)", color: "var(--ink-3)" }}>{tx.loading}</div>
+        ) : error ? (
+          <div className="card" style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--danger)", border: "1px solid var(--danger-soft)" }}>
+            ⚠️ {tx.error}
+          </div>
         ) : filtered.length === 0 ? (
           <div className="card" style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-3)" }}>{tx.empty}</div>
         ) : (
@@ -182,13 +256,14 @@ export default function TaxCalendarPage() {
             {filtered.map(r => {
               const { text: daysText, urgent } = daysLabel(r.days_until, tx);
               const meta = CATEGORY_META[r.category];
+              const catLabel = meta ? meta.label[lang] : r.category;
               return (
                 <div key={r.id} className="card" style={{ padding: "var(--sp-4) var(--sp-5)", borderInlineStart: `3px solid ${meta?.color || "var(--sage-400)"}` }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--sp-3)" }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)", marginBottom: "var(--sp-1)", flexWrap: "wrap" }}>
                         {meta && <span style={{ fontSize: 14 }}>{meta.icon}</span>}
-                        <span className="eyebrow" style={{ color: meta?.color }}>{meta?.label || r.category}</span>
+                        <span className="eyebrow" style={{ color: meta?.color }}>{catLabel}</span>
                         <span className="pill pill-sm" style={{
                           background: urgent ? "var(--danger-soft)" : "var(--accent-soft)",
                           color: urgent ? "var(--danger)" : "var(--sage-700)",
@@ -210,6 +285,15 @@ export default function TaxCalendarPage() {
                             {tx.source} →
                           </a>
                         )}
+                        {/* Per-reminder Google Calendar event link (CAL-5) */}
+                        <a
+                          href={googleEventUrl(r)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", textDecoration: "none" }}
+                        >
+                          {tx.add_event}
+                        </a>
                       </div>
                     </div>
                     <button

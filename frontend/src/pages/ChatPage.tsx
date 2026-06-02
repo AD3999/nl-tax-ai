@@ -202,6 +202,9 @@ export default function ChatPage() {
           setSessionCount(userMsgs.length);
           setAskedSet(new Set(userMsgs.map(m => m.content)));
           if (profile) setIntakeComplete(true);
+          // An incoming question (e.g. from IB Guide "Ask TaxWijs") must still be
+          // submitted even when we're continuing an existing conversation.
+          if (q) void submit(q);
           return; // skip normal init — history is restored
         }
       }
