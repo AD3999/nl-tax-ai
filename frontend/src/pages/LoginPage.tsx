@@ -182,14 +182,18 @@ export default function LoginPage() {
         )}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Wordmark size={16} />
-          <Link to="/" style={{ fontSize: 13, color: "var(--ink-3)" }}>← Back to home</Link>
+          <Link to="/" style={{ fontSize: 13, color: "var(--ink-3)" }}>
+            {lang === "nl" ? "← Terug naar home" : lang === "fa" ? "← بازگشت به صفحه اصلی" : "← Back to home"}
+          </Link>
         </div>
 
         <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
           <div style={{ width: "100%", maxWidth: 380 }}>
-            <div className="eyebrow eyebrow-accent">Welcome back</div>
+            <div className="eyebrow eyebrow-accent">
+              {lang === "nl" ? "Welkom terug" : lang === "fa" ? "خوش آمدید" : "Welcome back"}
+            </div>
             <h1 style={{ marginTop: 8, fontSize: 36, fontFamily: "var(--serif)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-              Log in to your<br />tax workspace
+              {lang === "nl" ? <>Inloggen op uw<br />belastingwerkruimte</> : lang === "fa" ? <>ورود به<br />فضای کاری مالیاتی</> : <>Log in to your<br />tax workspace</>}
             </h1>
 
             {/* Google sign-in — primary CTA */}
@@ -290,16 +294,27 @@ export default function LoginPage() {
       {!isMobile && <div className="grain" style={{ padding: 36, borderInlineStart: "1px solid var(--hairline)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
         <Wordmark size={14} />
         <div>
-          <span className="pill" style={{ background: "rgba(255,255,255,0.18)", color: "var(--ink-2)" }}>Today's tip</span>
+          <span className="pill" style={{ background: "rgba(255,255,255,0.18)", color: "var(--ink-2)" }}>
+            {lang === "nl" ? "Tip van de dag" : lang === "fa" ? "نکته روز" : "Today's tip"}
+          </span>
           <h2 style={{ marginTop: 16, color: "var(--ink)", fontFamily: "var(--serif)", fontWeight: 400, fontSize: 32, lineHeight: 1.12, letterSpacing: "-0.015em" }}>
-            "Startersaftrek runs out at end of <em>2026</em> — last call for the €2,123 deduction"
+            {lang === "nl"
+              ? <>"Startersaftrek vervalt eind <em>2026</em> — laatste kans voor de €2.123 aftrek"</>
+              : lang === "fa"
+              ? <>"Startersaftrek در پایان <em>۲۰۲۶</em> حذف می‌شود — آخرین فرصت برای کسر €۲,۱۲۳"</>
+              : <>"Startersaftrek runs out at end of <em>2026</em> — last call for the €2,123 deduction"</>}
           </h2>
           <p style={{ marginTop: 16, color: "var(--ink-3)", fontSize: "var(--text-sm)", maxWidth: 360 }}>
-            One of 28 verified 2026 rules in your knowledge base
+            {lang === "nl" ? "Eén van de 28 geverifieerde 2026 regels in uw kennisbank" : lang === "fa" ? "یکی از ۲۸ قانون تأیید‌شده ۲۰۲۶ در پایگاه دانش شما" : "One of 28 verified 2026 rules in your knowledge base"}
           </p>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-          {[["28", "Rules verified"], ["3", "Languages"], ["1,225 h", "ZZP hour rule"]].map(([n, l]) => (
+          {(lang === "nl"
+            ? [["28", "Regels geverifieerd"], ["3", "Talen"], ["1.225 u", "ZZP-urenregel"]]
+            : lang === "fa"
+            ? [["۲۸", "قانون تأیید‌شده"], ["۳", "زبان"], ["۱٬۲۲۵ س", "قانون ساعت ZZP"]]
+            : [["28", "Rules verified"], ["3", "Languages"], ["1,225 h", "ZZP hour rule"]]
+          ).map(([n, l]) => (
             <div key={l} style={{ padding: 14, background: "var(--paper)", border: "1px solid var(--hairline)", borderRadius: "var(--r)" }}>
               <div className="font-serif" style={{ fontSize: 26, color: "var(--ink)", lineHeight: 1 }}>{n}</div>
               <div className="eyebrow" style={{ marginTop: 6 }}>{l}</div>

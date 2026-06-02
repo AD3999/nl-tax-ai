@@ -16,6 +16,21 @@ const USER_TYPES = {
   expat:    { label: "Expat",    glyph: "EX", desc: "30% ruling · foreign income", color: "oklch(0.62 0.13 50)",  benefits: ["30%-ruling year tracker (years 1–5)", "Foreign income reconciliation", "EN + FA chat as a first-class language"] },
   dga:      { label: "DGA",      glyph: "DG", desc: "Director · own BV",           color: "oklch(0.55 0.10 290)", benefits: ["Optimal salary vs. dividend split", "Box 2 calculations for your BV", "DGA-only deductions surfaced first"] },
 } as const;
+
+const USER_TYPE_TX: Record<string, { label: Record<string, string>; desc: Record<string, string>; benefits: Record<string, string[]> }> = {
+  zzp:      { label: { nl: "ZZP",          en: "ZZP",            fa: "ZZP"                },
+              desc:  { nl: "Freelancer · zelfstandige",  en: "Freelance · self-employed", fa: "آزادکار · کارآفرین مستقل" },
+              benefits: { nl: ["Wet DBA-risico bij elke chat", "Zelfstandigenaftrek + MKB automatisch", "Kwartaalherinneringen BTW"], en: ["Wet DBA risk check on every chat", "Zelfstandigenaftrek + MKB-vrijstelling auto-applied", "Quarterly VAT reminders"], fa: ["بررسی ریسک Wet DBA در هر گفتگو", "اعمال خودکار کسر ZZP و MKB", "یادآوری فصلی BTW"] } },
+  employee: { label: { nl: "Werknemer",    en: "Employee",        fa: "کارمند"              },
+              desc:  { nl: "In loondienst · loonstrook", en: "Salaried · payslip",         fa: "حقوق‌بگیر · فیش حقوقی" },
+              benefits: { nl: ["Loonstrookvertaler (loonheffing → netto)", "Box 3-prognose", "Alle standaard belastingkortingen"], en: ["Payslip translator (loonheffing → take-home)", "Box 3 forecast with WOZ inputs", "All standard tax credits"], fa: ["ترجمه فیش حقوقی", "پیش‌بینی باکس ۳", "تمام اعتبارات مالیاتی"] } },
+  expat:    { label: { nl: "Expat",        en: "Expat",           fa: "مهاجر خارجی"        },
+              desc:  { nl: "30%-regeling · buitenlands inkomen", en: "30% ruling · foreign income", fa: "قانون ۳۰٪ · درآمد خارجی" },
+              benefits: { nl: ["30%-regelingsjaartracker (jaren 1–5)", "Verzoening buitenlands inkomen", "NL + FA als eerste taal"], en: ["30%-ruling year tracker (years 1–5)", "Foreign income reconciliation", "EN + FA chat as a first-class language"], fa: ["پیگیری سال قانون ۳۰٪", "تطبیق درآمد خارجی", "پشتیبانی کامل زبان فارسی"] } },
+  dga:      { label: { nl: "DGA",          en: "DGA",             fa: "DGA"                },
+              desc:  { nl: "Directeur · eigen BV",       en: "Director · own BV",          fa: "مدیرعامل · BV شخصی" },
+              benefits: { nl: ["Optimale salaris-dividendverdeling", "Box 2-berekeningen voor uw BV", "DGA-aftrekken als eerste"], en: ["Optimal salary vs. dividend split", "Box 2 calculations for your BV", "DGA-only deductions surfaced first"], fa: ["بهینه‌سازی حقوق و سود سهام", "محاسبات باکس ۲ برای BV", "نمایش کسورات DGA در اولویت"] } },
+};
 type UTK = keyof typeof USER_TYPES;
 
 export default function RegisterPage() {
@@ -119,6 +134,7 @@ export default function RegisterPage() {
   };
 
   const t2 = USER_TYPES[userType];
+  const t2tx = USER_TYPE_TX[userType];
 
   return (
     <div style={{ flex: 1, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.1fr 1fr", minHeight: "calc(100vh - 64px)" }}>
@@ -126,23 +142,27 @@ export default function RegisterPage() {
       <div style={{ padding: isMobile ? "28px 20px" : "36px 56px", display: "flex", flexDirection: "column", background: "var(--paper)", overflow: "auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Wordmark size={16} />
-          <Link to="/" style={{ fontSize: 13, color: "var(--ink-3)" }}>← Back to home</Link>
+          <Link to="/" style={{ fontSize: 13, color: "var(--ink-3)" }}>
+            {lang === "nl" ? "← Terug naar home" : lang === "fa" ? "← بازگشت به صفحه اصلی" : "← Back to home"}
+          </Link>
         </div>
 
         <div style={{ flex: 1, display: "flex", alignItems: "center" }}>
           <div style={{ width: "100%", maxWidth: 380 }}>
-            <div className="eyebrow eyebrow-accent">Step 1 of 3</div>
+            <div className="eyebrow eyebrow-accent">
+              {lang === "nl" ? "Stap 1 van 3" : lang === "fa" ? "مرحله ۱ از ۳" : "Step 1 of 3"}
+            </div>
             <h1 style={{ marginTop: 8, fontSize: 36, fontFamily: "var(--serif)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-              Make an account.
+              {lang === "nl" ? "Maak een account" : lang === "fa" ? "ایجاد حساب کاربری" : "Make an account"}
             </h1>
             <p style={{ marginTop: 8, color: "var(--ink-3)", fontSize: 14 }}>
-              We'll personalise everything to your tax type.
+              {lang === "nl" ? "We personaliseren alles op uw belastingtype" : lang === "fa" ? "همه چیز بر اساس وضعیت مالیاتی شما شخصی‌سازی می‌شود" : "We'll personalise everything to your tax type"}
             </p>
 
             {/* User type selector — shown before Google too so user picks their type */}
             <div style={{ marginTop: 20 }}>
               <div className="tw-label" style={{ marginBottom: 8 }}>
-                {lang === "nl" ? "Ik ben een" : lang === "fa" ? "من یک" : "I'm a"}
+                {lang === "nl" ? "Ik ben een" : lang === "fa" ? "وضعیت شغلی من:" : "I'm a"}
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                 {(Object.entries(USER_TYPES) as [UTK, typeof USER_TYPES[UTK]][]).map(([k, v]) => {
@@ -158,8 +178,8 @@ export default function RegisterPage() {
                         {v.glyph}
                       </span>
                       <div>
-                        <div style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>{v.label}</div>
-                        <div style={{ fontSize: 11, color: "var(--ink-3)" }}>{v.desc}</div>
+                        <div style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>{USER_TYPE_TX[k]?.label[lang] ?? v.label}</div>
+                        <div style={{ fontSize: 11, color: "var(--ink-3)" }}>{USER_TYPE_TX[k]?.desc[lang] ?? v.desc}</div>
                       </div>
                     </button>
                   );
@@ -263,12 +283,18 @@ export default function RegisterPage() {
       {!isMobile && <div className="grain" style={{ padding: 36, borderInlineStart: "1px solid var(--hairline)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
         <Wordmark size={14} />
         <div>
-          <span className="pill pill-accent">For {t2.label.toLowerCase()}s</span>
+          <span className="pill pill-accent">
+            {lang === "nl" ? `Voor ${(t2tx?.label.nl ?? t2.label).toLowerCase()}s` : lang === "fa" ? `برای ${t2tx?.label.fa ?? t2.label}` : `For ${t2.label.toLowerCase()}s`}
+          </span>
           <h2 style={{ marginTop: 14, color: "var(--ink)", fontFamily: "var(--serif)", fontWeight: 400, fontSize: 32, lineHeight: 1.12, letterSpacing: "-0.015em" }}>
-            We'll tune the chat, the calculator and the return guide to <em>{t2.label}</em> situations.
+            {lang === "nl"
+              ? <>We stemmen de chat, rekenmachine en aangifte af op <em>{t2tx?.label.nl ?? t2.label}</em>-situaties</>
+              : lang === "fa"
+              ? <>چت، محاسبه‌گر و راهنمای اظهارنامه را بر اساس وضعیت <em>{t2tx?.label.fa ?? t2.label}</em> تنظیم می‌کنیم</>
+              : <>We'll tune the chat, the calculator and the return guide to <em>{t2.label}</em> situations</>}
           </h2>
           <div style={{ marginTop: 22, display: "flex", flexDirection: "column", gap: 10 }}>
-            {t2.benefits.map((l, i) => (
+            {(t2tx?.benefits[lang] ?? t2.benefits).map((l: string, i: number) => (
               <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 13.5, color: "var(--ink-2)" }}>
                 <span style={{ marginTop: 5, width: 14, height: 14, borderRadius: 999, background: t2.color, color: "white", display: "grid", placeItems: "center", flexShrink: 0 }}>
                   <Icon.check style={{ width: 9, height: 9 }} />
@@ -278,7 +304,9 @@ export default function RegisterPage() {
             ))}
           </div>
         </div>
-        <div style={{ fontSize: 11.5, color: "var(--ink-4)" }}>Can change later in your profile.</div>
+        <div style={{ fontSize: 11.5, color: "var(--ink-4)" }}>
+          {lang === "nl" ? "Later te wijzigen in uw profiel" : lang === "fa" ? "بعداً در پروفایل خود قابل تغییر است" : "Can change later in your profile"}
+        </div>
       </div>}
     </div>
   );

@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { calculateTax } from "../api/calculator";
 import type { CalcInput, CalcResult } from "../api/calculator";
 import { Icon } from "../components/Icon";
 import { useMobile } from "../hooks/useMobile";
+
+type Lang = "nl" | "en" | "fa";
+const T = (tx: Record<Lang, string>, l: Lang) => tx[l] ?? tx.en;
 
 type UserType = "zzp" | "employee" | "expat" | "dga";
 
@@ -11,10 +15,10 @@ const EUR = (n: number) => "€ " + n.toLocaleString("nl-NL");
 const PCT = (n: number) => (n * 100).toFixed(1) + "%";
 
 const USER_TYPES = {
-  zzp:      { label: "ZZP",      color: "var(--sage-600)",      dot: "var(--sage-600)" },
-  employee: { label: "Employee", color: "oklch(0.55 0.12 230)", dot: "oklch(0.55 0.12 230)" },
-  expat:    { label: "Expat",    color: "oklch(0.62 0.13 50)",  dot: "oklch(0.62 0.13 50)" },
-  dga:      { label: "DGA",      color: "oklch(0.55 0.10 290)", dot: "oklch(0.55 0.10 290)" },
+  zzp:      { color: "var(--sage-600)",      dot: "var(--sage-600)",      labels: { nl: "ZZP",        en: "ZZP",      fa: "ZZP"            } },
+  employee: { color: "oklch(0.55 0.12 230)", dot: "oklch(0.55 0.12 230)", labels: { nl: "Werknemer",  en: "Employee", fa: "کارمند"         } },
+  expat:    { color: "oklch(0.62 0.13 50)",  dot: "oklch(0.62 0.13 50)",  labels: { nl: "Expat",      en: "Expat",    fa: "مهاجر خارجی"   } },
+  dga:      { color: "oklch(0.55 0.10 290)", dot: "oklch(0.55 0.10 290)", labels: { nl: "DGA",        en: "DGA",      fa: "DGA"            } },
 } as const;
 
 const DBA_TONE: Record<string, string> = {
@@ -51,19 +55,22 @@ function CalcField({ label, k, form, set, placeholder, unit, hint }: {
   );
 }
 
-function Toggle({ label, k, form, set }: { label: string; k: string; form: FormState; set: (k: string, v: boolean) => void }) {
+function Toggle({ label, k, form, set, yesNo = ["Yes", "No"] }: {
+  label: string; k: string; form: FormState; set: (k: string, v: boolean) => void;
+  lang?: string; yesNo?: [string, string];
+}) {
   const v = form[k] as boolean;
   return (
     <div>
       <div className="tw-label" style={{ marginBottom: 6 }}>{label}</div>
       <div style={{ display: "flex", border: "1px solid var(--hairline-2)", borderRadius: "var(--r-sm)", overflow: "hidden" }}>
-        {[["Yes", true], ["No", false]].map(([lbl, val]) => (
-          <button key={String(lbl)} type="button" onClick={() => set(k, Boolean(val))} style={{
+        {([[yesNo[0], true], [yesNo[1], false]] as [string, boolean][]).map(([lbl, val]) => (
+          <button key={lbl} type="button" onClick={() => set(k, val)} style={{
             flex: 1, padding: "9px 0", fontSize: 13, border: "none", cursor: "pointer",
-            background: v === Boolean(val) ? "var(--accent-soft)" : "var(--paper)",
-            color: v === Boolean(val) ? "var(--sage-700)" : "var(--ink-3)",
-            fontWeight: v === Boolean(val) ? 600 : 400,
-          }}>{String(lbl)}</button>
+            background: v === val ? "var(--accent-soft)" : "var(--paper)",
+            color: v === val ? "var(--sage-700)" : "var(--ink-3)",
+            fontWeight: v === val ? 600 : 400,
+          }}>{lbl}</button>
         ))}
       </div>
     </div>
@@ -82,7 +89,61 @@ function SummaryCard({ label, value, kind }: { label: string; value: string; kin
   );
 }
 
+const CALC_TX = {
+  eyebrow:     { nl: "Rekenmachine 2026",      en: "2026 Calculator",       fa: "محاسبه‌گر ۲۰۲۶" },
+  heading:     { nl: "Elk euro, per schijf",    en: "See every euro, by bracket", fa: "هر یورو، به تفکیک دهک" },
+  subtext:     { nl: "Geen AI — pure deterministische motor. Dezelfde cijfers als uw accountant", en: "No AI — pure deterministic engine. Same numbers your accountant would get", fa: "بدون هوش مصنوعی — موتور قطعی خالص. همان اعداد حسابدار شما" },
+  discuss:     { nl: "Bespreek met TaxWijs",    en: "Discuss with TaxWijs",  fa: "گفتگو با TaxWijs" },
+  inputsLabel: { nl: "Invoer",                  en: "Inputs",                fa: "ورودی‌ها" },
+  yourSit:     { nl: "Uw situatie",             en: "Your situation",        fa: "وضعیت شما" },
+  household:   { nl: "Huishouden",              en: "Household",             fa: "اطلاعات خانوار" },
+  calcBtn:     { nl: "Berekenen",               en: "Calculate",             fa: "محاسبه" },
+  calcLoading: { nl: "Berekenen…",              en: "Calculating…",          fa: "در حال محاسبه…" },
+  yesNo:       { nl: ["Ja", "Nee"],             en: ["Yes", "No"],           fa: ["بله", "خیر"] },
+  // Form field labels
+  fAnnualRev:  { nl: "Jaarlijkse omzet",        en: "Annual revenue",        fa: "درآمد سالانه" },
+  fBizExp:     { nl: "Zakelijke kosten",         en: "Business expenses",     fa: "هزینه‌های کسب‌وکار" },
+  fHours:      { nl: "Uren per jaar",            en: "Hours per year",        fa: "ساعات در سال" },
+  fKia:        { nl: "KIA-investeringen",        en: "KIA investments",       fa: "سرمایه‌گذاری‌های KIA" },
+  fSingleClient:{ nl: "Klantconcentratie %",     en: "Single client %",       fa: "سهم مشتری واحد %" },
+  fStarter:    { nl: "Starterjaar?",             en: "Starter year?",         fa: "سال اول کارآفرینی؟" },
+  fEmpIncome:  { nl: "Arbeidsinkomen",           en: "Employment income",     fa: "درآمد کارمندی" },
+  f30pct:      { nl: "30%-regeling actief?",     en: "30% ruling active?",    fa: "قانون ۳۰٪ فعال است؟" },
+  fRulingYear: { nl: "Regelingsjaar (1–5)",      en: "Ruling year (1–5)",     fa: "سال قانون (۱–۵)" },
+  fBox2Div:    { nl: "Box 2 dividend",           en: "Box 2 dividend",        fa: "سود سهام باکس ۲" },
+  fPension:    { nl: "Pensioenaftrek",           en: "Pension contribution",  fa: "حق بیمه بازنشستگی" },
+  fBox3:       { nl: "Nettovermogen Box 3",      en: "Net assets Box 3",      fa: "دارایی خالص باکس ۳" },
+  fSavings:    { nl: "Spaarspaardeel %",         en: "Savings fraction %",    fa: "سهم پس‌انداز %" },
+  fChildren:   { nl: "Kinderen onder 12",        en: "Children under 12",     fa: "فرزندان زیر ۱۲ سال" },
+  fHasPartner: { nl: "Heeft u een partner?",     en: "Has partner?",          fa: "شریک مالیاتی دارید؟" },
+  fPartnerInc: { nl: "Inkomen partner",          en: "Partner income",        fa: "درآمد شریک" },
+  // Summary card labels
+  sTotalTax:   { nl: "Totale belasting 2026",    en: "Total tax due 2026",    fa: "مجموع مالیات ۲۰۲۶" },
+  sEffRate:    { nl: "Effectief tarief",         en: "Effective rate",        fa: "نرخ مؤثر مالیاتی" },
+  sMonthly:    { nl: "Maandelijkse reserve",     en: "Monthly reserve",       fa: "ذخیره ماهانه" },
+  sWetDBA:     { nl: "Wet DBA-risico",           en: "Wet DBA risk",          fa: "ریسک Wet DBA" },
+  // Breakdown table
+  bBrackets:   { nl: "Box 1 schijven 2026",      en: "2026 Box 1 brackets",   fa: "دهک‌های باکس ۱ سال ۲۰۲۶" },
+  bFullBreak:  { nl: "Volledig overzicht",       en: "Full breakdown",        fa: "تفکیک کامل" },
+  bIncTax:     { nl: "2026 inkomen → belasting", en: "2026 income → total tax", fa: "درآمد ۲۰۲۶ → مجموع مالیات" },
+  bGrossRev:   { nl: "Bruto-omzet / -inkomen",   en: "Gross revenue / income", fa: "درآمد ناخالص" },
+  bBizExp:     { nl: "Zakelijke kosten",         en: "Business expenses",     fa: "هزینه‌های کسب‌وکار" },
+  bGrossProfit:{ nl: "Brutowinstmarge",          en: "Gross profit",          fa: "سود ناخالص" },
+  bKia:        { nl: "KIA-aftrek",               en: "KIA deduction",         fa: "کسر KIA" },
+  bPension:    { nl: "Pensioenaftrek",           en: "Pension deduction",     fa: "کسر بازنشستگی" },
+  bTaxableInc: { nl: "Belastbaar inkomen (Box 1)", en: "Taxable income (Box 1)", fa: "درآمد مشمول مالیات (باکس ۱)" },
+  bIncTaxCred: { nl: "IB na kortingen",          en: "Income tax after credits", fa: "مالیات بر درآمد پس از اعتبارات" },
+  bZvw:        { nl: "ZVW-bijdrage (5.32%)",     en: "ZVW contribution (5.32%)", fa: "مشارکت ZVW (۵.۳۲٪)" },
+  bBox2:       { nl: "Box 2-belasting (dividend)", en: "Box 2 tax (dividend)", fa: "مالیات باکس ۲ (سود سهام)" },
+  bBox3:       { nl: "Box 3-belasting (vermogen)", en: "Box 3 tax (wealth)",  fa: "مالیات باکس ۳ (دارایی)" },
+  bTotal:      { nl: "Totale belasting 2026",    en: "Total tax due 2026",    fa: "مجموع مالیات ۲۰۲۶" },
+  // Empty state placeholders
+  ePlaceholders: { nl: ["Totale belasting", "Effectief tarief", "Maandelijkse reserve"], en: ["Total tax due", "Effective rate", "Monthly reserve"], fa: ["مجموع مالیات", "نرخ مؤثر", "ذخیره ماهانه"] },
+};
+
 export default function CalculatorPage() {
+  const { i18n } = useTranslation();
+  const lang = i18n.language as Lang;
   const navigate = useNavigate();
   const isMobile = useMobile();
   const [userType, setUserType] = useState<UserType>("zzp");
@@ -141,16 +202,16 @@ export default function CalculatorPage() {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28 }}>
           <div>
-            <div className="eyebrow eyebrow-accent">2026 Calculator</div>
+            <div className="eyebrow eyebrow-accent">{T(CALC_TX.eyebrow, lang)}</div>
             <h1 style={{ marginTop: 6, fontFamily: "var(--serif)", fontSize: 42, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-              See every euro, by bracket.
+              {T(CALC_TX.heading, lang)}
             </h1>
             <p style={{ marginTop: 6, color: "var(--ink-3)", fontSize: 14 }}>
-              No AI — pure deterministic engine. Same numbers your accountant would get.
+              {T(CALC_TX.subtext, lang)}
             </p>
           </div>
           <button className="btn btn-ghost" onClick={() => navigate("/chat")}>
-            <Icon.spark /> Discuss with TaxWijs
+            <Icon.spark /> {T(CALC_TX.discuss, lang)}
           </button>
         </div>
 
@@ -165,7 +226,7 @@ export default function CalculatorPage() {
               display: "inline-flex", alignItems: "center", gap: 8, transition: "all .15s",
             }}>
               <span style={{ width: 6, height: 6, borderRadius: 999, background: userType === k ? v.dot : "var(--hairline-2)" }} />
-              {v.label}
+              {v.labels[lang] ?? v.labels.en}
             </button>
           ))}
         </div>
@@ -174,41 +235,41 @@ export default function CalculatorPage() {
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1.05fr", gap: isMobile ? 16 : 24, alignItems: "flex-start" }}>
             {/* Form card */}
             <div className="card" style={{ padding: 26 }}>
-              <div className="eyebrow eyebrow-accent">Inputs</div>
-              <h2 style={{ marginTop: 4, fontSize: 18, color: "var(--ink)", fontWeight: 500 }}>Your situation</h2>
+              <div className="eyebrow eyebrow-accent">{T(CALC_TX.inputsLabel, lang)}</div>
+              <h2 style={{ marginTop: 4, fontSize: 18, color: "var(--ink)", fontWeight: 500 }}>{T(CALC_TX.yourSit, lang)}</h2>
 
               <div style={{ marginTop: 18, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
                 {userType === "zzp" && <>
-                  <CalcField label="Annual revenue" k="annual_revenue_zzp" form={form} set={set} unit="€" placeholder="72000" />
-                  <CalcField label="Business expenses" k="business_expenses" form={form} set={set} unit="€" placeholder="9500" />
-                  <CalcField label="Hours per year" k="hours_per_year" form={form} set={set} unit="h" placeholder="1380" hint="≥ 1,225 h" />
-                  <CalcField label="KIA investments" k="kia_investments" form={form} set={set} unit="€" placeholder="0" />
-                  <CalcField label="Single client %" k="single_client_percentage" form={form} set={set} unit="%" placeholder="0" hint="Wet DBA test" />
-                  <Toggle label="Starter year?" k="is_starter" form={form} set={(k, v) => set(k, v)} />
+                  <CalcField label={T(CALC_TX.fAnnualRev, lang)} k="annual_revenue_zzp" form={form} set={set} unit="€" placeholder="72000" />
+                  <CalcField label={T(CALC_TX.fBizExp, lang)} k="business_expenses" form={form} set={set} unit="€" placeholder="9500" />
+                  <CalcField label={T(CALC_TX.fHours, lang)} k="hours_per_year" form={form} set={set} unit="h" placeholder="1380" hint="≥ 1,225 h" />
+                  <CalcField label={T(CALC_TX.fKia, lang)} k="kia_investments" form={form} set={set} unit="€" placeholder="0" />
+                  <CalcField label={T(CALC_TX.fSingleClient, lang)} k="single_client_percentage" form={form} set={set} unit="%" placeholder="0" hint="Wet DBA test" />
+                  <Toggle label={T(CALC_TX.fStarter, lang)} k="is_starter" form={form} set={(k, v) => set(k, v)} lang={lang} yesNo={CALC_TX.yesNo[lang] as [string, string]} />
                 </>}
                 {userType !== "zzp" && (
                   <div style={{ gridColumn: "1 / -1" }}>
-                    <CalcField label="Employment income" k="employment_income" form={form} set={set} unit="€" placeholder="48000" />
+                    <CalcField label={T(CALC_TX.fEmpIncome, lang)} k="employment_income" form={form} set={set} unit="€" placeholder="48000" />
                   </div>
                 )}
                 {userType === "expat" && <>
-                  <Toggle label="30% ruling active" k="uses_30pct_ruling" form={form} set={(k, v) => set(k, v)} />
-                  {form.uses_30pct_ruling && <CalcField label="Ruling year (1–5)" k="ruling_year" form={form} set={set} placeholder="1" />}
+                  <Toggle label={T(CALC_TX.f30pct, lang)} k="uses_30pct_ruling" form={form} set={(k, v) => set(k, v)} lang={lang} yesNo={CALC_TX.yesNo[lang] as [string, string]} />
+                  {form.uses_30pct_ruling && <CalcField label={T(CALC_TX.fRulingYear, lang)} k="ruling_year" form={form} set={set} placeholder="1" />}
                 </>}
                 {userType === "dga" && (
-                  <CalcField label="Box 2 dividend" k="box2_dividend" form={form} set={set} unit="€" placeholder="24000" />
+                  <CalcField label={T(CALC_TX.fBox2Div, lang)} k="box2_dividend" form={form} set={set} unit="€" placeholder="24000" />
                 )}
               </div>
 
               <div className="dots" style={{ margin: "22px 0" }} />
-              <div className="eyebrow">Household</div>
+              <div className="eyebrow">{T(CALC_TX.household, lang)}</div>
               <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
-                <CalcField label="Pension contribution" k="pension_contribution" form={form} set={set} unit="€" placeholder="0" />
-                <CalcField label="Net assets Box 3" k="net_assets_box3" form={form} set={set} unit="€" placeholder="0" />
-                <CalcField label="Savings fraction %" k="savings_fraction" form={form} set={set} unit="%" placeholder="50" />
-                <CalcField label="Children under 12" k="children_under_12" form={form} set={set} placeholder="0" />
-                <Toggle label="Has partner?" k="has_partner" form={form} set={(k, v) => set(k, v)} />
-                {form.has_partner && <CalcField label="Partner income" k="partner_income" form={form} set={set} unit="€" placeholder="0" />}
+                <CalcField label={T(CALC_TX.fPension, lang)} k="pension_contribution" form={form} set={set} unit="€" placeholder="0" />
+                <CalcField label={T(CALC_TX.fBox3, lang)} k="net_assets_box3" form={form} set={set} unit="€" placeholder="0" />
+                <CalcField label={T(CALC_TX.fSavings, lang)} k="savings_fraction" form={form} set={set} unit="%" placeholder="50" />
+                <CalcField label={T(CALC_TX.fChildren, lang)} k="children_under_12" form={form} set={set} placeholder="0" />
+                <Toggle label={T(CALC_TX.fHasPartner, lang)} k="has_partner" form={form} set={(k, v) => set(k, v)} lang={lang} yesNo={CALC_TX.yesNo[lang] as [string, string]} />
+                {form.has_partner && <CalcField label={T(CALC_TX.fPartnerInc, lang)} k="partner_income" form={form} set={set} unit="€" placeholder="0" />}
               </div>
 
               {error && (
@@ -218,7 +279,7 @@ export default function CalculatorPage() {
               )}
 
               <button className="btn btn-accent btn-lg" type="submit" disabled={loading} style={{ width: "100%", marginTop: 22 }}>
-                {loading ? "Calculating…" : <>Calculate <Icon.arrow /></>}
+                {loading ? T(CALC_TX.calcLoading, lang) : <>{T(CALC_TX.calcBtn, lang)} <Icon.arrow /></>}
               </button>
             </div>
 
@@ -226,12 +287,12 @@ export default function CalculatorPage() {
             {result && c && r ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
-                  <SummaryCard kind="primary" label="Total tax due 2026" value={EUR(r.total_tax_due)} />
-                  <SummaryCard kind="ink" label="Effective rate" value={PCT(r.effective_rate)} />
-                  {r.monthly_reserve_needed > 0 && <SummaryCard label="Monthly reserve" value={EUR(r.monthly_reserve_needed)} />}
+                  <SummaryCard kind="primary" label={T(CALC_TX.sTotalTax, lang)} value={EUR(r.total_tax_due)} />
+                  <SummaryCard kind="ink" label={T(CALC_TX.sEffRate, lang)} value={PCT(r.effective_rate)} />
+                  {r.monthly_reserve_needed > 0 && <SummaryCard label={T(CALC_TX.sMonthly, lang)} value={EUR(r.monthly_reserve_needed)} />}
                   {r.wet_dba_risk !== "n/a" && (
                     <div style={{ padding: 18, background: r.wet_dba_risk === "high" ? "var(--danger-soft)" : r.wet_dba_risk === "medium" ? "var(--warn-soft)" : "var(--ok-soft)", borderRadius: "var(--r-lg)" }}>
-                      <div className="eyebrow" style={{ color: DBA_TONE[r.wet_dba_risk] ?? "var(--ink-3)" }}>Wet DBA risk</div>
+                      <div className="eyebrow" style={{ color: DBA_TONE[r.wet_dba_risk] ?? "var(--ink-3)" }}>{T(CALC_TX.sWetDBA, lang)}</div>
                       <div className="font-serif" style={{ marginTop: 8, fontSize: 30, color: DBA_TONE[r.wet_dba_risk], lineHeight: 1 }}>{r.wet_dba_risk.toUpperCase()}</div>
                     </div>
                   )}
@@ -239,7 +300,7 @@ export default function CalculatorPage() {
 
                 {/* Bracket bar */}
                 <div className="card" style={{ padding: 20 }}>
-                  <div className="eyebrow eyebrow-accent">2026 Box 1 brackets</div>
+                  <div className="eyebrow eyebrow-accent">{T(CALC_TX.bBrackets, lang)}</div>
                   <div style={{ marginTop: 14, height: 10, borderRadius: 999, background: "var(--paper-3)", overflow: "hidden", display: "flex" }}>
                     <div style={{ width: "60%", background: "var(--sage-400)" }} />
                     <div style={{ width: "35%", background: "var(--sage-600)" }} />
@@ -256,32 +317,32 @@ export default function CalculatorPage() {
                 <div className="card" style={{ padding: 0, overflow: "hidden" }}>
                   <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--hairline)" }}>
                     <div>
-                      <div className="eyebrow eyebrow-accent">Full breakdown</div>
-                      <div style={{ fontSize: 14, color: "var(--ink)", fontWeight: 500 }}>2026 income → total tax</div>
+                      <div className="eyebrow eyebrow-accent">{T(CALC_TX.bFullBreak, lang)}</div>
+                      <div style={{ fontSize: 14, color: "var(--ink)", fontWeight: 500 }}>{T(CALC_TX.bIncTax, lang)}</div>
                     </div>
                   </div>
                   <div>
                     {[
-                      { label: "Gross revenue / income", value: EUR(c.gross_revenue), bold: true },
-                      c.business_expenses > 0 && { label: "Business expenses", value: `− ${EUR(c.business_expenses)}`, muted: true },
-                      { label: "Gross profit", value: EUR(c.gross_profit), bold: true, line: true },
+                      { label: T(CALC_TX.bGrossRev, lang), value: EUR(c.gross_revenue), bold: true },
+                      c.business_expenses > 0 && { label: T(CALC_TX.bBizExp, lang), value: `− ${EUR(c.business_expenses)}`, muted: true },
+                      { label: T(CALC_TX.bGrossProfit, lang), value: EUR(c.gross_profit), bold: true, line: true },
                       c.zelfstandigenaftrek > 0 && { label: "Zelfstandigenaftrek", value: `− ${EUR(c.zelfstandigenaftrek)}`, muted: true },
-                      c.startersaftrek > 0 && { label: "Startersaftrek (last year!)", value: `− ${EUR(c.startersaftrek)}`, muted: true },
-                      c.kia_deduction > 0 && { label: "KIA deduction", value: `− ${EUR(c.kia_deduction)}`, muted: true },
+                      c.startersaftrek > 0 && { label: lang === "nl" ? "Startersaftrek (laatste jaar!)" : lang === "fa" ? "Startersaftrek (آخرین سال!)" : "Startersaftrek (last year!)", value: `− ${EUR(c.startersaftrek)}`, muted: true },
+                      c.kia_deduction > 0 && { label: T(CALC_TX.bKia, lang), value: `− ${EUR(c.kia_deduction)}`, muted: true },
                       c.mkb_winstvrijstelling > 0 && { label: "MKB-winstvrijstelling (12.7%)", value: `− ${EUR(c.mkb_winstvrijstelling)}`, muted: true },
-                      c.pension_deduction > 0 && { label: "Pension deduction", value: `− ${EUR(c.pension_deduction)}`, muted: true },
-                      { label: "Taxable income (Box 1)", value: EUR(c.taxable_income_box1), bold: true, line: true },
-                      { label: "Box 1 bracket 1 (35.75%)", value: EUR(c.box1_tax_bracket1) },
-                      c.box1_tax_bracket2 > 0 && { label: "Box 1 bracket 2 (37.07%)", value: EUR(c.box1_tax_bracket2) },
-                      c.box1_tax_bracket3 > 0 && { label: "Box 1 bracket 3 (49.50%)", value: EUR(c.box1_tax_bracket3) },
+                      c.pension_deduction > 0 && { label: T(CALC_TX.bPension, lang), value: `− ${EUR(c.pension_deduction)}`, muted: true },
+                      { label: T(CALC_TX.bTaxableInc, lang), value: EUR(c.taxable_income_box1), bold: true, line: true },
+                      { label: lang === "fa" ? "دهک ۱ باکس ۱ (۳۵.۷۵٪)" : "Box 1 bracket 1 (35.75%)", value: EUR(c.box1_tax_bracket1) },
+                      c.box1_tax_bracket2 > 0 && { label: lang === "fa" ? "دهک ۲ باکس ۱ (۳۷.۰۷٪ — AOW)" : "Box 1 bracket 2 (37.07%)", value: EUR(c.box1_tax_bracket2) },
+                      c.box1_tax_bracket3 > 0 && { label: lang === "fa" ? "دهک ۳ باکس ۱ (۴۹.۵۰٪)" : "Box 1 bracket 3 (49.50%)", value: EUR(c.box1_tax_bracket3) },
                       c.algemene_heffingskorting > 0 && { label: "− Algemene heffingskorting", value: `− ${EUR(c.algemene_heffingskorting)}`, muted: true },
                       c.arbeidskorting > 0 && { label: "− Arbeidskorting", value: `− ${EUR(c.arbeidskorting)}`, muted: true },
-                      c.iack > 0 && { label: "− IACK (working parents)", value: `− ${EUR(c.iack)}`, muted: true },
-                      { label: "Income tax after credits", value: EUR(c.income_tax_after_credits), bold: true, line: true },
-                      c.zvw_contribution > 0 && { label: "ZVW contribution (4.85%)", value: EUR(c.zvw_contribution) },
-                      c.box2_tax > 0 && { label: "Box 2 tax (dividend)", value: EUR(c.box2_tax) },
-                      c.box3_tax > 0 && { label: "Box 3 tax (wealth)", value: EUR(c.box3_tax) },
-                      { label: "Total tax due 2026", value: EUR(c.total_tax_due), bold: true, accent: true, line: true, big: true },
+                      c.iack > 0 && { label: lang === "nl" ? "− IACK (werkende ouders)" : lang === "fa" ? "− IACK (والدین شاغل)" : "− IACK (working parents)", value: `− ${EUR(c.iack)}`, muted: true },
+                      { label: T(CALC_TX.bIncTaxCred, lang), value: EUR(c.income_tax_after_credits), bold: true, line: true },
+                      c.zvw_contribution > 0 && { label: T(CALC_TX.bZvw, lang), value: EUR(c.zvw_contribution) },
+                      c.box2_tax > 0 && { label: T(CALC_TX.bBox2, lang), value: EUR(c.box2_tax) },
+                      c.box3_tax > 0 && { label: T(CALC_TX.bBox3, lang), value: EUR(c.box3_tax) },
+                      { label: T(CALC_TX.bTotal, lang), value: EUR(c.total_tax_due), bold: true, accent: true, line: true, big: true },
                     ].filter(Boolean).map((row, i) => {
                       const ro = row as { label: string; value: string; bold?: boolean; muted?: boolean; line?: boolean; accent?: boolean; big?: boolean };
                       return (
@@ -307,7 +368,7 @@ export default function CalculatorPage() {
             ) : (
               /* Empty results placeholder */
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {["Total tax due", "Effective rate", "Monthly reserve"].map(l => (
+                {CALC_TX.ePlaceholders[lang].map(l => (
                   <div key={l} style={{ height: 96, background: "var(--paper-3)", borderRadius: "var(--r-lg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <span className="eyebrow">{l}</span>
                   </div>
