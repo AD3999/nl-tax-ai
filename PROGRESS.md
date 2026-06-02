@@ -1,11 +1,72 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 3 Jun 2026 — Brand loading multilingual, chat Persian fixes, chatbot max_tokens, Django admin English.
+> Last updated: 3 Jun 2026 — Full trilingual site coverage: LandingPage, LoginPage, RegisterPage, CalculatorPage, trailing dot removal, Persian formalisation.
 
 ---
 
-## Session — 3 Jun 2026 ✅ Complete
+## Session — 3 Jun 2026 (part 2) ✅ Complete
+
+### Full trilingual coverage — LandingPage, LoginPage, RegisterPage, CalculatorPage
+
+Comprehensive audit and rewrite of hardcoded English strings across the four highest-traffic pages. Every user-visible string now renders in NL/EN/FA based on `i18n.language`.
+
+#### LandingPage.tsx — complete overhaul
+
+| Section | What changed |
+|---------|-------------|
+| Hero card mockup | Question, answer, labels, chips, floating badges → NL/EN/FA |
+| Features grid | Titles + body descriptions → NL/EN/FA via `TX.features` |
+| Section headings | "What it does", "Four tools…", "Same engine…" → trilingual |
+| Proof table | Headers (Flag/Income/Sample profile), all 3 data rows → trilingual |
+| User type dots | "Employee" → "Werknemer"/"کارمند", "Expat" → "Expat"/"مهاجر خارجی" |
+| Trust bar | "2026 rules verified", "Sources on every answer" → trilingual |
+| Footer CTA | Persian completely rewritten: informal/poetic "با یک جفت چشم دوم" → formal "با پشتیبانی هوشمند تکمیل کنید" |
+| Trailing dots | Removed from all headings ("Four tools, one tax brain.", etc.) |
+
+#### LoginPage.tsx
+
+| What | Before | After |
+|------|--------|-------|
+| Heading | "Log in to your tax workspace" (hardcoded EN) | NL/EN/FA conditional |
+| Eyebrow | "Welcome back" | NL: "Welkom terug" · FA: "خوش آمدید" |
+| Back link | "← Back to home" | Trilingual |
+| Right panel tip | "Today's tip" + EN quote | NL/EN/FA |
+| Right panel stats | "Rules verified", "Languages", "ZZP hour rule" | NL/EN/FA |
+
+#### RegisterPage.tsx
+
+| What | Before | After |
+|------|--------|-------|
+| Step indicator | "Step 1 of 3" | Trilingual |
+| Heading | "Make an account." (with period) | Trilingual, dot removed |
+| Subtitle | "We'll personalise everything…" | Trilingual |
+| "I'm a" label | Informal FA "من یک" | Formal "وضعیت شغلی من:" |
+| User type labels | EN only | NL/EN/FA via `USER_TYPE_TX` |
+| User type descriptions | EN only | NL/EN/FA |
+| Benefits list | EN only | NL/EN/FA |
+| Right panel heading | EN only | Trilingual |
+| Footer note | "Can change later…" | Trilingual |
+
+#### CalculatorPage.tsx
+
+- Added `useTranslation` + `CALC_TX` lookup object (50+ keys covering all labels)
+- Form field labels: Annual revenue, Business expenses, Hours, KIA, etc. → NL/EN/FA
+- Toggle Yes/No → Ja/Nee · Yes/No · بله/خیر via `yesNo` prop
+- Section headings: "Inputs", "Your situation", "Household" → trilingual
+- Calculate button → NL: "Berekenen" · FA: "محاسبه"
+- Summary cards: Total tax, Effective rate, Monthly reserve, Wet DBA risk → trilingual
+- Breakdown table: all row labels → NL/EN/FA (Dutch tax terms like Zelfstandigenaftrek preserved)
+- Type selector buttons → NL: Werknemer/Expat · FA: کارمند/مهاجر خارجی
+- Empty state placeholders → trilingual
+
+**Files changed:** `frontend/src/pages/LandingPage.tsx`, `frontend/src/pages/LoginPage.tsx`, `frontend/src/pages/RegisterPage.tsx`, `frontend/src/pages/CalculatorPage.tsx`
+
+**TypeScript:** 0 errors after all changes.
+
+---
+
+## Session — 3 Jun 2026 (part 1) ✅ Complete
 
 ### Brand loading screen — multilingual tips
 
