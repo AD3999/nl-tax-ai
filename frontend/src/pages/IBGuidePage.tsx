@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { fetchIBFields } from "../api/ib";
@@ -42,7 +42,7 @@ const CARD_TX: Record<Lang, {
   summary_title: string;
   summary_empty: string;
   when_to_file: string;
-  when_to_file_body: JSX.Element;
+  when_to_file_body: ReactNode;
   profile_label: string;
   open_intro: string;
   open_outro: string;
