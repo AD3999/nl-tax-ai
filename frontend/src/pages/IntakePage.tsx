@@ -70,8 +70,9 @@ export default function IntakePage() {
 
   const isMobile = useMobile();
   const [step, setStep]         = useState<1 | 2 | 3>(1);
-  const [userType, setUserType] = useState<UserType>("zzp");
+  const [userType, setUserType] = useState<UserType | null>(null);
   const [loading, setLoading]   = useState(false);
+  const [incomeError, setIncomeError] = useState(false);
 
   const [revenue, setRevenue]         = useState("");
   const [expenses, setExpenses]       = useState("");
@@ -88,6 +89,10 @@ export default function IntakePage() {
   const [pension, setPension]             = useState("");
 
   const handleFinish = async () => {
+    if (!userType) return;
+    const primaryIncome = userType === "zzp" ? revenue : salary;
+    if (!primaryIncome || parseFloat(primaryIncome) <= 0) { setIncomeError(true); return; }
+    setIncomeError(false);
     setLoading(true);
     const input: CalcInput = {
       user_type: userType,
@@ -219,6 +224,11 @@ export default function IntakePage() {
                 {t("intake.step1_title")}
               </h1>
               <p style={{ marginTop: "var(--sp-2)", color: "var(--ink-3)", fontSize: "var(--text-base)" }}>{t("intake.step1_subtitle")}</p>
+              {!userType && (
+                <div style={{ marginTop: "var(--sp-3)", fontSize: 12, color: "var(--sage-700)", fontWeight: 600 }}>
+                  {lang === "nl" ? "✱ Kies een profiel om door te gaan" : lang === "fa" ? "✱ برای ادامه یک نوع را انتخاب کنید" : "✱ Select a profile to continue"}
+                </div>
+              )}
               <div style={{ marginTop: "var(--sp-6)", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
                 {(Object.entries(USER_TYPES) as [UserType, typeof USER_TYPES[UserType]][]).map(([k, v]) => {
                   const on = userType === k;
@@ -256,7 +266,7 @@ export default function IntakePage() {
           )}
 
           {/* Step 2 */}
-          {step === 2 && (
+          {step === 2 && userType && (
             <div style={{ marginTop: "var(--sp-6)" }}>
               <h1 style={{ fontFamily: "var(--serif)", fontSize: isMobile ? "var(--text-3xl)" : "var(--text-4xl)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
                 {lang === "nl" ? "Uw " : lang === "fa" ? "درآمد " : "Your "}
@@ -334,7 +344,12 @@ export default function IntakePage() {
           )}
 
           {/* Nav buttons */}
-          <div style={{ marginTop: 30, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          {incomeError && (
+            <div style={{ marginTop: 12, padding: "10px 14px", background: "var(--danger-soft)", borderRadius: "var(--r-sm)", fontSize: 13, color: "var(--danger)", border: "1px solid var(--danger-soft)" }}>
+              {lang === "nl" ? "Voer uw inkomen in om verder te gaan" : lang === "fa" ? "لطفاً درآمد خود را وارد کنید" : "Please enter your income to continue"}
+            </div>
+          )}
+          <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <button className="btn btn-ghost" onClick={() => setStep(Math.max(1, step - 1) as 1|2|3)} disabled={step === 1}>
               ← {t("intake.back")}
             </button>
@@ -343,7 +358,18 @@ export default function IntakePage() {
                 {t("intake.skip")}
               </button>
               {step < 3 ? (
-                <button className="btn btn-accent" onClick={() => setStep((step + 1) as 2|3)}>
+                <button
+                  className="btn btn-accent"
+                  disabled={step === 1 && !userType}
+                  onClick={() => {
+                    if (step === 2) {
+                      const val = userType === "zzp" ? revenue : salary;
+                      if (!val || parseFloat(val) <= 0) { setIncomeError(true); return; }
+                      setIncomeError(false);
+                    }
+                    setStep((step + 1) as 2|3);
+                  }}
+                >
                   {t("intake.next")} <Icon.arrow />
                 </button>
               ) : (

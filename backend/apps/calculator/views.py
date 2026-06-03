@@ -23,7 +23,10 @@ class CalculateView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         profile = serializer.validated_data
-        result  = calculate(profile)
+        try:
+            result = calculate(profile)
+        except ValueError as exc:
+            return Response({"user_type": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         # Persist only for authenticated users
         if request.user and request.user.is_authenticated:

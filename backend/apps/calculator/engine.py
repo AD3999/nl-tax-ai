@@ -152,7 +152,9 @@ def calculate(profile: dict) -> dict:
     Run the full Dutch 2026 income tax calculation for a user profile.
     Returns a dict with 'calculation' (all intermediate steps) and 'result' (summary).
     """
-    user_type = str(profile.get("user_type", "zzp"))
+    user_type = str(profile.get("user_type") or "").strip().lower()
+    if user_type not in ("zzp", "employee", "expat", "dga"):
+        raise ValueError(f"user_type is required — must be one of: zzp, employee, expat, dga. Got: {user_type!r}")
     aow_age   = bool(profile.get("aow_age", False))
 
     # ── 1. Gross income ─────────────────────────────────────────────

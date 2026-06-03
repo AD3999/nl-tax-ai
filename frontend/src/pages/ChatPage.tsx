@@ -256,7 +256,8 @@ export default function ChatPage() {
     }
   }
 
-  const sessionLimitReached = !user && sessionCount >= ANON_SESSION_LIMIT;
+  // Chat is unlimited for all users — no rate limit enforced
+  const sessionLimitReached = false;
   const userType = String(profile?.user_type ?? "zzp");
   const allCards = getCards(userType, lang);
   const remainingCards = allCards.filter(c => !askedSet.has(c.q));

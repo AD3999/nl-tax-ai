@@ -133,7 +133,7 @@ const CALC_TX = {
   bPension:    { nl: "Pensioenaftrek",           en: "Pension deduction",     fa: "کسر بازنشستگی" },
   bTaxableInc: { nl: "Belastbaar inkomen (Box 1)", en: "Taxable income (Box 1)", fa: "درآمد مشمول مالیات (باکس ۱)" },
   bIncTaxCred: { nl: "IB na kortingen",          en: "Income tax after credits", fa: "مالیات بر درآمد پس از اعتبارات" },
-  bZvw:        { nl: "ZVW-bijdrage (5.32%)",     en: "ZVW contribution (5.32%)", fa: "مشارکت ZVW (۵.۳۲٪)" },
+  bZvw:        { nl: "ZVW-bijdrage (4.85%)",     en: "ZVW contribution (4.85%)", fa: "مشارکت ZVW (۴.۸۵٪)" },
   bBox2:       { nl: "Box 2-belasting (dividend)", en: "Box 2 tax (dividend)", fa: "مالیات باکس ۲ (سود سهام)" },
   bBox3:       { nl: "Box 3-belasting (vermogen)", en: "Box 3 tax (wealth)",  fa: "مالیات باکس ۳ (دارایی)" },
   bTotal:      { nl: "Totale belasting 2026",    en: "Total tax due 2026",    fa: "مجموع مالیات ۲۰۲۶" },
@@ -146,7 +146,7 @@ export default function CalculatorPage() {
   const lang = i18n.language as Lang;
   const navigate = useNavigate();
   const isMobile = useMobile();
-  const [userType, setUserType] = useState<UserType>("zzp");
+  const [userType, setUserType] = useState<UserType | null>(null);
   const [form, setForm]         = useState<FormState>(DEFAULT_FORM);
   const [result, setResult]     = useState<CalcResult | null>(null);
   const [loading, setLoading]   = useState(false);
@@ -156,8 +156,20 @@ export default function CalculatorPage() {
   const num = (k: string): number | undefined => form[k] ? parseFloat(form[k] as string) : undefined;
   const int = (k: string): number | undefined => form[k] ? parseInt(form[k] as string) : undefined;
 
+  const INCOME_REQUIRED: Record<Lang, string> = {
+    nl: "Voer uw inkomen in om te kunnen berekenen",
+    en: "Enter your income to calculate",
+    fa: "لطفاً درآمد خود را وارد کنید",
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!userType) return;
+    // Validate required income field
+    const incomeEmpty = userType === "zzp"
+      ? !form.annual_revenue_zzp || parseFloat(form.annual_revenue_zzp as string) <= 0
+      : !form.employment_income  || parseFloat(form.employment_income  as string) <= 0;
+    if (incomeEmpty) { setError(INCOME_REQUIRED[lang]); return; }
     setLoading(true);
     setError(null);
     try {
@@ -216,22 +228,38 @@ export default function CalculatorPage() {
         </div>
 
         {/* Type selector */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 24 }}>
-          {(Object.entries(USER_TYPES) as [UserType, typeof USER_TYPES[UserType]][]).map(([k, v]) => (
-            <button key={k} type="button" onClick={() => setUserType(k)} style={{
-              padding: "8px 16px", borderRadius: 999, fontSize: 13, fontWeight: 500, cursor: "pointer",
-              border: `1px solid ${userType === k ? "transparent" : "var(--hairline-2)"}`,
-              background: userType === k ? "var(--ink)" : "var(--paper)",
-              color: userType === k ? "var(--paper)" : "var(--ink-3)",
-              display: "inline-flex", alignItems: "center", gap: 8, transition: "all .15s",
-            }}>
-              <span style={{ width: 6, height: 6, borderRadius: 999, background: userType === k ? v.dot : "var(--hairline-2)" }} />
-              {v.labels[lang] ?? v.labels.en}
-            </button>
-          ))}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: userType ? "var(--ink-4)" : "var(--sage-700)" }}>
+              {userType
+                ? (lang === "nl" ? "Type gekozen" : lang === "fa" ? "نوع انتخاب شد" : "Type selected")
+                : (lang === "nl" ? "Kies uw belastingprofiel ✱" : lang === "fa" ? "نوع مالیاتی خود را انتخاب کنید ✱" : "Choose your tax profile ✱")}
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            {(Object.entries(USER_TYPES) as [UserType, typeof USER_TYPES[UserType]][]).map(([k, v]) => (
+              <button key={k} type="button" onClick={() => { setUserType(k); setError(null); }} style={{
+                padding: "8px 16px", borderRadius: 999, fontSize: 13, fontWeight: 500, cursor: "pointer",
+                border: `1px solid ${userType === k ? "transparent" : "var(--hairline-2)"}`,
+                background: userType === k ? "var(--ink)" : "var(--paper)",
+                color: userType === k ? "var(--paper)" : "var(--ink-3)",
+                display: "inline-flex", alignItems: "center", gap: 8, transition: "all .15s",
+              }}>
+                <span style={{ width: 6, height: 6, borderRadius: 999, background: userType === k ? v.dot : "var(--hairline-2)" }} />
+                {v.labels[lang] ?? v.labels.en}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        {/* Prompt when no type selected */}
+        {!userType && (
+          <div style={{ padding: "32px 0", textAlign: "center", color: "var(--ink-3)", fontSize: 14 }}>
+            {lang === "nl" ? "Kies hierboven uw profiel om te beginnen" : lang === "fa" ? "برای شروع، نوع مالیاتی خود را از بالا انتخاب کنید" : "Select your profile above to start the calculation"}
+          </div>
+        )}
+
+        {userType && <form onSubmit={handleSubmit}>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1.05fr", gap: isMobile ? 16 : 24, alignItems: "flex-start" }}>
             {/* Form card */}
             <div className="card" style={{ padding: 26 }}>
@@ -308,7 +336,7 @@ export default function CalculatorPage() {
                   </div>
                   <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 4, fontSize: 11.5, color: "var(--ink-3)" }}>
                     <span>35.75% · up to €38,883</span>
-                    <span style={{ textAlign: "center" }}>37.07% · AOW only</span>
+                    <span style={{ textAlign: "center" }}>37.56% · €38,883–€78,426</span>
                     <span style={{ textAlign: "end" }}>49.50% · €78,426+</span>
                   </div>
                 </div>
@@ -333,7 +361,7 @@ export default function CalculatorPage() {
                       c.pension_deduction > 0 && { label: T(CALC_TX.bPension, lang), value: `− ${EUR(c.pension_deduction)}`, muted: true },
                       { label: T(CALC_TX.bTaxableInc, lang), value: EUR(c.taxable_income_box1), bold: true, line: true },
                       { label: lang === "fa" ? "دهک ۱ باکس ۱ (۳۵.۷۵٪)" : "Box 1 bracket 1 (35.75%)", value: EUR(c.box1_tax_bracket1) },
-                      c.box1_tax_bracket2 > 0 && { label: lang === "fa" ? "دهک ۲ باکس ۱ (۳۷.۰۷٪ — AOW)" : "Box 1 bracket 2 (37.07%)", value: EUR(c.box1_tax_bracket2) },
+                      c.box1_tax_bracket2 > 0 && { label: lang === "fa" ? "دهک ۲ باکس ۱ (۳۷.۵۶٪)" : "Box 1 bracket 2 (37.56%)", value: EUR(c.box1_tax_bracket2) },
                       c.box1_tax_bracket3 > 0 && { label: lang === "fa" ? "دهک ۳ باکس ۱ (۴۹.۵۰٪)" : "Box 1 bracket 3 (49.50%)", value: EUR(c.box1_tax_bracket3) },
                       c.algemene_heffingskorting > 0 && { label: "− Algemene heffingskorting", value: `− ${EUR(c.algemene_heffingskorting)}`, muted: true },
                       c.arbeidskorting > 0 && { label: "− Arbeidskorting", value: `− ${EUR(c.arbeidskorting)}`, muted: true },
@@ -376,7 +404,7 @@ export default function CalculatorPage() {
               </div>
             )}
           </div>
-        </form>
+        </form>}
       </div>
     </div>
   );
