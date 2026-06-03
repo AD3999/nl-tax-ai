@@ -1,7 +1,108 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 3 Jun 2026 — IB Guide + Tax Calendar bug-fix session (branch fix/ib-calendar-bugs).
+> Last updated: 3 Jun 2026 — Engine accuracy fixes, Belastingdienst validation, required fields, chat unlimited.
+
+---
+
+## Session — 3 Jun 2026 (part 6) ✅ Complete
+
+### Required fields validation + chat limits removed
+
+**Commits:** `50e071c`
+
+#### Engine + API — user_type is now required, not defaulted
+
+| File | Change |
+|------|--------|
+| `backend/apps/calculator/engine.py` | Removed silent `user_type = "zzp"` default. Engine now raises `ValueError` if user_type is missing or not one of: zzp, employee, expat, dga |
+| `backend/apps/calculator/views.py` | Added try/except around `calculate()` — catches `ValueError` and returns HTTP 400 with a clear message |
+
+**Why:** A missing user_type would silently run the full ZZP calculation on employee/expat/DGA profiles, producing completely wrong numbers.
+
+#### CalculatorPage.tsx — no pre-selected type, required income
+
+| What | Before | After |
+|------|--------|-------|
+| `userType` initial state | `"zzp"` (always pre-selected) | `null` (no type selected) |
+| Form visibility | Always shown | Hidden until a type is clicked |
+| Type selector | One always highlighted | None highlighted; prompt: "Choose your tax profile ✱" |
+| Submit without income | Allowed (sent €0 to engine) | Blocked — inline error in NL/EN/FA |
+| Bracket 2 label | "37.07%" (stale) | **"37.56%"** (correct) |
+| ZVW label | "5.32%" (stale) | **"4.85%"** (correct) |
+
+#### IntakePage.tsx — no pre-selected type, required income per step
+
+| What | Before | After |
+|------|--------|-------|
+| `userType` initial state | `"zzp"` (pre-selected) | `null` |
+| Step 1 "Next" button | Always enabled | Disabled until user clicks a type card |
+| Step 1 hint | None | "✱ Select a profile to continue" shown below grid |
+| Step 2 "Next" button | Always allowed to proceed | Validates primary income > 0 first; shows red error card if empty |
+| `handleFinish` | No validation | Guards against null userType + validates income before calling API |
+
+#### ChatPage.tsx — unlimited chat for all users
+
+`sessionLimitReached` hardcoded to `false`. The upgrade modal can no longer fire from the session counter regardless of sign-in status. Anonymous users may chat without any limit. Backend limits were already at 9999; frontend check is now permanently disabled.
+
+**Files changed:** `backend/apps/calculator/engine.py`, `backend/apps/calculator/views.py`, `frontend/src/pages/CalculatorPage.tsx`, `frontend/src/pages/IntakePage.tsx`, `frontend/src/pages/ChatPage.tsx`
+
+**TypeScript:** 0 errors.
+
+---
+
+## Session — 3 Jun 2026 (part 5) ✅ Complete
+
+### Belastingdienst validation — two engine accuracy bugs found and fixed
+
+Source validation performed against official Belastingdienst 2026 figures. All 6 ground-truth scenarios recalculated and corrected.
+
+**Commits:** `0818082`
+
+#### Bugs found and fixed
+
+| # | Bug | Old value | Correct value | Source |
+|---|-----|-----------|---------------|--------|
+| 1 | Box 1 bracket 2 rate | 37.07% | **37.56%** | belastingdienst.nl voorlopige aanslag tarieven 2026 |
+| 2 | ZVW rate | 5.32% | **4.85%** | belastingdienst.nl / zzp-pulse.nl |
+| 3 | ZVW ceiling income | €71,628 | **€79,409** | same |
+| 4 | ZVW base | After MKB deduction | **Before MKB** (profit_after_OA per Wfsv) | Wet financiering sociale verzekeringen |
+
+**Root cause of bug 2/3/4:** Phase 16 "correction" accidentally replaced the correct 2026 ZVW rate (4.85%/€79,409) with the 2024 rate (5.32%/€71,628). The original pre-Phase-16 values were actually correct.
+
+#### Corrected scenario totals
+
+| Scenario | Old total | Correct total | Difference |
+|----------|-----------|---------------|------------|
+| SCN-ZZP-001 IT €72k yr3 | €13,776 | **€13,952** | +€176 |
+| SCN-ZZP-002 Design €28k yr1 | €1,152 | **€1,203** | +€51 |
+| SCN-ZZP-003 Senior €140k yr8 | €34,254 | **€34,488** | +€234 |
+| SCN-EMP-001 Employee €48k | €10,079 | **€10,124** | +€45 |
+| SCN-EXP-001 Expat €90k | €14,270 | **€14,388** | +€118 |
+| SCN-DGA-001 DGA €56k+div | €17,010 | **€17,055** | +€45 |
+
+All 6 scenarios now validate with **zero error** (engine output == scenarios.json). Max remaining deviation vs Belastingdienst: €0 on all checked line items.
+
+**Files changed:** `backend/apps/calculator/engine.py`, `phase1/data/seed/tax_rules_2026.json`, `phase1/data/seed/scenarios.json`
+
+#### Test documents created
+
+| File | Purpose |
+|------|---------|
+| `test-scenarios-2026.html` | 6 full test scenarios for manual QA of all 5 site sections per user type — open in browser, Ctrl+P → Save as PDF |
+| `belastingdienst-validation-2026.html` | Side-by-side comparison: our engine vs official Belastingdienst expected results — includes explanation of every line item difference |
+
+---
+
+## Session — 3 Jun 2026 (part 4) ✅ Complete
+
+### Railway build fix — IBGuidePage JSX.Element → ReactNode
+
+`IBGuidePage.tsx`: `when_to_file_body` field in `CARD_TX` was typed as `JSX.Element`. Railway's clean build caught a `TS2503: Cannot find namespace 'JSX'` error that local cached builds masked.
+
+**Fix:** Added `type ReactNode` to the React import; changed `JSX.Element` → `ReactNode` in the `CARD_TX` type definition.
+
+**Commit:** `87f4d93` — `fix(build): replace JSX.Element with ReactNode in IBGuidePage`
 
 ---
 
