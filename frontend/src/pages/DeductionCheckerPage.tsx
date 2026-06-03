@@ -96,7 +96,7 @@ const T = {
     ded_edu: "Education deduction",
     ded_edu_desc: "Training and course costs directly for your business",
     ded_zvw: "ZVW health contribution",
-    ded_zvw_desc: "5.32% on your profit — this significantly reduces your net income",
+    ded_zvw_desc: "4.85% on your profit — this significantly reduces your net income",
     not_zzp_msg: "Most ZZP deductions only apply if you are self-employed",
     not_zzp_sub: "Different tax rules apply to employees, expats and DGA directors",
   },

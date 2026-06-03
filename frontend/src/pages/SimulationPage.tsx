@@ -242,7 +242,7 @@ function OverviewStep({ answers, lang, onGoToChat }: {
                 ["Arbeidskorting", -result.calculation.arbeidskorting],
                 ...(result.calculation.iack > 0 ? [["IACK", -result.calculation.iack]] : []),
                 ["Box 1 na kortingen", result.calculation.income_tax_after_credits],
-                ...(result.calculation.zvw_contribution > 0 ? [["ZVW-bijdrage (5.32%)", result.calculation.zvw_contribution]] : []),
+                ...(result.calculation.zvw_contribution > 0 ? [["ZVW-bijdrage (4.85%)", result.calculation.zvw_contribution]] : []),
                 ...(result.calculation.box2_tax > 0 ? [["Box 2 belasting", result.calculation.box2_tax]] : []),
                 ...(result.calculation.box3_tax > 0 ? [["Box 3 belasting", result.calculation.box3_tax]] : []),
               ].map(([label, val], i, arr) => (

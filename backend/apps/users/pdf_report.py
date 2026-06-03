@@ -466,7 +466,7 @@ def generate_report(
             _section_heading("ZVW Health Contribution — The Tax Most ZZP Forget"),
             Paragraph(
                 f"As a ZZP worker you pay a ZVW contribution of <b>€{zvw:,.0f}</b> on top of your income tax. "
-                "This is 5.32% on your profit (up to €71,628). It is often not budgeted for because it "
+                "This is 4.85% on your profit (up to €79,409). It is often not budgeted for because it "
                 "does not appear on a separate bill — it is included in your tax assessment.",
                 BODY
             ),

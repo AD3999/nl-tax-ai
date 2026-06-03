@@ -12,7 +12,7 @@ The main taxes that apply to ZZP workers:
 • **ZVW health insurance contribution** — 4.85% on your profit (up to €79,409)
 • **BTW (VAT)** — 21% on most services (you collect this from clients and pay it quarterly)
 
-Many ZZP workers forget the ZVW contribution, which can add up to €3,811/year on top of income tax.`,
+Many ZZP workers forget the ZVW contribution, which can add up to €3,851/year on top of income tax.`,
     source: "belastingdienst.nl/inkomstenbelasting",
   },
   {

@@ -20,7 +20,8 @@
       "uses_30pct_ruling": false,
       "pension_contribution": 0,
       "kia_investments": 4500,
-      "single_client_percentage": 65
+      "single_client_percentage": 65,
+      "user_type": "zzp"
     },
     "calculation": {
       "gross_revenue": 72000,
@@ -108,7 +109,8 @@
       "uses_30pct_ruling": false,
       "pension_contribution": 0,
       "kia_investments": 1800,
-      "single_client_percentage": 30
+      "single_client_percentage": 30,
+      "user_type": "zzp"
     },
     "calculation": {
       "gross_revenue": 28000,
@@ -202,7 +204,8 @@
       "uses_30pct_ruling": false,
       "pension_contribution": 18000,
       "kia_investments": 8000,
-      "single_client_percentage": 45
+      "single_client_percentage": 45,
+      "user_type": "zzp"
     },
     "calculation": {
       "gross_revenue": 140000,
@@ -291,7 +294,8 @@
       "uses_30pct_ruling": false,
       "pension_contribution": 0,
       "kia_investments": 0,
-      "single_client_percentage": null
+      "single_client_percentage": null,
+      "user_type": "employee"
     },
     "calculation": {
       "gross_revenue": 48000,
@@ -376,7 +380,8 @@
       "uses_30pct_ruling": true,
       "pension_contribution": 0,
       "kia_investments": 0,
-      "single_client_percentage": null
+      "single_client_percentage": null,
+      "user_type": "expat"
     },
     "calculation": {
       "gross_revenue": 90000,
@@ -467,7 +472,8 @@
       "pension_contribution": 8000,
       "kia_investments": 0,
       "single_client_percentage": null,
-      "box2_dividend": 24000
+      "box2_dividend": 24000,
+      "user_type": "dga"
     },
     "calculation": {
       "gross_revenue": 56000,
