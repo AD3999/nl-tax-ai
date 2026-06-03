@@ -35,23 +35,23 @@
       "mkb_winstvrijstelling": 7355,
       "taxable_income_box1": 50562,
       "box1_tax_bracket1": 13901,
-      "box1_tax_bracket2": 4329,
+      "box1_tax_bracket2": 4387,
       "box1_tax_bracket3": 0,
-      "box1_tax_raw": 18230,
+      "box1_tax_raw": 18287,
       "algemene_heffingskorting": 1783,
       "arbeidskorting": 5361,
       "iack": 0,
-      "income_tax_after_credits": 11086,
-      "zvw_contribution": 2690,
+      "income_tax_after_credits": 11143,
+      "zvw_contribution": 2809,
       "box2_tax": 0,
       "box3_tax": 0,
-      "total_tax_due": 13776,
-      "effective_rate": 0.22
+      "total_tax_due": 13952,
+      "effective_rate": 0.223
     },
     "result": {
-      "total_tax_due": 13776,
-      "effective_rate": 0.22,
-      "monthly_reserve_needed": 1148,
+      "total_tax_due": 13952,
+      "effective_rate": 0.223,
+      "monthly_reserve_needed": 1163,
       "eligible_toeslagen": [],
       "toeslagen_value": 0,
       "optimization_opportunities": [
@@ -64,8 +64,8 @@
       "key_insights": [
         "Startersaftrek saved €798 in taxes — 2026 is the LAST year to use it",
         "KIA on €4,500 equipment investment saved €450 in taxes",
-        "ZVW (5.32%) adds €2,690 on top of income tax — always reserve for this",
-        "Effective rate 22% is reasonable — but pension optimization could reduce significantly",
+        "ZVW (4.85%) adds €2,809 on top of income tax — always reserve for this",
+        "Effective rate 22.3% is reasonable — but pension optimization could reduce significantly",
         "65% revenue from single client creates medium Wet DBA risk"
       ]
     },
@@ -130,16 +130,16 @@
       "arbeidskorting": 3999,
       "iack": 1765,
       "income_tax_after_credits": 0,
-      "zvw_contribution": 1152,
+      "zvw_contribution": 1203,
       "box2_tax": 0,
       "box3_tax": 0,
-      "total_tax_due": 1152,
-      "effective_rate": 0.046
+      "total_tax_due": 1203,
+      "effective_rate": 0.049
     },
     "result": {
-      "total_tax_due": 1152,
-      "effective_rate": 0.046,
-      "monthly_reserve_needed": 96,
+      "total_tax_due": 1203,
+      "effective_rate": 0.049,
+      "monthly_reserve_needed": 100,
       "eligible_toeslagen": [
         "zorgtoeslag",
         "huurtoeslag",
@@ -159,7 +159,7 @@
         "IACK (€1,770) significantly reduces taxes for working parent",
         "Missed urencriterium — needs to track hours carefully in year 2 to qualify for zelfstandigenaftrek",
         "Toeslagen (€4,800 estimated) worth MORE than total tax bill — always check eligibility",
-        "ZVW (€1,152) is the largest single tax item this year"
+        "ZVW (€1,203) is the largest single tax item this year"
       ]
     },
     "rule_ids_applied": [
@@ -217,23 +217,23 @@
       "mkb_winstvrijstelling": 15438,
       "taxable_income_box1": 88122,
       "box1_tax_bracket1": 13901,
-      "box1_tax_bracket2": 14659,
+      "box1_tax_bracket2": 14852,
       "box1_tax_bracket3": 4800,
-      "box1_tax_raw": 33359,
+      "box1_tax_raw": 33553,
       "algemene_heffingskorting": 0,
       "arbeidskorting": 2916,
       "iack": 0,
-      "income_tax_after_credits": 30443,
-      "zvw_contribution": 3811,
+      "income_tax_after_credits": 30637,
+      "zvw_contribution": 3851,
       "box2_tax": 0,
       "box3_tax": 0,
-      "total_tax_due": 34254,
-      "effective_rate": 0.274
+      "total_tax_due": 34488,
+      "effective_rate": 0.276
     },
     "result": {
-      "total_tax_due": 34254,
-      "effective_rate": 0.274,
-      "monthly_reserve_needed": 2855,
+      "total_tax_due": 34488,
+      "effective_rate": 0.276,
+      "monthly_reserve_needed": 2874,
       "eligible_toeslagen": [],
       "toeslagen_value": 0,
       "optimization_opportunities": [
@@ -306,22 +306,22 @@
       "mkb_winstvrijstelling": 0,
       "taxable_income_box1": 48000,
       "box1_tax_bracket1": 13901,
-      "box1_tax_bracket2": 3380,
+      "box1_tax_bracket2": 3424,
       "box1_tax_bracket3": 0,
-      "box1_tax_raw": 17280,
+      "box1_tax_raw": 17325,
       "algemene_heffingskorting": 1946,
       "arbeidskorting": 5528,
       "iack": 0,
-      "income_tax_after_credits": 9806,
+      "income_tax_after_credits": 9851,
       "zvw_contribution": 0,
       "box2_tax": 0,
       "box3_tax": 273,
-      "total_tax_due": 10079,
-      "effective_rate": 0.21
+      "total_tax_due": 10124,
+      "effective_rate": 0.211
     },
     "result": {
-      "total_tax_due": 10079,
-      "effective_rate": 0.21,
+      "total_tax_due": 10124,
+      "effective_rate": 0.211,
       "monthly_reserve_needed": 0,
       "eligible_toeslagen": [
         "zorgtoeslag"
@@ -391,22 +391,22 @@
       "mkb_winstvrijstelling": 0,
       "taxable_income_box1": 63000,
       "box1_tax_bracket1": 13901,
-      "box1_tax_bracket2": 8940,
+      "box1_tax_bracket2": 9058,
       "box1_tax_bracket3": 0,
-      "box1_tax_raw": 22841,
+      "box1_tax_raw": 22959,
       "algemene_heffingskorting": 987,
       "arbeidskorting": 4552,
       "iack": 3032,
-      "income_tax_after_credits": 14270,
+      "income_tax_after_credits": 14388,
       "zvw_contribution": 0,
       "box2_tax": 0,
       "box3_tax": 0,
-      "total_tax_due": 14270,
-      "effective_rate": 0.227
+      "total_tax_due": 14388,
+      "effective_rate": 0.228
     },
     "result": {
-      "total_tax_due": 14270,
-      "effective_rate": 0.227,
+      "total_tax_due": 14388,
+      "effective_rate": 0.228,
       "monthly_reserve_needed": 0,
       "eligible_toeslagen": [
         "zorgtoeslag",
@@ -482,22 +482,22 @@
       "mkb_winstvrijstelling": 0,
       "taxable_income_box1": 48000,
       "box1_tax_bracket1": 13901,
-      "box1_tax_bracket2": 3380,
+      "box1_tax_bracket2": 3424,
       "box1_tax_bracket3": 0,
-      "box1_tax_raw": 17280,
+      "box1_tax_raw": 17325,
       "algemene_heffingskorting": 1946,
       "arbeidskorting": 5528,
       "iack": 0,
-      "income_tax_after_credits": 9806,
+      "income_tax_after_credits": 9851,
       "zvw_contribution": 0,
       "box2_tax": 5880,
       "box3_tax": 1324,
-      "total_tax_due": 17010,
-      "effective_rate": 0.304
+      "total_tax_due": 17055,
+      "effective_rate": 0.305
     },
     "result": {
-      "total_tax_due": 17010,
-      "effective_rate": 0.304,
+      "total_tax_due": 17055,
+      "effective_rate": 0.305,
       "monthly_reserve_needed": 0,
       "eligible_toeslagen": [],
       "toeslagen_value": 0,

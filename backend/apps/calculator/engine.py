@@ -40,7 +40,7 @@ def calc_box1_tax(taxable: float, aow_age: bool = False) -> dict:
     b1_ceil  = 38883.0
     b3_floor = 78426.0
     b1_rate  = _rv("BR1-2026-001", "value") / 100   # 0.3575
-    b2_rate  = 0.3707                                # non-AOW bracket 2 (not in JSON; correct Dutch law)
+    b2_rate  = 0.3756                                # non-AOW bracket 2 — confirmed 37.56% belastingdienst.nl 2026
     b2_aow   = _rv("BR1-2026-002", "value") / 100   # 0.3756 (AOW age only)
     b3_rate  = _rv("BR1-2026-003", "value") / 100   # 0.495
 
@@ -187,9 +187,10 @@ def calculate(profile: dict) -> dict:
 
     mkb = _eur(profit_after_oa * (_rv("MKB-2026-001", "value") / 100)) if user_type == "zzp" else 0
 
-    # ZVW uses profit before pension; taxable Box 1 deducts pension
-    zvw_base     = profit_after_oa - mkb
-    taxable_box1 = zvw_base - pension
+    # ZVW bijdrage: Wfsv base = profit_after_OA (before MKB), per belastingdienst.nl
+    # Taxable Box 1 still subtracts MKB and pension
+    zvw_base     = profit_after_oa
+    taxable_box1 = profit_after_oa - mkb - pension
 
     # ── 3. Box 1 tax ────────────────────────────────────────────────
     b1 = calc_box1_tax(max(0.0, taxable_box1), aow_age)

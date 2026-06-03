@@ -493,15 +493,15 @@
     },
     "result": {
       "type": "rate",
-      "value": 5.32,
+      "value": 4.85,
       "unit": "percent",
-      "formula": "min(taxable_zzp_profit, 71628) * 0.0532",
-      "ceiling_income": 71628,
-      "max_amount": 3810.61
+      "formula": "min(profit_after_ondernemers, 79409) * 0.0485",
+      "ceiling_income": 79409,
+      "max_amount": 3851.34
     },
-    "plain_nl": "ZZP'ers betalen 5,32% ZVW-bijdrage over hun winst, met een maximum van €71.628 winst. Maximale bijdrage: €3.811 per jaar. Wordt via de aangifte IB betaald.",
-    "plain_en": "Self-employed pay 5.32% ZVW health contribution on their profit, capped at €71,628. Max €3,811/year. Paid via annual tax return.",
-    "plain_fa": "ZZP‌کاران ۵.۳۲٪ مشارکت ZVW بر سود خود تا سقف ۷۱٬۶۲۸ یورو می‌پردازند. حداکثر ۳٬۸۱۱ یورو/سال. از طریق اظهارنامه سالانه پرداخت می‌شود.",
+    "plain_nl": "ZZP'ers betalen 4,85% ZVW-bijdrage over hun winst na ondernemersaftrek, met een maximum van €79.409 winst. Maximale bijdrage: €3.851 per jaar. Wordt via de aangifte IB betaald.",
+    "plain_en": "Self-employed pay 4.85% ZVW health contribution on their profit after ondernemersaftrek, capped at €79,409. Max €3,851/year. Paid via annual tax return.",
+    "plain_fa": "ZZP‌کاران ۴.۸۵٪ مشارکت ZVW بر سود پس از کسر هزینه‌های کارآفرینی تا سقف ۷۹٬۴۰۹ یورو می‌پردازند. حداکثر ۳٬۸۵۱ یورو/سال. از طریق اظهارنامه سالانه پرداخت می‌شود.",
     "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/ondernemer/zorgverzekeringswet/",
     "tags": [
       "zvw",
