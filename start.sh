@@ -11,9 +11,8 @@ echo "==> Seeding tax reminders…"
 python3 manage.py seed_reminders
 
 echo "==> Importing tax rules into DB…"
-python3 -c "
+python3 manage.py shell -c "
 from apps.tax.models import TaxRule
-import os, sys
 from pathlib import Path
 p = Path('/app/phase1/data/seed/tax_rules_2026.json')
 if p.exists():
