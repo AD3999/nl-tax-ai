@@ -168,10 +168,14 @@ export default function TaxCalendarPage() {
   const categories = ["all", ...Array.from(new Set(reminders.map(r => r.category)))];
   const filtered   = filter === "all" ? reminders : reminders.filter(r => r.category === filter);
 
-  // iCal feed URL (uses apiBase — correct for both dev and production)
-  const icsUrl    = `${apiBase}/users/calendar.ics`;
-  // Google Calendar feed subscription (same base as icsUrl — CAL-2 fix)
-  const googleUrl = `https://www.google.com/calendar/render?cid=${encodeURIComponent(icsUrl)}`;
+  // iCal feed URL — relative for .ics download (browser resolves it)
+  const icsUrl = `${apiBase}/users/calendar.ics`;
+  // Google Calendar cid= requires a fully absolute URL — build one from window.location.origin
+  // when apiBase is a relative path (VITE_API_URL not set, frontend+backend on same domain)
+  const icsAbsoluteUrl = apiBase.startsWith("http")
+    ? icsUrl
+    : `${window.location.origin}${icsUrl}`;
+  const googleUrl = `https://www.google.com/calendar/render?cid=${encodeURIComponent(icsAbsoluteUrl)}`;
 
   const hasReminders = !loading && !error && reminders.length > 0;
 

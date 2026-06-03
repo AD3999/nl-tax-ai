@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from config.authentication import SoftJWTAuthentication
 import rest_framework.throttling
 
-from .models import Conversation
+from .models import Conversation, Message
 from .serializers import ChatMessageSerializer, ConversationSerializer
 
 ANON_SESSION_LIMIT = getattr(settings, "ANON_SESSION_LIMIT", 5)
@@ -228,6 +228,21 @@ class ChatMessageView(APIView):
                     yield f"data: {json.dumps({'done': True})}\n\n"
                 return StreamingHttpResponse(stream_anon_limit(), content_type="text/event-stream")
 
+        # Persist conversation + user message to DB for authenticated users
+        _conv = None
+        if request.user.is_authenticated and not intake_mode:
+            try:
+                _conv = Conversation.objects.create(
+                    user=request.user,
+                    language=language,
+                    tax_year=2026,
+                    summary=message[:200],
+                    message_count=0,
+                )
+                Message.objects.create(conversation=_conv, role="user", content=message)
+            except Exception:
+                _conv = None
+
         api_key = os.environ.get("ANTHROPIC_API_KEY", "")
 
         if not api_key:
@@ -364,6 +379,7 @@ class ChatMessageView(APIView):
                 claude_messages.append({"role": "user", "content": message})
 
                 try:
+                    full_response = []
                     with client.messages.stream(
                         model="claude-sonnet-4-6",
                         max_tokens=2048,
@@ -371,8 +387,21 @@ class ChatMessageView(APIView):
                         messages=claude_messages,
                     ) as stream:
                         for text in stream.text_stream:
+                            full_response.append(text)
                             yield f"data: {json.dumps({'text': text})}\n\n"
                     yield f"data: {json.dumps({'done': True})}\n\n"
+                    # Persist assistant response to DB
+                    if _conv and full_response:
+                        try:
+                            Message.objects.create(
+                                conversation=_conv,
+                                role="assistant",
+                                content="".join(full_response),
+                            )
+                            _conv.message_count = 2
+                            _conv.save(update_fields=["message_count"])
+                        except Exception:
+                            pass
                 except Exception as e:
                     error_msg = getattr(e, 'message', None) or str(e)
                     yield f"data: {json.dumps({'error': error_msg})}\n\n"
