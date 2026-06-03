@@ -170,12 +170,13 @@ export default function TaxCalendarPage() {
 
   // iCal feed URL — relative for .ics download (browser resolves it)
   const icsUrl = `${apiBase}/users/calendar.ics`;
-  // Google Calendar cid= requires a fully absolute URL — build one from window.location.origin
-  // when apiBase is a relative path (VITE_API_URL not set, frontend+backend on same domain)
+  // Google Calendar cid= needs a fully absolute URL using webcal:// protocol.
+  // https:// is rejected with "unable to add calendar". webcal:// is the standard.
   const icsAbsoluteUrl = apiBase.startsWith("http")
     ? icsUrl
     : `${window.location.origin}${icsUrl}`;
-  const googleUrl = `https://www.google.com/calendar/render?cid=${encodeURIComponent(icsAbsoluteUrl)}`;
+  const webcalUrl = icsAbsoluteUrl.replace(/^https?:\/\//, "webcal://");
+  const googleUrl = `https://www.google.com/calendar/render?cid=${encodeURIComponent(webcalUrl)}`;
 
   const hasReminders = !loading && !error && reminders.length > 0;
 

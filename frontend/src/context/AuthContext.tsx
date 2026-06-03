@@ -31,7 +31,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchProfile().then((u) => {
       setUser(u);
       setLoading(false);
-      if (u) updateLastActive();
+      if (u) {
+        updateLastActive();
+      } else {
+        // Token missing or expired — wipe all session data so stale user-id
+        // never causes another visitor to read the previous user's chat history.
+        apiLogout();
+      }
     });
   }, []);
 

@@ -62,8 +62,8 @@ export default function RegisterPage() {
       scope: "email profile",
       callback: async (resp) => {
         if (resp.error) {
-          const msg = lang === "nl" ? "Google-registratie mislukt" : lang === "fa" ? "ثبت‌نام با گوگل ناموفق بود" : "Google sign-up failed";
-          setError(msg);
+          const base = lang === "nl" ? "Google-registratie mislukt" : lang === "fa" ? "ثبت‌نام با گوگل ناموفق بود" : "Google sign-up failed";
+          setError(`${base} (${resp.error})`);
           return;
         }
         setLoading(true);

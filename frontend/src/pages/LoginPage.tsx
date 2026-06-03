@@ -36,8 +36,8 @@ export default function LoginPage() {
       scope: "email profile",
       callback: async (resp) => {
         if (resp.error) {
-          const msg = lang === "nl" ? "Google-inloggen mislukt" : lang === "fa" ? "ورود با گوگل ناموفق بود" : "Google sign-in failed";
-          setError(msg);
+          const base = lang === "nl" ? "Google-inloggen mislukt" : lang === "fa" ? "ورود با گوگل ناموفق بود" : "Google sign-in failed";
+          setError(`${base} (${resp.error})`);
           return;
         }
         setLoading(true);
