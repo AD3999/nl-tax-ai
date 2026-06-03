@@ -7,6 +7,9 @@ cd /app/backend
 echo "==> Running migrations…"
 python3 manage.py migrate --noinput
 
+echo "==> Seeding tax reminders…"
+python3 manage.py seed_reminders
+
 echo "==> Starting gunicorn…"
 exec python3 -m gunicorn config.wsgi:application \
   --bind "0.0.0.0:${PORT:-8000}" \
