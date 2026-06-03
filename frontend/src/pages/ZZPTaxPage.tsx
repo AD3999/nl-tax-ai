@@ -9,7 +9,7 @@ const SECTIONS = [
 
 The main taxes that apply to ZZP workers:
 • **Income tax (inkomstenbelasting)** — Box 1 tax on your taxable profit
-• **ZVW health insurance contribution** — 5.32% on your profit (up to €71,628)
+• **ZVW health insurance contribution** — 4.85% on your profit (up to €79,409)
 • **BTW (VAT)** — 21% on most services (you collect this from clients and pay it quarterly)
 
 Many ZZP workers forget the ZVW contribution, which can add up to €3,811/year on top of income tax.`,
@@ -23,7 +23,7 @@ Many ZZP workers forget the ZVW contribution, which can add up to €3,811/year 
 | Income range | Rate | Includes social insurance |
 |---|---|---|
 | €0 – €38,883 | **35.75%** | Yes (27.65% premie volksverzekeringen) |
-| €38,883 – €78,426 | **37.07%** | Only for AOW-age workers |
+| €38,883 – €78,426 | **37.56%** | Only for AOW-age workers |
 | Above €78,426 | **49.50%** | No social insurance above this |
 
 Important: Your taxable profit is your revenue minus expenses minus ZZP deductions (zelfstandigenaftrek, MKB-winstvrijstelling). Most ZZP workers pay significantly less than the headline rate after applying deductions and tax credits.`,
@@ -82,15 +82,15 @@ Note: If you work in the accommodation sector, the BTW rate changed from 9% to 2
     id: "zvw",
     title: "ZVW health contribution — the tax most ZZP forget",
     body: `The ZVW-bijdrage is a health insurance contribution paid by ZZP workers. In 2026:
-• Rate: **5.32%**
-• Maximum income: **€71,628**
-• Maximum annual contribution: **€3,811**
+• Rate: **4.85%**
+• Maximum income: **€79,409**
+• Maximum annual contribution: **€3,851**
 
-This is separate from the health insurance premium you pay your insurer (zorgverzekering). It is paid through your income tax return and is calculated on your ZZP profit (after ZA and before pension deduction, but after MKB).
+This is separate from the health insurance premium you pay your insurer (zorgverzekering). It is paid through your income tax return and is calculated on your ZZP profit after ondernemersaftrek (ZA/SA/KIA), before MKB-winstvrijstelling.
 
 **Why ZZP workers miss it:** it does not appear on a separate bill. It is included in your total tax assessment. Budget for it!
 
-Example: ZZP profit €50,000 → ZVW contribution ≈ €2,660/year on top of Box 1 income tax.`,
+Example: ZZP profit €50,000 → ZVW contribution ≈ €2,425/year on top of Box 1 income tax.`,
     source: "belastingdienst.nl/zvw",
   },
   {

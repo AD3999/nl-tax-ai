@@ -168,7 +168,7 @@ def _check_zvw(alerts, calc, lang):
         alerts.append({
             "id": "zvw-reminder", "category": "cashflow", "severity": "info",
             "title": {"nl": f"ZVW-bijdrage: €{zvw:,.0f} — vergeet dit niet!", "en": f"ZVW health contribution: €{zvw:,.0f} — easy to miss", "fa": f"ZVW: €{zvw:,.0f} — فراموش نکنید!"}.get(lang),
-            "body": {"nl": "ZZP'ers betalen de ZVW-bijdrage (5.32% over winst) zelf. Dit wordt niet automatisch ingehouden. Zet het maandelijks apart.", "en": "Self-employed workers pay ZVW (health contribution, 5.32% of profit) themselves — it's not withheld automatically. Set it aside monthly.", "fa": "کارآفرینان ZVW (۵.۳۲٪ سود) را خودشان می‌پردازند — به صورت خودکار کسر نمی‌شود."}.get(lang),
+            "body": {"nl": "ZZP'ers betalen de ZVW-bijdrage (4.85% over winst) zelf. Dit wordt niet automatisch ingehouden. Zet het maandelijks apart.", "en": "Self-employed workers pay ZVW (health contribution, 4.85% of profit) themselves — it's not withheld automatically. Set it aside monthly.", "fa": "کارآفرینان ZVW (۴.۸۵٪ سود) را خودشان می‌پردازند — به صورت خودکار کسر نمی‌شود."}.get(lang),
             "action_label": {"nl": "Meer over ZVW", "en": "About ZVW", "fa": "درباره ZVW"}.get(lang),
             "action_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/overige_belastingen/inkomensafhankelijke_bijdrage_zvw/",
         })
