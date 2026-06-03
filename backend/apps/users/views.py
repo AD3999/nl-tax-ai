@@ -170,14 +170,19 @@ class GoogleAuthView(APIView):
         if not email:
             return Response({"error": "Google account has no email"}, status=400)
 
-        # Get or create user
-        try:
-            user = User.objects.get(email__iexact=email)
+        # Get or create user — filter().first() handles the edge case where
+        # duplicate email rows exist (MultipleObjectsReturned would crash .get())
+        user = User.objects.filter(email__iexact=email).first()
+        if user:
             created = False
-        except User.DoesNotExist:
+        else:
+            # Ensure username is unique even if email is already taken as username
+            username = email
+            if User.objects.filter(username=username).exists():
+                username = email.split("@")[0] + "_g"
             user = User.objects.create_user(
                 email=email,
-                username=email,
+                username=username,
                 password=None,
                 user_type=user_type,
             )
