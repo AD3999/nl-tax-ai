@@ -136,6 +136,7 @@ class TaxRuleListView(generics.ListCreateAPIView):
     """GET /api/tax/rules/ — list + filter; POST — create new rule (admin only)."""
     serializer_class = TaxRuleSerializer
     permission_classes = [IsStaffUser]
+    pagination_class = None  # small dataset (~28 rules), no pagination needed
 
     def get_queryset(self):
         qs = TaxRule.objects.all()

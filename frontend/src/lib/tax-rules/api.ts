@@ -100,7 +100,8 @@ export async function getRules(filters?: RuleFilters): Promise<TaxRule[]> {
       if (filters?.search) params.set("search", filters.search);
       const res = await fetch(`${API_BASE}/tax/rules/?${params}`, { headers: authHeaders() });
       if (!res.ok) throw new Error("Backend unavailable");
-      const data = await res.json() as Record<string, unknown>[];
+      const raw = await res.json() as Record<string, unknown>[] | { results: Record<string, unknown>[] };
+      const data = Array.isArray(raw) ? raw : (raw as { results: Record<string, unknown>[] }).results ?? [];
       let rules = data.map(mapDjangoRule);
       if (filters?.user_type && filters.user_type !== "all") {
         rules = rules.filter(r => r.user_types.includes(filters.user_type as never));
