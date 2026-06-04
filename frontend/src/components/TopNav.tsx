@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import Wordmark from "./Wordmark";
 import LangSwitch from "./LangSwitch";
+import ThemeToggle from "./ThemeToggle";
 import { useMobile } from "../hooks/useMobile";
 
 const NAV_ITEMS_GUEST = [
@@ -93,7 +94,7 @@ export default function TopNav() {
           alignItems: "center",
           justifyContent: "space-between",
           borderBottom: scrolled ? "1px solid rgba(0,0,0,0.06)" : "1px solid var(--hairline)",
-          background: scrolled ? "rgba(252,251,249,0.88)" : "var(--paper)",
+          background: scrolled ? "var(--paper-glass)" : "var(--paper)",
           backdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
           WebkitBackdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
           boxShadow: scrolled ? "0 2px 16px rgba(0,0,0,0.06)" : "none",
@@ -133,8 +134,9 @@ export default function TopNav() {
           )}
         </div>
 
-        {/* Right: lang switch + auth + hamburger */}
+        {/* Right: theme toggle + lang switch + auth + hamburger */}
         <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
+          <ThemeToggle />
           <LangSwitch />
 
           {!isMobile && user ? (

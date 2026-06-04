@@ -1,7 +1,59 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 4 Jun 2026 — Deduction Checker v2: 10-step wizard, 3-tier eligibility, email gate, landing page repositioning.
+> Last updated: 4 Jun 2026 — Deduction Checker v2, dark theme toggle, TaxRule pagination fix.
+
+---
+
+## Session — 4 Jun 2026 (part 3) ✅ Complete
+
+### Bug fix: TaxRule admin page — DRF pagination crash
+
+**Symptom:** Browser console showed `[TaxRules] Backend unreachable, using mock data: TypeError: (intermediate value).map is not a function`. Admin rules page silently fell back to mock data.
+
+**Root cause:** `TaxRuleListView` inherits `DEFAULT_PAGINATION_CLASS = PageNumberPagination` with `PAGE_SIZE = 20`. DRF wraps list responses in `{ count, next, previous, results: [...] }`. The frontend `api.ts` did `data.map(mapDjangoRule)` directly on the wrapper — crash. Secondary issue: with 28 rules and page size 20, only 20 would have been shown even if it didn't crash.
+
+**Fix:**
+- `backend/apps/tax/views.py`: added `pagination_class = None` on `TaxRuleListView` — small dataset, no pagination needed.
+- `frontend/src/lib/tax-rules/api.ts`: defensive fallback — handles both `{ results: [...] }` and plain array shapes so it cannot break again.
+
+---
+
+### Feature: Dark theme toggle (system-wide)
+
+A full dark mode that works on every page, respects system preference, persists in localStorage, and has zero flash on load.
+
+**Architecture:**
+- `[data-theme="dark"]` on `<html>` element — all CSS custom properties cascade automatically, no per-component changes needed
+- Anti-FWOT inline `<script>` in `index.html` — reads localStorage and applies the attribute synchronously before React renders
+- `ThemeProvider` + `useTheme` hook in `ThemeContext.tsx` — React state layer, listens for system preference changes when user has no stored preference
+- `ThemeToggle` component — sun/moon SVG button in the navbar
+
+**Dark theme token overrides (`index.css`):**
+
+| Token | Light | Dark |
+|---|---|---|
+| `--paper` | `oklch(0.985 …)` warm off-white | `oklch(0.13 … 260)` deep dark |
+| `--paper-2/3` | slightly darker off-white | darker greys |
+| `--ink` | near-black | `oklch(0.92 …)` near-white |
+| `--hairline` | light warm grey | dark cool grey |
+| `--accent-soft` | light sage tint | dark sage tint |
+| `--paper-glass` | `oklch(0.985 … / 0.88)` | `oklch(0.13 … / 0.90)` |
+| `color-scheme` | `light` | `dark` (browser UI elements) |
+
+`.grain` class gets dark-appropriate radial gradients.
+
+**Files changed:**
+- `frontend/index.html` — anti-FWOT inline script
+- `frontend/src/index.css` — `--paper-glass` token + `[data-theme="dark"]` block + dark `.grain`
+- `frontend/src/context/ThemeContext.tsx` — new: `ThemeProvider` + `useTheme`
+- `frontend/src/components/ThemeToggle.tsx` — new: sun/moon toggle button
+- `frontend/src/main.tsx` — wrap app with `ThemeProvider`
+- `frontend/src/components/TopNav.tsx` — add `ThemeToggle`, fix hardcoded glass nav color
+
+**TypeScript:** 0 errors.
+
+---
 
 ---
 
