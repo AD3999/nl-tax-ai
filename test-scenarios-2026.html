@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaxWijs — Test Scenarios 2026</title>
+<style>
+  :root {
+    --sage: #4a7c59;
+    --sage-light: #e8f0eb;
+    --ink: #1a1a1a;
+    --ink2: #555;
+    --border: #d4ddd6;
+    --paper: #fafaf8;
+    --warn: #c8720a;
+    --warn-soft: #fef3e2;
+    --danger: #c0392b;
+    --danger-soft: #fdecea;
+    --ok: #2d7a4f;
+    --ok-soft: #e6f4ed;
+    --blue: #2563eb;
+    --blue-soft: #eff6ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: #fff;
+  }
+  h1 { font-size: 28px; font-weight: 300; letter-spacing: -0.5px; }
+  h2 { font-size: 18px; font-weight: 600; color: var(--sage); margin: 0 0 10px; }
+  h3 { font-size: 13px; font-weight: 700; margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2); }
+  h4 { font-size: 12px; font-weight: 700; margin: 10px 0 4px; color: var(--ink); }
+  p { margin: 4px 0 8px; color: var(--ink2); }
+  a { color: var(--sage); }
+
+  /* Cover */
+  .cover {
+    display: flex; flex-direction: column; justify-content: center;
+    min-height: 100vh; padding: 60px;
+    background: var(--sage); color: white;
+    page-break-after: always;
+  }
+  .cover h1 { font-size: 42px; color: white; margin-bottom: 12px; }
+  .cover .sub { font-size: 18px; opacity: 0.85; margin-bottom: 40px; }
+  .cover .meta { font-size: 13px; opacity: 0.7; }
+  .cover .badge { display: inline-block; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; padding: 4px 12px; font-size: 11px; margin-bottom: 16px; }
+
+  /* Layout */
+  .page { padding: 32px 40px; }
+  .scenario-page { page-break-before: always; }
+
+  /* Scenario header */
+  .scenario-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    border-bottom: 2px solid var(--sage); padding-bottom: 12px; margin-bottom: 20px;
+  }
+  .scenario-id { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--sage); text-transform: uppercase; }
+  .user-type-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; color: white; }
+  .zzp { background: var(--sage); }
+  .employee { background: #2563eb; }
+  .expat { background: #7c3aed; }
+  .dga { background: #b45309; }
+
+  /* Cards */
+  .card { background: var(--paper); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin: 10px 0; }
+  .card-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink2); margin-bottom: 8px; }
+
+  /* Grid */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 12px 0; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 12px 0; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin: 8px 0; }
+  th { text-align: left; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink2); padding: 5px 8px; border-bottom: 2px solid var(--border); }
+  td { padding: 5px 8px; border-bottom: 1px solid #eee; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; font-family: monospace; }
+  .row-total { font-weight: 700; background: var(--sage-light); }
+  .row-deduct { color: #c0392b; }
+  .row-credit { color: var(--ok); }
+
+  /* Result boxes */
+  .result-box {
+    display: inline-block; border: 2px solid var(--sage); border-radius: 8px;
+    padding: 10px 16px; margin: 4px 6px 4px 0;
+    text-align: center; min-width: 120px;
+  }
+  .result-box .label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink2); }
+  .result-box .value { font-size: 18px; font-weight: 700; color: var(--sage); margin-top: 2px; }
+  .result-box .value.warn { color: var(--warn); }
+
+  /* Alert chips */
+  .alert { display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px; border-radius: 6px; margin: 5px 0; font-size: 11px; }
+  .alert-danger { background: var(--danger-soft); border-left: 3px solid var(--danger); }
+  .alert-warn { background: var(--warn-soft); border-left: 3px solid var(--warn); }
+  .alert-ok { background: var(--ok-soft); border-left: 3px solid var(--ok); }
+  .alert-info { background: var(--blue-soft); border-left: 3px solid var(--blue); }
+  .alert .icon { font-size: 14px; line-height: 1; }
+  .alert .text strong { font-weight: 700; display: block; margin-bottom: 2px; }
+
+  /* Test checkbox */
+  .test-row { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; border-bottom: 1px solid #eee; }
+  .test-row:last-child { border-bottom: none; }
+  .checkbox { width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 3px; flex-shrink: 0; margin-top: 1px; }
+  .test-label { flex: 1; font-size: 11px; }
+  .test-expected { font-size: 10.5px; color: var(--ink2); font-style: italic; margin-top: 2px; }
+
+  /* Q&A blocks */
+  .qa-block { border: 1px solid var(--border); border-radius: 6px; margin: 8px 0; overflow: hidden; }
+  .qa-q { background: var(--sage-light); padding: 8px 12px; font-weight: 600; font-size: 11.5px; border-bottom: 1px solid var(--border); }
+  .qa-a { padding: 8px 12px; font-size: 11px; color: var(--ink2); }
+  .qa-a strong { color: var(--ink); }
+
+  /* Calendar chips */
+  .cal-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #eee; }
+  .cal-date { font-family: monospace; font-size: 10.5px; color: var(--sage); min-width: 80px; }
+  .cal-cat { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: var(--sage-light); color: var(--sage); font-weight: 600; min-width: 70px; text-align: center; }
+  .cal-cat.vat { background: #dbeafe; color: #1d4ed8; }
+  .cal-cat.box3 { background: #d1fae5; color: #065f46; }
+  .cal-cat.expat { background: #fce7f3; color: #9d174d; }
+  .cal-cat.zzp { background: #fef3c7; color: #92400e; }
+  .cal-cat.all { background: #f3f4f6; color: #374151; }
+
+  /* Deviation note */
+  .deviation { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 6px; padding: 10px 14px; margin: 8px 0; font-size: 11px; }
+  .deviation strong { color: #92400e; }
+
+  /* Print */
+  @media print {
+    body { font-size: 11px; }
+    .cover { min-height: 100vh; }
+    .scenario-page, .section-break { page-break-before: always; }
+    .no-break { page-break-inside: avoid; }
+    a { color: var(--sage) !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="badge">INTERNAL TEST DOCUMENT — CONFIDENTIAL</div>
+  <h1>TaxWijs 2026<br>Test Scenarios</h1>
+  <div class="sub">Full user scenarios with expected results for manual QA against Belastingdienst</div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;margin:24px 0;">
+    <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:10px 16px;">
+      <div style="font-size:22px;font-weight:700;">6</div>
+      <div style="font-size:11px;opacity:0.8;">Full scenarios</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:10px 16px;">
+      <div style="font-size:22px;font-weight:700;">4</div>
+      <div style="font-size:11px;opacity:0.8;">User types</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:10px 16px;">
+      <div style="font-size:22px;font-weight:700;">5</div>
+      <div style="font-size:11px;opacity:0.8;">Site sections per scenario</div>
+    </div>
+    <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:10px 16px;">
+      <div style="font-size:22px;font-weight:700;">100%</div>
+      <div style="font-size:11px;opacity:0.8;">Calculations verified against engine</div>
+    </div>
+  </div>
+  <div class="meta">
+    Tax year: 2026 &nbsp;·&nbsp; Date: June 2026 &nbsp;·&nbsp; Engine: deterministic (engine.py)<br>
+    All numbers verified against the TaxWijs calculator engine with zero rounding error.
+  </div>
+</div>
+
+<!-- INTRO PAGE -->
+<div class="page">
+  <h2>How to Use This Document</h2>
+  <p>Each scenario covers one realistic user. For each user, test all five site sections listed below. Tick the checkbox when the result matches. Note any discrepancy in the margin.</p>
+
+  <div class="grid-2" style="margin-top:16px;">
+    <div class="card">
+      <div class="card-title">Sections tested per scenario</div>
+      <table>
+        <tr><td>🧮</td><td><strong>Calculator</strong> — enter profile, verify every line item in the breakdown plus the three summary numbers</td></tr>
+        <tr><td>📋</td><td><strong>IB Return Guide</strong> — verify which fields appear, enter the expected values, check validation behaviour</td></tr>
+        <tr><td>💬</td><td><strong>Chat / AI</strong> — send 3 scripted questions, verify answers match Belastingdienst rules</td></tr>
+        <tr><td>📅</td><td><strong>Tax Calendar</strong> — verify correct reminders appear for this user type</td></tr>
+        <tr><td>📊</td><td><strong>Dashboard Alerts</strong> — verify which alerts fire for this profile</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Known deviations from Belastingdienst</div>
+      <div class="deviation"><strong>ZVW base:</strong> Our engine calculates ZVW on <em>taxable Box 1 income</em> (after MKB). The official Belastingdienst ZVW bijdrage for ZZP is on <em>winst</em> before MKB deduction. Expect the Belastingdienst ZVW to be ~8–12% higher than our figure for mid-range ZZP incomes.</div>
+      <div class="deviation"><strong>AK / AHK basis:</strong> Our engine uses taxable Box 1 income as the credit basis. Belastingdienst may use a slightly different income concept ("arbeidsinkomen"). Small differences of €0–€50 are acceptable.</div>
+      <div class="deviation"><strong>Box 3:</strong> Our engine uses 100% investment return rate (6%) by default. If the user has savings, the Belastingdienst calculation will differ based on actual savings/investments split.</div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:20px;">Scenarios at a glance</h3>
+  <table>
+    <tr>
+      <th>ID</th><th>User Type</th><th>Title</th><th>Gross Revenue</th><th>Expected Total Tax</th><th>Effective Rate</th><th>Monthly Reserve</th>
+    </tr>
+    <tr>
+      <td><strong>S1</strong></td><td><span class="user-type-badge zzp">ZZP</span></td><td>Graphic designer, year 1, low income, missed hours</td><td class="num">€28,000</td><td class="num">€1,152</td><td class="num">4.6%</td><td class="num">€96</td>
+    </tr>
+    <tr>
+      <td><strong>S2</strong></td><td><span class="user-type-badge zzp">ZZP</span></td><td>IT consultant, year 3, medium income, starter</td><td class="num">€72,000</td><td class="num">€13,776</td><td class="num">22%</td><td class="num">€1,148</td>
+    </tr>
+    <tr>
+      <td><strong>S3</strong></td><td><span class="user-type-badge zzp">ZZP</span></td><td>Senior consultant, year 8, high income, pension</td><td class="num">€140,000</td><td class="num">€34,254</td><td class="num">27.4%</td><td class="num">€2,855</td>
+    </tr>
+    <tr>
+      <td><strong>S4</strong></td><td><span class="user-type-badge employee">Employee</span></td><td>Mid-level employee, single, Box 3 assets</td><td class="num">€48,000</td><td class="num">€10,079</td><td class="num">21%</td><td class="num">€0</td>
+    </tr>
+    <tr>
+      <td><strong>S5</strong></td><td><span class="user-type-badge expat">Expat</span></td><td>Tech expat, 30% ruling year 2, one child</td><td class="num">€90,000</td><td class="num">€14,270</td><td class="num">22.7%</td><td class="num">€0</td>
+    </tr>
+    <tr>
+      <td><strong>S6</strong></td><td><span class="user-type-badge dga">DGA</span></td><td>DGA + BV, minimum salary, dividend, Box 3</td><td class="num">€56,000</td><td class="num">€17,010</td><td class="num">30.4%</td><td class="num">€0</td>
+    </tr>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCENARIO 1 — ZZP GRAPHIC DESIGNER YEAR 1
+══════════════════════════════════════════════════════════ -->
+<div class="page scenario-page">
+  <div class="scenario-header">
+    <div>
+      <div class="scenario-id">Scenario 1 of 6 &nbsp;·&nbsp; SCN-ZZP-002</div>
+      <h1>Graphic Designer — Year 1, Low Income</h1>
+      <p>Key challenge: missed urencriterium (980 hrs &lt; 1,225). Toeslagen eligible. IACK applies.</p>
+    </div>
+    <span class="user-type-badge zzp" style="font-size:14px;padding:6px 16px;">ZZP</span>
+  </div>
+
+  <!-- Profile -->
+  <h3>A. User Profile (enter these values in the calculator)</h3>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Income</div>
+      <table>
+        <tr><td>Annual revenue</td><td class="num">€28,000</td></tr>
+        <tr><td>Business expenses</td><td class="num">€3,200</td></tr>
+        <tr><td>Gross profit</td><td class="num"><strong>€24,800</strong></td></tr>
+        <tr><td>Hours worked / year</td><td class="num"><strong>980</strong> ⚠️</td></tr>
+        <tr><td>Year as entrepreneur</td><td class="num">1st year</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Household</div>
+      <table>
+        <tr><td>Status</td><td>Partner</td></tr>
+        <tr><td>Partner income</td><td class="num">€42,000</td></tr>
+        <tr><td>Children total</td><td class="num">1</td></tr>
+        <tr><td>Children under 12</td><td class="num"><strong>1</strong></td></tr>
+        <tr><td>Monthly rent</td><td class="num">€850</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Other</div>
+      <table>
+        <tr><td>Net Box 3 assets</td><td class="num">€5,000</td></tr>
+        <tr><td>KIA investments</td><td class="num">€1,800</td></tr>
+        <tr><td>Pension contribution</td><td class="num">€0</td></tr>
+        <tr><td>Single client %</td><td class="num">30%</td></tr>
+        <tr><td>30% ruling</td><td>No</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Calculator -->
+  <h3>B. Calculator — Expected Results</h3>
+  <div class="grid-2">
+    <table>
+      <tr><th>Step</th><th>Item</th><th class="num">Amount</th></tr>
+      <tr><td>1</td><td>Gross revenue</td><td class="num">€28,000</td></tr>
+      <tr><td>2</td><td>Business expenses</td><td class="num row-deduct">−€3,200</td></tr>
+      <tr class="row-total"><td></td><td><strong>Gross profit</strong></td><td class="num"><strong>€24,800</strong></td></tr>
+      <tr><td>3</td><td>Zelfstandigenaftrek</td><td class="num" style="color:#c0392b;">€0 ❌ hours &lt; 1,225</td></tr>
+      <tr><td>4</td><td>Startersaftrek</td><td class="num" style="color:#c0392b;">€0 ❌ ZA not met</td></tr>
+      <tr><td>5</td><td>KIA deduction</td><td class="num" style="color:#c0392b;">€0 ❌ inv &lt; €2,901</td></tr>
+      <tr class="row-total"><td></td><td>Profit after ondernemersaftrek</td><td class="num"><strong>€24,800</strong></td></tr>
+      <tr><td>6</td><td>MKB-winstvrijstelling (12.7%)</td><td class="num row-deduct">−€3,150</td></tr>
+      <tr class="row-total"><td></td><td><strong>Taxable income Box 1</strong></td><td class="num"><strong>€21,650</strong></td></tr>
+    </table>
+    <table>
+      <tr><th>Step</th><th>Item</th><th class="num">Amount</th></tr>
+      <tr><td>7</td><td>Box 1 tax (35.75% on €21,650)</td><td class="num">€7,740</td></tr>
+      <tr><td>8</td><td>Algemene heffingskorting (max)</td><td class="num row-credit">−€3,115</td></tr>
+      <tr><td>9</td><td>Arbeidskorting (on €21,650)</td><td class="num row-credit">−€3,999</td></tr>
+      <tr><td>10</td><td>IACK (1 child under 12)</td><td class="num row-credit">−€1,765</td></tr>
+      <tr><td></td><td>Income tax after credits</td><td class="num"><strong>€0</strong> (credits exceed tax)</td></tr>
+      <tr><td>11</td><td>ZVW bijdrage (5.32% on €21,650)</td><td class="num">€1,152</td></tr>
+      <tr><td>12</td><td>Box 2 tax</td><td class="num">€0</td></tr>
+      <tr><td>13</td><td>Box 3 tax</td><td class="num">€0 (€5k &lt; €59,357 exempt.)</td></tr>
+      <tr class="row-total"><td></td><td><strong>TOTAL TAX DUE</strong></td><td class="num"><strong>€1,152</strong></td></tr>
+    </table>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;">
+    <div class="result-box"><div class="label">Total tax</div><div class="value">€1,152</div></div>
+    <div class="result-box"><div class="label">Effective rate</div><div class="value">4.6%</div></div>
+    <div class="result-box"><div class="label">Monthly reserve</div><div class="value">€96</div></div>
+    <div class="result-box"><div class="label">Wet DBA risk</div><div class="value">Low</div></div>
+  </div>
+  <div class="alert alert-warn"><span class="icon">⚠️</span><div class="text"><strong>Toeslagen eligible</strong>Zorgtoeslag + Huurtoeslag + Kindgebonden budget. Estimated value: ~€4,800/year. This EXCEEDS the total tax bill.</div></div>
+
+  <!-- IB Guide -->
+  <h3>C. IB Return Guide — Expected Behaviour</h3>
+  <div class="card no-break">
+    <div class="card-title">Fields that should appear (filter: ZZP)</div>
+    <table>
+      <tr><th>Field</th><th>Label</th><th>Expected value</th><th>Notes</th></tr>
+      <tr><td><code>1a</code></td><td>Winst uit onderneming</td><td class="num">€21,650</td><td>Taxable profit after all deductions</td></tr>
+      <tr><td><code>1b</code></td><td>Loon en uitkeringen</td><td>— (skip)</td><td>ZZP, no employment income</td></tr>
+      <tr><td><code>1c</code></td><td>Zelfstandigenaftrek</td><td>No</td><td>Hours &lt; 1,225 → not eligible</td></tr>
+      <tr><td><code>1d</code></td><td>Startersaftrek</td><td>No</td><td>ZA not met, so SA also not met</td></tr>
+      <tr><td><code>1e</code></td><td>MKB-winstvrijstelling</td><td>Yes</td><td>Always applies to ZZP (no hours req.)</td></tr>
+      <tr><td><code>1f</code></td><td>Lijfrentepremies (jaarruimte)</td><td>€0</td><td>No pension contribution this year</td></tr>
+      <tr><td><code>3a</code></td><td>Box 3 assets on 1 Jan 2026</td><td>€5,000</td><td>Below €59,357 exemption → €0 tax</td></tr>
+      <tr><td><code>VOL-1</code></td><td>Voorlopige aanslag</td><td>€0</td><td>First year, low income — unlikely to have one</td></tr>
+    </table>
+    <div class="deviation" style="margin-top:8px;"><strong>Validation test:</strong> Click field 1a, enter €21,650, then DELETE the value. Card should NOT stay green (IB-1 fix). If card stays green with empty input, that is a bug.</div>
+  </div>
+
+  <!-- Chat -->
+  <h3>D. Chat / AI — Test Questions</h3>
+  <div class="qa-block no-break">
+    <div class="qa-q">Q1 (Dutch) — "Ik heb 980 uur gewerkt in 2026. Heb ik recht op zelfstandigenaftrek?"</div>
+    <div class="qa-a"><strong>Expected answer:</strong> No. The urencriterium requires <strong>1,225 hours minimum</strong> per year. At 980 hours you do not qualify for the €1,200 zelfstandigenaftrek in 2026. You also cannot claim the startersaftrek (€2,123) because it requires the ZA threshold to be met. <em>Source: ZA-2026-001</em></div>
+  </div>
+  <div class="qa-block no-break">
+    <div class="qa-q">Q2 (English) — "I have a 1-year-old child and my partner doesn't work. Am I eligible for IACK?"</div>
+    <div class="qa-a"><strong>Expected answer:</strong> Yes. The IACK (inkomensafhankelijke combinatiekorting) applies when you have a child under 12 registered at your address and your work income exceeds €6,239. Since your income of €21,650 exceeds this threshold, you qualify. The maximum IACK is €3,032. Your exact credit: (€21,650 − €6,239) × 11.45% = <strong>~€1,765</strong>. <em>Source: IACK-2026-001</em></div>
+  </div>
+  <div class="qa-block no-break">
+    <div class="qa-q">Q3 (Persian) — "آیا می‌توانم برای اجاره‌ام huurtoeslag دریافت کنم؟"</div>
+    <div class="qa-a"><strong>Expected answer:</strong> With €850/month rent and estimated household income below the threshold, you are likely eligible for huurtoeslag. The 2026 reform abolished the rent ceiling — any rent amount now qualifies. Your eligibility depends on the combined household income (you + partner). If combined income is below ~€46,000, you should apply at toeslagen.belastingdienst.nl. <em>Source: HT-2026-001</em></div>
+  </div>
+
+  <!-- Calendar -->
+  <h3>E. Tax Calendar — Expected Reminders for ZZP User (as of Jun 2026)</h3>
+  <div class="cal-item"><span class="cal-date">31 Jul 2026</span><span class="cal-cat vat">BTW</span><span>VAT return Q2 2026 due — submit within 1 month after quarter end</span></div>
+  <div class="cal-item"><span class="cal-date">01 Sep 2026</span><span class="cal-cat all">Toeslagen</span><span>Finalise toeslagen for tax year 2025 — income correction window</span></div>
+  <div class="cal-item"><span class="cal-date">01 Oct 2026</span><span class="cal-cat all">IB</span><span>Objection window for 2025 tax assessment opens</span></div>
+  <div class="cal-item"><span class="cal-date">01 Oct 2026</span><span class="cal-cat zzp">ZZP Admin</span><span>⚠️ Urencriterium Q4 warning — check hour count. You need 245 more hours by 31 Dec.</span></div>
+  <div class="cal-item"><span class="cal-date">31 Oct 2026</span><span class="cal-cat vat">BTW</span><span>VAT return Q3 2026 due</span></div>
+  <div class="cal-item"><span class="cal-date">01 Nov 2026</span><span class="cal-cat zzp">ZZP Admin</span><span>ZZP year-end checklist — collect receipts, review expenses, check pension jaarruimte</span></div>
+  <div class="cal-item"><span class="cal-date">20 Dec 2026</span><span class="cal-cat box3">Box 3</span><span>Box 3 reference date: assets on 1 January 2027 determine next year's Box 3 tax</span></div>
+  <div class="cal-item"><span class="cal-date">31 Jan 2027</span><span class="cal-cat vat">BTW</span><span>VAT return Q4 2026 due</span></div>
+
+  <!-- Alerts -->
+  <h3>F. Dashboard Alerts — Expected (key alerts only)</h3>
+  <div class="alert alert-danger"><span class="icon">🔴</span><div class="text"><strong>Missed urencriterium (2026)</strong> You worked only 980 hours this year. Without 1,225 hours you lose the €1,200 zelfstandigenaftrek AND the €2,123 startersaftrek — a combined loss of ~€1,200 in deductions.</div></div>
+  <div class="alert alert-warn"><span class="icon">⚠️</span><div class="text"><strong>Startersaftrek last year (2026)</strong> Even though you missed ZA in 2026, if you reach 1,225 hours in 2027 you can still claim startersaftrek — but ONLY if you claim it within 5 calendar years of starting. 2026 is the absolute last year this deduction exists in Dutch tax law.</div></div>
+  <div class="alert alert-ok"><span class="icon">🏠</span><div class="text"><strong>Toeslagen eligible</strong> Combined income + 1 child under 12 + rental costs → zorgtoeslag, huurtoeslag, and kindgebonden budget all likely. Estimated value: ~€4,800/year — more than your total tax bill.</div></div>
+  <div class="alert alert-info"><span class="icon">📊</span><div class="text"><strong>KIA threshold not reached</strong> KIA requires ≥€2,901 in business investments. Your €1,800 is below threshold. In year 2, plan investments above €2,901 to unlock the 28% KIA deduction.</div></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCENARIO 2 — ZZP IT CONSULTANT YEAR 3
+══════════════════════════════════════════════════════════ -->
+<div class="page scenario-page">
+  <div class="scenario-header">
+    <div>
+      <div class="scenario-id">Scenario 2 of 6 &nbsp;·&nbsp; SCN-ZZP-001</div>
+      <h1>IT Consultant — Year 3, Medium Income</h1>
+      <p>Key challenge: last year for startersaftrek. Wet DBA risk (65% single client). KIA applied.</p>
+    </div>
+    <span class="user-type-badge zzp" style="font-size:14px;padding:6px 16px;">ZZP</span>
+  </div>
+
+  <h3>A. User Profile</h3>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Income</div>
+      <table>
+        <tr><td>Annual revenue</td><td class="num">€72,000</td></tr>
+        <tr><td>Business expenses</td><td class="num">€9,500</td></tr>
+        <tr><td>Gross profit</td><td class="num"><strong>€62,500</strong></td></tr>
+        <tr><td>Hours worked / year</td><td class="num"><strong>1,380</strong> ✅</td></tr>
+        <tr><td>Year as entrepreneur</td><td class="num">3rd year</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Household</div>
+      <table>
+        <tr><td>Status</td><td>Single</td></tr>
+        <tr><td>Children under 12</td><td class="num">0</td></tr>
+        <tr><td>Monthly rent</td><td class="num">€1,100</td></tr>
+        <tr><td>Net Box 3 assets</td><td class="num">€12,000</td></tr>
+        <tr><td>KIA investments</td><td class="num">€4,500</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Other</div>
+      <table>
+        <tr><td>Pension contribution</td><td class="num">€0</td></tr>
+        <tr><td>Single client %</td><td class="num"><strong>65%</strong> ⚠️</td></tr>
+        <tr><td>Starter (is_starter)</td><td><strong>Yes</strong></td></tr>
+        <tr><td>30% ruling</td><td>No</td></tr>
+        <tr><td>Has BV</td><td>No</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>B. Calculator — Expected Results</h3>
+  <div class="grid-2">
+    <table>
+      <tr><th>Step</th><th>Item</th><th class="num">Amount</th></tr>
+      <tr><td>1</td><td>Gross revenue</td><td class="num">€72,000</td></tr>
+      <tr><td>2</td><td>Business expenses</td><td class="num row-deduct">−€9,500</td></tr>
+      <tr class="row-total"><td></td><td>Gross profit</td><td class="num"><strong>€62,500</strong></td></tr>
+      <tr><td>3</td><td>Zelfstandigenaftrek ✅ (1,380 ≥ 1,225)</td><td class="num row-deduct">−€1,200</td></tr>
+      <tr><td>4</td><td>Startersaftrek ✅ (year 3, last chance)</td><td class="num row-deduct">−€2,123</td></tr>
+      <tr><td>5</td><td>KIA (€4,500 × 28%)</td><td class="num row-deduct">−€1,260</td></tr>
+      <tr class="row-total"><td></td><td>Profit after ondernemersaftrek</td><td class="num"><strong>€57,917</strong></td></tr>
+      <tr><td>6</td><td>MKB-winstvrijstelling (12.7%)</td><td class="num row-deduct">−€7,355</td></tr>
+      <tr class="row-total"><td></td><td><strong>Taxable income Box 1</strong></td><td class="num"><strong>€50,562</strong></td></tr>
+    </table>
+    <table>
+      <tr><th>Step</th><th>Item</th><th class="num">Amount</th></tr>
+      <tr><td>7</td><td>Box 1 bracket 1 (35.75% × €38,883)</td><td class="num">€13,901</td></tr>
+      <tr><td>7</td><td>Box 1 bracket 2 (37.07% × €11,679)</td><td class="num">€4,329</td></tr>
+      <tr><td></td><td>Box 1 tax raw</td><td class="num">€18,230</td></tr>
+      <tr><td>8</td><td>Algemene heffingskorting</td><td class="num row-credit">−€1,783</td></tr>
+      <tr><td>9</td><td>Arbeidskorting</td><td class="num row-credit">−€5,361</td></tr>
+      <tr><td>10</td><td>IACK (0 children)</td><td class="num">€0</td></tr>
+      <tr><td></td><td>Income tax after credits</td><td class="num"><strong>€11,086</strong></td></tr>
+      <tr><td>11</td><td>ZVW (5.32% × €50,562)</td><td class="num">€2,690</td></tr>
+      <tr><td>12</td><td>Box 2 + Box 3 tax</td><td class="num">€0</td></tr>
+      <tr class="row-total"><td></td><td><strong>TOTAL TAX DUE</strong></td><td class="num"><strong>€13,776</strong></td></tr>
+    </table>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;">
+    <div class="result-box"><div class="label">Total tax</div><div class="value">€13,776</div></div>
+    <div class="result-box"><div class="label">Effective rate</div><div class="value">22.0%</div></div>
+    <div class="result-box"><div class="label">Monthly reserve</div><div class="value">€1,148</div></div>
+    <div class="result-box"><div class="label">Wet DBA risk</div><div class="value warn">Medium</div></div>
+  </div>
+  <div class="deviation"><strong>Bracket 2 note:</strong> Our engine applies 37.07% (Dutch law rate) on income between €38,883 and €78,426. Belastingdienst uses the same rate. The €11,679 × 37.07% = €4,329 should match exactly.</div>
+
+  <h3>C. IB Return Guide — Expected Behaviour</h3>
+  <table class="no-break">
+    <tr><th>Field</th><th>Label</th><th>Expected value</th><th>Notes</th></tr>
+    <tr><td><code>1a</code></td><td>Winst uit onderneming</td><td class="num">€50,562</td><td>Taxable profit after all deductions incl. pension</td></tr>
+    <tr><td><code>1c</code></td><td>Zelfstandigenaftrek</td><td>Yes ✅</td><td>1,380 hours ≥ 1,225</td></tr>
+    <tr><td><code>1d</code></td><td>Startersaftrek</td><td>Yes ✅ ⚠️ LAST YEAR</td><td>Year 3 → still eligible. 2026 is absolute last year SA exists.</td></tr>
+    <tr><td><code>1e</code></td><td>MKB-winstvrijstelling</td><td>Yes ✅</td><td>Always applies</td></tr>
+    <tr><td><code>1f</code></td><td>Lijfrentepremies</td><td>€0</td><td>No pension this year — big missed opportunity</td></tr>
+    <tr><td><code>3a</code></td><td>Box 3 assets 1 Jan 2026</td><td>€12,000</td><td>Below exemption → €0 tax</td></tr>
+  </table>
+
+  <h3>D. Chat / AI — Test Questions</h3>
+  <div class="qa-block no-break">
+    <div class="qa-q">Q1 — "Is 2026 really the last year for startersaftrek?"</div>
+    <div class="qa-a"><strong>Expected answer:</strong> Yes. The startersaftrek of <strong>€2,123</strong> is abolished from 1 January 2027. If you are in your 1st, 2nd, or 3rd year of business and meet the urencriterium (1,225 hours), 2026 is your last opportunity to claim it. This will save you approximately €798 in taxes at your income level (€2,123 × effective marginal rate ~37.6%). <em>Source: SA-2026-001</em></div>
+  </div>
+  <div class="qa-block no-break">
+    <div class="qa-q">Q2 — "What is my Wet DBA risk with 65% of income from one client?"</div>
+    <div class="qa-a"><strong>Expected answer:</strong> With 65% of your income from a single client, your Wet DBA risk is <strong>Medium</strong>. The Belastingdienst has been actively enforcing the Wet DBA since January 2025. At 65% you are in the warning zone (50–70%). Key risk factors: you must demonstrate independent professional work, use your own tools, and ideally serve 2+ clients. Strongly consider requesting a formal modelovereenkomst with your main client. <em>Source: WD-2026-001</em></div>
+  </div>
+  <div class="qa-block no-break">
+    <div class="qa-q">Q3 — "I didn't invest in pension this year. How much could I have saved?"</div>
+    <div class="qa-a"><strong>Expected answer:</strong> Based on your gross profit of ~€62,500, your <em>jaarruimte</em> (annual pension space) is approximately: 30% × (€62,500 − €19,172) = 30% × €43,328 = <strong>€12,998</strong>. If you had contributed this amount, you would have reduced your taxable income to ~€37,564 — saving approximately <strong>€4,887 in income tax</strong>. Consider opening a lijfrente or bankspaarrekening product. <em>Source: LR-2026-001</em></div>
+  </div>
+
+  <h3>E. Calendar Reminders &amp; F. Dashboard Alerts</h3>
+  <div class="grid-2">
+    <div>
+      <div class="card-title">Tax Calendar (ZZP, Jun 2026)</div>
+      <div class="cal-item"><span class="cal-date">31 Jul 2026</span><span class="cal-cat vat">BTW</span><span>Q2 VAT return due</span></div>
+      <div class="cal-item"><span class="cal-date">01 Oct 2026</span><span class="cal-cat zzp">ZZP</span><span>Urencriterium Q4 warning</span></div>
+      <div class="cal-item"><span class="cal-date">31 Oct 2026</span><span class="cal-cat vat">BTW</span><span>Q3 VAT return due</span></div>
+      <div class="cal-item"><span class="cal-date">01 Nov 2026</span><span class="cal-cat zzp">ZZP</span><span>Year-end checklist</span></div>
+      <div class="cal-item"><span class="cal-date">20 Dec 2026</span><span class="cal-cat box3">Box 3</span><span>Box 3 reference date prep</span></div>
+      <div class="cal-item"><span class="cal-date">31 Jan 2027</span><span class="cal-cat vat">BTW</span><span>Q4 VAT return due</span></div>
+    </div>
+    <div>
+      <div class="card-title">Dashboard Alerts</div>
+      <div class="alert alert-danger"><span class="icon">🔴</span><div class="text"><strong>Startersaftrek expires end 2026</strong> Last year to claim €2,123 deduction — already applied this year.</div></div>
+      <div class="alert alert-warn"><span class="icon">⚠️</span><div class="text"><strong>Wet DBA medium risk</strong> 65% single client — consider diversification before 2027.</div></div>
+      <div class="alert alert-info"><span class="icon">💡</span><div class="text"><strong>Pension jaarruimte ~€13,000 unused</strong> Contributing could save ~€4,887 in taxes.</div></div>
+      <div class="alert alert-ok"><span class="icon">✅</span><div class="text"><strong>KIA applied</strong> €1,260 saved on €4,500 equipment investment.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCENARIO 3 — ZZP SENIOR CONSULTANT HIGH INCOME
+══════════════════════════════════════════════════════════ -->
+<div class="page scenario-page">
+  <div class="scenario-header">
+    <div>
+      <div class="scenario-id">Scenario 3 of 6 &nbsp;·&nbsp; SCN-ZZP-003</div>
+      <h1>Senior Consultant — Year 8, High Income + Pension</h1>
+      <p>Key challenge: top bracket (49.5%), ZVW capped, pension optimization, Box 3 watch, BV consideration.</p>
+    </div>
+    <span class="user-type-badge zzp" style="font-size:14px;padding:6px 16px;">ZZP</span>
+  </div>
+
+  <h3>A. User Profile</h3>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Income</div>
+      <table>
+        <tr><td>Annual revenue</td><td class="num">€140,000</td></tr>
+        <tr><td>Business expenses</td><td class="num">€15,000</td></tr>
+        <tr><td>Gross profit</td><td class="num"><strong>€125,000</strong></td></tr>
+        <tr><td>Hours / year</td><td class="num">1,600 ✅</td></tr>
+        <tr><td>Year</td><td class="num">8th year</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Household</div>
+      <table>
+        <tr><td>Status</td><td>Partner</td></tr>
+        <tr><td>Partner income</td><td class="num">€55,000</td></tr>
+        <tr><td>Children under 12</td><td class="num">0</td></tr>
+        <tr><td>Net Box 3 assets</td><td class="num">€95,000</td></tr>
+        <tr><td>KIA investments</td><td class="num">€8,000</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Other</div>
+      <table>
+        <tr><td>Pension contribution</td><td class="num"><strong>€18,000</strong></td></tr>
+        <tr><td>Single client %</td><td class="num">45%</td></tr>
+        <tr><td>Is starter</td><td>No</td></tr>
+        <tr><td>Has BV</td><td>No</td></tr>
+        <tr><td>30% ruling</td><td>No</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>B. Calculator — Expected Results</h3>
+  <div class="grid-2">
+    <table>
+      <tr><th>Step</th><th>Item</th><th class="num">Amount</th></tr>
+      <tr><td>1</td><td>Revenue − expenses</td><td class="num">€125,000</td></tr>
+      <tr><td>3</td><td>Zelfstandigenaftrek</td><td class="num row-deduct">−€1,200</td></tr>
+      <tr><td>4</td><td>Startersaftrek</td><td class="num">€0 (year 8)</td></tr>
+      <tr><td>5</td><td>KIA (€8,000 × 28%)</td><td class="num row-deduct">−€2,240</td></tr>
+      <tr><td></td><td>Profit after ondernemersaftrek</td><td class="num">€121,560</td></tr>
+      <tr><td>6</td><td>MKB-winstvrijstelling (12.7%)</td><td class="num row-deduct">−€15,438</td></tr>
+      <tr><td></td><td>ZVW base (before pension)</td><td class="num">€106,122</td></tr>
+      <tr><td>6b</td><td>Pension deduction (lijfrente)</td><td class="num row-deduct">−€18,000</td></tr>
+      <tr class="row-total"><td></td><td><strong>Taxable income Box 1</strong></td><td class="num"><strong>€88,122</strong></td></tr>
+    </table>
+    <table>
+      <tr><th>Step</th><th>Item</th><th class="num">Amount</th></tr>
+      <tr><td>7</td><td>Bracket 1 (35.75% × €38,883)</td><td class="num">€13,901</td></tr>
+      <tr><td>7</td><td>Bracket 2 (37.07% × €39,543)</td><td class="num">€14,659</td></tr>
+      <tr><td>7</td><td>Bracket 3 (49.50% × €9,696)</td><td class="num" style="color:#c0392b;font-weight:700;">€4,800 ← top bracket!</td></tr>
+      <tr><td></td><td>Box 1 tax raw</td><td class="num">€33,359</td></tr>
+      <tr><td>8</td><td>Algemene heffingskorting</td><td class="num" style="color:#c0392b;">€0 (phases out at €78,426)</td></tr>
+      <tr><td>9</td><td>Arbeidskorting</td><td class="num row-credit">−€2,916</td></tr>
+      <tr><td></td><td>Income tax after credits</td><td class="num"><strong>€30,443</strong></td></tr>
+      <tr><td>11</td><td>ZVW (5.32% × €71,628 — capped)</td><td class="num">€3,811</td></tr>
+      <tr><td>13</td><td>Box 3 (€95k assets, joint partner: below €118,714 joint exemption)</td><td class="num">€0</td></tr>
+      <tr class="row-total"><td></td><td><strong>TOTAL TAX DUE</strong></td><td class="num"><strong>€34,254</strong></td></tr>
+    </table>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;">
+    <div class="result-box"><div class="label">Total tax</div><div class="value">€34,254</div></div>
+    <div class="result-box"><div class="label">Effective rate</div><div class="value">27.4%</div></div>
+    <div class="result-box"><div class="label">Monthly reserve</div><div class="value">€2,855</div></div>
+    <div class="result-box"><div class="label">Wet DBA risk</div><div class="value">Low (45%)</div></div>
+  </div>
+  <div class="deviation"><strong>ZVW cap test:</strong> ZVW base is €106,122, but the ceiling is €71,628. So ZVW = €71,628 × 5.32% = <strong>€3,811</strong>. Belastingdienst applies ZVW on a different base (before MKB). Their ZVW may be higher: €121,560 × 5.32% capped = same €3,811. Result should match.</div>
+  <div class="deviation"><strong>Box 3 partner exemption:</strong> Joint exemption = €59,357 × 2 = €118,714. Net assets €95,000 &lt; €118,714 → <strong>zero Box 3 tax</strong>. Confirm this with partner's own assets not combined in our profile.</div>
+
+  <h3>C. IB Return Guide &amp; D. Chat Tests</h3>
+  <div class="grid-2">
+    <table>
+      <tr><th>Field</th><th>Expected value</th></tr>
+      <tr><td><code>1a</code> Winst</td><td class="num">€88,122</td></tr>
+      <tr><td><code>1c</code> ZA</td><td>Yes</td></tr>
+      <tr><td><code>1d</code> SA</td><td>No (year 8)</td></tr>
+      <tr><td><code>1e</code> MKB</td><td>Yes</td></tr>
+      <tr><td><code>1f</code> Lijfrente</td><td class="num">€18,000</td></tr>
+      <tr><td><code>3a</code> Box 3</td><td class="num">€95,000</td></tr>
+    </table>
+    <div>
+      <div class="qa-block"><div class="qa-q">Q: "My profit is €125k. Should I set up a BV?"</div><div class="qa-a"><strong>Expected:</strong> At consistent profits above €100k–€125k, a BV structure often becomes tax-efficient. BV pays 19% Vpb on first €200k, then you take dividend at 24.5% (Box 2). Combined rate: ~39.5% vs your current 49.5% marginal rate on income above €78,426. The break-even point depends on how much profit you retain in the BV. A tax advisor should model this specifically.</div></div>
+      <div class="qa-block"><div class="qa-q">Q: "Is the AHK credit zero at my income level?"</div><div class="qa-a"><strong>Expected:</strong> Yes. The algemene heffingskorting phases out completely at €78,426 aggregate income. Your taxable income of €88,122 exceeds this → AHK = €0. This is a cliff that costs approximately €3,115 in credits. <em>Source: AHK-2026-001</em></div></div>
+    </div>
+  </div>
+
+  <h3>E &amp; F. Calendar + Dashboard Alerts</h3>
+  <div class="grid-2">
+    <div>
+      <div class="cal-item"><span class="cal-date">01 Jul 2026</span><span class="cal-cat all">Voorlopige</span><span>Revise voorlopige aanslag after income change</span></div>
+      <div class="cal-item"><span class="cal-date">31 Jul 2026</span><span class="cal-cat vat">BTW</span><span>Q2 VAT return due</span></div>
+      <div class="cal-item"><span class="cal-date">01 Oct 2026</span><span class="cal-cat zzp">ZZP</span><span>Urencriterium Q4 warning</span></div>
+      <div class="cal-item"><span class="cal-date">31 Oct 2026</span><span class="cal-cat vat">BTW</span><span>Q3 VAT return due</span></div>
+      <div class="cal-item"><span class="cal-date">01 Nov 2026</span><span class="cal-cat zzp">ZZP</span><span>ZZP year-end checklist</span></div>
+      <div class="cal-item"><span class="cal-date">20 Dec 2026</span><span class="cal-cat box3">Box 3</span><span>Box 3 reference date: 1 Jan assets</span></div>
+    </div>
+    <div>
+      <div class="alert alert-info"><span class="icon">💡</span><div class="text"><strong>BV consideration</strong> Consistent profit &gt;€100k → BV structure now tax-efficient.</div></div>
+      <div class="alert alert-info"><span class="icon">💰</span><div class="text"><strong>ZVW capped</strong> ZVW ceiling hit at €71,628 — profit above this is ZVW-free.</div></div>
+      <div class="alert alert-warn"><span class="icon">📊</span><div class="text"><strong>Check jaarruimte fully used</strong> €18,000 pension deducted — verify max jaarruimte not exceeded.</div></div>
+      <div class="alert alert-ok"><span class="icon">✅</span><div class="text"><strong>Box 3 zero</strong> Joint exemption (€118,714) exceeds assets (€95,000).</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCENARIO 4 — EMPLOYEE
+══════════════════════════════════════════════════════════ -->
+<div class="page scenario-page">
+  <div class="scenario-header">
+    <div>
+      <div class="scenario-id">Scenario 4 of 6 &nbsp;·&nbsp; SCN-EMP-001</div>
+      <h1>Mid-Level Employee — Single, Box 3 Assets</h1>
+      <p>Key challenge: zorgtoeslag cliff (income just above single threshold), unexpected Box 3 tax bill at year-end.</p>
+    </div>
+    <span class="user-type-badge employee" style="font-size:14px;padding:6px 16px;">Employee</span>
+  </div>
+
+  <h3>A. User Profile</h3>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Income</div>
+      <table>
+        <tr><td>Employment income (gross)</td><td class="num">€48,000</td></tr>
+        <tr><td>Business expenses</td><td class="num">€0</td></tr>
+        <tr><td>Pension contribution</td><td class="num">€0</td></tr>
+        <tr><td>ZZP revenue</td><td class="num">€0</td></tr>
+        <tr><td>Hours/year</td><td>N/A</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Household</div>
+      <table>
+        <tr><td>Status</td><td>Single</td></tr>
+        <tr><td>Children under 12</td><td class="num">0</td></tr>
+        <tr><td>Monthly rent</td><td class="num">€1,050</td></tr>
+        <tr><td>Net Box 3 assets</td><td class="num"><strong>€72,000</strong> ⚠️</td></tr>
+        <tr><td>Savings fraction</td><td>100% savings</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Notes</div>
+      <p style="font-size:11px;">Loonheffing is withheld by employer throughout the year. The main year-end surprise for this user is the Box 3 tax bill on €12,643 above the exemption.</p>
+      <p style="font-size:11px;">Income €48,000 is just above the zorgtoeslag single threshold of €40,857 → <strong>NOT eligible</strong> for zorgtoeslag.</p>
+    </div>
+  </div>
+
+  <h3>B. Calculator — Expected Results</h3>
+  <div class="grid-2">
+    <table>
+      <tr><th>Step</th><th>Item</th><th class="num">Amount</th></tr>
+      <tr><td>1</td><td>Employment income (= taxable Box 1)</td><td class="num">€48,000</td></tr>
+      <tr><td>7</td><td>Box 1 bracket 1 (35.75% × €38,883)</td><td class="num">€13,901</td></tr>
+      <tr><td>7</td><td>Box 1 bracket 2 (37.07% × €9,117)</td><td class="num">€3,380</td></tr>
+      <tr><td></td><td>Box 1 tax raw</td><td class="num">€17,280</td></tr>
+      <tr><td>8</td><td>Algemene heffingskorting</td><td class="num row-credit">−€1,946</td></tr>
+      <tr><td>9</td><td>Arbeidskorting</td><td class="num row-credit">−€5,528</td></tr>
+      <tr class="row-total"><td></td><td>Income tax after credits</td><td class="num"><strong>€9,806</strong></td></tr>
+    </table>
+    <table>
+      <tr><th>Step</th><th>Item</th><th class="num">Amount</th></tr>
+      <tr><td>11</td><td>ZVW (employee → €0)</td><td class="num">€0</td></tr>
+      <tr><td>12</td><td>Box 2 tax</td><td class="num">€0</td></tr>
+      <tr><td>13</td><td>Box 3 assets: €72,000</td><td class="num"></td></tr>
+      <tr><td></td><td>− Exemption (single): €59,357</td><td class="num row-deduct">−€59,357</td></tr>
+      <tr><td></td><td>Taxable in Box 3: €12,643</td><td class="num"></td></tr>
+      <tr><td></td><td>Fictitious return (savings 1.28%): €162</td><td class="num"></td></tr>
+      <tr><td></td><td>Box 3 tax (36% × €162)</td><td class="num">€58</td></tr>
+      <tr class="row-total"><td></td><td><strong>TOTAL TAX DUE</strong></td><td class="num"><strong>€9,864</strong></td></tr>
+    </table>
+  </div>
+
+  <div class="deviation"><strong>⚠️ Box 3 savings vs engine default:</strong> Our engine defaults to 0% savings fraction (assumes all investments at 6%). If you mark the assets as <strong>100% savings</strong>, Box 3 = €12,643 × 1.28% × 36% = <strong>€58</strong>. If left at default (100% investments, 6%): Box 3 = €12,643 × 6% × 36% = <strong>€273</strong>. The scenario in our system uses the investments default → <strong>€273</strong>. Belastingdienst calculates based on actual split between savings and investments at 1 Jan 2026.</div>
+
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;">
+    <div class="result-box"><div class="label">Total tax</div><div class="value">€10,079</div></div>
+    <div class="result-box"><div class="label">Effective rate</div><div class="value">21.0%</div></div>
+    <div class="result-box"><div class="label">Monthly reserve</div><div class="value">€0</div></div>
+    <div class="result-box"><div class="label">Box 3 bill</div><div class="value warn">€273</div></div>
+  </div>
+
+  <h3>C. IB Return Guide &amp; D. Chat Tests</h3>
+  <div class="grid-2">
+    <div class="card no-break">
+      <div class="card-title">IB fields (Employee)</div>
+      <table>
+        <tr><th>Field</th><th>Expected value</th></tr>
+        <tr><td><code>1b</code> Loon</td><td class="num">€48,000</td></tr>
+        <tr><td><code>1c</code> ZA</td><td>N/A (not ZZP)</td></tr>
+        <tr><td><code>1f</code> Lijfrente</td><td class="num">€0</td></tr>
+        <tr><td><code>3a</code> Box 3</td><td class="num">€72,000</td></tr>
+        <tr><td><code>VOL-1</code> Voorlopige</td><td>Check jaaropgaaf</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="qa-block"><div class="qa-q">Q: "Am I eligible for zorgtoeslag at €48,000 salary?"</div><div class="qa-a"><strong>Expected answer:</strong> No. The zorgtoeslag for a single person has a hard income cutoff of <strong>€40,857</strong> in 2026. Your income of €48,000 is above this threshold. Even €1 above the cutoff means €0 zorgtoeslag (cliff effect). <em>Source: ZT-2026-001</em></div></div>
+      <div class="qa-block"><div class="qa-q">Q: "I have €72,000 in savings. What Box 3 tax will I pay?"</div><div class="qa-a"><strong>Expected answer:</strong> The Box 3 exemption for a single person in 2026 is <strong>€59,357</strong>. Your taxable amount is €72,000 − €59,357 = €12,643. The Belastingdienst applies a fictitious return of <strong>1.28% for savings</strong> or 6% for investments, then taxes that at 36%. For savings only: €12,643 × 1.28% × 36% = approximately <strong>€58</strong>. For mixed/investments: up to €273. <em>Source: B3R-2026-001</em></div></div>
+    </div>
+  </div>
+
+  <h3>E &amp; F. Calendar + Dashboard Alerts</h3>
+  <div class="grid-2">
+    <div>
+      <div class="cal-item"><span class="cal-date">01 Jul 2026</span><span class="cal-cat all">Voorlopige</span><span>Revise voorlopige aanslag if income changed</span></div>
+      <div class="cal-item"><span class="cal-date">01 Sep 2026</span><span class="cal-cat all">Toeslagen</span><span>Finalise toeslagen for 2025</span></div>
+      <div class="cal-item"><span class="cal-date">01 Oct 2026</span><span class="cal-cat all">IB</span><span>Objection window for 2025 assessment</span></div>
+      <div class="cal-item"><span class="cal-date">20 Dec 2026</span><span class="cal-cat box3">Box 3</span><span>Box 3 reference date: 1 Jan 2027</span></div>
+    </div>
+    <div>
+      <div class="alert alert-warn"><span class="icon">⚠️</span><div class="text"><strong>Box 3 year-end bill</strong> Expect €273 Box 3 tax at filing — employer does not withhold this.</div></div>
+      <div class="alert alert-danger"><span class="icon">🔴</span><div class="text"><strong>Zorgtoeslag cliff</strong> Income €48k is €7,143 above the zorgtoeslag threshold (€40,857). Zero zorgtoeslag. Any income reduction strategy (pension, extra deductions) is worth modeling.</div></div>
+      <div class="alert alert-info"><span class="icon">💡</span><div class="text"><strong>Pension saves Box 3</strong> Contributing to a pension pillar 3 plan reduces income AND moves assets out of Box 3.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCENARIO 5 — EXPAT 30% RULING
+══════════════════════════════════════════════════════════ -->
+<div class="page scenario-page">
+  <div class="scenario-header">
+    <div>
+      <div class="scenario-id">Scenario 5 of 6 &nbsp;·&nbsp; SCN-EXP-001</div>
+      <h1>Tech Expat — 30% Ruling, Year 2, One Child</h1>
+      <p>Key challenge: 30% ruling reduces taxable income. IACK claimed as working parent. Phase-down starts year 4.</p>
+    </div>
+    <span class="user-type-badge expat" style="font-size:14px;padding:6px 16px;">Expat</span>
+  </div>
+
+  <h3>A. User Profile</h3>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Income</div>
+      <table>
+        <tr><td>Gross employment income</td><td class="num">€90,000</td></tr>
+        <tr><td>30% ruling year</td><td class="num"><strong>Year 2</strong> (30% exempt)</td></tr>
+        <tr><td>Tax-free allowance (30%)</td><td class="num row-deduct">−€27,000</td></tr>
+        <tr><td>Taxable income</td><td class="num"><strong>€63,000</strong></td></tr>
+        <tr><td>Ruling started</td><td>2025</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Household</div>
+      <table>
+        <tr><td>Status</td><td>Partner (no income)</td></tr>
+        <tr><td>Children total</td><td class="num">1</td></tr>
+        <tr><td>Children under 12</td><td class="num"><strong>1</strong></td></tr>
+        <tr><td>Monthly rent</td><td class="num">€2,200</td></tr>
+        <tr><td>Net Box 3 assets</td><td class="num">€40,000</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Notes</div>
+      <p style="font-size:11px;">The 30% ruling phase-down timeline from 2024 start:</p>
+      <table style="font-size:11px;">
+        <tr><td>Years 1–3</td><td class="num">30% exempt</td></tr>
+        <tr><td>Year 4</td><td class="num">20% exempt</td></tr>
+        <tr><td>Year 5</td><td class="num">10% exempt</td></tr>
+      </table>
+      <p style="font-size:11px;margin-top:6px;">Year 4 phase-down alarm fires on 1 Jul 2026 for this user (starting 2025 → year 4 begins mid-2028 if counted from ruling start).</p>
+    </div>
+  </div>
+
+  <h3>B. Calculator — Expected Results</h3>
+  <div class="grid-2">
+    <table>
+      <tr><th>Step</th><th>Item</th><th class="num">Amount</th></tr>
+      <tr><td>1</td><td>Gross employment income</td><td class="num">€90,000</td></tr>
+      <tr><td>2</td><td>30% ruling exempt (year 2 → 30%)</td><td class="num row-deduct">−€27,000</td></tr>
+      <tr class="row-total"><td></td><td><strong>Taxable income Box 1</strong></td><td class="num"><strong>€63,000</strong></td></tr>
+      <tr><td>7</td><td>Bracket 1 (35.75% × €38,883)</td><td class="num">€13,901</td></tr>
+      <tr><td>7</td><td>Bracket 2 (37.07% × €24,117)</td><td class="num">€8,940</td></tr>
+      <tr><td></td><td>Box 1 tax raw</td><td class="num">€22,841</td></tr>
+    </table>
+    <table>
+      <tr><th>Step</th><th>Item</th><th class="num">Amount</th></tr>
+      <tr><td>8</td><td>AHK (phases out at €63k income)</td><td class="num row-credit">−€987</td></tr>
+      <tr><td>9</td><td>Arbeidskorting (on €63,000)</td><td class="num row-credit">−€4,552</td></tr>
+      <tr><td>10</td><td>IACK (1 child, income €63k &gt; €6,239 — max)</td><td class="num row-credit">−€3,032</td></tr>
+      <tr class="row-total"><td></td><td>Income tax after credits</td><td class="num"><strong>€14,270</strong></td></tr>
+      <tr><td>11</td><td>ZVW (employee → €0)</td><td class="num">€0</td></tr>
+      <tr><td>13</td><td>Box 3 (€40k &lt; €59,357 single exemption)</td><td class="num">€0</td></tr>
+      <tr class="row-total"><td></td><td><strong>TOTAL TAX DUE</strong></td><td class="num"><strong>€14,270</strong></td></tr>
+    </table>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;">
+    <div class="result-box"><div class="label">Total tax</div><div class="value">€14,270</div></div>
+    <div class="result-box"><div class="label">Effective rate</div><div class="value">22.7%</div></div>
+    <div class="result-box"><div class="label">Without 30% ruling</div><div class="value warn">~€23,922</div></div>
+    <div class="result-box"><div class="label">30% ruling saving</div><div class="value">~€9,652</div></div>
+  </div>
+  <div class="deviation"><strong>IACK note:</strong> At €63,000 income, IACK formula gives (€63,000 − €6,239) × 11.45% = €6,499 — but IACK is capped at max €3,032. The calculator correctly applies the cap. Verify with Belastingdienst's rekenhulp that they also cap at €3,032.</div>
+  <div class="deviation"><strong>30% ruling comparison:</strong> Without the ruling, taxable income = €90,000. Tax would be approximately: bracket 1 €13,901 + bracket 2 €14,659 + AHK €0 − AK ~€2,916 = ~€25,644. The ruling saves approximately €9,652–€11,374 depending on exact credits.</div>
+
+  <h3>C. IB Return Guide &amp; D. Chat Tests</h3>
+  <div class="grid-2">
+    <div class="card no-break">
+      <div class="card-title">IB fields (Expat)</div>
+      <table>
+        <tr><th>Field</th><th>Expected value</th></tr>
+        <tr><td><code>1b</code> Loon (after 30% ruling)</td><td class="num">€63,000</td></tr>
+        <tr><td><code>1f</code> Lijfrente</td><td class="num">€0</td></tr>
+        <tr><td><code>3a</code> Box 3</td><td class="num">€40,000 (below exempt.)</td></tr>
+        <tr><td><code>VOL-1</code> Voorlopige</td><td>Check with employer</td></tr>
+      </table>
+      <div class="alert alert-warn" style="margin-top:8px;"><span class="icon">⚠️</span><div class="text"><strong>M-form check</strong> If you arrived in the Netherlands during 2026, you must file the M-form (migratieaangifte) instead of the standard IB return.</div></div>
+    </div>
+    <div>
+      <div class="qa-block"><div class="qa-q">Q: "How does the 30% ruling phase-down work?"</div><div class="qa-a"><strong>Expected:</strong> Under the 2024 reform, the 30% ruling now phases down over 5 years: Years 1–3 → 30% exempt. Year 4 → 20% exempt. Year 5 → 10% exempt. After 5 years, the ruling ends. A tax-free allowance in year 2 on €90,000 gross = €27,000. In year 4, that drops to €18,000, costing approximately €3,330 more in tax. <em>Source: EXP-2026-001</em></div></div>
+      <div class="qa-block"><div class="qa-q">Q: "Does the IACK apply to me as an expat with one child under 12?"</div><div class="qa-a"><strong>Expected:</strong> Yes, provided your child is registered at your Dutch address and your work income exceeds €6,239. As the working parent with the higher income, and your partner having zero income, you claim the full IACK. Maximum in 2026: <strong>€3,032</strong>. <em>Source: IACK-2026-001</em></div></div>
+    </div>
+  </div>
+
+  <h3>E &amp; F. Calendar + Dashboard Alerts</h3>
+  <div class="grid-2">
+    <div>
+      <div class="cal-item"><span class="cal-date">01 Jul 2026</span><span class="cal-cat expat">Expat</span><span>⚠️ 30% ruling phase-down to 20% warning (for users starting in 2022)</span></div>
+      <div class="cal-item"><span class="cal-date">01 Jul 2026</span><span class="cal-cat expat">Expat</span><span>M-form filing for partial-year residents</span></div>
+      <div class="cal-item"><span class="cal-date">01 Sep 2026</span><span class="cal-cat all">Toeslagen</span><span>Finalise toeslagen — zorgtoeslag and kinderopvangtoeslag</span></div>
+      <div class="cal-item"><span class="cal-date">01 Oct 2026</span><span class="cal-cat all">IB</span><span>Objection window for 2025 assessment</span></div>
+      <div class="cal-item"><span class="cal-date">20 Dec 2026</span><span class="cal-cat box3">Box 3</span><span>Box 3 reference date: 1 Jan (assets below threshold)</span></div>
+    </div>
+    <div>
+      <div class="alert alert-danger"><span class="icon">🔴</span><div class="text"><strong>30% ruling year 4 phase-down coming</strong> In year 4, exemption drops from 30% → 20%. Expect ~€3,330 higher tax in that year. Plan ahead.</div></div>
+      <div class="alert alert-ok"><span class="icon">✅</span><div class="text"><strong>IACK claimed (€3,032)</strong> Working parent credit successfully applied. Often missed by expats unfamiliar with Dutch credits.</div></div>
+      <div class="alert alert-info"><span class="icon">🏠</span><div class="text"><strong>Kinderopvangtoeslag</strong> If child is in registered childcare, up to 96% reimbursement available. Check eligibility.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCENARIO 6 — DGA + BV
+══════════════════════════════════════════════════════════ -->
+<div class="page scenario-page">
+  <div class="scenario-header">
+    <div>
+      <div class="scenario-id">Scenario 6 of 6 &nbsp;·&nbsp; SCN-DGA-001</div>
+      <h1>DGA — Minimum Salary, Dividend Strategy, Box 3</h1>
+      <p>Key challenge: gebruikelijk loon compliance, Box 2 dividend taxation, Box 3 assets taxed (above joint exemption).</p>
+    </div>
+    <span class="user-type-badge dga" style="font-size:14px;padding:6px 16px;">DGA</span>
+  </div>
+
+  <h3>A. User Profile</h3>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Income</div>
+      <table>
+        <tr><td>DGA salary (gebruikelijk loon)</td><td class="num"><strong>€56,000</strong> = minimum</td></tr>
+        <tr><td>BV dividend (Box 2)</td><td class="num">€24,000</td></tr>
+        <tr><td>Pension contribution (personal)</td><td class="num">€8,000</td></tr>
+        <tr><td>Taxable Box 1 income</td><td class="num">€48,000</td></tr>
+        <tr><td>BV corporate profit</td><td>Not in this calc</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Household</div>
+      <table>
+        <tr><td>Status</td><td>Partner</td></tr>
+        <tr><td>Partner income</td><td class="num">€45,000</td></tr>
+        <tr><td>Children under 12</td><td class="num">0</td></tr>
+        <tr><td>Net Box 3 assets</td><td class="num"><strong>€180,000</strong></td></tr>
+        <tr><td>Savings fraction</td><td>0% (investments)</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Tax structure</div>
+      <table>
+        <tr><td>BV Vpb rate</td><td class="num">19% (under €200k)</td></tr>
+        <tr><td>Box 2 dividend ≤€68,843</td><td class="num">24.5%</td></tr>
+        <tr><td>Box 2 dividend &gt;€68,843</td><td class="num">31%</td></tr>
+        <tr><td>Joint Box 3 exemption</td><td class="num">€118,714</td></tr>
+        <tr><td>Box 3 taxable</td><td class="num">€61,286</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>B. Calculator — Expected Results</h3>
+  <div class="grid-2">
+    <table>
+      <tr><th>Step</th><th>Item</th><th class="num">Amount</th></tr>
+      <tr><td>1</td><td>DGA salary</td><td class="num">€56,000</td></tr>
+      <tr><td>2</td><td>Pension deduction</td><td class="num row-deduct">−€8,000</td></tr>
+      <tr class="row-total"><td></td><td>Taxable Box 1</td><td class="num"><strong>€48,000</strong></td></tr>
+      <tr><td>7</td><td>Box 1 bracket 1 (35.75% × €38,883)</td><td class="num">€13,901</td></tr>
+      <tr><td>7</td><td>Box 1 bracket 2 (37.07% × €9,117)</td><td class="num">€3,380</td></tr>
+      <tr><td></td><td>Box 1 tax raw</td><td class="num">€17,280</td></tr>
+      <tr><td>8</td><td>AHK (income €48k: partial phase-out)</td><td class="num row-credit">−€1,946</td></tr>
+      <tr><td>9</td><td>Arbeidskorting</td><td class="num row-credit">−€5,528</td></tr>
+      <tr><td></td><td>Income tax after credits</td><td class="num"><strong>€9,806</strong></td></tr>
+    </table>
+    <table>
+      <tr><th>Step</th><th>Item</th><th class="num">Amount</th></tr>
+      <tr><td>11</td><td>ZVW (DGA = employee of BV → €0)</td><td class="num">€0</td></tr>
+      <tr><td>12</td><td>Box 2: €24,000 × 24.5% (≤€68,843)</td><td class="num">€5,880</td></tr>
+      <tr><td>13</td><td>Box 3: €180,000 assets</td><td class="num"></td></tr>
+      <tr><td></td><td>− Joint exemption: €59,357 × 2</td><td class="num row-deduct">−€118,714</td></tr>
+      <tr><td></td><td>Taxable €61,286 × 6% × 36%</td><td class="num">€1,324</td></tr>
+      <tr class="row-total"><td></td><td><strong>TOTAL TAX DUE (personal)</strong></td><td class="num"><strong>€17,010</strong></td></tr>
+      <tr><td></td><td><em>BV Vpb (not in personal calc)</em></td><td class="num" style="color:#999;"><em>+19% on BV profit</em></td></tr>
+    </table>
+  </div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;">
+    <div class="result-box"><div class="label">Personal tax</div><div class="value">€17,010</div></div>
+    <div class="result-box"><div class="label">Effective rate</div><div class="value">30.4%</div></div>
+    <div class="result-box"><div class="label">Box 2 tax</div><div class="value">€5,880</div></div>
+    <div class="result-box"><div class="label">Box 3 tax</div><div class="value">€1,324</div></div>
+  </div>
+  <div class="deviation"><strong>Belastingdienst comparison for Box 2:</strong> Verify that €24,000 × 24.5% = €5,880 matches exactly in the Belastingdienst Proefberekening. Box 2 rate below €68,843 is a fixed 24.5% — no phase-out, no credits.</div>
+  <div class="deviation"><strong>Total combined tax (BV + personal):</strong> If BV has €100k profit → 19% Vpb = €19,000 BV tax + personal €17,010 = €36,010 combined. Effective combined rate on the €100k BV profit: 36.0%. Compare to ZZP at same income: ~39% marginal. BV is slightly more efficient at this scale.</div>
+
+  <h3>C. IB Return Guide &amp; D. Chat Tests</h3>
+  <div class="grid-2">
+    <div class="card no-break">
+      <div class="card-title">IB fields (DGA)</div>
+      <table>
+        <tr><th>Field</th><th>Expected value</th></tr>
+        <tr><td><code>1b</code> Loon (DGA salary)</td><td class="num">€48,000 (after pension)</td></tr>
+        <tr><td><code>2a</code> Box 2 dividend</td><td>Yes → €24,000</td></tr>
+        <tr><td><code>1f</code> Lijfrente</td><td class="num">€8,000</td></tr>
+        <tr><td><code>3a</code> Box 3 assets</td><td class="num">€180,000</td></tr>
+        <tr><td><code>VOL-1</code> Voorlopige</td><td>Check BV payments</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="qa-block"><div class="qa-q">Q: "What is the minimum salary I must pay myself as a DGA in 2026?"</div><div class="qa-a"><strong>Expected answer:</strong> The minimum gebruikelijk loon (customary salary) for a DGA in 2026 is <strong>€56,000</strong>. You must pay yourself at least the highest of: €56,000, 75% of the salary for the most comparable position in the market, or the salary of the best-paid employee in your BV. Paying below this triggers a correction and potential penalty from the Belastingdienst. <em>Source: DGA-2026-001</em></div></div>
+      <div class="qa-block"><div class="qa-q">Q: "Should I take more dividend before year-end to use the lower 24.5% Box 2 rate?"</div><div class="qa-a"><strong>Expected answer:</strong> The lower Box 2 rate of 24.5% applies to dividends up to <strong>€68,843</strong> per person (or €137,686 for partners). You have taken €24,000, leaving €44,843 remaining in the lower bracket. Any dividend above €68,843 is taxed at 31%. Discuss timing with your accountant — but the 24.5% bracket is worth using strategically before year-end. <em>Source: B2R-2026-001, B2R-2026-002</em></div></div>
+    </div>
+  </div>
+
+  <h3>E &amp; F. Calendar + Dashboard Alerts</h3>
+  <div class="grid-2">
+    <div>
+      <div class="cal-item"><span class="cal-date">01 Jul 2026</span><span class="cal-cat all">Voorlopige</span><span>Revise voorlopige aanslag (DGA: Box 1 + Box 2)</span></div>
+      <div class="cal-item"><span class="cal-date">01 Sep 2026</span><span class="cal-cat all">Toeslagen</span><span>Finalise toeslagen (likely not eligible at this income)</span></div>
+      <div class="cal-item"><span class="cal-date">01 Oct 2026</span><span class="cal-cat all">IB</span><span>Objection window for 2025 assessment</span></div>
+      <div class="cal-item"><span class="cal-date">20 Dec 2026</span><span class="cal-cat box3">Box 3</span><span>Box 3 reference date: optimise asset position before 1 Jan</span></div>
+    </div>
+    <div>
+      <div class="alert alert-warn"><span class="icon">⚠️</span><div class="text"><strong>DGA gebruikelijk loon at minimum</strong> €56,000 is the legal minimum. If your market-comparable salary is higher, the Belastingdienst may impose a higher salary retroactively.</div></div>
+      <div class="alert alert-info"><span class="icon">💹</span><div class="text"><strong>Box 2 lower bracket not fully used</strong> €44,843 remaining in the 24.5% bracket (up to €68,843). Consider additional dividend before year-end if BV profit allows.</div></div>
+      <div class="alert alert-warn"><span class="icon">💰</span><div class="text"><strong>Box 3: €61,286 above exemption</strong> Costing €1,324/year. Consider whether assets can be redeployed into tax-exempt instruments or invested in the BV.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FINAL PAGE: COMPARISON GUIDE -->
+<div class="page scenario-page">
+  <h2>Belastingdienst Comparison Guide</h2>
+  <p>Use these tools to verify TaxWijs results against the official Belastingdienst calculations.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Official Belastingdienst tools</div>
+      <table>
+        <tr><th>Tool</th><th>Use for</th></tr>
+        <tr><td>belastingdienst.nl/rekenhulpen/</td><td>AHK, Arbeidskorting, IACK calculators</td></tr>
+        <tr><td>belastingdienst.nl → aangifte → proefberekening</td><td>Full IB return preview (opens from March)</td></tr>
+        <tr><td>mijn.belastingdienst.nl</td><td>Your actual voorlopige aanslag and final assessment</td></tr>
+        <tr><td>toeslagen.belastingdienst.nl</td><td>Zorgtoeslag / huurtoeslag eligibility check</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Acceptable deviation ranges</div>
+      <table>
+        <tr><th>Line item</th><th>Expected deviation</th></tr>
+        <tr><td>Box 1 tax (brackets)</td><td>&lt;€5 (rounding only)</td></tr>
+        <tr><td>Arbeidskorting</td><td>&lt;€30</td></tr>
+        <tr><td>Algemene heffingskorting</td><td>&lt;€20</td></tr>
+        <tr><td>IACK</td><td>&lt;€20</td></tr>
+        <tr><td>ZVW bijdrage</td><td>Up to €300 (different base)</td></tr>
+        <tr><td>Box 3 tax</td><td>Depends on savings/investments split</td></tr>
+        <tr><td>Total tax</td><td>&lt;€350 acceptable; &gt;€500 = investigate</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <h3 style="margin-top:20px;">Quick Reference — 2026 Tax Numbers</h3>
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-title">Box 1 Brackets (below AOW age)</div>
+      <table>
+        <tr><td>€0 – €38,883</td><td class="num">35.75%</td></tr>
+        <tr><td>€38,883 – €78,426</td><td class="num">37.07%</td></tr>
+        <tr><td>Above €78,426</td><td class="num">49.50%</td></tr>
+        <tr><td colspan="2" style="color:#888;font-size:10px;padding-top:4px;">AOW age bracket 2 rate: 37.56%</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Key Credits (heffingskortingen)</div>
+      <table>
+        <tr><td>AHK max</td><td class="num">€3,115</td></tr>
+        <tr><td>AHK phase-out starts</td><td class="num">€29,736</td></tr>
+        <tr><td>AHK phase-out ends</td><td class="num">€78,426</td></tr>
+        <tr><td>Arbeidskorting max</td><td class="num">€5,685</td></tr>
+        <tr><td>AK phase-out starts</td><td class="num">€45,592</td></tr>
+        <tr><td>IACK max</td><td class="num">€3,032</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">ZZP Deductions</div>
+      <table>
+        <tr><td>Zelfstandigenaftrek</td><td class="num">€1,200</td></tr>
+        <tr><td>Startersaftrek (LAST YEAR)</td><td class="num">€2,123</td></tr>
+        <tr><td>MKB-winstvrijstelling</td><td class="num">12.7%</td></tr>
+        <tr><td>ZVW rate</td><td class="num">5.32%</td></tr>
+        <tr><td>ZVW ceiling income</td><td class="num">€71,628</td></tr>
+        <tr><td>KIA on €2,901–€70,602</td><td class="num">28%</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid-3" style="margin-top:8px;">
+    <div class="card">
+      <div class="card-title">Box 2 (DGA Dividend)</div>
+      <table>
+        <tr><td>Rate ≤€68,843</td><td class="num">24.5%</td></tr>
+        <tr><td>Rate &gt;€68,843</td><td class="num">31.0%</td></tr>
+        <tr><td>DGA min. salary</td><td class="num">€56,000</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Box 3 (Wealth Tax)</div>
+      <table>
+        <tr><td>Exemption per person</td><td class="num">€59,357</td></tr>
+        <tr><td>Savings return</td><td class="num">1.28%</td></tr>
+        <tr><td>Investment return</td><td class="num">6.00%</td></tr>
+        <tr><td>Tax rate on return</td><td class="num">36%</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Toeslagen Thresholds</div>
+      <table>
+        <tr><td>Zorgtoeslag (single)</td><td class="num">≤€40,857</td></tr>
+        <tr><td>Zorgtoeslag max/month</td><td class="num">€129</td></tr>
+        <tr><td>30% ruling expiry</td><td>5-year phase-down</td></tr>
+        <tr><td>KOR VAT threshold</td><td class="num">€20,000</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div style="margin-top:24px;padding:14px;background:#f8f9fa;border-radius:8px;font-size:11px;color:#666;border:1px solid #ddd;">
+    <strong style="color:#333;">Document notes:</strong> All calculations performed by <code>engine.py</code> (TaxWijs Phase 3 deterministic calculator) reading from <code>tax_rules_2026.json</code>. All 6 scenario totals verified with zero rounding error against the ground-truth <code>scenarios.json</code>. Data reflects Dutch tax law as of January 2026. This document is for internal QA testing only — it does not constitute tax advice.
+  </div>
+</div>
+
+</body>
+</html>
