@@ -214,7 +214,7 @@ export default function LandingPage() {
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 11px", borderRadius: 999, background: "var(--paper)", border: "1px solid var(--accent-line)" }}>
               <span style={{ width: 6, height: 6, borderRadius: 999, background: "var(--sage-600)" }} />
               <span className="eyebrow eyebrow-accent">
-                {lang === "fa" ? "شفاف‌سازی مالیات در هلند" : lang === "nl" ? "Belasting AI · 2026" : "Dutch Tax AI · 2026"}
+                {lang === "fa" ? "کشف کسورات مالیاتی · ZZP · ۲۰۲۶" : lang === "nl" ? "Vind uw belastingaftrekken · ZZP · 2026" : "Find missing deductions · ZZP · 2026"}
               </span>
             </div>
 

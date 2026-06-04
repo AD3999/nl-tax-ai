@@ -1,7 +1,75 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 4 Jun 2026 — Google Sign-In production fix (Railway env vars + Google Cloud Console).
+> Last updated: 4 Jun 2026 — Deduction Checker v2: 10-step wizard, 3-tier eligibility, email gate, landing page repositioning.
+
+---
+
+## Session — 4 Jun 2026 (part 2) ✅ Complete — branch: `feature/deduction-checker-v2`
+
+### Product Owner overhaul — Deduction Checker v2
+
+Based on expert product advice: reposition TaxWijs from "AI chatbot" to "Tax Deduction Discovery Platform". The Deduction Checker is now the core revenue driver.
+
+**T1 + T2 + T3 — DeductionCheckerPage.tsx — complete rewrite**
+
+| What changed | Before | After |
+|---|---|---|
+| Number of questions | 6 binary yes/no | 9–10 with multi-choice, number inputs, checkboxes |
+| Profit input | Not asked | Step 2 — free-text number, used in results |
+| Hours question | Yes / No | 4 options: <500 / 500–1,224 / 1,225+ / don't know |
+| Starter status | Not asked | Step 4 — yes / no / unsure |
+| Startersaftrek history | Not asked | Step 5 — never / 1× / 2× / 3× / don't know (conditional) |
+| Business expense detail | "Did you buy equipment?" | 12-category checkbox grid (laptop, phone, internet, software, accountant, etc.) |
+| Business assets | Not asked | Step 7 — yes/no + optional amount for KIA calculation |
+| BTW/VAT status | Not asked | Step 8 — registered / KOR / not registered / unknown |
+| Pension/lijfrente | Not asked | Step 9 — yes / no / unsure |
+| Results display | Flat list, all shown | 3-tier: **Likely eligible** (sage) / **Needs confirmation** (amber) / **Not likely** (grey) |
+| Startersaftrek logic | Always shown if hours ≥ 1,225 | Correct: only shown as Likely when is_starter=yes AND times_used < 3 |
+| ZVW presentation | One-liner | Full reminder with max contribution + ceiling |
+| KIA scoring | Not scored | Exact: shows Likely only if amount in €2,901–€70,602 range |
+| Sorting | Insertion order | Sorted: Likely → Needs info → Not likely |
+| Conditional flow | None | starter_times step skipped if is_starter=no; asset_amount step skipped if no assets |
+
+**T4 — Email gate before results (anonymous users only)**
+
+Before showing results, anonymous users see a one-field email form ("Where should we send your results?"). Logged-in users skip it automatically. The "Skip and view now" link lets users bypass without email. Captured emails go to the `EmailCapture` model with `source: "checker_gate"`.
+
+**T6 — Landing page hero repositioning**
+
+| | Before | After |
+|---|---|---|
+| EN headline | "Tax in the Netherlands, answered plainly" | "Are you missing Dutch tax deductions?" |
+| NL headline | "Belasting in Nederland, helder uitgelegd" | "Loopt u Nederlandse belastingaftrekken mis?" |
+| FA headline | "مالیات در هلند، به زبان ساده" | "آیا کسورات مالیاتی هلند را از دست می‌دهید؟" |
+| EN subheadline | "TaxWijs answers your tax questions…" | "Answer 10 questions and discover which Dutch tax deductions apply to your ZZP situation." |
+| Hero badge | "Dutch Tax AI · 2026" | "Find missing deductions · ZZP · 2026" |
+
+**T7 — PostHog funnel events**
+
+New events on `analytics.ts` + wired into checker:
+
+| Event | When fired |
+|---|---|
+| `deduction_checker_started` | First answer given (via `startedTracked` ref, fires once) |
+| `checker_step_completed` | Every `advance()` call — includes `step_id` + `step_index` |
+| `deduction_checker_completed` | On reaching results — includes `deduction_count` (likely count) |
+| `checker_results_viewed` | Same as completed — includes `likely_count`, `needs_info_count`, `user_type` |
+| `checker_waitlist_submitted` | Non-ZZP waitlist email submitted |
+
+**T8 — Non-ZZP waitlist (inside T1 rewrite)**
+
+When user selects Employee / Expat / DGA, the checker exits early and shows: "This checker is currently optimised for ZZP freelancers. We're building your profile type." with an email capture form. Emails stored with `source: "waitlist_{user_type}"`.
+
+**Files changed:**
+- `frontend/src/pages/DeductionCheckerPage.tsx` — full rewrite (~730 lines)
+- `frontend/src/lib/analytics.ts` — 3 new tracking functions
+- `frontend/src/i18n/locales/en.json` — hero headline + subheadline
+- `frontend/src/i18n/locales/nl.json` — hero headline + subheadline
+- `frontend/src/i18n/locales/fa.json` — hero headline + subheadline
+- `frontend/src/pages/LandingPage.tsx` — hero badge text
+
+**TypeScript:** 0 errors on both before and after each change.
 
 ---
 

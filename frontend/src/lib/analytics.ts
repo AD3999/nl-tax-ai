@@ -70,6 +70,18 @@ export function trackDeductionCheckerCompleted(deductionCount: number) {
   trackEvent("deduction_checker_completed", { deduction_count: deductionCount });
 }
 
+export function trackCheckerStepCompleted(stepId: string, stepIndex: number) {
+  trackEvent("checker_step_completed", { step_id: stepId, step_index: stepIndex });
+}
+
+export function trackCheckerResultsViewed(likelyCount: number, needsInfoCount: number, userType: string) {
+  trackEvent("checker_results_viewed", { likely_count: likelyCount, needs_info_count: needsInfoCount, user_type: userType });
+}
+
+export function trackCheckerWaitlistSubmitted(userType: string) {
+  trackEvent("checker_waitlist_submitted", { user_type: userType });
+}
+
 export function trackAlertDismissed(category: string) { trackEvent("alert_dismissed", { category }); }
 
 export function trackAlertActionClicked(category: string) { trackEvent("alert_action_clicked", { category }); }
