@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMobile } from "../hooks/useMobile";
 import { useTranslation } from "react-i18next";
-import { client } from "../api/client";
+import { captureEmail } from "../api/reminders";
 import { useAuth } from "../context/AuthContext";
 import {
   trackDeductionCheckerStarted,
@@ -511,7 +511,7 @@ export default function DeductionCheckerPage() {
     if (!gateEmail) return;
     setGateLoading(true);
     try {
-      await client.post("/users/email-capture/", { email: gateEmail, source: "checker_gate" });
+      await captureEmail(gateEmail, "checker_gate");
     } catch { /* fail silently */ }
     setGateLoading(false);
     setGateSubmitted(true);
@@ -521,10 +521,7 @@ export default function DeductionCheckerPage() {
     if (!waitlistEmail) return;
     setWaitlistLoading(true);
     try {
-      await client.post("/users/email-capture/", {
-        email: waitlistEmail,
-        source: `waitlist_${answers.user_type}`,
-      });
+      await captureEmail(waitlistEmail, `waitlist_${answers.user_type}`, answers.user_type ?? "");
       trackCheckerWaitlistSubmitted(answers.user_type ?? "unknown");
     } catch { /* fail silently */ }
     setWaitlistLoading(false);
