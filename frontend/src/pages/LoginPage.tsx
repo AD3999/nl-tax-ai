@@ -24,44 +24,57 @@ export default function LoginPage() {
   const handleGoogle = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
     if (!clientId) {
-      setError("Google Client ID not configured — add VITE_GOOGLE_CLIENT_ID to frontend/.env and restart");
+      setError("Google Client ID not configured — set VITE_GOOGLE_CLIENT_ID in Railway env vars");
       return;
     }
-    if (!window.google) {
+    // Check for the full OAuth2 API, not just window.google stub
+    if (!window.google?.accounts?.oauth2) {
       setError("Google sign-in is still loading — please try again in a moment");
       return;
     }
-    const client = window.google.accounts.oauth2.initTokenClient({
-      client_id: clientId,
-      scope: "email profile",
-      callback: async (resp) => {
-        if (resp.error) {
-          const base = lang === "nl" ? "Google-inloggen mislukt" : lang === "fa" ? "ورود با گوگل ناموفق بود" : "Google sign-in failed";
-          setError(`${base} (${resp.error})`);
-          return;
-        }
-        setLoading(true);
-        setError("");
-        try {
-          await googleAuth(resp.access_token);
-          const profile = await fetchProfile();
-          setUser(profile);
-          if (profile?.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
-          showToast(
-            lang === "nl" ? "Ingelogd — welkom terug" : lang === "fa" ? "وارد شدید — خوش آمدید" : "Logged in — welcome back",
-            "success",
-          );
-          navigate("/dashboard");
-        } catch {
-          const msg = lang === "nl" ? "Google-inloggen mislukt" : lang === "fa" ? "ورود با گوگل ناموفق بود" : "Google sign-in failed";
-          setError(msg);
-          showToast(msg, "error");
-        } finally {
-          setLoading(false);
-        }
-      },
-    });
-    client.requestAccessToken();
+    try {
+      const gClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: "email profile",
+        callback: (resp: { error?: string; access_token?: string }) => {
+          if (resp.error) {
+            const base = lang === "nl" ? "Google-inloggen mislukt" : lang === "fa" ? "ورود با گوگل ناموفق بود" : "Google sign-in failed";
+            setError(`${base} (${resp.error})`);
+            return;
+          }
+          if (!resp.access_token) {
+            setError("Google sign-in returned no token — please try again");
+            return;
+          }
+          setLoading(true);
+          setError("");
+          googleAuth(resp.access_token)
+            .then(() => fetchProfile())
+            .then((profile) => {
+              if (!profile) throw new Error("profile_null");
+              setUser(profile);
+              if (profile.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
+              showToast(
+                lang === "nl" ? "Ingelogd — welkom terug" : lang === "fa" ? "وارد شدید — خوش آمدید" : "Logged in — welcome back",
+                "success",
+              );
+              navigate("/dashboard");
+            })
+            .catch((err: unknown) => {
+              const code = (err instanceof Error ? err.message : String(err)) || "unknown";
+              const base = lang === "nl" ? "Google-inloggen mislukt" : lang === "fa" ? "ورود با گوگل ناموفق بود" : "Google sign-in failed";
+              const msg = `${base} (${code})`;
+              setError(msg);
+              showToast(msg, "error");
+            })
+            .finally(() => setLoading(false));
+        },
+      });
+      gClient.requestAccessToken();
+    } catch (err: unknown) {
+      const code = err instanceof Error ? err.message : String(err);
+      setError(`Google sign-in error: ${code}`);
+    }
   };
 
   const LOGIN_ERR: Record<string, string> = {

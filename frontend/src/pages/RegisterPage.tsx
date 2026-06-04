@@ -50,44 +50,56 @@ export default function RegisterPage() {
   const handleGoogle = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
     if (!clientId) {
-      setError("Google Client ID not configured — add VITE_GOOGLE_CLIENT_ID to frontend/.env and restart");
+      setError("Google Client ID not configured — set VITE_GOOGLE_CLIENT_ID in Railway env vars");
       return;
     }
-    if (!window.google) {
+    if (!window.google?.accounts?.oauth2) {
       setError("Google sign-in is still loading — please try again in a moment");
       return;
     }
-    const client = window.google.accounts.oauth2.initTokenClient({
-      client_id: clientId,
-      scope: "email profile",
-      callback: async (resp) => {
-        if (resp.error) {
-          const base = lang === "nl" ? "Google-registratie mislukt" : lang === "fa" ? "ثبت‌نام با گوگل ناموفق بود" : "Google sign-up failed";
-          setError(`${base} (${resp.error})`);
-          return;
-        }
-        setLoading(true);
-        setError("");
-        try {
-          await googleAuth(resp.access_token, userType);
-          const profile = await fetchProfile();
-          setUser(profile);
-          if (profile?.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
-          showToast(
-            lang === "nl" ? "Account aangemaakt — welkom bij TaxWijs" : lang === "fa" ? "حساب ایجاد شد — به TaxWijs خوش آمدید" : "Account created — welcome to TaxWijs",
-            "success",
-          );
-          navigate("/intake");
-        } catch {
-          const msg = lang === "nl" ? "Google-registratie mislukt" : lang === "fa" ? "ثبت‌نام با گوگل ناموفق بود" : "Google sign-up failed";
-          setError(msg);
-          showToast(msg, "error");
-        } finally {
-          setLoading(false);
-        }
-      },
-    });
-    client.requestAccessToken();
+    try {
+      const gClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: "email profile",
+        callback: (resp: { error?: string; access_token?: string }) => {
+          if (resp.error) {
+            const base = lang === "nl" ? "Google-registratie mislukt" : lang === "fa" ? "ثبت‌نام با گوگل ناموفق بود" : "Google sign-up failed";
+            setError(`${base} (${resp.error})`);
+            return;
+          }
+          if (!resp.access_token) {
+            setError("Google sign-up returned no token — please try again");
+            return;
+          }
+          setLoading(true);
+          setError("");
+          googleAuth(resp.access_token, userType)
+            .then(() => fetchProfile())
+            .then((profile) => {
+              if (!profile) throw new Error("profile_null");
+              setUser(profile);
+              if (profile.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
+              showToast(
+                lang === "nl" ? "Account aangemaakt — welkom bij TaxWijs" : lang === "fa" ? "حساب ایجاد شد — به TaxWijs خوش آمدید" : "Account created — welcome to TaxWijs",
+                "success",
+              );
+              navigate("/intake");
+            })
+            .catch((err: unknown) => {
+              const code = (err instanceof Error ? err.message : String(err)) || "unknown";
+              const base = lang === "nl" ? "Google-registratie mislukt" : lang === "fa" ? "ثبت‌نام با گوگل ناموفق بود" : "Google sign-up failed";
+              const msg = `${base} (${code})`;
+              setError(msg);
+              showToast(msg, "error");
+            })
+            .finally(() => setLoading(false));
+        },
+      });
+      gClient.requestAccessToken();
+    } catch (err: unknown) {
+      const code = err instanceof Error ? err.message : String(err);
+      setError(`Google sign-up error: ${code}`);
+    }
   };
 
   const EMAIL_TAKEN: Record<string, string> = {
