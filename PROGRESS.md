@@ -1,7 +1,36 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 3 Jun 2026 — Engine accuracy fixes, Belastingdienst validation, required fields, chat unlimited.
+> Last updated: 4 Jun 2026 — Google Sign-In production fix (Railway env vars + Google Cloud Console).
+
+---
+
+## Session — 4 Jun 2026 ✅ Complete
+
+### Google Sign-In — production fix
+
+**Problem:** Google Sign-In worked locally but silently failed on Railway. The GIS library (`accounts.google.com/gsi/client`) loaded correctly, but clicking the button failed because:
+1. `VITE_GOOGLE_CLIENT_ID` was never set in Railway's environment variables → code hit early-exit guard, button did nothing
+2. Railway domain `https://nl-tax-ai-production.up.railway.app` was not in Google Cloud Console **Authorized JavaScript origins** → Google would reject the popup even if the Client ID were present
+
+**Root cause discovered by:** Running `console.log(window.google.accounts.oauth2)` in the Railway production browser — confirmed library loads, ruling out the script-tag as the problem.
+
+**Code fix (`Dockerfile.frontend` — gitignored, local only):**
+Added `VITE_GOOGLE_CLIENT_ID` and `VITE_ANON_SESSION_LIMIT` as proper Docker build ARGs alongside the existing `VITE_API_URL`. Without these ARGs, Docker builds don't bake the env vars into the Vite bundle.
+
+**Documentation fix (`.env.production.example`):**
+Added the three `VITE_*` vars with comments explaining they must be set before `npm run build` runs.
+
+**Manual steps required (not in code):**
+
+| Where | Action |
+|-------|--------|
+| Google Cloud Console → Credentials → OAuth 2.0 Client ID | Add `https://nl-tax-ai-production.up.railway.app` to Authorized JavaScript origins AND Authorized redirect URIs |
+| Railway dashboard → Variables | Add `VITE_GOOGLE_CLIENT_ID=1051653351506-a9e3982dr3tujce671eteo94hkbgb20i.apps.googleusercontent.com` then trigger redeploy |
+
+**Files changed:** `.env.production.example`
+
+**Note:** `Dockerfile*` is in `.gitignore` (Railway deploys via nixpacks, not Docker). Railway automatically injects env vars from the dashboard into the nixpacks build environment — adding `VITE_GOOGLE_CLIENT_ID` in Railway Variables is sufficient.
 
 ---
 
