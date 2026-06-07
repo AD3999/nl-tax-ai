@@ -27,13 +27,13 @@ if _env_file.exists():
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="dev-secret-key-change-in-production")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
-# Railway's healthchecker (User-Agent: RailwayHealthCheck/1.0) sends requests with the
-# Railway-generated domain as the Host header, NOT the custom domain (taxwijs.nl).
-# Railway auto-sets RAILWAY_PUBLIC_DOMAIN to that generated hostname, so we add it here.
-if "*" not in ALLOWED_HOSTS:
-    _railway_public = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
-    _extras = filter(None, [_railway_public, ".railway.internal", "localhost", "127.0.0.1"])
-    for _host in _extras:
+# Railway injects RAILWAY_ENVIRONMENT at runtime. When present, health checks arrive
+# from internal infrastructure using unpredictable internal hostnames. Using * inside
+# Railway is safe: Railway's edge proxy handles public routing security.
+if os.environ.get("RAILWAY_ENVIRONMENT") and "*" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS = list(ALLOWED_HOSTS) + ["*"]
+elif "*" not in ALLOWED_HOSTS:
+    for _host in ["localhost", "127.0.0.1"]:
         if _host not in ALLOWED_HOSTS:
             ALLOWED_HOSTS.append(_host)
 
