@@ -120,6 +120,28 @@ export default function TopNav() {
               ))}
               {user?.is_admin && (
                 <NavLink
+                  to="/accountant/portal"
+                  style={({ isActive }) => ({
+                    ...navLinkStyle({ isActive }),
+                    color: isActive ? "var(--ink)" : "var(--ink-4)",
+                  })}
+                >
+                  Accountant
+                </NavLink>
+              )}
+              {user && !user.is_admin && (
+                <NavLink
+                  to="/client"
+                  style={({ isActive }) => ({
+                    ...navLinkStyle({ isActive }),
+                    color: isActive ? "var(--ink)" : "var(--ink-4)",
+                  })}
+                >
+                  My Portal
+                </NavLink>
+              )}
+              {user?.is_admin && (
+                <NavLink
                   to="/admin"
                   end
                   style={({ isActive }) => ({
@@ -249,6 +271,36 @@ export default function TopNav() {
               </NavLink>
             ))}
 
+            {user?.is_admin && (
+              <NavLink
+                to="/accountant/portal"
+                onClick={closeMenu}
+                style={({ isActive }) => ({
+                  display: "flex", alignItems: "center", height: 52,
+                  padding: "0 var(--sp-5)", fontSize: "var(--text-md)", fontWeight: 500,
+                  color: isActive ? "var(--sage-700)" : "var(--ink-3)", textDecoration: "none",
+                  background: isActive ? "var(--accent-soft)" : "transparent",
+                  borderInlineStart: isActive ? "3px solid var(--sage-600)" : "3px solid transparent",
+                })}
+              >
+                Accountant
+              </NavLink>
+            )}
+            {user && !user.is_admin && (
+              <NavLink
+                to="/client"
+                onClick={closeMenu}
+                style={({ isActive }) => ({
+                  display: "flex", alignItems: "center", height: 52,
+                  padding: "0 var(--sp-5)", fontSize: "var(--text-md)", fontWeight: 500,
+                  color: isActive ? "var(--sage-700)" : "var(--ink-3)", textDecoration: "none",
+                  background: isActive ? "var(--accent-soft)" : "transparent",
+                  borderInlineStart: isActive ? "3px solid var(--sage-600)" : "3px solid transparent",
+                })}
+              >
+                My Portal
+              </NavLink>
+            )}
             {user?.is_admin && (
               <NavLink
                 to="/admin"

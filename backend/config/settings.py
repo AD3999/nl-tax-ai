@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "apps.chat",
     "apps.calculator",
     "apps.payments",
+    "apps.portal",
 ]
 
 MIDDLEWARE = [
