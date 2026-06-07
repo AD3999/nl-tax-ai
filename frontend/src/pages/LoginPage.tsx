@@ -45,6 +45,7 @@ export default function LoginPage() {
       response_type: "token",
       scope: "openid email profile",
       include_granted_scopes: "true",
+      prompt: "select_account",
     });
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
   };

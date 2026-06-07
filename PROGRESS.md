@@ -1,7 +1,19 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 7 Jun 2026 — Google Sign-In switched to redirect-based OAuth2 (popup removed).
+> Last updated: 7 Jun 2026 — Google Sign-In fully working: redirect flow + account picker + profile race fix.
+
+---
+
+## Session — 7 Jun 2026 (part 3) ✅ Complete
+
+### Google Sign-In — force account picker on every sign-in
+
+**Problem:** With multiple Google accounts in Chrome, clicking "Continue with Google" auto-signed in with the default Chrome account without showing the account chooser.
+
+**Fix:** Added `prompt=select_account` to the OAuth2 URL in both `LoginPage.tsx` and `RegisterPage.tsx`. Google now always shows the account picker.
+
+**Files changed:** `frontend/src/pages/LoginPage.tsx`, `frontend/src/pages/RegisterPage.tsx`
 
 ---
 
