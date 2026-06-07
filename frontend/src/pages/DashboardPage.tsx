@@ -816,7 +816,7 @@ function EmptySection({ icon, text }: { icon: string; text: string }) {
 
 export default function DashboardPage() {
   const { i18n } = useTranslation();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const isMobile = useMobile();
   const lang = i18n.language as "nl" | "en" | "fa";
@@ -877,6 +877,7 @@ export default function DashboardPage() {
 
   // ── Data loading ───────────────────────────────────────────────────────────
   useEffect(() => {
+    if (loading) return;
     if (!user) { navigate("/login"); return; }
     if (!profile) {
       fetch("/api/users/profile/", { headers: authHeader() })
@@ -887,7 +888,7 @@ export default function DashboardPage() {
     fetch("/api/calculator/history/", { headers: authHeader() })
       .then(r => r.ok ? r.json() as Promise<HistoryItem[]> : [])
       .then(setHistory).catch(() => null);
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!profile) return;
