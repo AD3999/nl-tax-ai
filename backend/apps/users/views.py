@@ -195,6 +195,7 @@ class GoogleAuthView(APIView):
             "access": str(refresh.access_token),
             "refresh": str(refresh),
             "is_new": created,
+            "user": UserSerializer(user).data,
         })
 
 

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { googleAuth, fetchProfile } from "../api/auth";
+import { googleAuth } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 import LoadingScreen from "../components/LoadingScreen";
 
@@ -9,7 +9,6 @@ export default function GoogleCallbackPage() {
   const { setUser } = useAuth();
 
   useEffect(() => {
-    // Google returns the access_token in the URL hash: #access_token=...&token_type=Bearer&...
     const hash = new URLSearchParams(window.location.hash.slice(1));
     const accessToken = hash.get("access_token");
     const oauthError = hash.get("error");
@@ -25,12 +24,12 @@ export default function GoogleCallbackPage() {
     sessionStorage.removeItem("google_auth_user_type");
     sessionStorage.removeItem("google_auth_redirect");
 
+    // googleAuth now returns user profile in the same response — no second fetch needed.
+    // This avoids any race with AuthContext.apiLogout() wiping a just-stored token.
     googleAuth(accessToken, userType)
-      .then(() => fetchProfile())
-      .then((profile) => {
-        if (!profile) throw new Error("profile_null");
-        setUser(profile);
-        if (profile.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
+      .then((data) => {
+        setUser(data.user);
+        if (data.user.id) localStorage.setItem("taxwijs_user_id", String(data.user.id));
         navigate(redirectTo, { replace: true });
       })
       .catch((err: unknown) => {

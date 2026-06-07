@@ -39,8 +39,13 @@ export const fetchProfile = async (): Promise<AuthUser | null> => {
   }
 };
 
-export const googleAuth = async (accessToken: string, userType = "zzp"): Promise<TokenPair> => {
-  const { data } = await client.post<TokenPair>("/users/auth/google/", {
+export interface GoogleAuthResponse extends TokenPair {
+  is_new: boolean;
+  user: AuthUser;
+}
+
+export const googleAuth = async (accessToken: string, userType = "zzp"): Promise<GoogleAuthResponse> => {
+  const { data } = await client.post<GoogleAuthResponse>("/users/auth/google/", {
     access_token: accessToken,
     user_type: userType,
   });
