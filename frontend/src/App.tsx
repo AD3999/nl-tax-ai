@@ -65,7 +65,13 @@ const DeductionCheckerPage = lazy(() => import("./pages/DeductionCheckerPage"));
 const ZZPTaxPage           = lazy(() => import("./pages/ZZPTaxPage"));
 const ExpatTaxPage         = lazy(() => import("./pages/ExpatTaxPage"));
 const TaxCalendarPage      = lazy(() => import("./pages/TaxCalendarPage"));
-const AccountantPage       = lazy(() => import("./pages/AccountantPage"));
+const AccountantPage          = lazy(() => import("./pages/AccountantPage"));
+const AccountantPortalPage    = lazy(() => import("./pages/portal/AccountantPortalPage"));
+const AccountantClientPage    = lazy(() => import("./pages/portal/AccountantClientDetailPage"));
+const AccountantEngagementPage = lazy(() => import("./pages/portal/EngagementPage"));
+const ClientPortalPage        = lazy(() => import("./pages/portal/ClientPortalPage"));
+const ClientTasksPage         = lazy(() => import("./pages/portal/ClientTasksPage"));
+const ClientDocumentsPage     = lazy(() => import("./pages/portal/ClientDocumentsPage"));
 
 const GoogleCallbackPage   = lazy(() => import("./pages/GoogleCallbackPage"));
 
@@ -130,7 +136,13 @@ function App() {
           <Route path="/zzp-tax-netherlands" element={<ZZPTaxPage />} />
           <Route path="/expat-tax-netherlands" element={<ExpatTaxPage />} />
           <Route path="/tax-calendar"        element={<TaxCalendarPage />} />
-          <Route path="/accountant"          element={<AccountantPage />} />
+          <Route path="/accountant"              element={<AccountantPage />} />
+          <Route path="/accountant/portal"       element={<AccountantPortalPage />} />
+          <Route path="/accountant/clients/:id"  element={<AccountantClientPage />} />
+          <Route path="/accountant/engagements/:id" element={<AccountantEngagementPage />} />
+          <Route path="/client"              element={<ClientPortalPage />} />
+          <Route path="/client/tasks"        element={<ClientTasksPage />} />
+          <Route path="/client/documents"    element={<ClientDocumentsPage />} />
           {/* Calculator: kept at URL but hidden from user nav */}
           <Route path="/calculator"          element={<CalculatorPage />} />
           {/* Admin routes — redirect to home if not staff */}

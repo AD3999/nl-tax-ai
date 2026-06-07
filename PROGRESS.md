@@ -1,7 +1,94 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 7 Jun 2026 — Google Sign-In fully working: redirect flow + account picker + profile race fix.
+> Last updated: 7 Jun 2026 — AI Accountant Portal + Client Document Collection Portal complete (Phase 8).
+
+---
+
+## Session — 7 Jun 2026 (part 4) ✅ Complete — branch: `feature/accountant-client-portal`
+
+### AI Accountant Portal + Client Document Collection Portal (Phase 8)
+
+Full end-to-end build across backend and frontend. Branch: `feature/accountant-client-portal`.
+
+---
+
+#### Backend — Django app `apps/portal`
+
+**New files created:**
+
+| File | What it does |
+|------|--------------|
+| `backend/apps/portal/__init__.py` | Marks portal as a Python package |
+| `backend/apps/portal/apps.py` | AppConfig (label="portal") |
+| `backend/apps/portal/models.py` | 9 new models (see below) |
+| `backend/apps/portal/admin.py` | Registers all models; PortalAuditLog is immutable (no add/change) |
+| `backend/apps/portal/serializers.py` | DRF serializers for all 9 models; includes computed fields |
+| `backend/apps/portal/views.py` | ~30 API views with object-level permission checks and audit logging |
+| `backend/apps/portal/urls.py` | 30 URL patterns |
+| `backend/apps/portal/migrations/0001_initial_portal_models.py` | Creates all 9 models |
+| `backend/apps/portal/migrations/0002_add_stable_key_to_document_request.py` | Adds stable_key to DocumentRequest |
+| `backend/apps/portal/services/accountant_checklists.py` | Deterministic checklist templates for employee/zzp/expat/dga/other; idempotent via stable_key |
+| `backend/apps/portal/services/readiness.py` | Readiness score 0-100; ready_to_file gate at ≥85 + zero missing + zero needs_review |
+| `backend/apps/portal/services/missing_info.py` | Idempotent missing information detector; creates AccountantActions via stable_key |
+| `backend/apps/portal/services/accountant_actions.py` | Generates accountant next-actions with trilingual (NL/EN/FA) client messages |
+| `backend/apps/portal/services/document_extraction.py` | Candidate-only AI extraction (pdfminer + optional Claude haiku); never authoritative until accountant approves |
+| `backend/apps/portal/tests/test_models.py` | Model defaults, stable_key, display_name |
+| `backend/apps/portal/tests/test_services.py` | Checklist templates, idempotency, readiness scoring, missing info detection |
+| `backend/apps/portal/tests/test_api.py` | API auth, object-level permissions, document upload MIME rejection |
+
+**9 new Django models:**
+
+1. `AccountantClientProfile` — client record under an accountant; client_type, preferred_language, status, tax_year
+2. `TaxEngagement` — one engagement per client per year; readiness_score, missing_items_count, risk_level
+3. `DocumentRequest` — a request for a specific document; stable_key for idempotency
+4. `ClientDocument` — uploaded file; MIME/size validated (PDF/JPEG/PNG/HEIC/CSV/XLSX, max 20MB); triggers extraction
+5. `ExtractedIncome` — candidate AI extraction; review_status=candidate until accountant approves
+6. `ExtractedExpense` — same; candidate until approved
+7. `ChecklistItem` — one checklist item per engagement; stable_key for idempotency
+8. `AccountantAction` — next action for accountant; stable_key for idempotency
+9. `PortalAuditLog` — immutable write log; every create/update/delete is logged
+
+**Key design decisions enforced:**
+- AI extraction is candidate-only — `review_status` defaults to `"candidate"`. Values never affect tax calculations until accountant sets `"approved"`.
+- `stable_key` pattern on ChecklistItem, AccountantAction, DocumentRequest prevents duplicates when engines run multiple times.
+- Object-level permissions: accountant can only access their own clients; client can only access their own profile.
+- `PortalAuditLog` has `has_add_permission=False` and `has_change_permission=False` in admin — fully immutable.
+
+**Modified files:**
+- `backend/config/settings.py` — added `"apps.portal"` to INSTALLED_APPS
+- `backend/config/urls.py` — added `path("api/portal/", include("apps.portal.urls"))`
+
+---
+
+#### Frontend — React + TypeScript portal pages
+
+**New files created:**
+
+| File | What it does |
+|------|--------------|
+| `frontend/src/api/portal/types.ts` | TypeScript interfaces for all 9 models + enum type aliases |
+| `frontend/src/api/portal/client.ts` | All portal API functions (~25 exports): clients, engagements, checklist, documents, income, expenses, actions, readiness, risks, reminders, audit, client self-service |
+| `frontend/src/pages/portal/AccountantPortalPage.tsx` | Accountant dashboard: summary KPI cards, Clients tab, Engagements tab, Add client form |
+| `frontend/src/pages/portal/AccountantClientDetailPage.tsx` | Client detail: profile card left, engagements right, status dropdown, create engagement form |
+| `frontend/src/pages/portal/EngagementPage.tsx` | Full engagement workspace with 7 tabs: Overview (readiness ring + next actions), Checklist, Documents, Income, Expenses, Risks & Deductions, Audit log |
+| `frontend/src/pages/portal/ClientPortalPage.tsx` | Client-facing portal home: readiness ring, task/doc CTA cards |
+| `frontend/src/pages/portal/ClientTasksPage.tsx` | Client task list: progress bar, open/done split, required item highlighting |
+| `frontend/src/pages/portal/ClientDocumentsPage.tsx` | Client document upload + list with status |
+
+**Modified files:**
+- `frontend/src/App.tsx` — added 7 new routes: `/accountant/portal`, `/accountant/clients/:id`, `/accountant/engagements/:id`, `/client`, `/client/tasks`, `/client/documents`
+- `frontend/src/components/TopNav.tsx` — added "Accountant" link for is_admin users, "My Portal" link for regular authenticated users (desktop + mobile hamburger)
+
+---
+
+#### Checks passed
+
+- `python manage.py check` — 0 issues
+- `npx tsc --noEmit` — 0 errors
+- `npm run build` — clean build, 0 warnings
+
+---
 
 ---
 

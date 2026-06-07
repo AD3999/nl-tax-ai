@@ -1,0 +1,932 @@
+"""
+Portal API views.
+
+Permission model:
+  - Accountant can only access their own clients and engagements.
+  - Client can only access their own assigned profile / engagement.
+  - Staff can access everything.
+  - Unauthenticated requests are always rejected.
+
+All file uploads are validated by ClientDocumentUploadSerializer.
+All write operations are logged via _audit().
+"""
+from __future__ import annotations
+
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import permissions, status
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .models import (
+    AccountantClientProfile, TaxEngagement, DocumentRequest,
+    ClientDocument, ExtractedIncome, ExtractedExpense,
+    ChecklistItem, AccountantAction, PortalAuditLog,
+)
+from .serializers import (
+    AccountantClientProfileSerializer, TaxEngagementSerializer,
+    DocumentRequestSerializer, ClientDocumentSerializer,
+    ClientDocumentUploadSerializer, ExtractedIncomeSerializer,
+    ExtractedExpenseSerializer, ChecklistItemSerializer,
+    AccountantActionSerializer, PortalAuditLogSerializer,
+)
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _audit(request, action, entity_type="", entity_id="",
+           client_profile=None, engagement=None,
+           before=None, after=None):
+    PortalAuditLog.objects.create(
+        actor_user=request.user if request.user.is_authenticated else None,
+        accountant=request.user if request.user.is_authenticated else None,
+        client_profile=client_profile,
+        engagement=engagement,
+        action=action,
+        entity_type=entity_type,
+        entity_id=str(entity_id),
+        before_json=before,
+        after_json=after,
+    )
+
+
+def _is_accountant_of_client(user, client_profile):
+    """True if the user owns the AccountantClientProfile."""
+    return client_profile.accountant_user_id == user.id
+
+
+def _is_client_of_profile(user, client_profile):
+    """True if the user is the linked client user."""
+    return client_profile.client_user_id == user.id
+
+
+def _can_access_client(user, client_profile):
+    return (
+        user.is_staff
+        or _is_accountant_of_client(user, client_profile)
+        or _is_client_of_profile(user, client_profile)
+    )
+
+
+def _can_access_engagement(user, engagement):
+    return _can_access_client(user, engagement.client_profile)
+
+
+# ── Client Profile CRUD ───────────────────────────────────────────────────────
+
+class AccountantClientListView(APIView):
+    """
+    GET  /api/portal/clients/         — list accountant's clients
+    POST /api/portal/clients/         — create new client profile
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        qs = AccountantClientProfile.objects.filter(accountant_user=request.user)
+        if request.user.is_staff:
+            qs = AccountantClientProfile.objects.all()
+        serializer = AccountantClientProfileSerializer(qs, many=True, context={"request": request})
+        return Response(serializer.data)
+
+    def post(self, request):
+        data = request.data.copy()
+        serializer = AccountantClientProfileSerializer(data=data, context={"request": request})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        profile = serializer.save(accountant_user=request.user)
+        _audit(request, "client_created", "AccountantClientProfile", profile.id, client_profile=profile)
+        return Response(AccountantClientProfileSerializer(profile, context={"request": request}).data, status=status.HTTP_201_CREATED)
+
+
+class AccountantClientDetailView(APIView):
+    """
+    GET   /api/portal/clients/<id>/  — get client profile
+    PATCH /api/portal/clients/<id>/  — partial update
+    DELETE /api/portal/clients/<id>/ — archive (soft delete)
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _get_profile(self, request, pk):
+        profile = get_object_or_404(AccountantClientProfile, pk=pk)
+        if not _can_access_client(request.user, profile):
+            return None, Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        return profile, None
+
+    def get(self, request, pk):
+        profile, err = self._get_profile(request, pk)
+        if err:
+            return err
+        return Response(AccountantClientProfileSerializer(profile, context={"request": request}).data)
+
+    def patch(self, request, pk):
+        profile, err = self._get_profile(request, pk)
+        if err:
+            return err
+        before = AccountantClientProfileSerializer(profile).data
+        serializer = AccountantClientProfileSerializer(
+            profile, data=request.data, partial=True, context={"request": request}
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        profile = serializer.save()
+        _audit(request, "client_updated", "AccountantClientProfile", profile.id,
+               client_profile=profile, before=before,
+               after=AccountantClientProfileSerializer(profile).data)
+        return Response(AccountantClientProfileSerializer(profile, context={"request": request}).data)
+
+    def delete(self, request, pk):
+        profile, err = self._get_profile(request, pk)
+        if err:
+            return err
+        if not _is_accountant_of_client(request.user, profile) and not request.user.is_staff:
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+        profile.status = "archived"
+        profile.save(update_fields=["status"])
+        _audit(request, "client_archived", "AccountantClientProfile", profile.id, client_profile=profile)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# ── Engagement CRUD ───────────────────────────────────────────────────────────
+
+class EngagementListView(APIView):
+    """
+    GET  /api/portal/engagements/
+    POST /api/portal/engagements/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if request.user.is_staff:
+            qs = TaxEngagement.objects.select_related("client_profile").all()
+        else:
+            qs = TaxEngagement.objects.select_related("client_profile").filter(
+                accountant=request.user
+            )
+        serializer = TaxEngagementSerializer(qs, many=True, context={"request": request})
+        return Response(serializer.data)
+
+    def post(self, request):
+        serializer = TaxEngagementSerializer(data=request.data, context={"request": request})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Ensure the client_profile belongs to this accountant
+        client_profile = serializer.validated_data.get("client_profile")
+        if not _is_accountant_of_client(request.user, client_profile) and not request.user.is_staff:
+            return Response({"detail": "You do not own this client profile."}, status=status.HTTP_403_FORBIDDEN)
+
+        engagement = serializer.save(accountant=request.user)
+        _audit(request, "engagement_created", "TaxEngagement", engagement.id,
+               client_profile=engagement.client_profile, engagement=engagement)
+
+        # Auto-generate checklist
+        from apps.portal.services.accountant_checklists import create_checklist_for_engagement
+        create_checklist_for_engagement(engagement)
+
+        return Response(TaxEngagementSerializer(engagement, context={"request": request}).data, status=status.HTTP_201_CREATED)
+
+
+class EngagementDetailView(APIView):
+    """
+    GET   /api/portal/engagements/<id>/
+    PATCH /api/portal/engagements/<id>/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _get_engagement(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _can_access_engagement(request.user, eng):
+            return None, Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        return eng, None
+
+    def get(self, request, pk):
+        eng, err = self._get_engagement(request, pk)
+        if err:
+            return err
+        return Response(TaxEngagementSerializer(eng, context={"request": request}).data)
+
+    def patch(self, request, pk):
+        eng, err = self._get_engagement(request, pk)
+        if err:
+            return err
+        serializer = TaxEngagementSerializer(
+            eng, data=request.data, partial=True, context={"request": request}
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        eng = serializer.save()
+        _audit(request, "engagement_updated", "TaxEngagement", eng.id,
+               client_profile=eng.client_profile, engagement=eng)
+        return Response(TaxEngagementSerializer(eng, context={"request": request}).data)
+
+
+# ── Checklist ─────────────────────────────────────────────────────────────────
+
+class ChecklistView(APIView):
+    """
+    GET  /api/portal/engagements/<id>/checklist/
+    POST /api/portal/engagements/<id>/checklist/regenerate/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _can_access_engagement(request.user, eng):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        items = ChecklistItem.objects.filter(engagement=eng).order_by("-required", "priority", "created_at")
+        return Response(ChecklistItemSerializer(items, many=True).data)
+
+    def post(self, request, pk):
+        """Regenerate / top-up checklist (idempotent)."""
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _is_accountant_of_client(request.user, eng.client_profile) and not request.user.is_staff:
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+        from apps.portal.services.accountant_checklists import create_checklist_for_engagement
+        count = create_checklist_for_engagement(eng)
+        _audit(request, "checklist_regenerated", "TaxEngagement", eng.id, engagement=eng)
+        return Response({"created": count})
+
+
+class ChecklistItemDetailView(APIView):
+    """PATCH /api/portal/checklist/<id>/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        item = get_object_or_404(ChecklistItem, pk=pk)
+        if not _can_access_engagement(request.user, item.engagement):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        before_status = item.status
+        serializer = ChecklistItemSerializer(item, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        item = serializer.save()
+        _audit(request, "checklist_item_changed", "ChecklistItem", item.id,
+               client_profile=item.client_profile, engagement=item.engagement,
+               before={"status": before_status}, after={"status": item.status})
+        return Response(ChecklistItemSerializer(item).data)
+
+
+# ── Document Requests ─────────────────────────────────────────────────────────
+
+class DocumentRequestListView(APIView):
+    """
+    GET  /api/portal/engagements/<id>/document-requests/
+    POST /api/portal/engagements/<id>/document-requests/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _can_access_engagement(request.user, eng):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        requests = DocumentRequest.objects.filter(engagement=eng)
+        return Response(DocumentRequestSerializer(requests, many=True).data)
+
+    def post(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _is_accountant_of_client(request.user, eng.client_profile) and not request.user.is_staff:
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+        data = request.data.copy()
+        data["engagement"] = eng.id
+        data["client_profile"] = eng.client_profile_id
+        serializer = DocumentRequestSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        req = serializer.save(created_by="accountant")
+        _audit(request, "document_request_created", "DocumentRequest", req.id,
+               client_profile=eng.client_profile, engagement=eng)
+        return Response(DocumentRequestSerializer(req).data, status=status.HTTP_201_CREATED)
+
+
+class DocumentRequestDetailView(APIView):
+    """PATCH /api/portal/document-requests/<id>/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        req = get_object_or_404(DocumentRequest, pk=pk)
+        if not _can_access_engagement(request.user, req.engagement):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = DocumentRequestSerializer(req, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        req = serializer.save()
+        return Response(DocumentRequestSerializer(req).data)
+
+
+# ── Document Upload & Review ──────────────────────────────────────────────────
+
+class ClientDocumentUploadView(APIView):
+    """POST /api/portal/documents/upload/"""
+    parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        serializer = ClientDocumentUploadSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        engagement     = serializer.validated_data["engagement"]
+        client_profile = serializer.validated_data["client_profile"]
+
+        # Permission: client or accountant can upload
+        if not _can_access_engagement(request.user, engagement):
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        # Verify client_profile belongs to engagement
+        if client_profile.id != engagement.client_profile_id:
+            return Response({"detail": "client_profile does not match engagement."}, status=status.HTTP_400_BAD_REQUEST)
+
+        uploaded_file = serializer.validated_data["file"]
+        doc = ClientDocument.objects.create(
+            engagement=engagement,
+            client_profile=client_profile,
+            document_request=serializer.validated_data.get("document_request"),
+            uploaded_by=request.user,
+            original_filename=uploaded_file.name,
+            file=uploaded_file,
+            mime_type=uploaded_file.content_type,
+            file_size=uploaded_file.size,
+            processing_status="uploaded",
+        )
+
+        _audit(request, "document_uploaded", "ClientDocument", doc.id,
+               client_profile=client_profile, engagement=engagement,
+               after={"filename": doc.original_filename, "size": doc.file_size})
+
+        # Update any linked document_request status
+        if doc.document_request:
+            req = doc.document_request
+            if req.status == "open":
+                req.status = "uploaded"
+                req.save(update_fields=["status"])
+
+        # Async extraction — run inline for now (Celery can be added later)
+        try:
+            from apps.portal.services.document_extraction import extract_from_document
+            extract_from_document(doc)
+        except Exception:
+            pass  # Extraction failure must never block the upload
+
+        return Response(ClientDocumentSerializer(doc, context={"request": request}).data, status=status.HTTP_201_CREATED)
+
+
+class EngagementDocumentsView(APIView):
+    """GET /api/portal/engagements/<id>/documents/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _can_access_engagement(request.user, eng):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        docs = ClientDocument.objects.filter(engagement=eng)
+        return Response(ClientDocumentSerializer(docs, many=True, context={"request": request}).data)
+
+
+class DocumentReviewView(APIView):
+    """PATCH /api/portal/documents/<id>/review/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        doc = get_object_or_404(ClientDocument, pk=pk)
+        if not _is_accountant_of_client(request.user, doc.client_profile) and not request.user.is_staff:
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        new_status = request.data.get("processing_status")
+        review_notes = request.data.get("review_notes", doc.review_notes)
+
+        if new_status:
+            allowed = [c[0] for c in ClientDocument.PROCESSING_STATUS_CHOICES]
+            if new_status not in allowed:
+                return Response({"detail": f"Invalid status. Choose from: {allowed}"}, status=status.HTTP_400_BAD_REQUEST)
+            doc.processing_status = new_status
+            doc.review_notes = review_notes
+            doc.save(update_fields=["processing_status", "review_notes"])
+
+            _audit(request, f"document_{new_status}", "ClientDocument", doc.id,
+                   client_profile=doc.client_profile, engagement=doc.engagement,
+                   after={"status": new_status, "notes": review_notes})
+
+        return Response(ClientDocumentSerializer(doc, context={"request": request}).data)
+
+
+# ── Extracted Income / Expense ────────────────────────────────────────────────
+
+class ExtractedIncomeView(APIView):
+    """GET + PATCH /api/portal/engagements/<id>/income/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _can_access_engagement(request.user, eng):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(ExtractedIncomeSerializer(eng.income_items.all(), many=True).data)
+
+    def post(self, request, pk):
+        """Manually add income row."""
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _can_access_engagement(request.user, eng):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        data = request.data.copy()
+        data["engagement"] = eng.id
+        data["client_profile"] = eng.client_profile_id
+        data["review_status"] = "manual"
+        serializer = ExtractedIncomeSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        income = serializer.save()
+        return Response(ExtractedIncomeSerializer(income).data, status=status.HTTP_201_CREATED)
+
+
+class ExtractedIncomeDetailView(APIView):
+    """PATCH /api/portal/income/<id>/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        income = get_object_or_404(ExtractedIncome, pk=pk)
+        if not _can_access_engagement(request.user, income.engagement):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        before_status = income.review_status
+        serializer = ExtractedIncomeSerializer(income, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        income = serializer.save()
+        if income.review_status != before_status:
+            _audit(request, f"income_{income.review_status}", "ExtractedIncome", income.id,
+                   client_profile=income.client_profile, engagement=income.engagement,
+                   before={"status": before_status}, after={"status": income.review_status})
+        return Response(ExtractedIncomeSerializer(income).data)
+
+
+class ExtractedExpenseView(APIView):
+    """GET + POST /api/portal/engagements/<id>/expenses/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _can_access_engagement(request.user, eng):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(ExtractedExpenseSerializer(eng.expense_items.all(), many=True).data)
+
+    def post(self, request, pk):
+        """Manually add expense row."""
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _can_access_engagement(request.user, eng):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        data = request.data.copy()
+        data["engagement"] = eng.id
+        data["client_profile"] = eng.client_profile_id
+        data["review_status"] = "manual"
+        serializer = ExtractedExpenseSerializer(data=data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        expense = serializer.save()
+        return Response(ExtractedExpenseSerializer(expense).data, status=status.HTTP_201_CREATED)
+
+
+class ExtractedExpenseDetailView(APIView):
+    """PATCH /api/portal/expenses/<id>/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        expense = get_object_or_404(ExtractedExpense, pk=pk)
+        if not _can_access_engagement(request.user, expense.engagement):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        before_status = expense.review_status
+        serializer = ExtractedExpenseSerializer(expense, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        expense = serializer.save()
+        if expense.review_status != before_status:
+            _audit(request, f"expense_{expense.review_status}", "ExtractedExpense", expense.id,
+                   client_profile=expense.client_profile, engagement=expense.engagement,
+                   before={"status": before_status}, after={"status": expense.review_status})
+        return Response(ExtractedExpenseSerializer(expense).data)
+
+
+# ── Actions ───────────────────────────────────────────────────────────────────
+
+class AccountantActionsView(APIView):
+    """
+    GET  /api/portal/engagements/<id>/actions/
+    POST /api/portal/engagements/<id>/generate-actions/
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _can_access_engagement(request.user, eng):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        actions = AccountantAction.objects.filter(engagement=eng).order_by("-priority", "-created_at")
+        return Response(AccountantActionSerializer(actions, many=True).data)
+
+    def post(self, request, pk):
+        """Generate actions (rule engine + AI suggestions)."""
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _is_accountant_of_client(request.user, eng.client_profile) and not request.user.is_staff:
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+        from apps.portal.services.accountant_actions import generate_accountant_actions
+        result = generate_accountant_actions(eng)
+        _audit(request, "actions_generated", "TaxEngagement", eng.id, engagement=eng)
+        return Response(result)
+
+
+class AccountantActionDetailView(APIView):
+    """PATCH /api/portal/actions/<id>/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        action = get_object_or_404(AccountantAction, pk=pk)
+        if not _can_access_engagement(request.user, action.engagement):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = AccountantActionSerializer(action, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        action = serializer.save()
+        return Response(AccountantActionSerializer(action).data)
+
+
+# ── Readiness ─────────────────────────────────────────────────────────────────
+
+class ReadinessView(APIView):
+    """POST /api/portal/engagements/<id>/recalculate-readiness/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _can_access_engagement(request.user, eng):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        from apps.portal.services.readiness import calculate_readiness
+        result = calculate_readiness(eng)
+        return Response(result)
+
+
+# ── Risks & Deductions ────────────────────────────────────────────────────────
+
+class RisksDeductionsView(APIView):
+    """GET /api/portal/engagements/<id>/risks/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _can_access_engagement(request.user, eng):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        result = _build_risks_and_deductions(eng)
+        return Response(result)
+
+
+def _build_risks_and_deductions(engagement) -> dict:
+    """
+    Build deduction opportunities and risk warnings for a given engagement.
+    Flags are: likely / needs_confirmation / not_enough_info / needs_accountant_review
+    """
+    profile = engagement.client_profile
+    ct = profile.client_type or "other"
+
+    checklist_map = {
+        item.stable_key: item.status
+        for item in ChecklistItem.objects.filter(engagement=engagement)
+    }
+
+    def has(key): return checklist_map.get(key) in ("accepted", "waived", "uploaded")
+
+    opportunities = []
+    risks = []
+
+    if ct == "zzp":
+        hours_ok = has("zzp_hours") or has("det_zzp_hours")
+        opportunities.append({
+            "id": "zelfstandigenaftrek",
+            "title": "Zelfstandigenaftrek €1,200",
+            "description": "Deduction for self-employed workers with 1,225+ hours/year.",
+            "confidence": "likely" if hours_ok else "needs_confirmation",
+            "rule_id": "ZA-2026-001",
+            "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/zelfstandigenaftrek/",
+        })
+        opportunities.append({
+            "id": "mkb_winstvrijstelling",
+            "title": "MKB-winstvrijstelling 12.7%",
+            "description": "12.7% profit exemption after ondernemersaftrek. No hours requirement.",
+            "confidence": "likely",
+            "rule_id": "MKB-2026-001",
+            "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/mkb_winstvrijstelling/",
+        })
+        kia_ok = has("zzp_kia")
+        opportunities.append({
+            "id": "kia",
+            "title": "Kleinschaligheidsinvesteringsaftrek (KIA) 28%",
+            "description": "28% deduction on business investments €2,901–€70,602.",
+            "confidence": "needs_confirmation" if kia_ok else "not_enough_info",
+            "rule_id": "KIA-2026-001",
+            "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/investeringsaftrek/kleinschaligheidsinvesteringsaftrek/",
+        })
+        pension_ok = has("zzp_pension")
+        opportunities.append({
+            "id": "lijfrente",
+            "title": "Pension / lijfrente jaarruimte",
+            "description": "ZZP workers can deduct voluntary pension premiums (30% × (income − €19,172)).",
+            "confidence": "needs_confirmation" if pension_ok else "not_enough_info",
+            "rule_id": "LR-2026-001",
+            "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/",
+        })
+        opportunities.append({
+            "id": "zvw_reminder",
+            "title": "ZVW bijdrage 4.85%",
+            "description": "Health insurance contribution on ZZP profit — often forgotten. Max €3,851/year.",
+            "confidence": "likely",
+            "rule_id": "ZVW-2026-001",
+            "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/",
+        })
+        # Wet DBA risk
+        wetdba_ok = has("zzp_wet_dba_clients")
+        risks.append({
+            "id": "wet_dba",
+            "title": "Wet DBA enforcement risk",
+            "description": "Active enforcement since Jan 2025. Single client >65% = medium risk.",
+            "level": "needs_confirmation" if wetdba_ok else "not_enough_info",
+            "rule_id": "WD-2026-001",
+            "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/ondernemen/",
+        })
+        if not has("zzp_hours"):
+            risks.append({
+                "id": "hours_missing",
+                "title": "Hours registration not confirmed",
+                "description": "Zelfstandigenaftrek is at risk if 1,225 hours cannot be proven.",
+                "level": "needs_accountant_review",
+                "rule_id": "ZA-2026-001",
+                "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/zelfstandigenaftrek/",
+            })
+
+    elif ct == "employee":
+        if not has("emp_jaaropgave"):
+            risks.append({
+                "id": "jaaropgave_missing",
+                "title": "Jaaropgave not received",
+                "description": "Cannot complete IB return without the annual income statement.",
+                "level": "needs_accountant_review",
+                "rule_id": "BR1-2026-001",
+                "source_url": "https://www.belastingdienst.nl",
+            })
+        pension_ok = has("emp_pension")
+        opportunities.append({
+            "id": "lijfrente",
+            "title": "Pension / lijfrente deduction",
+            "description": "Voluntary pension premiums may be deductible via jaarruimte calculation.",
+            "confidence": "needs_confirmation" if pension_ok else "not_enough_info",
+            "rule_id": "LR-2026-001",
+            "source_url": "https://www.belastingdienst.nl",
+        })
+        mortgage_ok = has("emp_mortgage")
+        opportunities.append({
+            "id": "mortgage_interest",
+            "title": "Hypotheekrenteaftrek",
+            "description": "Mortgage interest deduction if client is homeowner.",
+            "confidence": "likely" if mortgage_ok else "not_enough_info",
+            "rule_id": "BR1-2026-001",
+            "source_url": "https://www.belastingdienst.nl",
+        })
+        box3 = has("emp_box3_bank") or has("emp_box3_investments")
+        opportunities.append({
+            "id": "box3_exemption",
+            "title": "Box 3 exemption €59,357",
+            "description": "Assets below €59,357/person are exempt from Box 3 wealth tax.",
+            "confidence": "needs_confirmation" if box3 else "not_enough_info",
+            "rule_id": "B3R-2026-001",
+            "source_url": "https://www.belastingdienst.nl",
+        })
+
+    elif ct == "expat":
+        ruling_ok = has("exp_30pct_ruling")
+        opportunities.append({
+            "id": "30pct_ruling",
+            "title": "30% ruling expat exemption",
+            "description": "Years 1-3: 30%, Year 4: 20%, Year 5: 10% exemption on salary.",
+            "confidence": "likely" if ruling_ok else "needs_confirmation",
+            "rule_id": "EXP-2026-001",
+            "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/werk_en_inkomen/buitenlandse_werknemers_in_nederland/",
+        })
+        mform_ok = has("exp_m_form")
+        risks.append({
+            "id": "m_form",
+            "title": "M-form for partial-year resident",
+            "description": "If arrived after 1 Jan, M-form applies. Risk of incorrect form type.",
+            "level": "needs_confirmation" if mform_ok else "needs_accountant_review",
+            "rule_id": "DL-2026-002",
+            "source_url": "https://www.belastingdienst.nl",
+        })
+        foreign_assets = has("exp_foreign_assets")
+        risks.append({
+            "id": "foreign_assets",
+            "title": "Foreign assets Box 3 reporting",
+            "description": "Foreign bank accounts and property must be reported on 1 January reference date.",
+            "level": "needs_confirmation" if foreign_assets else "not_enough_info",
+            "rule_id": "B3R-2026-001",
+            "source_url": "https://www.belastingdienst.nl",
+        })
+
+    elif ct == "dga":
+        salary_ok = has("dga_salary") or has("det_dga_salary")
+        risks.append({
+            "id": "gebruikelijk_loon",
+            "title": "Gebruikelijk loon €56,000 minimum",
+            "description": "DGA must pay at least €56,000 salary. Lower = risk of Belastingdienst correction.",
+            "level": "needs_confirmation" if salary_ok else "needs_accountant_review",
+            "rule_id": "DGA-2026-001",
+            "source_url": "https://www.belastingdienst.nl",
+        })
+        dividend_ok = has("dga_dividend")
+        opportunities.append({
+            "id": "dividend_box2",
+            "title": "Box 2 dividend — 24.5% up to €68,843",
+            "description": "Lower Box 2 rate applies on first €68,843 of dividend income.",
+            "confidence": "likely" if dividend_ok else "needs_confirmation",
+            "rule_id": "B2R-2026-001",
+            "source_url": "https://www.belastingdienst.nl",
+        })
+
+    return {
+        "client_type": ct,
+        "opportunities": opportunities,
+        "risks": risks,
+    }
+
+
+# ── Reminder / Notification ───────────────────────────────────────────────────
+
+class PortalReminderView(APIView):
+    """POST /api/portal/engagements/<id>/send-reminder/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _is_accountant_of_client(request.user, eng.client_profile) and not request.user.is_staff:
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+
+        profile = eng.client_profile
+        lang = profile.preferred_language or "en"
+
+        # Build missing items list
+        missing = list(ChecklistItem.objects.filter(
+            engagement=eng, required=True, status__in=("todo", "waiting_client", "rejected")
+        ).values_list("title", flat=True))
+
+        SUBJECT = {
+            "nl": f"Ontbrekende documenten voor uw belastingaangifte {eng.tax_year}",
+            "en": f"Missing information for your Dutch tax file {eng.tax_year}",
+            "fa": f"اطلاعات ناقص برای پرونده مالیاتی {eng.tax_year} شما",
+        }
+        GREETING = {
+            "nl": f"Beste {profile.first_name or 'klant'},",
+            "en": f"Dear {profile.first_name or 'client'},",
+            "fa": f"با احترام {profile.first_name or 'مشتری گرامی'},",
+        }
+        INTRO = {
+            "nl": f"Voor uw belastingaangifte {eng.tax_year} hebben wij nog de volgende informatie nodig:",
+            "en": f"We still need the following items for your {eng.tax_year} tax file:",
+            "fa": f"برای پرونده مالیاتی {eng.tax_year} شما هنوز به موارد زیر نیاز داریم:",
+        }
+        CLOSING = {
+            "nl": "Upload deze documenten via uw TaxWijs client portal.\n\nMet vriendelijke groet,\n{accountant}",
+            "en": "Please upload them through your TaxWijs client portal.\n\nKind regards,\n{accountant}",
+            "fa": "لطفاً آن‌ها را از طریق پورتال TaxWijs آپلود کنید.\n\nبا احترام،\n{accountant}",
+        }
+
+        accountant_name = request.user.get_full_name() or request.user.email
+        items_text = "\n".join(f"• {item}" for item in missing) if missing else "—"
+
+        body = (
+            f"{GREETING[lang]}\n\n"
+            f"{INTRO[lang]}\n\n"
+            f"{items_text}\n\n"
+            f"{CLOSING[lang].format(accountant=accountant_name)}"
+        )
+
+        # TODO: wire into Resend/email sending — for now log and return preview
+        _audit(request, "reminder_sent", "TaxEngagement", eng.id,
+               client_profile=profile, engagement=eng,
+               after={"missing_count": len(missing), "lang": lang})
+
+        return Response({
+            "subject": SUBJECT[lang],
+            "body": body,
+            "recipient": profile.email,
+            "missing_count": len(missing),
+            "sent": False,  # True once email integration is wired
+            "preview": True,
+        })
+
+
+# ── Audit Log ─────────────────────────────────────────────────────────────────
+
+class AuditLogView(APIView):
+    """GET /api/portal/engagements/<id>/audit/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _is_accountant_of_client(request.user, eng.client_profile) and not request.user.is_staff:
+            return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+        logs = PortalAuditLog.objects.filter(engagement=eng).order_by("-created_at")[:100]
+        return Response(PortalAuditLogSerializer(logs, many=True).data)
+
+
+# ── Client Portal views (self-service) ───────────────────────────────────────
+
+class ClientPortalProfileView(APIView):
+    """GET /api/portal/client/profile/  — returns the client's own portal profile."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            profile = AccountantClientProfile.objects.get(client_user=request.user)
+        except AccountantClientProfile.DoesNotExist:
+            return Response({"detail": "No client portal profile found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(AccountantClientProfileSerializer(profile, context={"request": request}).data)
+
+
+class ClientPortalEngagementView(APIView):
+    """GET /api/portal/client/engagement/  — client's active engagement."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            profile = AccountantClientProfile.objects.get(client_user=request.user)
+        except AccountantClientProfile.DoesNotExist:
+            return Response({"detail": "No client portal profile found."}, status=status.HTTP_404_NOT_FOUND)
+        engagement = profile.engagements.order_by("-created_at").first()
+        if not engagement:
+            return Response({"detail": "No engagement found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(TaxEngagementSerializer(engagement, context={"request": request}).data)
+
+
+class ClientPortalTasksView(APIView):
+    """GET /api/portal/client/tasks/  — open document requests + checklist items for client."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            profile = AccountantClientProfile.objects.get(client_user=request.user)
+        except AccountantClientProfile.DoesNotExist:
+            return Response({"detail": "No client portal profile found."}, status=status.HTTP_404_NOT_FOUND)
+
+        engagement = profile.engagements.order_by("-created_at").first()
+        if not engagement:
+            return Response({"tasks": [], "total": 0, "completed": 0})
+
+        open_requests = DocumentRequest.objects.filter(
+            engagement=engagement, status__in=("open", "rejected")
+        )
+        checklist_todo = ChecklistItem.objects.filter(
+            engagement=engagement, status__in=("todo", "waiting_client", "rejected")
+        )
+
+        tasks = []
+        for req in open_requests:
+            tasks.append({
+                "id": f"req_{req.id}",
+                "type": "document_request",
+                "title": req.title,
+                "description": req.description,
+                "required": req.required,
+                "status": req.status,
+                "due_date": str(req.due_date) if req.due_date else None,
+            })
+        for item in checklist_todo:
+            tasks.append({
+                "id": f"chk_{item.id}",
+                "type": "checklist",
+                "title": item.title,
+                "description": item.description,
+                "required": item.required,
+                "status": item.status,
+                "due_date": None,
+            })
+
+        total = (
+            DocumentRequest.objects.filter(engagement=engagement, required=True).count() +
+            ChecklistItem.objects.filter(engagement=engagement, required=True).count()
+        )
+        completed = (
+            DocumentRequest.objects.filter(engagement=engagement, required=True, status__in=("accepted","waived")).count() +
+            ChecklistItem.objects.filter(engagement=engagement, required=True, status__in=("accepted","waived")).count()
+        )
+
+        return Response({
+            "tasks": tasks,
+            "total": total,
+            "completed": completed,
+            "readiness_score": engagement.readiness_score,
+        })
+
+
+class ClientPortalDocumentsView(APIView):
+    """GET /api/portal/client/documents/"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            profile = AccountantClientProfile.objects.get(client_user=request.user)
+        except AccountantClientProfile.DoesNotExist:
+            return Response({"detail": "No client portal profile found."}, status=status.HTTP_404_NOT_FOUND)
+        docs = ClientDocument.objects.filter(client_profile=profile).order_by("-created_at")
+        return Response(ClientDocumentSerializer(docs, many=True, context={"request": request}).data)
