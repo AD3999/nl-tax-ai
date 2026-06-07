@@ -1,7 +1,109 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 4 Jun 2026 — Deduction Checker v2, dark theme toggle, TaxRule pagination fix.
+> Last updated: 7 Jun 2026 — Google Sign-In switched to redirect-based OAuth2 (popup removed).
+
+---
+
+## Session — 7 Jun 2026 (part 2) ✅ Complete
+
+### Google Sign-In — replaced popup with redirect-based OAuth2 flow
+
+**Problem:** Popup-based GIS flow (`requestAccessToken()`) silently fails on mobile browsers and strict popup blockers. User clicks button, popup is blocked or silently fails, nothing happens — no error shown.
+
+**Fix:** Replaced the entire GIS library approach with standard OAuth2 redirect flow.
+
+**How it works now:**
+1. Click "Continue with Google" → `window.location.href = https://accounts.google.com/o/oauth2/v2/auth?response_type=token&...`
+2. User authenticates on Google's own page (no popup needed, no origin restriction)
+3. Google redirects to `https://taxwijs.nl/auth/google/callback#access_token=ya29.xxx`
+4. New `GoogleCallbackPage.tsx` reads the token from the URL hash, calls backend, redirects to dashboard
+
+**Files changed:**
+- `frontend/index.html` — removed `<script src="https://accounts.google.com/gsi/client">` (no longer needed)
+- `frontend/src/pages/GoogleCallbackPage.tsx` — NEW: handles Google redirect, calls `googleAuth()`, navigates to post-auth destination
+- `frontend/src/pages/LoginPage.tsx` — `handleGoogle` now redirects to Google; shows errors passed back via `?google_error=` param
+- `frontend/src/pages/RegisterPage.tsx` — same; stores selected `userType` in sessionStorage before redirect so callback page can pass it to backend
+- `frontend/src/App.tsx` — added `<Route path="/auth/google/callback">` with lazy-loaded `GoogleCallbackPage`
+- `frontend/src/types/google.d.ts` — cleared GIS types (no longer used)
+
+**Required Google Console action (one-time):**
+| Where | What to add |
+|-------|-------------|
+| Google Cloud Console → Credentials → OAuth 2.0 Client → **Authorized redirect URIs** | `https://taxwijs.nl/auth/google/callback` |
+| Same field | `https://nl-tax-ai-production.up.railway.app/auth/google/callback` |
+
+> ⚠ This uses **Authorized redirect URIs** (NOT JavaScript origins). That's a different field.
+> JavaScript origins can be removed once redirect URIs are added.
+
+**Note on free Google Cloud trial:** OAuth 2.0 is always free regardless of billing status. No credits are consumed by authentication.
+
+---
+
+## Session — 7 Jun 2026 (part 1) ✅ Complete
+
+### Google Sign-In — full production diagnosis
+
+**Symptom reported:** Google Sign-In silently fails on Railway. User completes Google auth (popup opens, confirms), popup closes, user lands back on login page with zero error messages.
+
+**Root cause identified:** The Railway production domain is NOT in the OAuth 2.0 client's **Authorized JavaScript origins** in Google Cloud Console.
+
+How the failure happens:
+1. `requestAccessToken()` opens Google's popup ✓
+2. User confirms on Google's auth page ✓
+3. Google checks the requesting JavaScript origin against Authorized JavaScript origins
+4. Origin not authorized → Google silently drops the token, never calls the GIS callback
+5. Popup closes → user is back on login page → no error shown, no navigation → exactly matches symptom
+
+**Why no error is shown:** The GIS Token Client callback is never invoked when the origin is unauthorized — there is no error code to handle. The code's `if (resp.error)` check never runs because `resp` never arrives.
+
+**Required manual action (not in code):**
+| Where | Action |
+|-------|--------|
+| Google Cloud Console → Credentials → OAuth 2.0 Client `1051653351506-...` | Add `https://<railway-domain>.up.railway.app` to **Authorized JavaScript origins** |
+| Same client | Add custom domain (e.g. `https://taxwijs.nl`) if in use |
+
+> **Token/Implicit flow only needs JavaScript origins — NOT redirect URIs.** These are separate fields in the console.
+
+**Railway env vars checklist confirmed:**
+| Variable | Status |
+|---|---|
+| `VITE_GOOGLE_CLIENT_ID` | Must be set as Railway build-time env var (gitignored `.env` not committed) |
+| `VITE_API_URL` | Leave **empty** — same-origin serving via WhiteNoise, `/api` is correct |
+| `DJANGO_SECRET_KEY`, `DATABASE_URL`, `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, `DEBUG=False` | Standard Railway backend vars |
+
+---
+
+### Bug fix: DashboardPage auth race condition on hard refresh
+
+**Problem:** `DashboardPage.tsx` had:
+```js
+const { user } = useAuth();
+useEffect(() => {
+  if (!user) { navigate("/login"); return; }
+  ...
+}, [user]);
+```
+
+On hard refresh to `/dashboard`:
+1. App mounts → AuthContext starts `fetchProfile()` → `loading=true`, `user=null`
+2. DashboardPage renders → `useEffect` fires → `!user` is true → `navigate("/login")`
+3. User is kicked to login even though they have a valid JWT in localStorage
+4. `loading` was not in the dependency array either, so even when `loading` flipped to `false` with `user` set, the effect would not re-run to fetch data
+
+**Fix applied (`frontend/src/pages/DashboardPage.tsx`):**
+```js
+const { user, loading } = useAuth();
+useEffect(() => {
+  if (loading) return;           // wait for auth check to finish
+  if (!user) { navigate("/login"); return; }
+  ...
+}, [user, loading]);
+```
+
+**Note:** This was not the cause of the Google sign-in bug (soft navigation via `navigate()` has `user` already set via `setUser()` before navigating). But it IS a real bug that affects bookmarked `/dashboard` URLs and F5 refresh.
+
+**Files changed:** `frontend/src/pages/DashboardPage.tsx`
 
 ---
 

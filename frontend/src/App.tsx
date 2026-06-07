@@ -67,6 +67,8 @@ const ExpatTaxPage         = lazy(() => import("./pages/ExpatTaxPage"));
 const TaxCalendarPage      = lazy(() => import("./pages/TaxCalendarPage"));
 const AccountantPage       = lazy(() => import("./pages/AccountantPage"));
 
+const GoogleCallbackPage   = lazy(() => import("./pages/GoogleCallbackPage"));
+
 const AdminDashboard       = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminUsersPage       = lazy(() => import("./pages/admin/AdminUsersPage"));
 const AdminChatLogsPage    = lazy(() => import("./pages/admin/AdminChatLogsPage"));
@@ -116,6 +118,7 @@ function App() {
           <Route path="/"                      element={<LandingPage />} />
           <Route path="/login"               element={<LoginPage />} />
           <Route path="/register"            element={<RegisterPage />} />
+          <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
           <Route path="/chat"                element={<ChatPage />} />
           <Route path="/intake"              element={<IntakePage />} />
           <Route path="/ib-guide"            element={<IBGuidePage />} />

@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { register, login, googleAuth, fetchProfile } from "../api/auth";
+import { register, login, fetchProfile } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 import Wordmark from "../components/Wordmark";
 import { Icon } from "../components/Icon";
@@ -41,11 +41,21 @@ export default function RegisterPage() {
   const isMobile = useMobile();
   const lang = i18n.language as "nl" | "en" | "fa";
 
+  const [searchParams] = useSearchParams();
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [userType, setUserType] = useState<UTK>("zzp");
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
+
+  // Show errors passed back from the Google callback page
+  useEffect(() => {
+    const googleError = searchParams.get("google_error");
+    if (googleError) {
+      const base = lang === "nl" ? "Google-registratie mislukt" : lang === "fa" ? "ثبت‌نام با گوگل ناموفق بود" : "Google sign-up failed";
+      setError(`${base} (${googleError})`);
+    }
+  }, [searchParams, lang]);
 
   const handleGoogle = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
@@ -53,53 +63,17 @@ export default function RegisterPage() {
       setError("Google Client ID not configured — set VITE_GOOGLE_CLIENT_ID in Railway env vars");
       return;
     }
-    if (!window.google?.accounts?.oauth2) {
-      setError("Google sign-in is still loading — please try again in a moment");
-      return;
-    }
-    try {
-      const gClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: clientId,
-        scope: "email profile",
-        callback: (resp: { error?: string; access_token?: string }) => {
-          if (resp.error) {
-            const base = lang === "nl" ? "Google-registratie mislukt" : lang === "fa" ? "ثبت‌نام با گوگل ناموفق بود" : "Google sign-up failed";
-            setError(`${base} (${resp.error})`);
-            return;
-          }
-          if (!resp.access_token) {
-            setError("Google sign-up returned no token — please try again");
-            return;
-          }
-          setLoading(true);
-          setError("");
-          googleAuth(resp.access_token, userType)
-            .then(() => fetchProfile())
-            .then((profile) => {
-              if (!profile) throw new Error("profile_null");
-              setUser(profile);
-              if (profile.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
-              showToast(
-                lang === "nl" ? "Account aangemaakt — welkom bij TaxWijs" : lang === "fa" ? "حساب ایجاد شد — به TaxWijs خوش آمدید" : "Account created — welcome to TaxWijs",
-                "success",
-              );
-              navigate("/intake");
-            })
-            .catch((err: unknown) => {
-              const code = (err instanceof Error ? err.message : String(err)) || "unknown";
-              const base = lang === "nl" ? "Google-registratie mislukt" : lang === "fa" ? "ثبت‌نام با گوگل ناموفق بود" : "Google sign-up failed";
-              const msg = `${base} (${code})`;
-              setError(msg);
-              showToast(msg, "error");
-            })
-            .finally(() => setLoading(false));
-        },
-      });
-      gClient.requestAccessToken();
-    } catch (err: unknown) {
-      const code = err instanceof Error ? err.message : String(err);
-      setError(`Google sign-up error: ${code}`);
-    }
+    // Persist user_type across the redirect so the callback can pass it to the backend
+    sessionStorage.setItem("google_auth_user_type", userType);
+    sessionStorage.setItem("google_auth_redirect", "/intake");
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: `${window.location.origin}/auth/google/callback`,
+      response_type: "token",
+      scope: "openid email profile",
+      include_granted_scopes: "true",
+    });
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
   };
 
   const EMAIL_TAKEN: Record<string, string> = {

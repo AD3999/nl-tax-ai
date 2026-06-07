@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { login, googleAuth, fetchProfile } from "../api/auth";
+import { login, fetchProfile } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 import Wordmark from "../components/Wordmark";
 import { Icon } from "../components/Icon";
@@ -16,10 +16,20 @@ export default function LoginPage() {
   const isMobile = useMobile();
   const lang = i18n.language as "nl" | "en" | "fa";
 
+  const [searchParams] = useSearchParams();
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [error, setError]       = useState("");
   const [loading, setLoading]   = useState(false);
+
+  // Show errors passed back from the Google callback page
+  useEffect(() => {
+    const googleError = searchParams.get("google_error");
+    if (googleError) {
+      const base = lang === "nl" ? "Google-inloggen mislukt" : lang === "fa" ? "ورود با گوگل ناموفق بود" : "Google sign-in failed";
+      setError(`${base} (${googleError})`);
+    }
+  }, [searchParams, lang]);
 
   const handleGoogle = () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
@@ -27,62 +37,16 @@ export default function LoginPage() {
       setError("Google Client ID not configured — set VITE_GOOGLE_CLIENT_ID in Railway env vars");
       return;
     }
-    // Check for the full OAuth2 API, not just window.google stub
-    if (!window.google?.accounts?.oauth2) {
-      setError("Google sign-in is still loading — please try again in a moment");
-      return;
-    }
-    try {
-      const gClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: clientId,
-        scope: "email profile",
-        error_callback: (err: { type: string; message?: string }) => {
-          if (err.type === "popup_closed") return; // user dismissed — no error to show
-          const base = lang === "nl" ? "Google-inloggen mislukt" : lang === "fa" ? "ورود با گوگل ناموفق بود" : "Google sign-in failed";
-          const detail = err.type === "popup_failed_to_open"
-            ? (lang === "nl" ? "sta pop-ups toe in uw browser" : lang === "fa" ? "لطفاً پاپ‌آپ را در مرورگر فعال کنید" : "allow pop-ups in your browser")
-            : (err.message || err.type);
-          setError(`${base} — ${detail}`);
-        },
-        callback: (resp: { error?: string; access_token?: string }) => {
-          if (resp.error) {
-            const base = lang === "nl" ? "Google-inloggen mislukt" : lang === "fa" ? "ورود با گوگل ناموفق بود" : "Google sign-in failed";
-            setError(`${base} (${resp.error})`);
-            return;
-          }
-          if (!resp.access_token) {
-            setError("Google sign-in returned no token — please try again");
-            return;
-          }
-          setLoading(true);
-          setError("");
-          googleAuth(resp.access_token)
-            .then(() => fetchProfile())
-            .then((profile) => {
-              if (!profile) throw new Error("profile_null");
-              setUser(profile);
-              if (profile.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
-              showToast(
-                lang === "nl" ? "Ingelogd — welkom terug" : lang === "fa" ? "وارد شدید — خوش آمدید" : "Logged in — welcome back",
-                "success",
-              );
-              navigate("/dashboard");
-            })
-            .catch((err: unknown) => {
-              const code = (err instanceof Error ? err.message : String(err)) || "unknown";
-              const base = lang === "nl" ? "Google-inloggen mislukt" : lang === "fa" ? "ورود با گوگل ناموفق بود" : "Google sign-in failed";
-              const msg = `${base} (${code})`;
-              setError(msg);
-              showToast(msg, "error");
-            })
-            .finally(() => setLoading(false));
-        },
-      });
-      gClient.requestAccessToken();
-    } catch (err: unknown) {
-      const code = err instanceof Error ? err.message : String(err);
-      setError(`Google sign-in error: ${code}`);
-    }
+    sessionStorage.setItem("google_auth_user_type", "zzp");
+    sessionStorage.setItem("google_auth_redirect", "/dashboard");
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: `${window.location.origin}/auth/google/callback`,
+      response_type: "token",
+      scope: "openid email profile",
+      include_granted_scopes: "true",
+    });
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
   };
 
   const LOGIN_ERR: Record<string, string> = {
