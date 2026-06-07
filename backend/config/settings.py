@@ -3,6 +3,7 @@ Django settings for nl-tax-ai backend.
 Reads all secrets from environment variables via django-environ.
 """
 
+import os
 import sys
 import environ
 from pathlib import Path
@@ -26,11 +27,15 @@ if _env_file.exists():
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="dev-secret-key-change-in-production")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
-# Railway's internal health checker makes requests BEFORE custom-domain routing is active,
-# so the Host header will be the Railway-internal hostname, not taxwijs.nl.
-# Add internal patterns so Django never returns 400 during healthchecks.
+# Railway's healthchecker (User-Agent: RailwayHealthCheck/1.0) sends requests with the
+# Railway-generated domain as the Host header, NOT the custom domain (taxwijs.nl).
+# Railway auto-sets RAILWAY_PUBLIC_DOMAIN to that generated hostname, so we add it here.
 if "*" not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS += [".railway.internal", "localhost", "127.0.0.1"]
+    _railway_public = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
+    _extras = filter(None, [_railway_public, ".railway.internal", "localhost", "127.0.0.1"])
+    for _host in _extras:
+        if _host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(_host)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
