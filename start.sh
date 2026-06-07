@@ -22,9 +22,10 @@ else:
     print('  tax_rules_2026.json not found — skipping')
 "
 
-echo "==> Starting gunicorn…"
+echo "==> Starting gunicorn on port ${PORT:-8000}…"
 exec python3 -m gunicorn config.wsgi:application \
   --bind "0.0.0.0:${PORT:-8000}" \
   --workers 2 \
   --timeout 120 \
-  --log-level info
+  --log-level info \
+  --access-logfile -

@@ -11,7 +11,9 @@ from .actions import generate_actions
 
 
 class HealthView(APIView):
+    authentication_classes = []
     permission_classes = [permissions.AllowAny]
+    throttle_classes = []
 
     def get(self, request):
         return Response({"status": "ok"})

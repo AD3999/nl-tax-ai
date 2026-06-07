@@ -26,6 +26,11 @@ if _env_file.exists():
 SECRET_KEY = env("DJANGO_SECRET_KEY", default="dev-secret-key-change-in-production")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
+# Railway's internal health checker makes requests BEFORE custom-domain routing is active,
+# so the Host header will be the Railway-internal hostname, not taxwijs.nl.
+# Add internal patterns so Django never returns 400 during healthchecks.
+if "*" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS += [".railway.internal", "localhost", "127.0.0.1"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
