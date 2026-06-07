@@ -36,6 +36,14 @@ export default function LoginPage() {
       const gClient = window.google.accounts.oauth2.initTokenClient({
         client_id: clientId,
         scope: "email profile",
+        error_callback: (err: { type: string; message?: string }) => {
+          if (err.type === "popup_closed") return; // user dismissed — no error to show
+          const base = lang === "nl" ? "Google-inloggen mislukt" : lang === "fa" ? "ورود با گوگل ناموفق بود" : "Google sign-in failed";
+          const detail = err.type === "popup_failed_to_open"
+            ? (lang === "nl" ? "sta pop-ups toe in uw browser" : lang === "fa" ? "لطفاً پاپ‌آپ را در مرورگر فعال کنید" : "allow pop-ups in your browser")
+            : (err.message || err.type);
+          setError(`${base} — ${detail}`);
+        },
         callback: (resp: { error?: string; access_token?: string }) => {
           if (resp.error) {
             const base = lang === "nl" ? "Google-inloggen mislukt" : lang === "fa" ? "ورود با گوگل ناموفق بود" : "Google sign-in failed";

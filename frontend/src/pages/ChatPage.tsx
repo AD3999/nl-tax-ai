@@ -305,7 +305,8 @@ export default function ChatPage() {
 
     const history = messages
       .filter(m => m.id !== "intake-greeting")
-      .map(m => ({ role: m.role, content: m.content }));
+      .map(m => ({ role: m.role, content: m.content }))
+      .slice(-40); // backend uses last 10; cap at 40 to stay within serializer limit
 
     abortRef.current = new AbortController();
     let fullResponse = "";

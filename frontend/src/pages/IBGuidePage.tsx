@@ -46,6 +46,8 @@ const CARD_TX: Record<Lang, {
   profile_label: string;
   open_intro: string;
   open_outro: string;
+  last_year_warn: string;
+  source_link: string;
 }> = {
   nl: {
     headline_1: "De velden die tellen,",
@@ -65,6 +67,8 @@ const CARD_TX: Record<Lang, {
     profile_label: "profiel",
     open_intro: "Mijn ingevulde IB-aangifte velden:",
     open_outro: "Kunt u mij helpen mijn belastingsituatie te begrijpen op basis van deze gegevens?",
+    last_year_warn: "⚠ Laatste jaar 2026",
+    source_link: "Belastingdienst",
   },
   en: {
     headline_1: "The fields that matter,",
@@ -84,6 +88,8 @@ const CARD_TX: Record<Lang, {
     profile_label: "profile",
     open_intro: "My completed IB return fields:",
     open_outro: "Can you help me understand my tax situation based on these answers?",
+    last_year_warn: "⚠ Last year 2026",
+    source_link: "Tax authority",
   },
   fa: {
     headline_1: "فیلدهایی که اهمیت دارند،",
@@ -103,6 +109,8 @@ const CARD_TX: Record<Lang, {
     profile_label: "پروفایل",
     open_intro: "پاسخ‌های اظهارنامه مالیاتی من:",
     open_outro: "آیا می‌توانید بر اساس این اطلاعات به من کمک کنید وضعیت مالیاتی‌ام را بفهمم؟",
+    last_year_warn: "⚠ آخرین سال ۲۰۲۶",
+    source_link: "سازمان مالیاتی",
   },
 };
 
@@ -136,7 +144,7 @@ function IBFieldCard({
             </span>
             <span style={{ fontFamily: "var(--mono)", fontSize: 11.5, color: "var(--ink-3)" }}>{field.field_code}</span>
             <span style={{ fontFamily: "var(--serif)", fontSize: 18, color: "var(--ink)" }}>{field.official_label_nl}</span>
-            {isWarn && <span className="pill pill-warn">⚠ Last year 2026</span>}
+            {isWarn && <span className="pill pill-warn">{tx.last_year_warn}</span>}
           </div>
           {answered && (
             <span style={{ width: 22, height: 22, borderRadius: 999, background: "var(--sage-600)", color: "white", display: "grid", placeItems: "center", flexShrink: 0 }}>
@@ -211,7 +219,7 @@ function IBFieldCard({
           rel="noreferrer"
           style={{ fontSize: 11.5, color: "var(--ink-3)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
         >
-          Belastingdienst <Icon.external style={{ width: 10, height: 10 }} />
+          {tx.source_link} <Icon.external style={{ width: 10, height: 10 }} />
         </a>
         <button className="btn btn-soft btn-sm" type="button" onClick={() => onAsk(field)}>
           <Icon.spark style={{ width: 12, height: 12 }} /> {tx.ask}
