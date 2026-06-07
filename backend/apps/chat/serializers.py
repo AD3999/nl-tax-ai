@@ -31,7 +31,7 @@ class ChatMessageSerializer(serializers.Serializer):
         child=serializers.DictField(),
         required=False,
         default=list,
-        max_length=100,
+        max_length=500,
     )
     session_message_count = serializers.IntegerField(required=False, default=0, min_value=0)
     intake_mode = serializers.BooleanField(required=False, default=False)
