@@ -1,7 +1,101 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 8 Jun 2026 — Accountant profile (Option A): role field, AccountantProfile expansion, registration flow.
+> Last updated: 8 Jun 2026 — Accountant invitation system + Web Push notifications.
+
+---
+
+## Session — 8 Jun 2026 (part 6) ✅ Complete — branch feat/accountant-invitations → merged
+
+### Accountant-to-client invitation system + Web Push notifications
+
+**Architecture decision:** Accountant-initiated flow. Accountant sends invite by email → client sees
+banner on their dashboard → client accepts or declines → accountant is notified. On accept, the
+`AccountantClient` link is created automatically. No email sent (in-app + push only, for now).
+
+---
+
+**Backend — new models (migration 0009):**
+
+`AccountantInvitation` — `accountant → invited_email → client_user (nullable) → status`
+- Statuses: `pending / accepted / declined / cancelled`
+- `UniqueConstraint` prevents duplicate pending invites for the same email
+- When a registered user's email matches, `client_user` FK is set at creation
+- Invitations sent before user registration are linked on first `/client/invitations/` fetch
+
+`PushSubscription` — one row per browser/device per user
+- Stores `endpoint`, `p256dh`, `auth` from Web Push API
+- Expired subscriptions (HTTP 404/410) are auto-deleted on push failure
+
+**Backend — new utility:**
+
+`push_utils.py` — `send_push_notification(user, title, body, url)`
+- Uses `pywebpush` (VAPID)
+- Dev-safe: silently skips if `VAPID_PRIVATE_KEY` not set
+- Reads `VAPID_PRIVATE_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_CLAIMS_EMAIL` from env
+
+**Required env vars (production):**
+```
+VAPID_PRIVATE_KEY=<base64url EC P-256 private key>
+VAPID_PUBLIC_KEY=<base64url EC P-256 public key>
+VAPID_CLAIMS_EMAIL=admin@taxwijs.nl
+```
+Generate with: `python -c "from py_vapid import Vapid; v=Vapid(); v.generate_keys(); print(v.private_pem().decode())"`
+
+**Backend — new endpoints:**
+```
+POST   /api/users/accountant/invitations/            send invitation (accountant)
+GET    /api/users/accountant/invitations/            list sent invitations + status
+DELETE /api/users/accountant/invitations/<pk>/       cancel pending invitation
+GET    /api/users/client/invitations/                list pending invitations (client)
+POST   /api/users/client/invitations/<pk>/respond/   accept or decline
+GET    /api/users/push/vapid-key/                    serve VAPID public key
+POST   /api/users/push/subscribe/                    register push subscription
+DELETE /api/users/push/subscribe/                    unsubscribe
+```
+
+**Push notification triggers:**
+- Accountant sends invite → push to client (if registered)
+- Client accepts → push to accountant ("Invitation accepted")
+- Client declines → push to accountant ("Invitation declined")
+
+---
+
+**Frontend — new files:**
+
+`frontend/public/sw.js` — service worker
+- Handles `push` events → shows notification with title/body/icon
+- Handles `notificationclick` → focuses existing tab or opens new window
+
+`frontend/src/hooks/usePushNotifications.ts`
+- Registers SW, fetches VAPID key, calls `pushManager.subscribe()`
+- Sends subscription to backend, exposes `permission`, `subscribed`, `subscribe()`, `unsubscribe()`
+
+`frontend/src/api/invitations.ts` — typed API module
+- `fetchClientInvitations()`, `respondToInvitation()`, `fetchSentInvitations()`, `sendInvitation()`, `cancelInvitation()`
+
+`frontend/src/components/InvitationBanner.tsx`
+- Shown on client dashboard for all pending invitations
+- Shows firm name, optional message, Accept / Decline buttons
+- Toast on accept ("You are now connected with …") or decline
+
+**Frontend — modified files:**
+
+`DashboardPage.tsx`
+- Imports `InvitationBanner` → rendered above no-profile banner
+- Push opt-in prompt (shown once when `permission === "default"`)
+
+`AccountantPortalPage.tsx`
+- Third "Invitations" tab with badge showing pending count
+- Summary card replaced "Ready to file" with "Pending invitations"
+- Invite form (email + optional message) on left, sent invitations list on right
+- Status chips: amber=pending, sage=accepted, red=declined, grey=cancelled
+- Cancel button on pending invitations
+
+**All checks passed:**
+- `python manage.py check` → 0 issues
+- `npx tsc --noEmit` → 0 errors
+- Migration 0009 applied cleanly
 
 ---
 
