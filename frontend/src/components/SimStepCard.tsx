@@ -14,13 +14,14 @@ function t3(field: { nl: string; en: string; fa: string }, lang: Lang): string {
 // ── Inline field renderer ────────────────────────────────────────────────────
 
 function FieldRow({
-  field, lang, value, onChange, onAskClaude,
+  field, lang, value, onChange, onAskClaude, error,
 }: {
   field: SimField;
   lang: Lang;
   value: unknown;
   onChange: (id: string, val: unknown) => void;
   onAskClaude: (q: string) => void;
+  error?: string;
 }) {
   const label = t3(field.label, lang);
   const help  = t3(field.help, lang);
@@ -56,10 +57,17 @@ function FieldRow({
     );
   }
 
+  const hasError = !!error;
+
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-        <span className="tw-label" style={{ fontSize: 12 }}>{label}</span>
+        <span className="tw-label" style={{ fontSize: 12 }}>
+          {label}
+          {field.required && (
+            <span style={{ color: "var(--danger)", marginInlineStart: 3 }} title="Required">*</span>
+          )}
+        </span>
         <button
           type="button"
           onClick={() => onAskClaude(t3(field.claudeQ, lang))}
@@ -114,7 +122,10 @@ function FieldRow({
             placeholder="0"
             value={value === undefined ? "" : String(value)}
             onChange={e => onChange(field.id, e.target.value === "" ? undefined : Number(e.target.value))}
-            style={{ paddingInlineStart: field.unit ? 28 : 12, fontSize: 16 }}
+            style={{
+              paddingInlineStart: field.unit ? 28 : 12, fontSize: 16,
+              borderColor: hasError ? "var(--danger)" : undefined,
+            }}
             dir="ltr"
           />
         </div>
@@ -127,7 +138,7 @@ function FieldRow({
           value={String(value ?? "")}
           onChange={e => onChange(field.id, e.target.value)}
           placeholder="—"
-          style={{ fontSize: 16 }}
+          style={{ fontSize: 16, borderColor: hasError ? "var(--danger)" : undefined }}
         />
       )}
 
@@ -136,7 +147,7 @@ function FieldRow({
           className="tw-input"
           value={String(value ?? "")}
           onChange={e => onChange(field.id, e.target.value)}
-          style={{ fontSize: 16 }}
+          style={{ fontSize: 16, borderColor: hasError ? "var(--danger)" : undefined }}
         >
           <option value="">
             {lang === "nl" ? "— kies —" : lang === "fa" ? "— انتخاب کنید —" : "— choose —"}
@@ -147,8 +158,14 @@ function FieldRow({
         </select>
       )}
 
-      {field.type !== "boolean" && help && (
-        <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--ink-4)", lineHeight: 1.4 }}>{help}</p>
+      {hasError ? (
+        <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--danger)", fontWeight: 500, lineHeight: 1.4 }}>
+          ⚠ {error}
+        </p>
+      ) : (
+        field.type !== "boolean" && help && (
+          <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--ink-4)", lineHeight: 1.4 }}>{help}</p>
+        )
       )}
 
       {field.sourceUrl && (
@@ -191,14 +208,63 @@ export function SimStepCard({
     return init;
   });
 
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
   // Combined view used for conditional field/section visibility
   const combined: Answers = { ...answers, ...localAnswers };
 
   function setField(id: string, val: unknown) {
     setLocalAnswers(prev => ({ ...prev, [id]: val }));
+    // Clear field-level error when user edits the field
+    if (validationErrors[id]) {
+      setValidationErrors(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
   }
 
   function handleContinue() {
+    const errors: Record<string, string> = {};
+
+    // Check required visible fields
+    for (const section of step.sections) {
+      if (section.condition && !section.condition(combined)) continue;
+      for (const field of section.fields) {
+        if (field.type === "info") continue;
+        if (field.condition && !field.condition(combined)) continue;
+        if (!field.required) continue;
+        const val = localAnswers[field.id] ?? answers[field.id];
+        if (val === undefined || val === null || val === "" || (typeof val === "number" && val <= 0)) {
+          errors[field.id] = lang === "nl"
+            ? "Voer een bedrag in"
+            : lang === "fa"
+            ? "مبلغ را وارد کنید"
+            : "Please enter an amount";
+        }
+      }
+    }
+
+    // income_sources step: at least one income type must be explicitly answered
+    if (step.id === "income_sources") {
+      const typeBooleans = ["is_employee", "is_zzp", "has_benefits", "has_foreign_income", "has_substantial_interest"];
+      const anyAnswered = typeBooleans.some(id => combined[id] !== undefined);
+      if (!anyAnswered) {
+        errors["_step"] = lang === "nl"
+          ? "Selecteer minstens één inkomstenbron om door te gaan"
+          : lang === "fa"
+          ? "حداقل یک منبع درآمد را برای ادامه انتخاب کنید"
+          : "Select at least one income source to continue";
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
+    setValidationErrors({});
     onSubmit(stepIndex, localAnswers);
   }
 
@@ -243,6 +309,8 @@ export function SimStepCard({
     ? (lang === "nl" ? "Toon resultaat" : lang === "fa" ? "نمایش نتیجه" : "Show result")
     : (lang === "nl" ? "Volgende →" : lang === "fa" ? "← بعدی" : "Continue →");
 
+  const hasStepError = !!validationErrors["_step"];
+
   return (
     <div className="card" style={{ padding: 0, overflow: "hidden" }}>
       {/* Header */}
@@ -284,6 +352,7 @@ export function SimStepCard({
                       value={localAnswers[field.id] ?? answers[field.id]}
                       onChange={setField}
                       onAskClaude={onAskClaude}
+                      error={validationErrors[field.id]}
                     />
                   );
                 })}
@@ -299,10 +368,12 @@ export function SimStepCard({
         display: "flex", justifyContent: "space-between", alignItems: "center",
         background: "var(--paper-2)",
       }}>
-        <span style={{ fontSize: 11, color: "var(--ink-4)" }}>
-          {lang === "nl" ? "Velden overslaan is toegestaan"
-            : lang === "fa" ? "می‌توانید فیلدها را رد کنید"
-            : "Optional fields may be skipped"}
+        <span style={{ fontSize: 11, color: hasStepError ? "var(--danger)" : "var(--ink-4)", fontWeight: hasStepError ? 500 : 400 }}>
+          {hasStepError
+            ? `⚠ ${validationErrors["_step"]}`
+            : (lang === "nl" ? "Velden overslaan is toegestaan"
+               : lang === "fa" ? "می‌توانید فیلدها را رد کنید"
+               : "Optional fields may be skipped")}
         </span>
         <button className="btn btn-accent btn-sm" type="button" onClick={handleContinue}>
           {continueLabel}

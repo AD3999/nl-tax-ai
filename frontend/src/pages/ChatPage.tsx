@@ -34,9 +34,9 @@ interface ChatMsg {
 }
 
 const SIM_CHIP_LABEL: Record<string, string> = {
-  nl: "🧮 Bereken mijn belasting 2026",
-  en: "🧮 Calculate my 2026 tax",
-  fa: "🧮 محاسبه مالیات ۲۰۲۶ من",
+  nl: "🧮 Belastingsimulatie 2026",
+  en: "🧮 Tax Simulation 2026",
+  fa: "🧮 شبیه‌سازی مالیاتی ۲۰۲۶",
 };
 
 const SIM_INTRO: Record<string, string> = {
@@ -677,9 +677,9 @@ export default function ChatPage() {
                 <button
                   onClick={() => startSimulation()}
                   disabled={loading}
-                  style={{ padding: "10px 20px", borderRadius: 999, border: "1px solid var(--sage-600)", background: "var(--accent-soft)", color: "var(--sage-700)", fontSize: 14, fontWeight: 500, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, transition: "background .15s" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "var(--sage-100)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "var(--accent-soft)"; }}
+                  style={{ padding: "10px 20px", borderRadius: 999, border: "2px solid var(--sage-600)", background: "var(--sage-100)", color: "var(--sage-700)", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, transition: "background .15s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "var(--accent-soft)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "var(--sage-100)"; }}
                 >
                   {SIM_CHIP_LABEL[lang] ?? SIM_CHIP_LABEL.en}
                 </button>
@@ -869,26 +869,50 @@ export default function ChatPage() {
             </div>
           )}
 
-          {/* Mode chips — IB return and simulation, shown when not already in a mode */}
-          {!ibMode && !simMode && !loading && (
+          {/* Mode chips — always visible, active chip highlighted */}
+          {!loading && (
             <div style={{ marginBottom: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
               <button
-                onClick={() => { setIbMode(true); void submit(IB_TRIGGER[lang] ?? IB_TRIGGER.en, false, true); }}
-                disabled={loading}
-                style={{ padding: "6px 14px", borderRadius: 999, border: "1px solid var(--sage-600)", background: "var(--accent-soft)", color: "var(--sage-700)", fontSize: 13, fontWeight: 500, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, transition: "background .15s" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "var(--sage-100)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "var(--accent-soft)"; }}
+                onClick={() => { if (!ibMode && !simMode) { setIbMode(true); void submit(IB_TRIGGER[lang] ?? IB_TRIGGER.en, false, true); } }}
+                disabled={ibMode || simMode}
+                style={{
+                  padding: "6px 14px", borderRadius: 999, fontSize: 13, fontWeight: 500,
+                  border: ibMode ? "2px solid var(--sage-600)" : "1px solid var(--sage-600)",
+                  background: ibMode ? "var(--sage-100)" : "var(--accent-soft)",
+                  color: (!ibMode && simMode) ? "var(--ink-4)" : "var(--sage-700)",
+                  cursor: ibMode ? "default" : simMode ? "not-allowed" : "pointer",
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  opacity: simMode ? 0.45 : 1,
+                  transition: "all .15s",
+                }}
               >
                 {IB_CHIP_LABEL[lang] ?? IB_CHIP_LABEL.en}
+                {ibMode && (
+                  <span style={{ fontSize: 10, background: "var(--sage-600)", color: "white", borderRadius: 999, padding: "1px 6px" }}>
+                    {lang === "nl" ? "actief" : lang === "fa" ? "فعال" : "active"}
+                  </span>
+                )}
               </button>
               <button
-                onClick={() => startSimulation()}
-                disabled={loading}
-                style={{ padding: "6px 14px", borderRadius: 999, border: "1px solid var(--sage-600)", background: "var(--accent-soft)", color: "var(--sage-700)", fontSize: 13, fontWeight: 500, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, transition: "background .15s" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "var(--sage-100)"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "var(--accent-soft)"; }}
+                onClick={() => { if (!simMode && !ibMode) startSimulation(); }}
+                disabled={simMode || ibMode}
+                style={{
+                  padding: "6px 14px", borderRadius: 999, fontSize: 13, fontWeight: 500,
+                  border: simMode ? "2px solid var(--sage-600)" : "1px solid var(--sage-600)",
+                  background: simMode ? "var(--sage-100)" : "var(--accent-soft)",
+                  color: (!simMode && ibMode) ? "var(--ink-4)" : "var(--sage-700)",
+                  cursor: simMode ? "default" : ibMode ? "not-allowed" : "pointer",
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  opacity: ibMode ? 0.45 : 1,
+                  transition: "all .15s",
+                }}
               >
                 {SIM_CHIP_LABEL[lang] ?? SIM_CHIP_LABEL.en}
+                {simMode && (
+                  <span style={{ fontSize: 10, background: "var(--sage-600)", color: "white", borderRadius: 999, padding: "1px 6px" }}>
+                    {lang === "nl" ? "actief" : lang === "fa" ? "فعال" : "active"}
+                  </span>
+                )}
               </button>
             </div>
           )}

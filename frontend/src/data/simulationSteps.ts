@@ -20,6 +20,7 @@ export interface SimField {
   condition?: (a: Answers) => boolean;
   options?: SimOption[];
   unit?: string;
+  required?: boolean;
   sourceUrl?: string;
   claudeQ: T3; // pre-filled question sent to Claude
 }
@@ -260,6 +261,7 @@ export const SIMULATION_STEPS: SimStep[] = [
             id: "employment_income",
             type: "number",
             unit: "€",
+            required: true,
             label: { nl: "Loon (Kolom 1 jaaropgave) (€)", en: "Salary (Column 1 jaaropgave) (€)", fa: "حقوق (ستون 1 jaaropgave) (€)" },
             help: {
               nl: "Het bruto loon inclusief vakantiegeld en eventuele bonussen. Staat op uw jaaropgave in kolom 1",
@@ -401,6 +403,7 @@ export const SIMULATION_STEPS: SimStep[] = [
             id: "annual_revenue_zzp",
             type: "number",
             unit: "€",
+            required: true,
             label: { nl: "Jaaromzet (€)", en: "Annual revenue (€)", fa: "درآمد سالانه (€)" },
             help: {
               nl: "Uw totale omzet inclusief BTW-vrijgestelde omzet, exclusief BTW",
