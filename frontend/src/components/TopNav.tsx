@@ -15,7 +15,6 @@ const NAV_ITEMS_GUEST = [
 const NAV_ITEMS_AUTH = [
   { to: "/dashboard",         labelKey: "nav.dashboard" },
   { to: "/chat",              labelKey: "nav.chat" },
-  { to: "/simulation",        labelKey: "nav.simulation" },
   { to: "/tax-calendar",      labelKey: "nav.tax_calendar" },
   { to: "/tax-history",       labelKey: "nav.tax_history" },
 ] as const;

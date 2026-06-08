@@ -54,7 +54,7 @@ class ErrorBoundary extends Component<
 const CalculatorPage       = lazy(() => import("./pages/CalculatorPage"));
 const ChatPage             = lazy(() => import("./pages/ChatPage"));
 const IntakePage           = lazy(() => import("./pages/IntakePage"));
-const SimulationPage       = lazy(() => import("./pages/SimulationPage"));
+// SimulationPage removed — /simulation now redirects to /chat?mode=simulation
 const LandingPage          = lazy(() => import("./pages/LandingPage"));
 const LoginPage            = lazy(() => import("./pages/LoginPage"));
 const RegisterPage         = lazy(() => import("./pages/RegisterPage"));
@@ -127,7 +127,7 @@ function App() {
           <Route path="/chat"                element={<ChatPage />} />
           <Route path="/intake"              element={<IntakePage />} />
           <Route path="/ib-guide"            element={<Navigate to="/chat?mode=ib-return" replace />} />
-          <Route path="/simulation"          element={<SimulationPage />} />
+          <Route path="/simulation"          element={<Navigate to="/chat?mode=simulation" replace />} />
           <Route path="/pricing"             element={<Navigate to="/" replace />} />
           <Route path="/dashboard"           element={<DashboardPage />} />
           <Route path="/tax-history"         element={<TaxHistoryPage />} />

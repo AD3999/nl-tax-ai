@@ -88,7 +88,7 @@ export function printIBReport(answers: IBAnswers, lang: Lang = "nl"): void {
     .map(([code, labels]) => {
       const label = labels[lang] ?? labels.en;
       const raw = answers[code as keyof IBAnswers];
-      const value = fmt(typeof raw === "number" ? String(raw) : raw, code);
+      const value = fmt(typeof raw === "number" ? String(raw) : Array.isArray(raw) ? raw.join(", ") : raw, code);
       return `<tr><td class="code">${code}</td><td class="label">${label}</td><td class="value">${value}</td></tr>`;
     })
     .join("");

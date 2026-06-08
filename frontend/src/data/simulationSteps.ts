@@ -1132,6 +1132,12 @@ export const SIMULATION_STEPS: SimStep[] = [
   },
 ];
 
+// ── Visible step filter (conditions applied against current answers) ─────────
+
+export function visibleSteps(answers: Answers): SimStep[] {
+  return SIMULATION_STEPS.filter(s => !s.condition || s.condition(answers));
+}
+
 // ── Answer → Calculator profile mapper ─────────────────────────────────────
 
 export function answersToCalcProfile(a: Answers) {

@@ -1,7 +1,46 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 7 Jun 2026 — AI Accountant Portal + Client Document Collection Portal complete (Phase 8).
+> Last updated: 8 Jun 2026 — Simulation merged into Chat (inline step-cards + live estimate + overview card).
+
+---
+
+## Session — 8 Jun 2026 (part 2) ✅ Complete
+
+### Simulation page merged into Chat — inline step-card UX
+
+Removed the standalone `/simulation` page and merged the full 11-step tax simulation directly into the Chat page as inline step-cards, following the same pattern as the IB return merge.
+
+**Design rationale:**
+One interface instead of two. The simulation unfolds as structured cards embedded in the chat thread — no separate page, no context switching. A live running estimate bar above the input updates automatically as the user fills in income data.
+
+**New files:**
+
+| File | What it does |
+|------|--------------|
+| `frontend/src/components/SimStepCard.tsx` | Renders one SimStep as an interactive inline card. Contains its own `FieldRow` component (handles boolean pills, number inputs, selects, info boxes). Collapses to a compact done-summary row once submitted. Props: `step`, `stepIndex`, `totalSteps`, `answers`, `lang`, `isMobile`, `done`, `onSubmit`, `onAskClaude` |
+| `frontend/src/components/SimOverviewCard.tsx` | Tax result card rendered inline as the final chat message after all steps are submitted. Dark header with large euro amount, metric grid, breakdown table, and "Discuss with TaxWijs" CTA that promotes sim answers to a full profile and continues regular chat |
+
+**Modified files:**
+
+| File | Change |
+|------|--------|
+| `frontend/src/data/simulationSteps.ts` | Exported `visibleSteps(answers)` function so both SimStepCard and ChatPage can use it |
+| `frontend/src/pages/ChatPage.tsx` | Added `simMode`, `simAnswers`, `simStepIdx`, `simRunning` state; `SIM_CHIP_LABEL` + `SIM_INTRO` constants; `startSimulation()` function; `handleSimStepSubmit()` callback; `handleAskClaude()` callback; URL param handler for `?mode=simulation`; updated `isIntakeMode` guard to exclude sim mode; updated clear-chat handler; added `isSimStep`/`isSimResult` message rendering in the messages loop; added sim chips to the empty state and input bar; added live estimate bar |
+| `frontend/src/App.tsx` | Removed `SimulationPage` lazy import; `/simulation` route now `<Navigate to="/chat?mode=simulation" replace />` |
+| `frontend/src/components/TopNav.tsx` | Removed `nav.simulation` link from `NAV_ITEMS_AUTH` |
+| `frontend/src/utils/ibReport.ts` | Fixed pre-existing TS error: `string[]` argument to `fmt()` now joined with `", "` before passing |
+
+**UX behaviour:**
+
+1. **Entry points** — "🧮 Bereken mijn belasting 2026" chip appears in both the empty state and the sticky input bar (alongside the IB chip). `/simulation` URL redirects to `/chat?mode=simulation`
+2. **Step cards** — Each of the 11 steps renders as a `SimStepCard` inline in the chat thread. Fields: boolean pill buttons (Ja/Nee/Yes/No), number inputs, selects, info boxes. Each field has an **Ask** micro-link that submits the field's pre-written `claudeQ` to the AI without leaving simulation mode
+3. **Done rows** — Once a step is submitted it collapses to a compact `✓ Title — value · value` summary row. Previous answers are locked (no re-editing in v1)
+4. **Running estimate bar** — Appears above the input after step 2 (when `user_type` + income are known). Shows `~€X,XXX/maand · stap N van M`. Updates after every subsequent step submission
+5. **Result card** — `SimOverviewCard` renders as the final message: dark header with net-to-pay, metric grid, breakdown table, Discuss CTA
+6. **Discuss with TaxWijs** — Clicking "Bespreek met TaxWijs" promotes sim answers to `taxwijs_calc_input`, sets `intakeComplete = true`, exits sim mode, and submits the question to the regular chat AI
+
+**Checks:** `npx tsc --noEmit` = 0 errors · `npm run build` = clean (ChatPage 220 kB gzip 65.9 kB)
 
 ---
 
