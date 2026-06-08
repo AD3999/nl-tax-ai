@@ -274,7 +274,6 @@ export default function AccountantPortalPage() {
   const totalClients      = clients.length;
   const waitingClient     = engagements.filter(e => e.status === "waiting_client").length;
   const needsReview       = engagements.filter(e => e.status === "needs_review").length;
-  const readyToFile       = engagements.filter(e => e.status === "ready_to_file").length;
   const pendingInvCount   = invitations.filter(i => i.status === "pending").length;
 
   if (loading) return null;
