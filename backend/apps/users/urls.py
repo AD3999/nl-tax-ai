@@ -5,7 +5,7 @@ from .views import (
     NotificationPrefsView, YearSnapshotView,
     ItemStatesView, EmailCaptureView, RemindersView,
     ChatHistoryView, ICSCalendarView, AccountantView,
-    PDFReportView,
+    AccountantSetupView, PDFReportView,
 )
 from .admin_views import AdminUserListView, AdminUserDetailView
 
@@ -26,8 +26,9 @@ urlpatterns = [
     path("chat-history/",     ChatHistoryView.as_view(),       name="chat-history"),
     path("chat-history/<int:pk>/", ChatHistoryView.as_view(),  name="chat-history-detail"),
     path("calendar.ics",      ICSCalendarView.as_view(),       name="calendar-ics"),
-    path("accountant/clients/",        AccountantView.as_view(), name="accountant-clients"),
-    path("accountant/clients/<int:pk>/", AccountantView.as_view(), name="accountant-client-detail"),
+    path("accountant/setup/",            AccountantSetupView.as_view(), name="accountant-setup"),
+    path("accountant/clients/",          AccountantView.as_view(),      name="accountant-clients"),
+    path("accountant/clients/<int:pk>/", AccountantView.as_view(),      name="accountant-client-detail"),
     path("report/",                    PDFReportView.as_view(),   name="pdf-report"),
     # Admin-only user management
     path("admin/list/",              AdminUserListView.as_view(),   name="admin-user-list"),

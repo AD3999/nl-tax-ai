@@ -18,7 +18,14 @@ class User(AbstractUser):
 
     PLANS = [("free", "Free"), ("premium", "Premium")]
 
+    ROLES = [
+        ("client",     "Client"),
+        ("accountant", "Accountant"),
+        ("admin",      "Admin"),
+    ]
+
     user_type = models.CharField(max_length=20, choices=USER_TYPES, blank=True)
+    role      = models.CharField(max_length=20, choices=ROLES, default="client")
     preferred_language = models.CharField(max_length=5, choices=LANGUAGES, default="nl")
     tax_year = models.PositiveIntegerField(default=2026)
 
@@ -147,16 +154,29 @@ class TaxYearSnapshot(models.Model):
 
 class AccountantProfile(models.Model):
     """B2B tier — accountants who manage multiple client accounts."""
-    user = models.OneToOneField("users.User", on_delete=models.CASCADE, related_name="accountant_profile")
-    firm_name = models.CharField(max_length=200, blank=True)
+
+    DESIGNATION_CHOICES = [
+        ("RB",    "Register Belastingadviseur (RB)"),
+        ("AA",    "Accountant-Administratieconsulent (AA)"),
+        ("RA",    "Registeraccountant (RA)"),
+        ("other", "Other"),
+    ]
+
+    user         = models.OneToOneField("users.User", on_delete=models.CASCADE, related_name="accountant_profile")
+    firm_name    = models.CharField(max_length=200, blank=True)
+    kvk_number   = models.CharField(max_length=20, blank=True, help_text="8-digit KvK registration number")
+    designation  = models.CharField(max_length=10, choices=DESIGNATION_CHOICES, blank=True)
+    phone        = models.CharField(max_length=30, blank=True)
     client_limit = models.PositiveIntegerField(default=10)
-    created_at = models.DateTimeField(auto_now_add=True)
+    is_verified  = models.BooleanField(default=False, help_text="Admin-verified accountant credential")
+    created_at   = models.DateTimeField(auto_now_add=True)
+    updated_at   = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "accountant_profiles"
 
     def __str__(self):
-        return f"{self.user_id} — {self.firm_name or 'Accountant'}"
+        return f"{self.user_id} — {self.firm_name or 'Accountant'} ({self.get_designation_display()})"
 
 
 class AccountantClient(models.Model):

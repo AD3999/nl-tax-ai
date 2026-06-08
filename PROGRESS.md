@@ -1,7 +1,74 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 8 Jun 2026 — Landing page redesign + AI guided data collection (no external-site redirects).
+> Last updated: 8 Jun 2026 — Accountant profile (Option A): role field, AccountantProfile expansion, registration flow.
+
+---
+
+## Session — 8 Jun 2026 (part 5) ✅ Complete
+
+### Accountant profile system — Option A
+
+Full implementation of B2B accountant accounts with a clean role-based permission model.
+
+**Backend changes:**
+
+`backend/apps/users/models.py`
+- Added `User.role` field — `CharField(choices=["client","accountant","admin"], default="client")`.
+  No existing user data is changed; all existing users default to `"client"`.
+- Expanded `AccountantProfile` with: `kvk_number`, `designation` (RB/AA/RA/other), `phone`,
+  `is_verified` (admin-set credential flag), `updated_at`. These are all optional/blank-safe.
+
+`backend/apps/users/migrations/0008_user_role_accountant_profile_fields.py`
+- Migration applied to DB. Covers all 6 new fields.
+
+`backend/apps/users/serializers.py`
+- `UserSerializer` now exposes `role` and nested `accountant_profile` (read-only).
+- `RegisterSerializer` accepts optional `role`, `firm_name`, `kvk_number`.
+  When `role="accountant"`, auto-creates `AccountantProfile` in `create()`.
+- New `AccountantProfileSerializer` for the setup endpoint.
+
+`backend/apps/users/views.py`
+- `RegisterView.create()` overridden to return `{access, refresh, user}` on success
+  so the frontend can log the user in immediately without a second `/login` call.
+- New `AccountantSetupView` at `GET/PATCH /api/users/accountant/setup/` — lets accountants
+  update `firm_name`, `kvk_number`, `designation`, `phone`. Protected by `role == "accountant"`.
+- `AccountantView._get_profile()` now returns `None` for non-accountant users and all methods
+  return 403 in that case (previously any authenticated user could access accountant endpoints).
+
+`backend/apps/users/urls.py`
+- Registered `accountant/setup/` route.
+
+`backend/apps/portal/views.py`
+- Added `_is_portal_user(user)` helper: `user.is_staff or role in ("accountant","admin")`.
+- `_can_access_client()` now calls `_is_portal_user()` instead of checking `is_staff` directly.
+- `AccountantClientListView.get()` returns 403 for non-portal users.
+
+**Frontend changes:**
+
+`frontend/src/api/auth.ts`
+- `AuthUser` interface gains `role: "client" | "accountant" | "admin"` and `accountant_profile?`.
+- `RegisterPayload` gains optional `role`, `firm_name`, `kvk_number`.
+- `register()` now returns `RegisterResponse` (access + refresh tokens + user) and stores them
+  in localStorage — no separate login call needed after registration.
+
+`frontend/src/pages/RegisterPage.tsx`
+- Added 5th user-type card: Accountant / Belastingadviseur / مشاور مالیاتی (full width, B2B badge).
+- When accountant is selected: firm_name + kvk_number fields shown in a terracotta-tinted box
+  with helper text explaining they can complete their profile in the portal.
+- Google sign-up is disabled for accountant flow (firm credentials need email-based registration).
+- On successful accountant registration → navigate to `/accountant/portal`.
+- On successful client registration → navigate to `/intake` (unchanged).
+
+`frontend/src/components/TopNav.tsx`
+- Desktop + mobile nav: portal link condition changed from `user?.is_admin`
+  to `user?.role === "accountant" || user?.is_admin`.
+- Client portal ("My Portal") link hidden for accountants (they see the Accountant portal link).
+
+**All checks pass:**
+- `python manage.py check` → 0 issues
+- `python manage.py migrate` → all migrations applied
+- `npx tsc --noEmit` → 0 errors
 
 ---
 

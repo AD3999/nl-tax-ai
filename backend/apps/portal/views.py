@@ -61,9 +61,14 @@ def _is_client_of_profile(user, client_profile):
     return client_profile.client_user_id == user.id
 
 
+def _is_portal_user(user):
+    """True if this user has accountant or admin access to the portal."""
+    return user.is_staff or getattr(user, "role", "client") in ("accountant", "admin")
+
+
 def _can_access_client(user, client_profile):
     return (
-        user.is_staff
+        _is_portal_user(user)
         or _is_accountant_of_client(user, client_profile)
         or _is_client_of_profile(user, client_profile)
     )
@@ -86,6 +91,8 @@ class AccountantClientListView(APIView):
         qs = AccountantClientProfile.objects.filter(accountant_user=request.user)
         if request.user.is_staff:
             qs = AccountantClientProfile.objects.all()
+        elif not _is_portal_user(request.user):
+            return Response({"error": "Portal access requires an accountant account."}, status=403)
         serializer = AccountantClientProfileSerializer(qs, many=True, context={"request": request})
         return Response(serializer.data)
 

@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from config.authentication import SoftJWTAuthentication
-from .models import User
-from .serializers import UserSerializer, RegisterSerializer
+from .models import User, AccountantProfile
+from .serializers import UserSerializer, RegisterSerializer, AccountantProfileSerializer
 from .alerts import generate_alerts
 from .actions import generate_actions
 
@@ -138,6 +138,17 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "access":  str(refresh.access_token),
+            "refresh": str(refresh),
+            "user":    UserSerializer(user).data,
+        }, status=201)
 
 
 class ProfileView(generics.RetrieveUpdateAPIView):
@@ -632,6 +643,35 @@ class ICSCalendarView(APIView):
         return HttpResponse(content, content_type="text/calendar; charset=utf-8")
 
 
+class AccountantSetupView(APIView):
+    """
+    GET   /api/users/accountant/setup/   — retrieve AccountantProfile
+    PATCH /api/users/accountant/setup/   — update AccountantProfile fields
+    Creates the profile record if it doesn't exist yet (idempotent).
+    Only accessible to users with role='accountant' or is_staff.
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _check_role(self, user):
+        return user.role == "accountant" or user.is_staff
+
+    def get(self, request):
+        if not self._check_role(request.user):
+            return Response({"error": "Not an accountant account."}, status=403)
+        profile, _ = AccountantProfile.objects.get_or_create(user=request.user)
+        return Response(AccountantProfileSerializer(profile).data)
+
+    def patch(self, request):
+        if not self._check_role(request.user):
+            return Response({"error": "Not an accountant account."}, status=403)
+        profile, _ = AccountantProfile.objects.get_or_create(user=request.user)
+        serializer = AccountantProfileSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
 class AccountantView(APIView):
     """
     GET  /api/users/accountant/clients/         — list accountant's clients
@@ -643,7 +683,8 @@ class AccountantView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def _get_profile(self, request):
-        from .models import AccountantProfile
+        if request.user.role != "accountant" and not request.user.is_staff:
+            return None
         profile, _ = AccountantProfile.objects.get_or_create(user=request.user)
         return profile
 
@@ -651,6 +692,8 @@ class AccountantView(APIView):
         from .models import AccountantClient, TaxReminder
         from datetime import date, timedelta
         profile = self._get_profile(request)
+        if profile is None:
+            return Response({"error": "Not an accountant account."}, status=403)
 
         if pk:
             try:
@@ -697,6 +740,8 @@ class AccountantView(APIView):
     def post(self, request):
         from .models import AccountantClient
         profile = self._get_profile(request)
+        if profile is None:
+            return Response({"error": "Not an accountant account."}, status=403)
         nickname = request.data.get("nickname", "")
         client_email = request.data.get("email", "")
         notes = request.data.get("notes", "")
@@ -712,5 +757,7 @@ class AccountantView(APIView):
     def delete(self, request, pk=None):
         from .models import AccountantClient
         profile = self._get_profile(request)
+        if profile is None:
+            return Response({"error": "Not an accountant account."}, status=403)
         AccountantClient.objects.filter(pk=pk, accountant=profile).delete()
         return Response(status=204)

@@ -1,20 +1,40 @@
 import { client } from "./client";
 
 export interface LoginPayload { username: string; password: string; }
-export interface RegisterPayload { email: string; username: string; password: string; user_type: string; preferred_language: string; }
+export interface RegisterPayload {
+  email: string;
+  username: string;
+  password: string;
+  user_type: string;
+  role?: "client" | "accountant";
+  preferred_language: string;
+  firm_name?: string;
+  kvk_number?: string;
+}
 export interface TokenPair { access: string; refresh: string; }
+
+export interface AccountantProfileData {
+  firm_name: string;
+  kvk_number: string;
+  designation: string;
+  phone: string;
+  client_limit: number;
+  is_verified: boolean;
+}
 
 export interface AuthUser {
   id: number;
   email: string;
   username: string;
   user_type: string;
+  role: "client" | "accountant" | "admin";
   preferred_language: string;
   tax_year: number;
   plan: "free" | "premium";
   daily_message_count: number;
   daily_message_date: string | null;
   is_admin?: boolean;
+  accountant_profile?: AccountantProfileData | null;
 }
 
 export const login = async (payload: LoginPayload): Promise<TokenPair> => {
@@ -24,8 +44,14 @@ export const login = async (payload: LoginPayload): Promise<TokenPair> => {
   return data;
 };
 
-export const register = async (payload: RegisterPayload) => {
-  const { data } = await client.post("/users/register/", payload);
+export interface RegisterResponse extends TokenPair {
+  user: AuthUser;
+}
+
+export const register = async (payload: RegisterPayload): Promise<RegisterResponse> => {
+  const { data } = await client.post<RegisterResponse>("/users/register/", payload);
+  localStorage.setItem("access_token", data.access);
+  localStorage.setItem("refresh_token", data.refresh);
   return data;
 };
 

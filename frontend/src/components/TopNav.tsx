@@ -116,7 +116,7 @@ export default function TopNav() {
                   {t(item.labelKey)}
                 </NavLink>
               ))}
-              {user?.is_admin && (
+              {(user?.role === "accountant" || user?.is_admin) && (
                 <NavLink
                   to="/accountant/portal"
                   style={({ isActive }) => ({
@@ -127,7 +127,7 @@ export default function TopNav() {
                   Accountant
                 </NavLink>
               )}
-              {user && !user.is_admin && (
+              {user && user.role !== "accountant" && !user.is_admin && (
                 <NavLink
                   to="/client"
                   style={({ isActive }) => ({
@@ -269,7 +269,7 @@ export default function TopNav() {
               </NavLink>
             ))}
 
-            {user?.is_admin && (
+            {(user?.role === "accountant" || user?.is_admin) && (
               <NavLink
                 to="/accountant/portal"
                 onClick={closeMenu}
@@ -284,7 +284,7 @@ export default function TopNav() {
                 Accountant
               </NavLink>
             )}
-            {user && !user.is_admin && (
+            {user && user.role !== "accountant" && !user.is_admin && (
               <NavLink
                 to="/client"
                 onClick={closeMenu}
