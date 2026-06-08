@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { answersToCalcProfile, type Answers, type Lang } from "../data/simulationSteps";
-import { calculateTax, type CalcResult } from "../api/calculator";
+import { calculateTax, type CalcResult, type CalcInput } from "../api/calculator";
 import { Icon } from "./Icon";
 
 export interface SimOverviewCardProps {
@@ -16,7 +16,23 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
   const [error, setError]     = useState("");
 
   useEffect(() => {
-    const profile = answersToCalcProfile(answers);
+    const profile = answersToCalcProfile(answers) as unknown as CalcInput;
+
+    // Guard: if no income was entered at all, show a clear actionable message
+    // instead of a cryptic API error
+    const totalIncome = Number(profile.annual_revenue_zzp ?? 0) + Number(profile.employment_income ?? 0);
+    if (totalIncome <= 0) {
+      setError(
+        lang === "nl"
+          ? "Geen inkomen ingevuld — ga terug naar een inkomststap en voer uw bedrag in"
+          : lang === "fa"
+          ? "درآمدی وارد نشده — به مرحله درآمد برگردید و مبلغ را وارد کنید"
+          : "No income entered — go back to an income step and fill in your amount"
+      );
+      setLoading(false);
+      return;
+    }
+
     calculateTax(profile as Parameters<typeof calculateTax>[0])
       .then(setResult)
       .catch(() => setError(

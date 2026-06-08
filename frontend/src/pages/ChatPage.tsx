@@ -637,6 +637,58 @@ export default function ChatPage() {
         </div>
       )}
 
+      {/* Chip bar — always visible, sits between header and messages, never scrolls away */}
+      <div style={{
+        flexShrink: 0,
+        padding: isMobile ? "6px 14px" : "6px 28px",
+        borderBottom: "1px solid var(--hairline)",
+        background: "var(--paper)",
+        display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center",
+      }}>
+        <button
+          onClick={() => { if (!ibMode && !simMode) { setIbMode(true); void submit(IB_TRIGGER[lang] ?? IB_TRIGGER.en, false, true); } }}
+          disabled={ibMode || simMode}
+          style={{
+            padding: "5px 14px", borderRadius: 999, fontSize: 12, fontWeight: 500,
+            border: ibMode ? "2px solid var(--sage-600)" : "1px solid var(--sage-600)",
+            background: ibMode ? "var(--sage-100)" : "var(--accent-soft)",
+            color: (!ibMode && simMode) ? "var(--ink-4)" : "var(--sage-700)",
+            cursor: ibMode ? "default" : simMode ? "not-allowed" : "pointer",
+            display: "inline-flex", alignItems: "center", gap: 6,
+            opacity: simMode ? 0.45 : 1,
+            transition: "all .15s",
+          }}
+        >
+          {IB_CHIP_LABEL[lang] ?? IB_CHIP_LABEL.en}
+          {ibMode && (
+            <span style={{ fontSize: 10, background: "var(--sage-600)", color: "white", borderRadius: 999, padding: "1px 6px" }}>
+              {lang === "nl" ? "actief" : lang === "fa" ? "فعال" : "active"}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => { if (!simMode && !ibMode) startSimulation(); }}
+          disabled={simMode || ibMode}
+          style={{
+            padding: "5px 14px", borderRadius: 999, fontSize: 12, fontWeight: 500,
+            border: simMode ? "2px solid var(--sage-600)" : "1px solid var(--sage-600)",
+            background: simMode ? "var(--sage-100)" : "var(--accent-soft)",
+            color: (!simMode && ibMode) ? "var(--ink-4)" : "var(--sage-700)",
+            cursor: simMode ? "default" : ibMode ? "not-allowed" : "pointer",
+            display: "inline-flex", alignItems: "center", gap: 6,
+            opacity: ibMode ? 0.45 : 1,
+            transition: "all .15s",
+          }}
+        >
+          {SIM_CHIP_LABEL[lang] ?? SIM_CHIP_LABEL.en}
+          {simMode && (
+            <span style={{ fontSize: 10, background: "var(--sage-600)", color: "white", borderRadius: 999, padding: "1px 6px" }}>
+              {lang === "nl" ? "actief" : lang === "fa" ? "فعال" : "active"}
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* Messages area — aria-live so screen readers announce new messages */}
       <div
         role="log"
