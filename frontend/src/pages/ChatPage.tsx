@@ -473,6 +473,33 @@ export default function ChatPage() {
             setMessages(prev => prev.filter(m => m.id !== aid));
             return;
           }
+          // Profile update collected by AI mid-conversation — merge silently
+          if (meta?.profile_update) {
+            const updates = meta.profile_update;
+            const base = profile ?? {};
+            const updatedProfile = { ...base, ...updates };
+            localStorage.setItem("taxwijs_calc_input", JSON.stringify(updatedProfile));
+            setProfile(updatedProfile);
+            // Persist to backend for authenticated users
+            if (user) {
+              const authToken = localStorage.getItem("access_token");
+              fetch("/api/users/profile/", {
+                method: "PATCH",
+                headers: {
+                  "Content-Type": "application/json",
+                  ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+                },
+                body: JSON.stringify({ intake_profile: updatedProfile }),
+              }).catch(() => null);
+            }
+            showToast(
+              lang === "nl" ? "Profiel bijgewerkt ✓" :
+              lang === "fa" ? "پروفایل به‌روز شد ✓" :
+              "Profile updated ✓",
+              "success",
+            );
+            return;
+          }
           fullResponse += token;
           setMessages(prev => prev.map(m => m.id === aid ? { ...m, content: m.content + token } : m));
         },
@@ -503,6 +530,13 @@ export default function ChatPage() {
           );
           return; // skip intake extraction below
         }
+      }
+
+      // Strip any [PROFILE_UPDATE] markers from the displayed message
+      // (the actual save already happened via the SSE meta event above)
+      if (/\[PROFILE_UPDATE:/.test(fullResponse)) {
+        const stripped = fullResponse.replace(/\[PROFILE_UPDATE:\s*\{[^}]*\}\]\n?/g, "").trim();
+        setMessages(prev => prev.map(m => m.id === aid ? { ...m, content: stripped } : m));
       }
 
       // Check if intake profile was embedded in the response

@@ -147,7 +147,33 @@ def _result_system_prompt(
         "STRICT RULES:\n"
         "1. Every euro amount MUST come from the CALCULATOR RESULT below. No inventing numbers.\n"
         "2. Only reference tax rules that appear in RETRIEVED RULES. Don't invent rates from memory.\n"
-        "3. If no calculator data exists, warmly tell them to set up their profile first — offer to help right now.\n\n"
+        "3. If no calculator data exists, warmly tell them to set up their profile first — offer to help right now.\n"
+        "4. DATA GAP RULE — CRITICAL: When the calculator shows €0 for a field and the data is marked\n"
+        "   as 'possibly missing', that is NOT the user's real number — it is a gap in their profile.\n"
+        "   DO NOT say 'log in to Mijn Belastingdienst' or refer them to any external website to look\n"
+        "   up their own figures. You are their data entry point. Ask the specific question yourself:\n"
+        "   e.g. 'Your Box 3 is showing €0 — do you actually have savings or investments above €59,357?'\n"
+        "   Then use their answer in your explanation.\n"
+        "5. EXTERNAL SITE BAN: NEVER instruct the user to go to an external site (Mijn Belastingdienst,\n"
+        "   DigiD, belastingdienst.nl, kvk.nl, etc.) to retrieve or enter their OWN personal numbers\n"
+        "   (savings balance, investment value, income figures). You ask, they answer, you save.\n"
+        "   Exception: citing a rule's official source URL is fine.\n"
+        "6. PROFILE_UPDATE PROTOCOL: When a user gives you a confirmed number during this conversation,\n"
+        "   acknowledge it naturally, use it in your answer, then output this marker on its own line at\n"
+        "   the very end of your response — nothing else on that line:\n"
+        "   [PROFILE_UPDATE: {\"field\": value}]\n"
+        "   Supported fields and expected types:\n"
+        "     net_assets_box3       — integer euros  (total savings + investments)\n"
+        "     savings_fraction      — float 0.0–1.0  (what fraction of net_assets_box3 is savings)\n"
+        "     hours_per_year        — integer        (hours worked in own business)\n"
+        "     pension_contribution  — integer euros  (annual lijfrente/AOV contribution)\n"
+        "     children_under_12     — integer        (number of qualifying children)\n"
+        "     annual_revenue_zzp    — integer euros  (ZZP gross revenue)\n"
+        "     business_expenses     — integer euros  (ZZP annual costs)\n"
+        "     kia_investments       — integer euros  (business equipment bought this year)\n"
+        "     mortgage_interest     — integer euros  (annual mortgage interest paid)\n"
+        "   This marker is invisible to the user — it auto-updates their tax profile silently.\n"
+        "   Only emit it when the user explicitly states a specific number, not for estimates.\n\n"
         "DATA YOU CAN USE:\n"
         f"{calculator_block}"
         f"{health_section}"
@@ -181,6 +207,23 @@ def _build_calculator_block(profile: dict, calc_result: dict) -> str:
     c = calc_result.get("calculation", {})
     user_type = profile.get("user_type", "unknown")
     gross = c.get("gross_profit") or c.get("gross_revenue") or 0
+
+    # Identify fields that were not provided and defaulted to 0 — the AI must ask for these
+    missing = []
+    if not profile.get("net_assets_box3"):
+        missing.append("net_assets_box3 — Box 3 savings/investments (user has not provided this; Box 3 tax is currently €0 by default — ask if they have savings or investments above €59,357)")
+    if user_type == "zzp" and not profile.get("hours_per_year"):
+        missing.append("hours_per_year — needed to confirm zelfstandigenaftrek eligibility (1,225 hrs minimum)")
+    if not profile.get("pension_contribution"):
+        missing.append("pension_contribution — lijfrente/AOV (if they contribute, this reduces taxable income)")
+    if user_type == "zzp" and not profile.get("kia_investments"):
+        missing.append("kia_investments — business equipment purchases (€2,901–€70,602 qualifies for 28% KIA deduction)")
+
+    missing_section = ""
+    if missing:
+        missing_section = "\nPOSSIBLY MISSING DATA (profile defaulted to 0 — ask user if relevant to their question):\n"
+        missing_section += "".join(f"  - {m}\n" for m in missing)
+
     return (
         "\n=== CALCULATOR RESULT (verified 2026 engine) ===\n"
         f"User type: {user_type}\n"
@@ -198,6 +241,7 @@ def _build_calculator_block(profile: dict, calc_result: dict) -> str:
         f"Effective rate: {r.get('effective_rate', 0) * 100:.1f}%\n"
         f"Monthly reserve recommended: €{r.get('monthly_reserve_needed', 0):,.0f}\n"
         f"Wet DBA risk: {r.get('wet_dba_risk', 'N/A')}\n"
+        f"{missing_section}"
         "=== END CALCULATOR RESULT ===\n"
     )
 
@@ -455,6 +499,32 @@ class ChatMessageView(APIView):
                         for text in stream.text_stream:
                             full_response.append(text)
                             yield f"data: {json.dumps({'text': text})}\n\n"
+
+                    # Extract [PROFILE_UPDATE: {...}] markers and persist to user profile
+                    if not intake_mode and not ib_return_mode:
+                        import re as _re
+                        full_text = "".join(full_response)
+                        raw_updates = _re.findall(r'\[PROFILE_UPDATE:\s*(\{[^}]*\})\]', full_text)
+                        if raw_updates:
+                            merged_update: dict = {}
+                            for raw in raw_updates:
+                                try:
+                                    merged_update.update(json.loads(raw))
+                                except Exception:
+                                    pass
+                            if merged_update:
+                                # Save to DB for authenticated users
+                                if request.user.is_authenticated:
+                                    try:
+                                        existing = dict(request.user.intake_profile or {})
+                                        existing.update(merged_update)
+                                        request.user.intake_profile = existing
+                                        request.user.save(update_fields=["intake_profile"])
+                                    except Exception:
+                                        pass
+                                # Signal the frontend so it can update localStorage + re-run calculator
+                                yield f"data: {json.dumps({'profile_update': merged_update})}\n\n"
+
                     yield f"data: {json.dumps({'done': True})}\n\n"
                     # Persist assistant response to DB
                     if _conv and full_response:

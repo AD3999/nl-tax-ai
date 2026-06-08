@@ -1,7 +1,73 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 8 Jun 2026 — Simulation merged into Chat (inline step-cards + live estimate + overview card).
+> Last updated: 8 Jun 2026 — Landing page redesign + AI guided data collection (no external-site redirects).
+
+---
+
+## Session — 8 Jun 2026 (part 4) ✅ Complete
+
+### Landing page redesign — clean, vibrant, less crowded
+
+Complete visual overhaul of `LandingPage.tsx` and hero gradient CSS.
+
+**Design brief:** page was too dense, too muted. Goal: match the portal's visual language — clean cards, colour variety, generous whitespace.
+
+**Structural changes:**
+
+| Before | After |
+|--------|-------|
+| 2-col hero, tight | Same 2-col hero, more padding, cleaner copy |
+| No stats bar | NEW — 28 rules / 3 languages / 2026 / 6 scenarios with 4 distinct accent colours |
+| 4-col tight feature grid | 2×2 feature cards — coloured icon badge + lift-on-hover |
+| Proof data table | 4 user-type cards (ZZP / Employee / Expat / DGA) — coloured top bar + bullet lists |
+| Email capture bar | Removed (adds friction without conversion value on a tax tool) |
+| Flat white footer CTA | Dark sage gradient background, white text |
+
+**Hero gradient (`index.css`):** enhanced from near-invisible tint to sage top-right glow + soft blue bottom-left depth. Dark-mode variant updated to match.
+
+**Files changed:** `frontend/src/pages/LandingPage.tsx` (full rewrite), `frontend/src/index.css`
+
+**TypeScript:** 0 errors.
+
+---
+
+### AI chat — guided data collection; no external-site redirects
+
+**Problem:** In Q&A mode the AI was (1) telling users "Log in to Mijn Belastingdienst" to enter their own savings data, and (2) noting Box 3 showed €0 without asking for the actual number.
+
+**Root cause:** `_result_system_prompt` had no rules about data gaps or external navigation. `_build_calculator_block` did not flag which fields defaulted to 0.
+
+**Fix across 3 files:**
+
+`backend/apps/chat/views.py`:
+- Added **Rule 4 (DATA GAP)** to system prompt: when a field is "possibly missing", ask the user directly — do not send them to an external site.
+- Added **Rule 5 (EXTERNAL SITE BAN)**: never instruct the user to retrieve their own personal numbers from Mijn Belastingdienst, DigiD, etc. — the AI is the data entry point.
+- Added **Rule 6 (PROFILE_UPDATE PROTOCOL)**: when a user confirms a number, the AI emits `[PROFILE_UPDATE: {"field": value}]` at the end of the response. Supported fields: `net_assets_box3`, `savings_fraction`, `hours_per_year`, `pension_contribution`, `children_under_12`, `annual_revenue_zzp`, `business_expenses`, `kia_investments`, `mortgage_interest`.
+- `_build_calculator_block` now appends a `POSSIBLY MISSING DATA` section listing fields that defaulted to 0 (Box 3 assets, hours, pension, KIA investments).
+- Stream generator: after stream ends, extracts `[PROFILE_UPDATE]` markers, merges into `request.user.intake_profile`, saves to DB, yields a `profile_update` SSE event before `done`.
+
+`frontend/src/api/chat.ts`:
+- Extended `TokenMeta` with `profile_update?: Record<string, unknown>`
+- SSE parser handles `data.profile_update` — routes to `onToken` as metadata, not message text
+
+`frontend/src/pages/ChatPage.tsx`:
+- On `meta.profile_update`: merges into profile state, saves to localStorage, PATCHes `/api/users/profile/` (auth users), shows "Profile updated ✓" toast
+- After stream: strips `[PROFILE_UPDATE: ...]` markers from displayed message
+
+**New flow:** AI asks "Do you have savings above €59,357?" → user answers → AI explains + emits PROFILE_UPDATE → silent save → toast → next question uses the real number.
+
+**TypeScript:** 0 errors. Python syntax: OK.
+
+---
+
+## Session — 8 Jun 2026 (part 3) ✅ Complete
+
+### Persian translations — fix to SimOverviewCard breakdown labels
+
+Added missing Persian translations to all breakdown label fields in `SimOverviewCard.tsx`.
+
+**File changed:** `frontend/src/components/SimOverviewCard.tsx`
 
 ---
 

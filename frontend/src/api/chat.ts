@@ -14,6 +14,7 @@ export interface TokenMeta {
   upgrade_required?: boolean;
   reason?: string;
   limit?: number;
+  profile_update?: Record<string, unknown>;
 }
 
 async function refreshAccessToken(): Promise<string | null> {
@@ -106,7 +107,7 @@ export async function sendMessage(
 
     for (const line of lines) {
       if (!line.startsWith("data: ")) continue;
-      let data: { text?: string; done?: boolean; error?: string; upgrade_required?: boolean; reason?: string; limit?: number };
+      let data: { text?: string; done?: boolean; error?: string; upgrade_required?: boolean; reason?: string; limit?: number; profile_update?: Record<string, unknown> };
       try {
         data = JSON.parse(line.slice(6));
       } catch {
@@ -114,6 +115,7 @@ export async function sendMessage(
       }
       if (data.error) throw new Error(data.error);
       if (data.upgrade_required) { onToken("", { upgrade_required: true, reason: data.reason, limit: data.limit }); return; }
+      if (data.profile_update) { onToken("", { profile_update: data.profile_update }); continue; }
       if (data.text) onToken(data.text);
     }
   }
