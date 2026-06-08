@@ -686,6 +686,21 @@ export default function ChatPage() {
         }}
       >
         <div style={{ maxWidth: 880, margin: "0 auto" }}>
+          {/* IB return chip — always visible when not already in IB mode */}
+          {!ibMode && !loading && (
+            <div style={{ marginBottom: 8 }}>
+              <button
+                onClick={() => { setIbMode(true); void submit(IB_TRIGGER[lang] ?? IB_TRIGGER.en, false, true); }}
+                disabled={loading}
+                style={{ padding: "6px 14px", borderRadius: 999, border: "1px solid var(--sage-600)", background: "var(--accent-soft)", color: "var(--sage-700)", fontSize: 13, fontWeight: 500, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6, transition: "background .15s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "var(--sage-100)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "var(--accent-soft)"; }}
+              >
+                {IB_CHIP_LABEL[lang] ?? IB_CHIP_LABEL.en}
+              </button>
+            </div>
+          )}
+
           {sessionLimitReached ? (
             <div style={{ textAlign: "center", padding: "10px 0" }}>
               <button className="btn btn-accent btn-sm" onClick={() => setUpgradeModal({ reason: "session_limit" })}>
