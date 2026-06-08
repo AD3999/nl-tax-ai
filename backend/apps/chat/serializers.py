@@ -35,6 +35,7 @@ class ChatMessageSerializer(serializers.Serializer):
     )
     session_message_count = serializers.IntegerField(required=False, default=0, min_value=0)
     intake_mode = serializers.BooleanField(required=False, default=False)
+    ib_return_mode = serializers.BooleanField(required=False, default=False)
     language = serializers.ChoiceField(choices=["nl", "en", "fa"], default="nl")
     # Structured alert context when user clicks "Ask AI" on a specific alert
     explain_alert = serializers.DictField(required=False, allow_null=True, default=None)

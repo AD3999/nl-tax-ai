@@ -10,6 +10,7 @@ import { Icon } from "../components/Icon";
 import { useMobile } from "../hooks/useMobile";
 import { useToast } from "../context/ToastContext";
 import { Skeleton } from "../components/Skeleton";
+import { printIBReport, type IBAnswers } from "../utils/ibReport";
 
 interface ChatMsg {
   id: string;
@@ -17,7 +18,21 @@ interface ChatMsg {
   content: string;
   streaming?: boolean;
   isIntake?: boolean;
+  isIBResult?: boolean;   // marks the final IB summary message that has the PDF button
 }
+
+// First message the AI sends to open the IB return flow
+const IB_TRIGGER: Record<string, string> = {
+  nl: "Ik wil mijn aangifte inkomstenbelasting 2025 doen",
+  en: "I want to complete my 2025 income tax return (aangifte)",
+  fa: "می‌خواهم اظهارنامه مالیاتی ۲۰۲۵ خود را تکمیل کنم",
+};
+
+const IB_CHIP_LABEL: Record<string, string> = {
+  nl: "📋 Aangifte doen 2025",
+  en: "📋 Start IB Return 2025",
+  fa: "📋 شروع اظهارنامه ۲۰۲۵",
+};
 
 const RESULT_QUESTIONS: Record<string, Record<string, { q: string; tag: string }[]>> = {
   zzp: {
@@ -146,6 +161,8 @@ export default function ChatPage() {
   const [showCards, setShowCards]         = useState(true);
   const [upgradeModal, setUpgradeModal]   = useState<{ reason: "session_limit" | "daily_limit" | "register" } | null>(null);
   const [intakeComplete, setIntakeComplete] = useState(false);
+  const [ibMode, setIbMode]               = useState(false);
+  const [ibAnswers, setIbAnswers]         = useState<IBAnswers | null>(null);
 
   const [profile, setProfile] = useState<Record<string, unknown> | null>(() => {
     try { const r = localStorage.getItem("taxwijs_calc_input"); return r ? JSON.parse(r) : null; }
@@ -185,8 +202,19 @@ export default function ChatPage() {
 
   // On mount: restore history first, then fall through to normal init if nothing saved
   useEffect(() => {
-    const locState = location.state as { question?: string; explain_alert?: ExplainAlert } | null;
+    const locState = location.state as { question?: string; explain_alert?: ExplainAlert; ibReturn?: boolean } | null;
     const q = locState?.question;
+
+    // Auto-start IB return mode if URL param or location state requests it
+    const params = new URLSearchParams(location.search);
+    if (params.get("mode") === "ib-return" || locState?.ibReturn) {
+      setIbMode(true);
+      // Clear history and start the IB return flow fresh
+      localStorage.removeItem(historyKey());
+      setMessages([]);
+      void submit(IB_TRIGGER[lang] ?? IB_TRIGGER.en, false, true);
+      return;
+    }
 
     // 1. Try restoring a previous conversation
     try {
@@ -279,8 +307,20 @@ export default function ChatPage() {
     }
   }
 
-  const submit = async (question: string, fromInput = false) => {
+  // Check if a Claude response contains an IB-complete JSON block
+  function extractIBComplete(text: string): IBAnswers | null {
+    const match = text.match(/\[IB_COMPLETE:\s*(\{[\s\S]*?\})\]/);
+    if (!match) return null;
+    try {
+      return JSON.parse(match[1]) as IBAnswers;
+    } catch {
+      return null;
+    }
+  }
+
+  const submit = async (question: string, fromInput = false, ibReturnOverride = false) => {
     if (!question.trim() || loading || sessionLimitReached) return;
+    const isIBMode = ibMode || ibReturnOverride;
 
     if (fromInput) {
       setAskedSet(prev => new Set([...prev, question]));
@@ -312,8 +352,8 @@ export default function ChatPage() {
     let fullResponse = "";
 
     try {
-      // Determine if we're in intake mode (no profile yet)
-      const isIntakeMode = !profile && !intakeComplete;
+      // Determine if we're in intake mode (no profile yet) — IB mode takes priority
+      const isIntakeMode = !isIBMode && !profile && !intakeComplete;
 
       // Consume the pending alert context (only used on the first message after navigation)
       const alertCtx = pendingAlertRef.current;
@@ -338,7 +378,28 @@ export default function ChatPage() {
         isIntakeMode,
         lang,
         alertCtx,
+        isIBMode,
       );
+
+      // Check if IB return is complete
+      if (isIBMode) {
+        const ibData = extractIBComplete(fullResponse);
+        if (ibData) {
+          setIbAnswers(ibData);
+          // Strip the JSON marker from the displayed message and mark it as IB result
+          const cleanContent = fullResponse.replace(/\[IB_COMPLETE:\s*\{[\s\S]*?\}\]/g, "").trim();
+          setMessages(prev => prev.map(m =>
+            m.id === aid ? { ...m, content: cleanContent, isIBResult: true } : m
+          ));
+          showToast(
+            lang === "nl" ? "Aangifte overzicht klaar — download uw rapport" :
+            lang === "fa" ? "خلاصه اظهارنامه آماده است — گزارش را دانلود کنید" :
+            "IB return summary ready — download your report",
+            "success"
+          );
+          return; // skip intake extraction below
+        }
+      }
 
       // Check if intake profile was embedded in the response
       const extracted = extractIntakeProfile(fullResponse);
@@ -498,6 +559,16 @@ export default function ChatPage() {
                 {t("chat.ready_title")}
               </h2>
               <p style={{ marginTop: 8, color: "var(--ink-3)", fontSize: 15 }}>{t("chat.ready_subtitle")}</p>
+              {/* IB return chip */}
+              <button
+                onClick={() => { setIbMode(true); void submit(IB_TRIGGER[lang] ?? IB_TRIGGER.en, false, true); }}
+                disabled={loading}
+                style={{ marginTop: 20, padding: "10px 20px", borderRadius: 999, border: "1px solid var(--sage-600)", background: "var(--accent-soft)", color: "var(--sage-700)", fontSize: 14, fontWeight: 500, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, transition: "background .15s" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "var(--sage-100)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "var(--accent-soft)"; }}
+              >
+                {IB_CHIP_LABEL[lang] ?? IB_CHIP_LABEL.en}
+              </button>
             </div>
           )}
 
@@ -538,6 +609,20 @@ export default function ChatPage() {
                     <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8, paddingTop: 12, borderTop: "1px solid var(--hairline)" }}>
                       <span className="eyebrow">Sources</span>
                       <Icon.external style={{ color: "var(--ink-4)" }} />
+                    </div>
+                  )}
+                  {msg.isIBResult && ibAnswers && (
+                    <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--hairline)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 12, color: "var(--ink-3)" }}>
+                        {lang === "nl" ? "Uw aangifte-overzicht is klaar" : lang === "fa" ? "خلاصه اظهارنامه شما آماده است" : "Your return summary is ready"}
+                      </span>
+                      <button
+                        className="btn btn-accent btn-sm"
+                        onClick={() => printIBReport(ibAnswers, lang)}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                      >
+                        ↓ {lang === "nl" ? "Download rapport (PDF)" : lang === "fa" ? "دانلود گزارش (PDF)" : "Download report (PDF)"}
+                      </button>
                     </div>
                   )}
                 </div>
@@ -615,13 +700,17 @@ export default function ChatPage() {
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 disabled={loading}
-                aria-label={profile
-                  ? (lang === "nl" ? "Stel een vraag over uw belasting" : lang === "fa" ? "سؤالی درباره مالیات بپرسید" : "Ask a tax question")
-                  : (lang === "nl" ? "Typ uw antwoord" : lang === "fa" ? "پاسخ خود را بنویسید" : "Type your answer")
+                aria-label={ibMode
+                  ? (lang === "nl" ? "Geef uw antwoord voor de aangifte" : lang === "fa" ? "پاسخ اظهارنامه را بنویسید" : "Enter your return answer")
+                  : profile
+                    ? (lang === "nl" ? "Stel een vraag over uw belasting" : lang === "fa" ? "سؤالی درباره مالیات بپرسید" : "Ask a tax question")
+                    : (lang === "nl" ? "Typ uw antwoord" : lang === "fa" ? "پاسخ خود را بنویسید" : "Type your answer")
                 }
-                placeholder={profile
-                  ? (lang === "nl" ? "Stel een vraag over uw belasting…" : lang === "fa" ? "سؤالی درباره مالیات خود بپرسید…" : "Ask a question about your taxes…")
-                  : (lang === "nl" ? "Typ uw antwoord…" : lang === "fa" ? "پاسخ خود را بنویسید…" : "Type your answer…")
+                placeholder={ibMode
+                  ? (lang === "nl" ? "Typ uw antwoord…" : lang === "fa" ? "پاسخ خود را بنویسید…" : "Type your answer…")
+                  : profile
+                    ? (lang === "nl" ? "Stel een vraag over uw belasting…" : lang === "fa" ? "سؤالی درباره مالیات خود بپرسید…" : "Ask a question about your taxes…")
+                    : (lang === "nl" ? "Typ uw antwoord…" : lang === "fa" ? "پاسخ خود را بنویسید…" : "Type your answer…")
                 }
                 rows={1}
                 style={{
@@ -663,6 +752,8 @@ export default function ChatPage() {
                   setAskedSet(new Set());
                   setShowCards(true);
                   setIntakeComplete(false);
+                  setIbMode(false);
+                  setIbAnswers(null);
                   localStorage.removeItem(historyKey());
                   if (!profile) startIntakeGreeting();
                 }}

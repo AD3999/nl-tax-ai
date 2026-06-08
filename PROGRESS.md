@@ -5,6 +5,38 @@
 
 ---
 
+## Session — 8 Jun 2026 ✅ Complete
+
+### IB Return merged into Chat page
+
+Removed the standalone IB Guide page and merged the income tax return flow directly into the Chat page as a conversational guide.
+
+**What was built:**
+
+**Backend (`apps/chat`):**
+- `serializers.py` — added `ib_return_mode` boolean field to `ChatMessageSerializer`
+- `views.py` — added `_ib_return_system_prompt(language, user_type)` function with a detailed conversational guide covering all 9 IB form fields (1a–8a). The AI asks one question at a time, explains each field in plain language, notes common mistakes, skips irrelevant fields based on user type, and at the end outputs `[IB_COMPLETE: {...}]`. Mock mode also updated for IB return mode.
+
+**Frontend:**
+- `api/chat.ts` — added `ibReturnMode` parameter (10th arg) to `sendMessage()`; serialized as `ib_return_mode` in the request body
+- `utils/ibReport.ts` — NEW: `printIBReport(answers, lang)` utility. Takes the collected IB answers, generates a styled HTML report with all field values in NL/EN/FA labels, and opens a print dialog. Falls back to HTML file download if popups are blocked. No new dependencies.
+- `pages/ChatPage.tsx`:
+  - Added `ibMode` + `ibAnswers` state
+  - Added `IB_CHIP_LABEL` (NL/EN/FA) and `IB_TRIGGER` first message
+  - **IB chip** appears in the empty state when a profile exists — "📋 Aangifte doen 2025"
+  - Auto-starts IB mode when navigating to `/chat?mode=ib-return` or `/chat` with `{ibReturn: true}` state
+  - `submit()` now accepts `ibReturnOverride` flag; passes `isIBMode` to `sendMessage`
+  - Detects `[IB_COMPLETE: {...}]` in AI response: strips marker, marks message as `isIBResult`, stores answers
+  - **"Download rapport (PDF)" button** renders inside the final AI message when IB is complete
+  - Input placeholder and aria-label update in IB mode
+  - Clear chat resets `ibMode` and `ibAnswers`
+- `App.tsx` — `/ib-guide` redirects to `/chat?mode=ib-return` (preserve old URLs); removed `IBGuidePage` lazy import
+- `components/TopNav.tsx` — removed "IB Guide" from `NAV_ITEMS_AUTH`
+
+**Checks:** `tsc --noEmit` = 0 errors · `npm run build` = clean (ChatPage 148kB gzip 46kB)
+
+---
+
 ## Session — 7 Jun 2026 (part 4) ✅ Complete — branch: `feature/accountant-client-portal`
 
 ### AI Accountant Portal + Client Document Collection Portal (Phase 8)

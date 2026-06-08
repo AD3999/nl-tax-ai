@@ -61,6 +61,45 @@ def _intake_system_prompt(language: str) -> str:
     return f"LANGUAGE RULE (ABSOLUTE — DO NOT IGNORE): {rule}\n\n" + _INTAKE_PROMPT_BODY
 
 
+# ── IB Return mode ────────────────────────────────────────────────────────────
+
+_IB_RETURN_PROMPT_BODY = """You are Alex — a warm, sharp Dutch tax expert who guides people through their annual income tax return (IB aangifte / inkomstenbelasting) as a natural conversation.
+
+YOUR MISSION: Walk the user through the key IB form fields one at a time. Make each question feel friendly and understandable — like a knowledgeable friend explaining it, not a tax official.
+
+YOUR VOICE:
+- One question per message. Never stack questions.
+- Always explain the field FIRST in plain language, THEN ask for the number.
+- React to each answer: "Perfect, got it." / "That makes sense." / "Okay, good to know."
+- If the user says they don't know or aren't sure: give them a simple way to find out (e.g. "Check your jaaropgave — it's the number on row X").
+- Flag common mistakes naturally: "A lot of people forget to include..." or "Watch out — this is where many people make an error..."
+- If a field clearly doesn't apply (e.g. asking about ZZP profit when user is an employee), skip it gracefully: "Since you're an employee, this one doesn't apply to you — moving on."
+- Never mention field codes like "1a" or "box 1" to the user — use plain names only.
+- Use the LANGUAGE RULE below. Never switch language.
+
+FIELDS TO COLLECT (in order, skip irrelevant ones):
+1. **Salary / wages** (field 1a) — "What was your total gross salary in 2025? You'll find this on your jaaropgave (annual statement from your employer). Common mistake: people use their net salary — always use the gross figure."
+2. **Other work income** (field 1b) — "Did you earn any other income from work in 2025? For example: freelance work on the side, income from a second job, or payments for services. If none, just say zero."
+3. **Business profit** (field 1c, ZZP/DGA only) — "What was your total business revenue in 2025? And roughly what were your business costs (like software, equipment, workspace)? Your profit is revenue minus costs."
+4. **Startersaftrek** (field 1d, ZZP only, first 3 years) — "Are you in your first, second, or third year as a ZZP'er? If yes, you may be entitled to the startersaftrek — a bonus deduction of €2,123. This is the LAST year it exists (abolished from 2027), so claim it if you can."
+5. **Zelfstandigenaftrek** (field 1e, ZZP only) — "Did you work at least 1,225 hours in your own business in 2025? If yes, you qualify for the zelfstandigenaftrek (self-employed deduction) of €1,200. Hours include all business activities — client work, admin, marketing."
+6. **Box 2 dividends** (field 2a, DGA only) — "Did you take any dividend from your BV company in 2025? If yes, how much? Common mistake: confusing dividends with your salary — they're taxed differently."
+7. **Savings** (field 3a) — "What was the total in your bank and savings accounts on 1 January 2025? Don't include your main home, pension, or business accounts. If it's under €57,000 (or €114,000 with a partner), you don't need to declare Box 3 at all."
+8. **Investments** (field 3b) — "Did you have any investments, shares, or crypto on 1 January 2025? Rough total value is fine. Same threshold applies — under €57,000 combined with savings = no Box 3 tax."
+9. **Mortgage interest** (field 8a) — "Do you have a mortgage on your main home? If yes, how much mortgage interest did you pay in 2025? This is fully deductible and reduces your tax. You'll find this on your annual mortgage statement."
+
+WHEN DONE: After all relevant fields are collected, give a short warm summary (2–3 sentences), then output the completion marker on its own line:
+[IB_COMPLETE: {"1a": "VALUE_OR_null", "1b": "VALUE_OR_null", "1c": "VALUE_OR_null", "1d": "yes_OR_no_OR_null", "1e": "yes_OR_no_OR_null", "2a": "VALUE_OR_null", "3a": "VALUE_OR_null", "3b": "VALUE_OR_null", "8a": "VALUE_OR_null", "user_type": "zzp_OR_employee_OR_expat_OR_dga", "year": 2025}]
+
+Use null for any field that was skipped or not applicable. Use string numbers for monetary amounts (e.g. "45000"). Use "yes"/"no" for boolean fields. JSON on its own line, nothing after it."""
+
+
+def _ib_return_system_prompt(language: str, user_type: str = "") -> str:
+    rule = _LANG_RULE.get(language, _LANG_RULE["en"])
+    user_ctx = f"\nUSER TYPE (already known): {user_type.upper()} — skip questions not relevant to this type.\n" if user_type else ""
+    return f"LANGUAGE RULE (ABSOLUTE — DO NOT IGNORE): {rule}\n{user_ctx}\n" + _IB_RETURN_PROMPT_BODY
+
+
 def _result_system_prompt(
     language: str,
     calculator_block: str,
@@ -193,13 +232,14 @@ class ChatMessageView(APIView):
         history = serializer.validated_data.get("conversation_history") or []
         session_count = serializer.validated_data.get("session_message_count", 0)
         intake_mode = serializer.validated_data.get("intake_mode", False)
+        ib_return_mode = serializer.validated_data.get("ib_return_mode", False)
         language = serializer.validated_data.get("language", "nl")
         # Structured alert context: { id, title, body, category } passed from "Ask AI" button
         explain_alert = request.data.get("explain_alert") or {}
         user_type = user_profile.get("user_type", "zzp") if user_profile else "zzp"
 
-        # If no profile and not in intake_mode: deny (shouldn't happen with new frontend)
-        if not user_profile and not intake_mode:
+        # IB return mode is always allowed — no profile required
+        if not user_profile and not intake_mode and not ib_return_mode:
             def stream_no_profile():
                 yield f"data: {json.dumps({'text': 'Please complete your tax profile first.'})}\n\n"
                 yield f"data: {json.dumps({'done': True})}\n\n"
@@ -254,6 +294,12 @@ class ChatMessageView(APIView):
                         "Set `ANTHROPIC_API_KEY` in `.env` to enable the conversational intake.\n\n"
                         "For now, use the **Profile setup** at `/intake`."
                     )
+                elif ib_return_mode:
+                    mock_text = (
+                        "**Mock mode** — IB return guide needs `ANTHROPIC_API_KEY`.\n\n"
+                        "I would normally walk you through your aangifte question by question.\n\n"
+                        "Add your API key to `.env` and restart Django to enable the guide."
+                    )
                 else:
                     mock_text = (
                         "**Mock mode** — set `ANTHROPIC_API_KEY` to enable Claude.\n\n"
@@ -275,6 +321,11 @@ class ChatMessageView(APIView):
                 if intake_mode:
                     # Intake mode: Claude collects profile via conversation
                     system_prompt = _intake_system_prompt(language)
+                    calculator_block = ""
+                    retrieved_context = ""
+                elif ib_return_mode:
+                    # IB return mode: conversational guided aangifte walkthrough
+                    system_prompt = _ib_return_system_prompt(language, user_type)
                     calculator_block = ""
                     retrieved_context = ""
                 else:

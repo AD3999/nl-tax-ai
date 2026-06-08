@@ -51,6 +51,7 @@ export async function sendMessage(
   intakeMode = false,
   language: "nl" | "en" | "fa" = "nl",
   explainAlert?: ExplainAlert | null,
+  ibReturnMode = false,
 ): Promise<void> {
   let token = localStorage.getItem("access_token");
 
@@ -59,6 +60,7 @@ export async function sendMessage(
     conversation_history: conversationHistory,
     session_message_count: sessionMessageCount,
     intake_mode: intakeMode,
+    ib_return_mode: ibReturnMode,
     language,
     ...(userProfile ? { user_profile: userProfile } : {}),
     ...(explainAlert?.id ? { explain_alert: explainAlert } : {}),
