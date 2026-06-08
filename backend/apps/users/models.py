@@ -194,6 +194,69 @@ class AccountantClient(models.Model):
         return f"{self.accountant_id} → {self.nickname or self.client_user_id}"
 
 
+class AccountantInvitation(models.Model):
+    """
+    Accountant sends an invitation to a client by email.
+    Client sees it in their dashboard and accepts or declines.
+    On accept, an AccountantClient link is created automatically.
+    """
+    STATUS_CHOICES = [
+        ("pending",   "Pending"),
+        ("accepted",  "Accepted"),
+        ("declined",  "Declined"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    accountant    = models.ForeignKey("users.AccountantProfile", on_delete=models.CASCADE, related_name="sent_invitations")
+    invited_email = models.EmailField(help_text="Email address of the invited client")
+    client_user   = models.ForeignKey(
+        "users.User", null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="accountant_invitations",
+    )
+    message    = models.TextField(blank=True, help_text="Optional personal message from accountant")
+    status     = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "accountant_invitations"
+        # Prevent duplicate pending invitations for the same email
+        constraints = [
+            models.UniqueConstraint(
+                fields=["accountant", "invited_email"],
+                condition=models.Q(status="pending"),
+                name="unique_pending_invitation",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.accountant_id} → {self.invited_email} [{self.status}]"
+
+
+class PushSubscription(models.Model):
+    """
+    Web Push API subscription — one per browser/device per user.
+    The endpoint + keys are provided by the browser when the user grants
+    notification permission. Stored server-side to allow sending pushes
+    from backend events (invitation sent, accepted, etc.).
+
+    Expired/gone subscriptions (HTTP 404/410 from push service) are
+    automatically deleted when a push fails.
+    """
+    user       = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="push_subscriptions")
+    endpoint   = models.TextField(unique=True)
+    p256dh     = models.TextField(help_text="Public key (base64url)")
+    auth       = models.TextField(help_text="Auth secret (base64url)")
+    user_agent = models.CharField(max_length=300, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "push_subscriptions"
+
+    def __str__(self):
+        return f"{self.user_id} — {self.endpoint[:60]}…"
+
+
 class EmailCapture(models.Model):
     """Anonymous email captures from landing page and deduction checker."""
     email = models.EmailField()

@@ -761,3 +761,244 @@ class AccountantView(APIView):
             return Response({"error": "Not an accountant account."}, status=403)
         AccountantClient.objects.filter(pk=pk, accountant=profile).delete()
         return Response(status=204)
+
+
+# ── Accountant Invitations ────────────────────────────────────────────────────
+
+class AccountantInvitationsView(APIView):
+    """
+    Accountant side of the invitation system.
+
+    GET  /api/users/accountant/invitations/       — list sent invitations
+    POST /api/users/accountant/invitations/       — send a new invitation
+    DELETE /api/users/accountant/invitations/<pk>/ — cancel a pending invitation
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _get_accountant_profile(self, user):
+        if user.role != "accountant" and not user.is_staff:
+            return None
+        return AccountantProfile.objects.filter(user=user).first()
+
+    def get(self, request):
+        profile = self._get_accountant_profile(request.user)
+        if not profile:
+            return Response({"error": "Not an accountant account."}, status=403)
+
+        from .models import AccountantInvitation
+        invs = AccountantInvitation.objects.filter(accountant=profile).order_by("-created_at")
+        return Response([
+            {
+                "id":             inv.id,
+                "invited_email":  inv.invited_email,
+                "status":         inv.status,
+                "message":        inv.message,
+                "client_name":    inv.client_user.get_full_name() or inv.client_user.email if inv.client_user else None,
+                "created_at":     inv.created_at.date().isoformat(),
+                "updated_at":     inv.updated_at.date().isoformat(),
+            }
+            for inv in invs
+        ])
+
+    def post(self, request):
+        from .models import AccountantInvitation
+        profile = self._get_accountant_profile(request.user)
+        if not profile:
+            return Response({"error": "Not an accountant account."}, status=403)
+
+        email   = (request.data.get("email") or "").strip().lower()
+        message = (request.data.get("message") or "").strip()
+
+        if not email or "@" not in email:
+            return Response({"error": "Valid email required."}, status=400)
+
+        # Prevent duplicate pending invitations
+        if AccountantInvitation.objects.filter(accountant=profile, invited_email=email, status="pending").exists():
+            return Response({"error": "A pending invitation already exists for this email."}, status=400)
+
+        # Link to existing user if already registered
+        client_user = User.objects.filter(email__iexact=email).first()
+
+        inv = AccountantInvitation.objects.create(
+            accountant=profile,
+            invited_email=email,
+            client_user=client_user,
+            message=message,
+        )
+
+        # Push notification to client (if registered and has a device)
+        if client_user:
+            firm = profile.firm_name or request.user.get_full_name() or request.user.email
+            from .push_utils import send_push_notification
+            send_push_notification(
+                client_user,
+                title="New accountant invitation",
+                body=f"{firm} has invited you to connect on TaxWijs.",
+                url="/dashboard",
+            )
+
+        return Response({
+            "id":            inv.id,
+            "invited_email": inv.invited_email,
+            "status":        inv.status,
+            "created_at":    inv.created_at.date().isoformat(),
+        }, status=201)
+
+    def delete(self, request, pk=None):
+        from .models import AccountantInvitation
+        profile = self._get_accountant_profile(request.user)
+        if not profile:
+            return Response({"error": "Not an accountant account."}, status=403)
+        AccountantInvitation.objects.filter(pk=pk, accountant=profile, status="pending").update(status="cancelled")
+        return Response(status=204)
+
+
+class ClientInvitationsView(APIView):
+    """
+    Client side of the invitation system.
+
+    GET  /api/users/client/invitations/             — list pending invitations for this user
+    POST /api/users/client/invitations/<pk>/respond/ — accept or decline
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from .models import AccountantInvitation
+        invs = AccountantInvitation.objects.filter(
+            client_user=request.user,
+            status="pending",
+        ).select_related("accountant__user").order_by("-created_at")
+
+        # Also pick up invitations sent to this email before they registered
+        email_invs = AccountantInvitation.objects.filter(
+            invited_email__iexact=request.user.email,
+            client_user__isnull=True,
+            status="pending",
+        ).select_related("accountant__user")
+
+        # Link unlinked invitations
+        for inv in email_invs:
+            inv.client_user = request.user
+            inv.save(update_fields=["client_user"])
+
+        all_invs = list(invs) + list(email_invs)
+
+        return Response([
+            {
+                "id":           inv.id,
+                "firm_name":    inv.accountant.firm_name or inv.accountant.user.get_full_name() or inv.accountant.user.email,
+                "accountant_email": inv.accountant.user.email,
+                "message":      inv.message,
+                "status":       inv.status,
+                "created_at":   inv.created_at.date().isoformat(),
+            }
+            for inv in all_invs
+        ])
+
+    def post(self, request, pk=None):
+        from .models import AccountantInvitation, AccountantClient
+        action = (request.data.get("action") or "").strip()
+        if action not in ("accept", "decline"):
+            return Response({"error": "action must be 'accept' or 'decline'."}, status=400)
+
+        try:
+            inv = AccountantInvitation.objects.select_related("accountant__user").get(
+                pk=pk,
+                status="pending",
+            )
+        except AccountantInvitation.DoesNotExist:
+            return Response({"error": "Invitation not found."}, status=404)
+
+        # Authorise: only the invited user (by email or FK) can respond
+        is_owner = (
+            inv.client_user_id == request.user.id
+            or inv.invited_email.lower() == request.user.email.lower()
+        )
+        if not is_owner:
+            return Response({"error": "Not your invitation."}, status=403)
+
+        if action == "accept":
+            inv.status = "accepted"
+            inv.client_user = request.user
+            inv.save(update_fields=["status", "client_user", "updated_at"])
+
+            # Create the AccountantClient link (idempotent)
+            AccountantClient.objects.get_or_create(
+                accountant=inv.accountant,
+                client_user=request.user,
+                defaults={"nickname": request.user.get_full_name() or request.user.email},
+            )
+
+            # Push notification to accountant
+            firm = inv.accountant.firm_name or inv.accountant.user.email
+            from .push_utils import send_push_notification
+            send_push_notification(
+                inv.accountant.user,
+                title="Invitation accepted",
+                body=f"{request.user.email} has accepted your invitation on TaxWijs.",
+                url="/accountant/portal",
+            )
+
+        else:
+            inv.status = "declined"
+            inv.client_user = request.user
+            inv.save(update_fields=["status", "client_user", "updated_at"])
+
+            # Notify accountant of the decline too
+            from .push_utils import send_push_notification
+            send_push_notification(
+                inv.accountant.user,
+                title="Invitation declined",
+                body=f"{request.user.email} declined your invitation.",
+                url="/accountant/portal",
+            )
+
+        return Response({"status": inv.status})
+
+
+# ── Web Push subscription management ─────────────────────────────────────────
+
+class PushVapidKeyView(APIView):
+    """GET /api/users/push/vapid-key/ — returns the VAPID public key for the frontend."""
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from .push_utils import VAPID_PUBLIC_KEY
+        return Response({"public_key": VAPID_PUBLIC_KEY})
+
+
+class PushSubscribeView(APIView):
+    """
+    POST /api/users/push/subscribe/     — register a push subscription
+    DELETE /api/users/push/subscribe/   — remove all subscriptions for this user
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from .models import PushSubscription
+        endpoint = request.data.get("endpoint", "").strip()
+        p256dh   = request.data.get("p256dh", "").strip()
+        auth     = request.data.get("auth", "").strip()
+        ua       = request.META.get("HTTP_USER_AGENT", "")[:300]
+
+        if not (endpoint and p256dh and auth):
+            return Response({"error": "endpoint, p256dh, and auth are required."}, status=400)
+
+        PushSubscription.objects.update_or_create(
+            endpoint=endpoint,
+            defaults={"user": request.user, "p256dh": p256dh, "auth": auth, "user_agent": ua},
+        )
+        return Response({"status": "subscribed"}, status=201)
+
+    def delete(self, request):
+        from .models import PushSubscription
+        endpoint = request.data.get("endpoint", "").strip()
+        if endpoint:
+            PushSubscription.objects.filter(user=request.user, endpoint=endpoint).delete()
+        else:
+            PushSubscription.objects.filter(user=request.user).delete()
+        return Response(status=204)

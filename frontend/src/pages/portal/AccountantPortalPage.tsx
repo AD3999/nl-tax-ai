@@ -7,6 +7,11 @@ import {
   fetchClients, fetchEngagements, createClient,
 } from "../../api/portal/client";
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
+import {
+  fetchSentInvitations, sendInvitation, cancelInvitation,
+  type SentInvitation,
+} from "../../api/invitations";
+import { useToast } from "../../context/ToastContext";
 
 const TX: Record<string, Record<string, string>> = {
   en: {
@@ -43,6 +48,20 @@ const TX: Record<string, Record<string, string>> = {
     total_clients: "Total clients",
     collecting: "Collecting",
     filed: "Filed",
+    invitations_tab:    "Invitations",
+    invite_title:       "Invite a client",
+    invite_email:       "Client email address",
+    invite_message:     "Personal message (optional)",
+    invite_btn:         "Send invitation",
+    invite_sent:        "Invitation sent!",
+    invite_error_dup:   "A pending invitation already exists for this email.",
+    no_invitations:     "No invitations sent yet",
+    inv_status_pending:  "Pending",
+    inv_status_accepted: "Accepted",
+    inv_status_declined: "Declined",
+    inv_status_cancelled:"Cancelled",
+    cancel_inv:          "Cancel",
+    pending_invitations: "Pending",
   },
   nl: {
     title: "Accountant Portal",
@@ -78,6 +97,20 @@ const TX: Record<string, Record<string, string>> = {
     total_clients: "Totaal klanten",
     collecting: "Verzamelen",
     filed: "Ingediend",
+    invitations_tab:    "Uitnodigingen",
+    invite_title:       "Klant uitnodigen",
+    invite_email:       "E-mailadres klant",
+    invite_message:     "Persoonlijk bericht (optioneel)",
+    invite_btn:         "Uitnodiging versturen",
+    invite_sent:        "Uitnodiging verstuurd!",
+    invite_error_dup:   "Er bestaat al een openstaande uitnodiging voor dit e-mailadres.",
+    no_invitations:     "Nog geen uitnodigingen verstuurd",
+    inv_status_pending:  "In afwachting",
+    inv_status_accepted: "Geaccepteerd",
+    inv_status_declined: "Geweigerd",
+    inv_status_cancelled:"Geannuleerd",
+    cancel_inv:          "Annuleren",
+    pending_invitations: "In afwachting",
   },
   fa: {
     title: "پورتال حسابدار",
@@ -113,6 +146,20 @@ const TX: Record<string, Record<string, string>> = {
     total_clients: "کل مشتریان",
     collecting: "جمع‌آوری",
     filed: "ارسال شده",
+    invitations_tab:    "دعوت‌نامه‌ها",
+    invite_title:       "دعوت از مشتری",
+    invite_email:       "آدرس ایمیل مشتری",
+    invite_message:     "پیام شخصی (اختیاری)",
+    invite_btn:         "ارسال دعوت‌نامه",
+    invite_sent:        "دعوت‌نامه ارسال شد!",
+    invite_error_dup:   "یک دعوت‌نامه در حال انتظار برای این ایمیل وجود دارد.",
+    no_invitations:     "هنوز دعوت‌نامه‌ای ارسال نشده",
+    inv_status_pending:  "در انتظار",
+    inv_status_accepted: "پذیرفته شده",
+    inv_status_declined: "رد شده",
+    inv_status_cancelled:"لغو شده",
+    cancel_inv:          "لغو",
+    pending_invitations: "در انتظار",
   },
 };
 
@@ -133,22 +180,36 @@ const STATUS_COLOR: Record<string, string> = {
   blocked: "var(--danger)",
 };
 
+const STATUS_CHIP: Record<string, { bg: string; color: string }> = {
+  pending:   { bg: "oklch(0.96 0.04 75)",   color: "oklch(0.48 0.14 75)"  },
+  accepted:  { bg: "var(--accent-soft)",     color: "var(--sage-700)"      },
+  declined:  { bg: "oklch(0.96 0.03 25)",    color: "var(--danger)"        },
+  cancelled: { bg: "var(--paper-3)",         color: "var(--ink-4)"         },
+};
+
 export default function AccountantPortalPage() {
   const { i18n } = useTranslation();
   const { user, loading } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const isMobile = useMobile();
   const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as "nl" | "en" | "fa";
   const tx = TX[lang];
 
-  const [tab, setTab] = useState<"clients" | "engagements">("clients");
+  const [tab, setTab] = useState<"clients" | "engagements" | "invitations">("clients");
   const [clients, setClients] = useState<ClientProfile[]>([]);
   const [engagements, setEngagements] = useState<TaxEngagement[]>([]);
+  const [invitations, setInvitations] = useState<SentInvitation[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ email: "", first_name: "", last_name: "", client_type: "zzp", preferred_language: "nl", notes: "" });
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
+
+  // Invitation form state
+  const [invEmail, setInvEmail] = useState("");
+  const [invMessage, setInvMessage] = useState("");
+  const [invSending, setInvSending] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -159,13 +220,36 @@ export default function AccountantPortalPage() {
   async function loadData() {
     setLoadingData(true);
     try {
-      const [cls, engs] = await Promise.all([fetchClients(), fetchEngagements()]);
+      const [cls, engs, invs] = await Promise.all([fetchClients(), fetchEngagements(), fetchSentInvitations()]);
       setClients(cls);
       setEngagements(engs);
+      setInvitations(invs);
     } catch {
       setError("Failed to load portal data");
     }
     setLoadingData(false);
+  }
+
+  async function handleSendInvitation(e: React.FormEvent) {
+    e.preventDefault();
+    setInvSending(true);
+    try {
+      const inv = await sendInvitation(invEmail.trim(), invMessage.trim());
+      setInvitations(prev => [inv, ...prev]);
+      setInvEmail("");
+      setInvMessage("");
+      showToast(tx.invite_sent, "success");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to send invitation";
+      showToast(msg.includes("already exists") ? tx.invite_error_dup : msg, "error");
+    } finally {
+      setInvSending(false);
+    }
+  }
+
+  async function handleCancelInvitation(id: number) {
+    await cancelInvitation(id);
+    setInvitations(prev => prev.map(inv => inv.id === id ? { ...inv, status: "cancelled" as const } : inv));
   }
 
   async function handleAddClient(e: React.FormEvent) {
@@ -187,10 +271,11 @@ export default function AccountantPortalPage() {
     setAdding(false);
   }
 
-  const totalClients = clients.length;
-  const waitingClient = engagements.filter(e => e.status === "waiting_client").length;
-  const needsReview   = engagements.filter(e => e.status === "needs_review").length;
-  const readyToFile   = engagements.filter(e => e.status === "ready_to_file").length;
+  const totalClients      = clients.length;
+  const waitingClient     = engagements.filter(e => e.status === "waiting_client").length;
+  const needsReview       = engagements.filter(e => e.status === "needs_review").length;
+  const readyToFile       = engagements.filter(e => e.status === "ready_to_file").length;
+  const pendingInvCount   = invitations.filter(i => i.status === "pending").length;
 
   if (loading) return null;
 
@@ -221,10 +306,10 @@ export default function AccountantPortalPage() {
         {/* Summary cards */}
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "var(--sp-3)", marginBottom: "var(--sp-6)" }}>
           {[
-            { label: tx.total_clients, value: totalClients, color: "var(--sage-600)" },
-            { label: tx.waiting,       value: waitingClient, color: "oklch(0.62 0.13 50)" },
-            { label: tx.needs_review,  value: needsReview,   color: "oklch(0.62 0.13 50)" },
-            { label: tx.ready,         value: readyToFile,   color: "var(--sage-600)" },
+            { label: tx.total_clients,      value: totalClients,    color: "var(--sage-600)"        },
+            { label: tx.waiting,            value: waitingClient,   color: "oklch(0.62 0.13 50)"    },
+            { label: tx.needs_review,       value: needsReview,     color: "oklch(0.62 0.13 50)"    },
+            { label: tx.pending_invitations,value: pendingInvCount, color: "oklch(0.48 0.14 75)"    },
           ].map(card => (
             <div key={card.label} className="card" style={{ padding: "var(--sp-4)", textAlign: "center" }}>
               <div style={{ fontSize: "var(--text-3xl)", fontFamily: "var(--serif)", color: card.color, fontWeight: 400 }}>{card.value}</div>
@@ -236,15 +321,20 @@ export default function AccountantPortalPage() {
         {error && <div className="card" style={{ padding: "var(--sp-3)", background: "oklch(0.95 0.03 25)", color: "var(--danger)", marginBottom: "var(--sp-4)", fontSize: "var(--text-sm)" }}>{error}</div>}
 
         {/* Tabs */}
-        <div style={{ display: "flex", gap: "var(--sp-2)", marginBottom: "var(--sp-5)", borderBottom: "1px solid var(--hairline)", paddingBottom: "var(--sp-2)" }}>
-          {(["clients", "engagements"] as const).map(t => (
+        <div style={{ display: "flex", gap: "var(--sp-2)", marginBottom: "var(--sp-5)", borderBottom: "1px solid var(--hairline)", paddingBottom: "var(--sp-2)", flexWrap: "wrap" }}>
+          {(["clients", "engagements", "invitations"] as const).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
               className="btn btn-ghost btn-sm"
-              style={{ fontWeight: tab === t ? 600 : 400, borderBottom: tab === t ? "2px solid var(--sage-600)" : "none", borderRadius: 0 }}
+              style={{ fontWeight: tab === t ? 600 : 400, borderBottom: tab === t ? "2px solid var(--sage-600)" : "none", borderRadius: 0, display: "flex", alignItems: "center", gap: 6 }}
             >
-              {t === "clients" ? tx.clients_tab : tx.engagements_tab}
+              {t === "clients" ? tx.clients_tab : t === "engagements" ? tx.engagements_tab : tx.invitations_tab}
+              {t === "invitations" && pendingInvCount > 0 && (
+                <span style={{ padding: "1px 7px", borderRadius: 99, background: "oklch(0.48 0.14 75)", color: "white", fontSize: 11, fontWeight: 700 }}>
+                  {pendingInvCount}
+                </span>
+              )}
             </button>
           ))}
           <div style={{ marginInlineStart: "auto" }}>
@@ -399,6 +489,90 @@ export default function AccountantPortalPage() {
             </div>
           )
         )}
+        {/* ── Invitations tab ─────────────────────────────────────────────── */}
+        {tab === "invitations" && (
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1.6fr", gap: "var(--sp-6)", alignItems: "start" }}>
+
+            {/* Send invitation form */}
+            <div className="card" style={{ padding: "var(--sp-5)" }}>
+              <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, color: "var(--ink)", marginBottom: "var(--sp-4)" }}>
+                {tx.invite_title}
+              </h3>
+              <form onSubmit={handleSendInvitation} style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)" }}>
+                <div>
+                  <label className="tw-label">{tx.invite_email} *</label>
+                  <input
+                    type="email" required className="tw-input"
+                    style={{ width: "100%", fontSize: 16 }}
+                    value={invEmail}
+                    onChange={e => setInvEmail(e.target.value)}
+                    placeholder="client@example.nl"
+                  />
+                </div>
+                <div>
+                  <label className="tw-label">{tx.invite_message}</label>
+                  <textarea
+                    className="tw-input"
+                    style={{ width: "100%", minHeight: 72, fontSize: 15, resize: "vertical" }}
+                    value={invMessage}
+                    onChange={e => setInvMessage(e.target.value)}
+                    placeholder={lang === "nl" ? "Bijv. Ik ben uw nieuwe belastingadviseur…" : lang === "fa" ? "مثلاً: من مشاور مالیاتی جدید شما هستم…" : "e.g. I'm your new tax advisor for 2026…"}
+                  />
+                </div>
+                <button type="submit" className="btn btn-accent" disabled={invSending} style={{ marginTop: "var(--sp-1)" }}>
+                  {invSending ? "…" : tx.invite_btn}
+                </button>
+              </form>
+            </div>
+
+            {/* Sent invitations list */}
+            <div>
+              <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, color: "var(--ink)", marginBottom: "var(--sp-4)" }}>
+                {tx.invitations_tab}
+              </h3>
+              {invitations.length === 0 ? (
+                <div className="card" style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-4)", fontSize: "var(--text-sm)" }}>
+                  {tx.no_invitations}
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
+                  {invitations.map(inv => {
+                    const chip = STATUS_CHIP[inv.status] ?? STATUS_CHIP.pending;
+                    const statusLabel = (tx as Record<string, string>)[`inv_status_${inv.status}`] ?? inv.status;
+                    return (
+                      <div key={inv.id} className="card" style={{ padding: "var(--sp-4)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {inv.client_name || inv.invited_email}
+                          </div>
+                          {inv.client_name && (
+                            <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>{inv.invited_email}</div>
+                          )}
+                          <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: 4 }}>{inv.created_at}</div>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+                          <span style={{ padding: "3px 10px", borderRadius: 99, fontSize: 11, fontWeight: 600, background: chip.bg, color: chip.color }}>
+                            {statusLabel}
+                          </span>
+                          {inv.status === "pending" && (
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              style={{ fontSize: 11, color: "var(--ink-4)" }}
+                              onClick={() => handleCancelInvitation(inv.id)}
+                            >
+                              {tx.cancel_inv}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
       </div>
     </main>
   );
