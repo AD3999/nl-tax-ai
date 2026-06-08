@@ -17,6 +17,8 @@ import {
   type ActionState,
 } from "../api/actions";
 import { apiBase, authHeader } from "../api/client";
+import InvitationBanner from "../components/InvitationBanner";
+import { usePushNotifications } from "../hooks/usePushNotifications";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -822,6 +824,8 @@ export default function DashboardPage() {
   const lang = i18n.language as "nl" | "en" | "fa";
   const isRtl = lang === "fa";
 
+  const { permission: pushPermission, subscribe: subscribePush, isSupported: pushSupported } = usePushNotifications();
+
   const [calcResult, setCalcResult]   = useState<CalcResult | null>(null);
   const [alerts, setAlerts]           = useState<Alert[]>([]);
   const [actions, setActions]         = useState<TaxAction[]>([]);
@@ -1087,6 +1091,21 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* ── Accountant invitation banners ─────────────────────────────────── */}
+      {user && <InvitationBanner />}
+
+      {/* ── Push notification opt-in (shown once, only if not yet granted) ── */}
+      {pushSupported && pushPermission === "default" && user && (
+        <div className="card" style={{ padding: "14px 18px", marginBottom: 20, background: "var(--accent-soft)", border: "1px solid var(--accent-line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-2)" }}>
+            🔔 {L("Ontvang meldingen voor belastingdeadlines en accountant-updates", "Get notified about tax deadlines and accountant updates", "اعلان‌های مهلت مالیاتی و به‌روزرسانی‌های حسابدار را دریافت کنید")}
+          </div>
+          <button className="btn btn-accent btn-sm" onClick={() => subscribePush()}>
+            {L("Meldingen aanzetten", "Enable notifications", "فعال‌سازی اعلان‌ها")}
+          </button>
+        </div>
+      )}
 
       {/* ── No-profile banner ──────────────────────────────────────────────── */}
       {!profile && (

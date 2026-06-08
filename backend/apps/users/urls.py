@@ -6,6 +6,8 @@ from .views import (
     ItemStatesView, EmailCaptureView, RemindersView,
     ChatHistoryView, ICSCalendarView, AccountantView,
     AccountantSetupView, PDFReportView,
+    AccountantInvitationsView, ClientInvitationsView,
+    PushVapidKeyView, PushSubscribeView,
 )
 from .admin_views import AdminUserListView, AdminUserDetailView
 
@@ -30,6 +32,14 @@ urlpatterns = [
     path("accountant/clients/",          AccountantView.as_view(),      name="accountant-clients"),
     path("accountant/clients/<int:pk>/", AccountantView.as_view(),      name="accountant-client-detail"),
     path("report/",                    PDFReportView.as_view(),   name="pdf-report"),
+    # Invitation system
+    path("accountant/invitations/",          AccountantInvitationsView.as_view(), name="accountant-invitations"),
+    path("accountant/invitations/<int:pk>/", AccountantInvitationsView.as_view(), name="accountant-invitation-detail"),
+    path("client/invitations/",              ClientInvitationsView.as_view(),     name="client-invitations"),
+    path("client/invitations/<int:pk>/respond/", ClientInvitationsView.as_view(), name="client-invitation-respond"),
+    # Web Push
+    path("push/vapid-key/",  PushVapidKeyView.as_view(),   name="push-vapid-key"),
+    path("push/subscribe/",  PushSubscribeView.as_view(),  name="push-subscribe"),
     # Admin-only user management
     path("admin/list/",              AdminUserListView.as_view(),   name="admin-user-list"),
     path("admin/<int:pk>/",          AdminUserDetailView.as_view(), name="admin-user-detail"),
