@@ -86,22 +86,25 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
       : []),
   ];
 
+  const t = (nl: string, en: string, fa: string) =>
+    lang === "nl" ? nl : lang === "fa" ? fa : en;
+
   const breakdownRows: [string, number][] = [
-    [lang === "nl" ? "Box 1 — belasting (bruto)" : "Box 1 (raw)", result.calculation.box1_tax_raw],
-    [lang === "nl" ? "Algemene heffingskorting" : "General tax credit", -result.calculation.algemene_heffingskorting],
-    [lang === "nl" ? "Arbeidskorting" : "Labour tax credit", -result.calculation.arbeidskorting],
+    [t("Box 1 — belasting (bruto)", "Box 1 — tax (gross)", "Box 1 — مالیات (ناخالص)"), result.calculation.box1_tax_raw],
+    [t("Algemene heffingskorting", "General tax credit", "تخفیف مالیاتی عمومی"), -result.calculation.algemene_heffingskorting],
+    [t("Arbeidskorting", "Labour tax credit", "تخفیف مالیات کار"), -result.calculation.arbeidskorting],
     ...(result.calculation.iack > 0
-      ? [[lang === "nl" ? "IACK (kinderopvang)" : "IACK", -result.calculation.iack] as [string, number]]
+      ? [[t("IACK (kinderopvang)", "IACK (child care)", "IACK (مراقبت از کودک)"), -result.calculation.iack] as [string, number]]
       : []),
-    [lang === "nl" ? "Box 1 na kortingen" : "Box 1 after credits", result.calculation.income_tax_after_credits],
+    [t("Box 1 na kortingen", "Box 1 after credits", "Box 1 پس از تخفیف‌ها"), result.calculation.income_tax_after_credits],
     ...(result.calculation.zvw_contribution > 0
-      ? [["ZVW-bijdrage (4.85%)", result.calculation.zvw_contribution] as [string, number]]
+      ? [[t("ZVW-bijdrage (4.85%)", "ZVW contribution (4.85%)", "مشارکت ZVW (4.85٪)"), result.calculation.zvw_contribution] as [string, number]]
       : []),
     ...(result.calculation.box2_tax > 0
-      ? [["Box 2", result.calculation.box2_tax] as [string, number]]
+      ? [[t("Box 2 — aanmerkelijk belang", "Box 2 — substantial interest", "Box 2 — سهم قابل توجه"), result.calculation.box2_tax] as [string, number]]
       : []),
     ...(result.calculation.box3_tax > 0
-      ? [["Box 3", result.calculation.box3_tax] as [string, number]]
+      ? [[t("Box 3 — vermogen", "Box 3 — savings/investments", "Box 3 — دارایی"), result.calculation.box3_tax] as [string, number]]
       : []),
   ];
 
@@ -139,8 +142,11 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
           </div>
           {hadVoorlopige && voorlopige > 0 && (
             <div style={{ marginTop: 6, fontSize: 12, color: "oklch(0.82 0.01 95)" }}>
-              {lang === "nl" ? `na €${voorlopige.toLocaleString("nl-NL")} voorlopige aanslag`
-                : `after €${voorlopige.toLocaleString("nl-NL")} provisional assessment`}
+              {t(
+                `na €${voorlopige.toLocaleString("nl-NL")} voorlopige aanslag`,
+                `after €${voorlopige.toLocaleString("nl-NL")} provisional assessment`,
+                `پس از €${voorlopige.toLocaleString("nl-NL")} ارزیابی موقت`,
+              )}
             </div>
           )}
         </div>
