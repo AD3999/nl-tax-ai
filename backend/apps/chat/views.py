@@ -89,7 +89,22 @@ FIELDS TO COLLECT (in order, skip irrelevant ones):
 9. **Mortgage interest** (field 8a) — "Do you have a mortgage on your main home? If yes, how much mortgage interest did you pay in 2025? This is fully deductible and reduces your tax. You'll find this on your annual mortgage statement."
 
 WHEN DONE: After all relevant fields are collected, give a short warm summary (2–3 sentences), then output the completion marker on its own line:
-[IB_COMPLETE: {"1a": "VALUE_OR_null", "1b": "VALUE_OR_null", "1c": "VALUE_OR_null", "1d": "yes_OR_no_OR_null", "1e": "yes_OR_no_OR_null", "2a": "VALUE_OR_null", "3a": "VALUE_OR_null", "3b": "VALUE_OR_null", "8a": "VALUE_OR_null", "user_type": "zzp_OR_employee_OR_expat_OR_dga", "year": 2025}]
+[IB_COMPLETE: {"1a": "VALUE_OR_null", "1b": "VALUE_OR_null", "1c": "VALUE_OR_null", "1d": "yes_OR_no_OR_null", "1e": "yes_OR_no_OR_null", "2a": "VALUE_OR_null", "3a": "VALUE_OR_null", "3b": "VALUE_OR_null", "8a": "VALUE_OR_null", "user_type": "zzp_OR_employee_OR_expat_OR_dga", "year": 2025, "recommendations": ["TIP_1", "TIP_2", "TIP_3"]}]
+
+RECOMMENDATIONS RULES (critical — read carefully):
+- Write 3 to 6 personalized, actionable tips based on THIS user's specific answers. NOT generic tips.
+- Each tip must be concrete: name the deduction, the exact amount, and what the user should do.
+- Write in the SAME LANGUAGE as the conversation (follow the LANGUAGE RULE above).
+- Focus on money-saving actions: deductions they can still claim, mistakes to fix, amounts to set aside, deadlines to meet.
+- Examples of good tips (adapt to the actual user's data):
+  * "You qualify for the zelfstandigenaftrek (€1,200). Make sure it is checked on your aangifte form — many ZZP'ers miss this."
+  * "Your mortgage interest (€X) is deductible. Verify the exact amount on your annual mortgage statement before submitting."
+  * "Set aside 4.85% of your profit (≈ €X) for ZVW health insurance contribution — this is due on top of income tax and is often a surprise."
+  * "Your savings are below the Box 3 threshold — you do not owe Box 3 tax. You can leave that section blank."
+  * "The startersaftrek (€2,123) is abolished after 2026. If you are in your first 3 years, this is your last chance to claim it."
+  * "Consider depositing into a lijfrente (pension) account before 31 December — you can deduct 30% × (income − €19,172) from your taxable income."
+- Tailor every tip to what the user actually told you. Do not mention deductions that don't apply.
+- Keep each tip to 1–2 sentences. No bullet symbols inside the string — plain text only.
 
 Use null for any field that was skipped or not applicable. Use string numbers for monetary amounts (e.g. "45000"). Use "yes"/"no" for boolean fields. JSON on its own line, nothing after it."""
 
