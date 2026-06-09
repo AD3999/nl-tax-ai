@@ -11,14 +11,6 @@ import { useMobile } from "../hooks/useMobile";
 import { useToast } from "../context/ToastContext";
 import { Skeleton } from "../components/Skeleton";
 import { printIBReport, type IBAnswers } from "../utils/ibReport";
-import { SimStepCard } from "../components/SimStepCard";
-import { SimOverviewCard } from "../components/SimOverviewCard";
-import {
-  visibleSteps,
-  answersToCalcProfile,
-  type Answers,
-} from "../data/simulationSteps";
-import { calculateTax } from "../api/calculator";
 
 interface ChatMsg {
   id: string;
@@ -26,11 +18,7 @@ interface ChatMsg {
   content: string;
   streaming?: boolean;
   isIntake?: boolean;
-  isIBResult?: boolean;   // marks the final IB summary message that has the PDF button
-  isSimStep?: boolean;    // renders as an inline SimStepCard
-  simStepId?: string;     // SIMULATION_STEPS[].id — used to look up the step definition
-  simStepIndex?: number;  // position in the visible-steps queue (for done/active check)
-  isSimResult?: boolean;  // renders the SimOverviewCard final result
+  isIBResult?: boolean;
 }
 
 const SIM_CHIP_LABEL: Record<string, string> = {
@@ -39,10 +27,10 @@ const SIM_CHIP_LABEL: Record<string, string> = {
   fa: "🧮 شبیه‌سازی مالیاتی ۲۰۲۶",
 };
 
-const SIM_INTRO: Record<string, string> = {
-  nl: "Ik bereken nu uw geschatte belasting voor 2026. Vul de stappen in — velden overslaan is toegestaan. Klik op **Vraag** naast een veld voor een uitleg van TaxWijs.",
-  en: "I'll now calculate your estimated 2026 tax. Fill in the steps — fields may be skipped. Click **Ask** next to any field for an explanation.",
-  fa: "اکنون مالیات تخمینی ۲۰۲۶ شما را محاسبه می‌کنم. مراحل را تکمیل کنید — رد کردن فیلدها مجاز است. برای توضیح هر فیلد روی **بپرس** کلیک کنید.",
+const SIM_TRIGGER: Record<string, string> = {
+  nl: "Bereken mijn geschatte belasting voor 2026",
+  en: "Calculate my estimated 2026 Dutch taxes",
+  fa: "مالیات تخمینی ۲۰۲۶ من را محاسبه کنید",
 };
 
 // First message the AI sends to open the IB return flow
@@ -189,9 +177,6 @@ export default function ChatPage() {
   const [ibAnswers, setIbAnswers]         = useState<IBAnswers | null>(null);
 
   const [simMode, setSimMode]             = useState(false);
-  const [simAnswers, setSimAnswers]       = useState<Answers>({});
-  const [simStepIdx, setSimStepIdx]       = useState(0);
-  const [simRunning, setSimRunning]       = useState<{ total_tax: number; monthly_reserve: number } | null>(null);
 
   const [profile, setProfile] = useState<Record<string, unknown> | null>(() => {
     try { const r = localStorage.getItem("taxwijs_calc_input"); return r ? JSON.parse(r) : null; }
@@ -226,71 +211,11 @@ export default function ChatPage() {
   function startSimulation() {
     localStorage.removeItem(historyKey());
     setSimMode(true);
-    setSimAnswers({});
-    setSimStepIdx(0);
-    setSimRunning(null);
     setIbMode(false);
     setIbAnswers(null);
-
-    const steps = visibleSteps({});
-    const firstStep = steps[0];
-    const now = Date.now();
-    setMessages([
-      { id: `u-sim-${now}`, role: "user", content: SIM_CHIP_LABEL[lang] ?? SIM_CHIP_LABEL.en },
-      { id: `sim-intro-${now}`, role: "assistant", content: SIM_INTRO[lang] ?? SIM_INTRO.en },
-      ...(firstStep
-        ? [{ id: `sim-step-0-${now}`, role: "assistant" as const, content: "", isSimStep: true, simStepId: firstStep.id, simStepIndex: 0 }]
-        : []),
-    ]);
+    setMessages([]);
+    void submit(SIM_TRIGGER[lang] ?? SIM_TRIGGER.en, false, false, true);
   }
-
-  const handleSimStepSubmit = useCallback((stepIndex: number, stepAnswers: Answers) => {
-    setSimAnswers(prev => {
-      const newAnswers = { ...prev, ...stepAnswers };
-      const steps = visibleSteps(newAnswers);
-      const nextIdx = stepIndex + 1;
-
-      // Update live estimate after step 2+ when we have income data
-      const calcProfile = answersToCalcProfile(newAnswers) as Record<string, unknown>;
-      if (nextIdx >= 2 && calcProfile.user_type &&
-          (calcProfile.annual_revenue_zzp || calcProfile.employment_income)) {
-        calculateTax(calcProfile as unknown as Parameters<typeof calculateTax>[0])
-          .then(r => setSimRunning({
-            total_tax: r.result.total_tax_due,
-            monthly_reserve: r.result.monthly_reserve_needed,
-          }))
-          .catch(() => null);
-      }
-
-      setSimStepIdx(nextIdx);
-
-      if (nextIdx >= steps.length) {
-        // All steps done — add result card
-        setMessages(prev2 => [...prev2, {
-          id: `sim-result-${Date.now()}`,
-          role: "assistant" as const,
-          content: "",
-          isSimResult: true,
-        }]);
-      } else {
-        const nextStep = steps[nextIdx];
-        setMessages(prev2 => [...prev2, {
-          id: `sim-step-${nextStep.id}-${Date.now()}`,
-          role: "assistant" as const,
-          content: "",
-          isSimStep: true,
-          simStepId: nextStep.id,
-          simStepIndex: nextIdx,
-        }]);
-      }
-
-      return newAnswers;
-    });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleAskClaude = useCallback((question: string) => {
-    void submit(question);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist messages to localStorage on every change (strip streaming flag so restore is clean)
   useEffect(() => {
@@ -422,7 +347,7 @@ export default function ChatPage() {
     }
   }
 
-  const submit = async (question: string, fromInput = false, ibReturnOverride = false) => {
+  const submit = async (question: string, fromInput = false, ibReturnOverride = false, simModeOverride = false) => {
     if (!question.trim() || loading || sessionLimitReached) return;
     const isIBMode = ibMode || ibReturnOverride;
 
@@ -456,8 +381,8 @@ export default function ChatPage() {
     let fullResponse = "";
 
     try {
-      // Determine if we're in intake mode (no profile yet) — IB and sim modes take priority
-      const isIntakeMode = !isIBMode && !simMode && !profile && !intakeComplete;
+      // Intake mode: no profile yet, OR simulation chip triggered (treats sim as a fresh intake)
+      const isIntakeMode = !isIBMode && (simMode || simModeOverride || (!profile && !intakeComplete));
 
       // Consume the pending alert context (only used on the first message after navigation)
       const alertCtx = pendingAlertRef.current;
@@ -546,6 +471,7 @@ export default function ChatPage() {
         localStorage.setItem("taxwijs_calc_input", JSON.stringify(extracted));
         setProfile(extracted);
         setIntakeComplete(true);
+        setSimMode(false); // simulation complete — switch to normal chat
 
         // For authenticated users: also persist to server so it works across devices
         if (user) {
@@ -775,51 +701,6 @@ export default function ChatPage() {
 
           {/* Message bubbles */}
           {messages.map(msg => {
-            // ── Inline simulation step card ──────────────────────────────────
-            if (msg.isSimStep && msg.simStepId) {
-              const steps = visibleSteps(simAnswers);
-              const step = steps.find(s => s.id === msg.simStepId);
-              if (!step) return null;
-              const isDone = (msg.simStepIndex ?? 0) < simStepIdx;
-              return (
-                <SimStepCard
-                  key={msg.id}
-                  step={step}
-                  stepIndex={msg.simStepIndex ?? 0}
-                  totalSteps={steps.length}
-                  answers={simAnswers}
-                  lang={lang as "nl" | "en" | "fa"}
-                  isMobile={isMobile}
-                  done={isDone}
-                  onSubmit={handleSimStepSubmit}
-                  onAskClaude={handleAskClaude}
-                />
-              );
-            }
-
-            // ── Simulation result overview ────────────────────────────────────
-            if (msg.isSimResult) {
-              return (
-                <SimOverviewCard
-                  key={msg.id}
-                  answers={simAnswers}
-                  lang={lang as "nl" | "en" | "fa"}
-                  isMobile={isMobile}
-                  onGoToChat={q => {
-                    // Promote sim answers to full profile so follow-up chat works normally
-                    if (!profile) {
-                      const simProfile = answersToCalcProfile(simAnswers);
-                      localStorage.setItem("taxwijs_calc_input", JSON.stringify(simProfile));
-                      setProfile(simProfile as Record<string, unknown>);
-                    }
-                    setIntakeComplete(true);
-                    setSimMode(false);
-                    void submit(q);
-                  }}
-                />
-              );
-            }
-
             return msg.role === "user" ? (
               <div key={msg.id} style={{ display: "flex", justifyContent: "flex-end" }}>
                 <div style={{ padding: "10px 16px", borderRadius: "18px 18px 4px 18px", background: "var(--ink)", color: "var(--paper)", fontSize: 14, maxWidth: "78%" }}>
@@ -932,29 +813,6 @@ export default function ChatPage() {
         }}
       >
         <div style={{ maxWidth: 880, margin: "0 auto" }}>
-          {/* Simulation running estimate bar */}
-          {simMode && simRunning && (
-            <div style={{
-              marginBottom: 8, display: "flex", alignItems: "center", gap: 8,
-              padding: "6px 14px", borderRadius: 999,
-              background: "var(--accent-soft)", border: "1px solid var(--accent-line)",
-              fontSize: 13, flexWrap: "wrap",
-            }}>
-              <span style={{ color: "var(--sage-700)", fontWeight: 500 }}>🧮</span>
-              <span className="font-mono" style={{ color: "var(--ink)", fontWeight: 600 }}>
-                ~€{simRunning.monthly_reserve.toLocaleString("nl-NL")}/
-                {lang === "nl" ? "maand" : lang === "fa" ? "ماه" : "mo"}
-              </span>
-              <span style={{ color: "var(--ink-4)", fontSize: 12 }}>
-                {lang === "nl"
-                  ? `· stap ${Math.min(simStepIdx + 1, visibleSteps(simAnswers).length)} van ${visibleSteps(simAnswers).length}`
-                  : lang === "fa"
-                  ? `· مرحله ${Math.min(simStepIdx + 1, visibleSteps(simAnswers).length)} از ${visibleSteps(simAnswers).length}`
-                  : `· step ${Math.min(simStepIdx + 1, visibleSteps(simAnswers).length)} of ${visibleSteps(simAnswers).length}`}
-              </span>
-            </div>
-          )}
-
           {/* Mode chips — always visible, active chip highlighted */}
           {!loading && (
             <div style={{ marginBottom: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -1019,13 +877,11 @@ export default function ChatPage() {
                 disabled={loading}
                 aria-label={
                   ibMode ? (lang === "nl" ? "Geef uw antwoord voor de aangifte" : lang === "fa" ? "پاسخ اظهارنامه را بنویسید" : "Enter your return answer")
-                  : simMode ? (lang === "nl" ? "Vraag iets over een simulatieveld" : lang === "fa" ? "سؤالی درباره فیلد شبیه‌سازی" : "Ask about a simulation field")
                   : profile ? (lang === "nl" ? "Stel een vraag over uw belasting" : lang === "fa" ? "سؤالی درباره مالیات بپرسید" : "Ask a tax question")
                   : (lang === "nl" ? "Typ uw antwoord" : lang === "fa" ? "پاسخ خود را بنویسید" : "Type your answer")
                 }
                 placeholder={
                   ibMode ? (lang === "nl" ? "Typ uw antwoord…" : lang === "fa" ? "پاسخ خود را بنویسید…" : "Type your answer…")
-                  : simMode ? (lang === "nl" ? "Vraag iets over een veld…" : lang === "fa" ? "سؤالی درباره یک فیلد…" : "Ask about a field…")
                   : profile ? (lang === "nl" ? "Stel een vraag over uw belasting…" : lang === "fa" ? "سؤالی درباره مالیات خود بپرسید…" : "Ask a question about your taxes…")
                   : (lang === "nl" ? "Typ uw antwoord…" : lang === "fa" ? "پاسخ خود را بنویسید…" : "Type your answer…")
                 }
@@ -1072,9 +928,6 @@ export default function ChatPage() {
                   setIbMode(false);
                   setIbAnswers(null);
                   setSimMode(false);
-                  setSimAnswers({});
-                  setSimStepIdx(0);
-                  setSimRunning(null);
                   localStorage.removeItem(historyKey());
                   if (!profile) startIntakeGreeting();
                 }}

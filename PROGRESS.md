@@ -1,7 +1,57 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 9 Jun 2026 (session 2) — invitation-only client onboarding, push notification reliability fixes.
+> Last updated: 9 Jun 2026 (session 3) — accountant route fix, simulation wizard replaced with conversational AI flow.
+
+---
+
+## Session — 9 Jun 2026 (session 3) ✅ Complete
+
+### Accountant route fix + simulation wizard → conversational AI
+
+---
+
+#### Fix — `/accountant` route now redirects to `/accountant/portal`
+
+**Problem:** `App.tsx` had `/accountant` rendering the old `AccountantPage` (legacy manual-add-client dashboard). The TopNav already pointed to `/accountant/portal`, but direct navigation or bookmarks to `/accountant` landed on the wrong page.
+
+**Fix (`frontend/src/App.tsx`):**
+- Changed `/accountant` route from `<AccountantPage />` to `<Navigate to="/accountant/portal" replace />`
+- Removed `AccountantPage` lazy import (no longer needed as a route; component file kept for reference)
+
+---
+
+#### Refactor — Simulation wizard replaced with conversational AI intake
+
+**Problem:** The "Tax Simulation 2026" chip launched an 11-step inline form wizard (`SimStepCard` components rendered inside the chat), which was visually heavy and inconsistent with the conversational IB return flow. The user wanted the chatbot to ask fields conversationally, the same way the initial profile intake works.
+
+**Changes (`frontend/src/pages/ChatPage.tsx`):**
+
+*Removed:*
+- `SimStepCard`, `SimOverviewCard` imports
+- `visibleSteps`, `answersToCalcProfile`, `Answers` imports from `simulationSteps`
+- `calculateTax` import (still used in other pages)
+- `simAnswers`, `simStepIdx`, `simRunning` state variables
+- `handleSimStepSubmit()` callback (11-step wizard logic)
+- `handleAskClaude()` callback
+- `SIM_INTRO` constant (wizard intro message)
+- `isSimStep` / `simStepId` / `simStepIndex` / `isSimResult` fields from `ChatMsg` interface
+- Wizard card rendering blocks in the message loop
+- Live estimate bar (`simMode && simRunning` progress display)
+
+*Added:*
+- `SIM_TRIGGER` constant — conversational opening message in NL/EN/FA
+- `simModeOverride` parameter on `submit()` — lets `startSimulation()` force intake mode on the first call, even if the user already has a profile
+- `setSimMode(false)` after `[INTAKE_COMPLETE]` is detected — switches back to normal chat after data is collected
+
+*How it works now:*
+1. User clicks "Tax Simulation 2026" chip
+2. `startSimulation()` clears history, sets `simMode = true`, calls `submit(SIM_TRIGGER, false, false, true)` with `simModeOverride = true`
+3. Backend receives `intake_mode = true` → uses the conversational intake system prompt
+4. Claude asks questions one-by-one (same as the normal profile intake, but triggered on demand)
+5. When enough data is collected, Claude outputs `[INTAKE_COMPLETE: {...}]`
+6. Frontend saves the profile, runs the calculator, shows the tax summary inline
+7. `simMode` resets to `false` — user can now ask follow-up questions in normal chat mode
 
 ---
 

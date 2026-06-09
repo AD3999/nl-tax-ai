@@ -64,7 +64,6 @@ const DeductionCheckerPage = lazy(() => import("./pages/DeductionCheckerPage"));
 const ZZPTaxPage           = lazy(() => import("./pages/ZZPTaxPage"));
 const ExpatTaxPage         = lazy(() => import("./pages/ExpatTaxPage"));
 const TaxCalendarPage      = lazy(() => import("./pages/TaxCalendarPage"));
-const AccountantPage          = lazy(() => import("./pages/AccountantPage"));
 const AccountantPortalPage    = lazy(() => import("./pages/portal/AccountantPortalPage"));
 const AccountantClientPage    = lazy(() => import("./pages/portal/AccountantClientDetailPage"));
 const AccountantEngagementPage = lazy(() => import("./pages/portal/EngagementPage"));
@@ -135,7 +134,7 @@ function App() {
           <Route path="/zzp-tax-netherlands" element={<ZZPTaxPage />} />
           <Route path="/expat-tax-netherlands" element={<ExpatTaxPage />} />
           <Route path="/tax-calendar"        element={<TaxCalendarPage />} />
-          <Route path="/accountant"              element={<AccountantPage />} />
+          <Route path="/accountant"              element={<Navigate to="/accountant/portal" replace />} />
           <Route path="/accountant/portal"       element={<AccountantPortalPage />} />
           <Route path="/accountant/clients/:id"  element={<AccountantClientPage />} />
           <Route path="/accountant/engagements/:id" element={<AccountantEngagementPage />} />
