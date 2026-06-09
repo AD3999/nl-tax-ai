@@ -828,9 +828,8 @@ class AccountantInvitationsView(APIView):
         )
 
         firm = profile.firm_name or request.user.get_full_name() or request.user.email
-        frontend_url = getattr(__import__("django.conf", fromlist=["settings"]).settings, "FRONTEND_URL", "https://taxwijs.nl")
 
-        # Push notification to client (if registered and has a device)
+        # Push notification to client (if registered and has subscribed)
         if client_user:
             from .push_utils import send_push_notification
             send_push_notification(
@@ -839,24 +838,6 @@ class AccountantInvitationsView(APIView):
                 body=f"{firm} has invited you to connect on TaxWijs.",
                 url="/dashboard",
             )
-
-        # Email notification — always send regardless of push subscription status
-        from django.core.mail import send_mail
-        subject = f"Invitation from {firm} on TaxWijs"
-        body_text = (
-            f"Hello,\n\n"
-            f"{firm} has invited you to connect as your tax advisor on TaxWijs.\n\n"
-        )
-        if message:
-            body_text += f"Message from {firm}:\n{message}\n\n"
-        body_text += (
-            f"Log in to your account to accept or decline:\n{frontend_url}/dashboard\n\n"
-            f"— TaxWijs"
-        )
-        try:
-            send_mail(subject, body_text, None, [email], fail_silently=True)
-        except Exception:
-            pass
 
         return Response({
             "id":            inv.id,
