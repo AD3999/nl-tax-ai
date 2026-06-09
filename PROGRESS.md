@@ -1,7 +1,105 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 8 Jun 2026 — Accountant invitation system + Web Push notifications.
+> Last updated: 9 Jun 2026 — VAPID keys, Railway TS fix, 5 accountant/notification UX fixes.
+
+---
+
+## Session — 9 Jun 2026 ✅ Complete
+
+### Railway TypeScript build fix + VAPID setup + 5 UX fixes
+
+---
+
+#### Railway build error — `Uint8Array<ArrayBufferLike>` TS2322 (commit `7a67f3d`)
+
+**Root cause:** TypeScript 5.7+ made typed arrays generic. `Uint8Array` (no generic) = `Uint8Array<ArrayBufferLike>`, not assignable to `BufferSource` (`ArrayBufferView<ArrayBuffer>`). The previous fix (`new Uint8Array(raw.length)`) still failed because the function return type was bare `Uint8Array`.
+
+**Fix (`frontend/src/hooks/usePushNotifications.ts`):** Removed `urlBase64ToUint8Array` entirely. The Web Push API accepts a base64url `string` directly for `applicationServerKey` — no conversion needed, no type issue.
+
+---
+
+#### VAPID key generation
+
+Generated a one-time VAPID key pair (EC P-256, base64url-encoded raw scalar):
+
+```
+VAPID_PUBLIC_KEY=BPoPvaEGs5ZKw-ZcRGfryFt1JQqSkZNMHPF_ZIJ9dUJDtLVC_eDaQBpoYLWwAFFKyrLQWP2m5amT3Zq08aFGmlk
+VAPID_PRIVATE_KEY=AhTVFZGLCmynas6fFK33QjM-K5KtgmWAuo3T1nbstG0
+VAPID_CLAIMS_EMAIL=ayuob1991.nl@gmail.com
+```
+
+Add these to local `.env` and to Railway Variables. The backend (`push_utils.py`) already reads them. The frontend fetches the public key from `/api/users/push/vapid-key/`.
+
+---
+
+#### Fix 1 — Invitation notifications: email fallback (commit `838b62b`)
+
+**Problem:** Push notification on invitation silently failed — VAPID keys absent → `send_push_notification()` returned early. No email fallback existed, so clients received nothing.
+
+**Backend changes:**
+- `settings.py`: Added Django email config reading from env vars (`EMAIL_BACKEND`, `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `EMAIL_USE_TLS`, `DEFAULT_FROM_EMAIL`). Defaults to console backend in dev.
+- `AccountantInvitationsView.post()`: Added `send_mail()` after the push attempt. Fires on every invitation regardless of push subscription. Uses `fail_silently=True`.
+
+**Production env vars needed:**
+```
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.example.com
+EMAIL_HOST_USER=noreply@taxwijs.nl
+EMAIL_HOST_PASSWORD=<password>
+DEFAULT_FROM_EMAIL=TaxWijs <noreply@taxwijs.nl>
+```
+
+---
+
+#### Fix 2 — "Back to portal" navigated to wrong page
+
+`AccountantClientDetailPage.tsx` had `Link to="/accountant"` in the breadcrumb and "← Back to portal" button. `/accountant` is the old standalone page; the portal is at `/accountant/portal`. Fixed all three link targets.
+
+---
+
+#### Fix 3 — No delete client button (accountant side)
+
+The `DELETE /api/portal/clients/<id>/` endpoint existed but no button existed in the UI.
+
+- `AccountantClientDetailPage.tsx`: Added "Remove client" button (red, below back button). Calls `archiveClient(profile.id)`, navigates to `/accountant/portal` on success.
+- `AccountantPortalPage.tsx`: Added ✕ button on each client table row. Removes row from local state on success.
+
+---
+
+#### Fix 4 — Users couldn't disconnect from accountant
+
+**New backend view `ClientMyAccountantView`** (`views.py` + `urls.py`):
+```
+GET    /api/users/client/my-accountant/        — list connected accountants
+DELETE /api/users/client/my-accountant/<pk>/   — remove AccountantClient link
+```
+
+**`InvitationBanner.tsx` extended:**
+- On mount: fetches connected accountants and renders a "Your tax advisor" card per entry.
+- Each card shows firm name + email + "Disconnect" button.
+- On disconnect: `confirm()` → DELETE → row removed → toast.
+- After accepting an invitation, list auto-refreshes to show the new accountant.
+- Early-exit condition updated: hides only when both `pending.length === 0` and `accountants.length === 0`.
+
+---
+
+#### Fix 5 — Push notification button had no state or feedback
+
+**`DashboardPage.tsx`:**
+- Wired up `subscribed` and `unsubscribe` from `usePushNotifications` (returned by hook, previously unused).
+- Added `useToast` / `showToast`.
+- **Enable:** `await subscribePush()` → success toast on approval; error toast if browser permission is blocked.
+- **Active state:** When `pushSubscribed === true`, banner switches to "Notifications active" style with a "Disable" button.
+- **Disable:** Calls `unsubscribePush()` (removes subscription from backend) → info toast.
+- Banner now shows for any `permission !== "denied"` state (not just `"default"`).
+
+---
+
+#### Checks
+
+- `npx tsc --noEmit` → 0 errors after all changes
+- Commits `7a67f3d` and `838b62b` pushed to master
 
 ---
 
