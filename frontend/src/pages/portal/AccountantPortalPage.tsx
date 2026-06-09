@@ -202,6 +202,7 @@ export default function AccountantPortalPage() {
   const [invitations, setInvitations] = useState<SentInvitation[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState("");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Invitation form state
   const [invEmail, setInvEmail] = useState("");
@@ -211,20 +212,23 @@ export default function AccountantPortalPage() {
   useEffect(() => {
     if (loading) return;
     if (!user) return;
-    loadData();
-  }, [user, loading]);
+    void loadData();
+    const id = setInterval(() => void loadData(true), 20_000);
+    return () => clearInterval(id);
+  }, [user, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function loadData() {
-    setLoadingData(true);
+  async function loadData(silent = false) {
+    if (!silent) setLoadingData(true);
     try {
       const [cls, engs, invs] = await Promise.all([fetchClients(), fetchEngagements(), fetchSentInvitations()]);
       setClients(cls);
       setEngagements(engs);
       setInvitations(invs);
+      setLastUpdated(new Date());
     } catch {
-      setError("Failed to load portal data");
+      if (!silent) setError("Failed to load portal data");
     }
-    setLoadingData(false);
+    if (!silent) setLoadingData(false);
   }
 
   async function handleSendInvitation(e: React.FormEvent) {
@@ -272,12 +276,28 @@ export default function AccountantPortalPage() {
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: isMobile ? "var(--sp-5) var(--sp-4)" : "var(--sp-9) var(--sp-8)" }}>
 
         {/* Header */}
-        <div style={{ marginBottom: "var(--sp-6)" }}>
-          <span className="pill pill-accent" style={{ marginBottom: "var(--sp-2)", display: "inline-block" }}>{tx.badge}</span>
-          <h1 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-4xl)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.025em" }}>
-            {tx.title}
-          </h1>
-          <p style={{ color: "var(--ink-3)", fontSize: "var(--text-sm)", marginTop: "var(--sp-1)" }}>{tx.subtitle}</p>
+        <div style={{ marginBottom: "var(--sp-6)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "var(--sp-3)" }}>
+          <div>
+            <span className="pill pill-accent" style={{ marginBottom: "var(--sp-2)", display: "inline-block" }}>{tx.badge}</span>
+            <h1 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-4xl)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.025em" }}>
+              {tx.title}
+            </h1>
+            <p style={{ color: "var(--ink-3)", fontSize: "var(--text-sm)", marginTop: "var(--sp-1)" }}>{tx.subtitle}</p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginTop: 4 }}>
+            {lastUpdated && (
+              <span style={{ fontSize: 11, color: "var(--ink-4)" }}>
+                {lang === "nl" ? "bijgewerkt" : lang === "fa" ? "به‌روز شد" : "updated"} {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
+            <button
+              onClick={() => void loadData(true)}
+              title="Refresh"
+              style={{ background: "none", border: "1px solid var(--hairline-2)", borderRadius: 6, cursor: "pointer", color: "var(--ink-4)", fontSize: 14, padding: "3px 8px", lineHeight: 1 }}
+            >
+              ↻
+            </button>
+          </div>
         </div>
 
         {/* Summary cards */}

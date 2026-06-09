@@ -41,20 +41,26 @@ export default function ClientTasksPage() {
   const [completed, setCompleted] = useState(0);
   const [readiness, setReadiness] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    load();
-  }, [user]);
+    void load();
+    const id = setInterval(() => void load(true), 20_000);
+    return () => clearInterval(id);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function load() {
-    setLoading(true);
-    const result = await fetchClientTasks();
-    setTasks((result.tasks as Task[]) || []);
-    setTotal(result.total);
-    setCompleted(result.completed);
-    setReadiness(result.readiness_score);
-    setLoading(false);
+  async function load(silent = false) {
+    if (!silent) setLoading(true);
+    try {
+      const result = await fetchClientTasks();
+      setTasks((result.tasks as Task[]) || []);
+      setTotal(result.total);
+      setCompleted(result.completed);
+      setReadiness(result.readiness_score);
+      setLastUpdated(new Date());
+    } catch { /* silent fail on background refresh */ }
+    if (!silent) setLoading(false);
   }
 
   if (loading) return (
@@ -72,7 +78,11 @@ export default function ClientTasksPage() {
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "var(--sp-3) 0 var(--sp-5)" }}>
           <h1 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-3xl)", fontWeight: 400, color: "var(--ink)", margin: 0 }}>{t("title", lang)}</h1>
-          <span style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)" }}>{completed}/{total} {t("done", lang)}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)" }}>{completed}/{total} {t("done", lang)}</span>
+            {lastUpdated && <span style={{ fontSize: 10, color: "var(--ink-4)" }}>{lastUpdated.toLocaleTimeString()}</span>}
+            <button onClick={() => void load(true)} title="Refresh" style={{ background: "none", border: "1px solid var(--hairline-2)", borderRadius: 6, cursor: "pointer", color: "var(--ink-4)", fontSize: 13, padding: "2px 7px", lineHeight: 1 }}>↻</button>
+          </div>
         </div>
 
         {/* Progress bar */}

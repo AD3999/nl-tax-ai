@@ -65,6 +65,7 @@ export default function EngagementPage() {
   const [tab, setTab] = useState<Tab>("overview");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [generatingActions, setGeneratingActions] = useState(false);
   const [reminderPreview, setReminderPreview] = useState<{ subject: string; body: string; missing_count: number } | null>(null);
 
@@ -76,11 +77,14 @@ export default function EngagementPage() {
 
   useEffect(() => {
     if (!user || !engId) return;
-    loadAll();
-  }, [user, engId]);
+    void loadAll();
+    // Poll the live-changing parts every 30 seconds (silently)
+    const id = setInterval(() => void loadLive(), 30_000);
+    return () => clearInterval(id);
+  }, [user, engId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function loadAll() {
-    setLoading(true);
+  async function loadAll(silent = false) {
+    if (!silent) setLoading(true);
     try {
       const [eng, chk, docs, inc, exp, acts] = await Promise.all([
         fetchEngagement(engId),
@@ -96,20 +100,36 @@ export default function EngagementPage() {
       setIncome(inc);
       setExpenses(exp);
       setActions(acts);
+      setLastUpdated(new Date());
     } catch {
-      setError("Failed to load engagement");
+      if (!silent) setError("Failed to load engagement");
     }
-    setLoading(false);
+    if (!silent) setLoading(false);
+  }
+
+  // Lightweight poll — only the fields most likely to change client-side
+  async function loadLive() {
+    try {
+      const [eng, chk, docs, acts] = await Promise.all([
+        fetchEngagement(engId),
+        fetchChecklist(engId),
+        fetchDocuments(engId),
+        fetchActions(engId),
+      ]);
+      setEngagement(eng);
+      setChecklist(chk);
+      setDocuments(docs);
+      setActions(acts);
+      setLastUpdated(new Date());
+    } catch { /* silent */ }
   }
 
   async function loadRisks() {
-    if (risks) return;
     const r = await fetchRisks(engId);
     setRisks(r);
   }
 
   async function loadAudit() {
-    if (auditLog.length > 0) return;
     const logs = await fetchAudit(engId);
     setAuditLog(logs);
   }
@@ -222,7 +242,11 @@ export default function EngagementPage() {
               </span>
             </div>
           </div>
-          <div style={{ display: "flex", gap: "var(--sp-2)" }}>
+          <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "center", flexWrap: "wrap" }}>
+            {lastUpdated && (
+              <span style={{ fontSize: 10, color: "var(--ink-4)" }}>{lastUpdated.toLocaleTimeString()}</span>
+            )}
+            <button title="Refresh" onClick={() => void loadAll(true)} style={{ background: "none", border: "1px solid var(--hairline-2)", borderRadius: 6, cursor: "pointer", color: "var(--ink-4)", fontSize: 13, padding: "2px 7px", lineHeight: 1 }}>↻</button>
             <button className="btn btn-ghost btn-sm" onClick={handleRecalculate}>Recalculate</button>
             <button className="btn btn-ghost btn-sm" onClick={handleSendReminder}>Send reminder</button>
             <button className="btn btn-accent btn-sm" onClick={handleGenerateActions} disabled={generatingActions}>

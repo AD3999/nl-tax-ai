@@ -32,14 +32,17 @@ export default function ClientPortalPage() {
   const [taskSummary, setTaskSummary] = useState<{ total: number; completed: number; readiness_score: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    load();
-  }, [user]);
+    void load();
+    const id = setInterval(() => void load(true), 20_000);
+    return () => clearInterval(id);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function load() {
-    setLoading(true);
+  async function load(silent = false) {
+    if (!silent) setLoading(true);
     try {
       const [p, e, tasks] = await Promise.all([
         fetchClientProfile(),
@@ -49,10 +52,11 @@ export default function ClientPortalPage() {
       setProfile(p);
       setEngagement(e);
       setTaskSummary(tasks);
+      setLastUpdated(new Date());
     } catch {
-      setError("Portal not available — contact your accountant");
+      if (!silent) setError("Portal not available — contact your accountant");
     }
-    setLoading(false);
+    if (!silent) setLoading(false);
   }
 
   if (loading) return (
@@ -71,11 +75,25 @@ export default function ClientPortalPage() {
   return (
     <main style={{ background: "var(--paper)", flex: 1 }}>
       <div style={{ maxWidth: 800, margin: "0 auto", padding: "var(--sp-8) var(--sp-6)" }}>
-        <div style={{ marginBottom: "var(--sp-6)" }}>
-          <p style={{ fontFamily: "var(--serif)", fontSize: "var(--text-sm)", color: "var(--ink-4)", margin: "0 0 4px" }}>{t("welcome", lang)},</p>
-          <h1 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-3xl)", fontWeight: 400, color: "var(--ink)", margin: 0 }}>
-            {profile.display_name}
-          </h1>
+        <div style={{ marginBottom: "var(--sp-6)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "var(--sp-3)" }}>
+          <div>
+            <p style={{ fontFamily: "var(--serif)", fontSize: "var(--text-sm)", color: "var(--ink-4)", margin: "0 0 4px" }}>{t("welcome", lang)},</p>
+            <h1 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-3xl)", fontWeight: 400, color: "var(--ink)", margin: 0 }}>
+              {profile.display_name}
+            </h1>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            {lastUpdated && (
+              <span style={{ fontSize: 11, color: "var(--ink-4)" }}>{lastUpdated.toLocaleTimeString()}</span>
+            )}
+            <button
+              onClick={() => void load(true)}
+              title="Refresh"
+              style={{ background: "none", border: "1px solid var(--hairline-2)", borderRadius: 6, cursor: "pointer", color: "var(--ink-4)", fontSize: 14, padding: "3px 8px", lineHeight: 1 }}
+            >
+              ↻
+            </button>
+          </div>
         </div>
 
         {/* Readiness ring + summary */}

@@ -43,23 +43,29 @@ export default function ClientDocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
-    load();
-  }, [user]);
+    void load();
+    const id = setInterval(() => void load(true), 20_000);
+    return () => clearInterval(id);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function load() {
-    setLoading(true);
-    const [docs, eng] = await Promise.all([
-      fetchClientDocuments(),
-      fetchClientEngagement(),
-    ]);
-    setDocuments(docs);
-    setEngagement(eng);
-    setLoading(false);
+  async function load(silent = false) {
+    if (!silent) setLoading(true);
+    try {
+      const [docs, eng] = await Promise.all([
+        fetchClientDocuments(),
+        fetchClientEngagement(),
+      ]);
+      setDocuments(docs);
+      setEngagement(eng);
+      setLastUpdated(new Date());
+    } catch { /* silent fail on background refresh */ }
+    if (!silent) setLoading(false);
   }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -70,6 +76,8 @@ export default function ClientDocumentsPage() {
     try {
       const doc = await uploadDocument(engagement.id, engagement.client_profile, file);
       setDocuments(prev => [doc, ...prev]);
+      // Re-fetch after a short delay to pick up processing status updates
+      setTimeout(() => void load(true), 3000);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Upload failed");
     }
@@ -91,6 +99,8 @@ export default function ClientDocumentsPage() {
           <h1 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-3xl)", fontWeight: 400, color: "var(--ink)", margin: 0 }}>{t("title", lang)}</h1>
           <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "center" }}>
             {error && <span style={{ color: "var(--danger)", fontSize: "var(--text-xs)" }}>{error}</span>}
+            {lastUpdated && <span style={{ fontSize: 10, color: "var(--ink-4)" }}>{lastUpdated.toLocaleTimeString()}</span>}
+            <button onClick={() => void load(true)} title="Refresh" style={{ background: "none", border: "1px solid var(--hairline-2)", borderRadius: 6, cursor: "pointer", color: "var(--ink-4)", fontSize: 13, padding: "2px 7px", lineHeight: 1 }}>↻</button>
             <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.heic,.csv,.xlsx" style={{ display: "none" }} onChange={handleFile} />
             <button className="btn btn-accent btn-sm" onClick={() => fileInputRef.current?.click()} disabled={uploading || !engagement}>
               {uploading ? t("uploading", lang) : t("upload", lang)}

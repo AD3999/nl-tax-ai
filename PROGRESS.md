@@ -1,7 +1,50 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 9 Jun 2026 (session 3) — accountant route fix, simulation wizard replaced with conversational AI flow.
+> Last updated: 9 Jun 2026 (session 4) — portal real-time refresh, EngagementPage stale data fixes, accountant/client portal audit.
+
+---
+
+## Session — 9 Jun 2026 (session 4) ✅ Complete
+
+### Full portal audit + real-time refresh
+
+---
+
+#### Audit — Accountant & client portal code review
+
+Full read-only audit covering all portal pages, API endpoints, routes, and state management.
+
+**Findings:**
+- All routes in `App.tsx` are correctly defined and all `<Link>` targets resolve. No broken navigation.
+- All frontend API calls match the backend URL patterns in `portal/urls.py` and `users/urls.py` exactly.
+- Critical stale-state bugs identified: all portal pages loaded data once on mount with no polling, no refresh button, and no "last updated" indicator. Accountant and client would need to refresh the browser to see changes made by the other party.
+- `EngagementPage.tsx` had two caching bugs: `loadAudit()` and `loadRisks()` both had early-return guards (`if (auditLog.length > 0) return`) that prevented ever re-fetching those tabs after the first load.
+
+---
+
+#### Fix — Portal real-time polling + refresh buttons (all portal pages)
+
+**Files changed:**
+- `AccountantPortalPage.tsx`
+- `ClientPortalPage.tsx`
+- `ClientTasksPage.tsx`
+- `ClientDocumentsPage.tsx`
+- `EngagementPage.tsx`
+
+**Pattern applied to every page:**
+
+1. `load(silent = false)` — when `silent = true`, skips the loading spinner; data updates in-place without UI flicker.
+2. `useEffect` starts a `setInterval(20_000)` (20 seconds) on mount, calling `load(true)` each tick. Returns a cleanup to `clearInterval` on unmount.
+3. `lastUpdated` state shows the actual refresh time in the header (e.g., "updated 14:23:05").
+4. Manual ↻ refresh button added to every portal header — calls `load(true)` immediately.
+
+**EngagementPage-specific improvements:**
+- Polling only re-fetches the 4 live-changing resources (engagement, checklist, documents, actions) every 30 seconds — not income/expenses which rarely change mid-session.
+- `loadAudit()` and `loadRisks()` — removed the "never refetch" early-return guards. Clicking those tabs now always fetches fresh data from the server.
+
+**ClientDocumentsPage-specific improvement:**
+- After a successful upload, triggers a silent re-fetch after 3 seconds so the document's processing status (`uploaded → processing → extracted`) updates automatically without the user refreshing.
 
 ---
 
