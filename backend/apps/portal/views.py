@@ -148,9 +148,21 @@ class AccountantClientDetailView(APIView):
             return err
         if not _is_accountant_of_client(request.user, profile) and not request.user.is_staff:
             return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
-        profile.status = "archived"
-        profile.save(update_fields=["status"])
-        _audit(request, "client_archived", "AccountantClientProfile", profile.id, client_profile=profile)
+
+        # Also remove the AccountantClient link in the users app
+        if profile.client_user_id:
+            try:
+                from apps.users.models import AccountantProfile, AccountantClient
+                acc_profile = AccountantProfile.objects.get(user=request.user)
+                AccountantClient.objects.filter(
+                    accountant=acc_profile,
+                    client_user_id=profile.client_user_id,
+                ).delete()
+            except Exception:
+                pass
+
+        _audit(request, "client_deleted", "AccountantClientProfile", profile.id, client_profile=profile)
+        profile.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

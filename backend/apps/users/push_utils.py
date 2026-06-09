@@ -30,20 +30,29 @@ def send_push_notification(user, title: str, body: str, url: str = "/") -> None:
     Automatically removes expired/invalid subscriptions (HTTP 404/410).
     """
     if not _VAPID_PRIVATE_KEY:
-        logger.debug("VAPID_PRIVATE_KEY not set — skipping push for user %s", user.pk)
+        logger.warning(
+            "VAPID_PRIVATE_KEY not set — push skipped for user %s. "
+            "Set VAPID_PRIVATE_KEY, VAPID_PUBLIC_KEY, VAPID_CLAIMS_EMAIL in env.",
+            user.pk,
+        )
         return
 
     try:
         from pywebpush import webpush, WebPushException
     except ImportError:
-        logger.warning("pywebpush not installed — pip install pywebpush")
+        logger.error("pywebpush not installed — run: pip install pywebpush")
+        return
+
+    subs = list(user.push_subscriptions.all())
+    if not subs:
+        logger.info("No push subscriptions for user %s — user must enable notifications first", user.pk)
         return
 
     payload = json.dumps({"title": title, "body": body, "url": url})
     vapid_claims = {"sub": f"mailto:{_VAPID_CLAIMS_EMAIL}"}
     to_delete = []
 
-    for sub in user.push_subscriptions.all():
+    for sub in subs:
         try:
             webpush(
                 subscription_info={
@@ -54,14 +63,17 @@ def send_push_notification(user, title: str, body: str, url: str = "/") -> None:
                 vapid_private_key=_VAPID_PRIVATE_KEY,
                 vapid_claims=vapid_claims,
             )
+            logger.info("Push sent to user %s sub %s", user.pk, sub.pk)
         except WebPushException as exc:
             resp = exc.response
             if resp is not None and resp.status_code in (404, 410):
                 to_delete.append(sub.pk)
+                logger.info("Stale subscription %s removed (HTTP %s)", sub.pk, resp.status_code)
             else:
-                logger.warning("Push failed for sub %s: %s", sub.pk, exc)
+                status = resp.status_code if resp is not None else "no-response"
+                logger.error("Push FAILED for sub %s (HTTP %s): %s", sub.pk, status, exc)
         except Exception as exc:
-            logger.warning("Unexpected push error for sub %s: %s", sub.pk, exc)
+            logger.error("Unexpected push error for sub %s: %s", sub.pk, exc)
 
     if to_delete:
         from .models import PushSubscription

@@ -16,6 +16,11 @@ export function usePushNotifications() {
   useEffect(() => {
     if (!isSupported) { setPermission("unsupported"); return; }
     setPermission(Notification.permission as PushPermission);
+    // Restore subscribed state across page loads
+    navigator.serviceWorker.ready
+      .then(reg => reg.pushManager.getSubscription())
+      .then(sub => { if (sub) setSubscribed(true); })
+      .catch(() => null);
   }, [isSupported]);
 
   const subscribe = useCallback(async (): Promise<boolean> => {

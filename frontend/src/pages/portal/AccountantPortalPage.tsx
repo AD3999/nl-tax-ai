@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useMobile } from "../../hooks/useMobile";
 import {
-  fetchClients, fetchEngagements, createClient, archiveClient,
+  fetchClients, fetchEngagements, archiveClient,
 } from "../../api/portal/client";
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
 import {
@@ -201,9 +201,6 @@ export default function AccountantPortalPage() {
   const [engagements, setEngagements] = useState<TaxEngagement[]>([]);
   const [invitations, setInvitations] = useState<SentInvitation[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ email: "", first_name: "", last_name: "", client_type: "zzp", preferred_language: "nl", notes: "" });
-  const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
 
   // Invitation form state
@@ -250,25 +247,6 @@ export default function AccountantPortalPage() {
   async function handleCancelInvitation(id: number) {
     await cancelInvitation(id);
     setInvitations(prev => prev.map(inv => inv.id === id ? { ...inv, status: "cancelled" as const } : inv));
-  }
-
-  async function handleAddClient(e: React.FormEvent) {
-    e.preventDefault();
-    setAdding(true);
-    setError("");
-    try {
-      await createClient({
-        ...form,
-        client_type: form.client_type as import("../../api/portal/types").ClientType,
-        preferred_language: form.preferred_language as "nl" | "en" | "fa",
-      });
-      setForm({ email: "", first_name: "", last_name: "", client_type: "zzp", preferred_language: "nl", notes: "" });
-      setShowAdd(false);
-      await loadData();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error adding client");
-    }
-    setAdding(false);
   }
 
   const totalClients      = clients.length;
@@ -336,60 +314,8 @@ export default function AccountantPortalPage() {
               )}
             </button>
           ))}
-          <div style={{ marginInlineStart: "auto" }}>
-            {tab === "clients" && (
-              <button className="btn btn-accent btn-sm" onClick={() => setShowAdd(s => !s)}>{tx.add_client}</button>
-            )}
-          </div>
+          <div style={{ marginInlineStart: "auto" }} />
         </div>
-
-        {/* Add client form */}
-        {showAdd && tab === "clients" && (
-          <div className="card" style={{ padding: "var(--sp-5)", marginBottom: "var(--sp-4)" }}>
-            <form onSubmit={handleAddClient}>
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: "var(--sp-3)", marginBottom: "var(--sp-3)" }}>
-                <div>
-                  <label className="tw-label">{tx.email_label} *</label>
-                  <input type="email" required className="tw-input" style={{ width: "100%", fontSize: 16 }} value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="tw-label">{tx.first_name_label}</label>
-                  <input type="text" className="tw-input" style={{ width: "100%", fontSize: 16 }} value={form.first_name} onChange={e => setForm(f => ({ ...f, first_name: e.target.value }))} />
-                </div>
-                <div>
-                  <label className="tw-label">{tx.last_name_label}</label>
-                  <input type="text" className="tw-input" style={{ width: "100%", fontSize: 16 }} value={form.last_name} onChange={e => setForm(f => ({ ...f, last_name: e.target.value }))} />
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: "var(--sp-3)", marginBottom: "var(--sp-4)" }}>
-                <div>
-                  <label className="tw-label">{tx.type_label}</label>
-                  <select className="tw-input" style={{ width: "100%", fontSize: 16 }} value={form.client_type} onChange={e => setForm(f => ({ ...f, client_type: e.target.value }))}>
-                    {["zzp", "employee", "expat", "dga", "other"].map(ct => (
-                      <option key={ct} value={ct}>{ct.toUpperCase()}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="tw-label">{tx.lang_label}</label>
-                  <select className="tw-input" style={{ width: "100%", fontSize: 16 }} value={form.preferred_language} onChange={e => setForm(f => ({ ...f, preferred_language: e.target.value }))}>
-                    <option value="nl">Nederlands</option>
-                    <option value="en">English</option>
-                    <option value="fa">فارسی</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="tw-label">{tx.notes_label}</label>
-                  <input type="text" className="tw-input" style={{ width: "100%", fontSize: 16 }} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
-                </div>
-              </div>
-              <div style={{ display: "flex", gap: "var(--sp-2)" }}>
-                <button type="submit" className="btn btn-accent btn-sm" disabled={adding}>{adding ? "..." : tx.add_btn}</button>
-                <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowAdd(false)}>{tx.cancel}</button>
-              </div>
-            </form>
-          </div>
-        )}
 
         {/* Client table */}
         {tab === "clients" && (

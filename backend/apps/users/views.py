@@ -932,6 +932,29 @@ class ClientInvitationsView(APIView):
                 defaults={"nickname": request.user.get_full_name() or request.user.email},
             )
 
+            # Create the portal AccountantClientProfile (idempotent via accountant+client pair)
+            try:
+                from apps.portal.models import AccountantClientProfile
+                intake = request.user.intake_profile or {}
+                raw_type = intake.get("user_type", "other")
+                raw_lang = intake.get("language", "nl")
+                client_type = raw_type if raw_type in ("employee", "zzp", "expat", "dga") else "other"
+                preferred_language = raw_lang if raw_lang in ("nl", "en", "fa") else "nl"
+                AccountantClientProfile.objects.get_or_create(
+                    accountant_user=inv.accountant.user,
+                    client_user=request.user,
+                    defaults={
+                        "email":              request.user.email,
+                        "first_name":         request.user.first_name or "",
+                        "last_name":          request.user.last_name or "",
+                        "client_type":        client_type,
+                        "preferred_language": preferred_language,
+                        "status":             "active",
+                    },
+                )
+            except Exception:
+                pass
+
             # Push notification to accountant
             firm = inv.accountant.firm_name or inv.accountant.user.email
             from .push_utils import send_push_notification

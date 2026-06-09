@@ -1,11 +1,68 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 9 Jun 2026 — VAPID keys, Railway TS fix, 5 accountant/notification UX fixes.
+> Last updated: 9 Jun 2026 (session 2) — invitation-only client onboarding, push notification reliability fixes.
 
 ---
 
-## Session — 9 Jun 2026 ✅ Complete
+## Session — 9 Jun 2026 (session 2) ✅ Complete
+
+### Invitation-only client onboarding + push notification reliability
+
+---
+
+#### Fix — Auto-create portal profile on invitation acceptance
+
+**Problem:** When a client accepted an accountant invitation, `AccountantClient` (users app link) was created but `AccountantClientProfile` (portal app working record) was not. The client never appeared in the accountant's portal clients tab.
+
+**Fix (`backend/apps/users/views.py` — `ClientInvitationsView.post()`):**
+After creating `AccountantClient`, also creates `AccountantClientProfile` via `get_or_create(accountant_user=..., client_user=...)`. Uses the client's `intake_profile` JSON to set `client_type` and `preferred_language`. Wrapped in `try/except` so a portal import failure never blocks invitation acceptance.
+
+---
+
+#### Fix — Remove manual "+ Add client" form (accountant portal)
+
+**Problem:** Accountants could manually add clients by email in the portal, creating `AccountantClientProfile` rows with `client_user=null`. These weren't linked to real users and bypassed the invitation flow, leading to duplicates and stale records.
+
+**Fix (`frontend/src/pages/portal/AccountantPortalPage.tsx`):**
+- Removed `createClient` import
+- Removed `showAdd`, `form`, `adding` state
+- Removed `handleAddClient()` function
+- Removed "+ Add client" button from tab bar
+- Removed the add-client form block
+
+Clients are now exclusively added through the invitation flow (Invitations tab → Send invitation → client accepts).
+
+---
+
+#### Fix — Push subscribed state not persisting across page loads
+
+**Problem:** `usePushNotifications.ts` started with `subscribed = false` on every mount. After a page reload, the "Enable notifications" button showed even for users who had already subscribed, and the "Notifications active" / Disable button never appeared.
+
+**Fix (`frontend/src/hooks/usePushNotifications.ts`):**
+On mount, calls `pushManager.getSubscription()` and sets `subscribed = true` if an active subscription exists. The banner now shows the correct state without requiring a fresh subscribe call.
+
+---
+
+#### Fix — Push notification logging improved
+
+**Fix (`backend/apps/users/push_utils.py`):**
+- Changed missing `VAPID_PRIVATE_KEY` from `logger.debug` to `logger.warning` (now visible in Railway logs)
+- Added `logger.info` when user has no subscriptions (tells you the user hasn't opted in)
+- Added `logger.info` on successful push delivery
+- Changed error cases from `logger.warning` to `logger.error` with HTTP status code included
+- These logs will now surface push failures in Railway's log viewer
+
+**To make push work in production, add to Railway Variables:**
+```
+VAPID_PRIVATE_KEY=AhTVFZGLCmynas6fFK33QjM-K5KtgmWAuo3T1nbstG0
+VAPID_PUBLIC_KEY=BPoPvaEGs5ZKw-ZcRGfryFt1JQqSkZNMHPF_ZIJ9dUJDtLVC_eDaQBpoYLWwAFFKyrLQWP2m5amT3Zq08aFGmlk
+VAPID_CLAIMS_EMAIL=ayuob1991.nl@gmail.com
+```
+
+---
+
+## Session — 9 Jun 2026 (session 1) ✅ Complete
 
 ### Railway TypeScript build fix + VAPID setup + 5 UX fixes
 
