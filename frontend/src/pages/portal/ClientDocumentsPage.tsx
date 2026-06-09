@@ -11,13 +11,22 @@ const STATUS_COLOR: Record<string, string> = {
   approved: "var(--sage-600)", rejected: "var(--danger)",
 };
 
+const STATUS_LABELS: Record<string, Record<"nl" | "en" | "fa", string>> = {
+  uploaded:     { nl: "Geüpload",          en: "Uploaded",      fa: "بارگذاری شده" },
+  processing:   { nl: "Verwerken...",      en: "Processing...", fa: "در حال پردازش..." },
+  extracted:    { nl: "Geëxtraheerd",      en: "Extracted",     fa: "استخراج شده" },
+  needs_review: { nl: "Beoordeling nodig", en: "Needs review",  fa: "نیاز به بررسی" },
+  approved:     { nl: "Goedgekeurd",       en: "Approved",      fa: "تأیید شده" },
+  rejected:     { nl: "Afgewezen",         en: "Rejected",      fa: "رد شده" },
+};
+
 const TX = {
   title:    { nl: "Mijn documenten", en: "My documents", fa: "اسناد من" },
   back:     { nl: "← Terug", en: "← Back", fa: "← بازگشت" },
   upload:   { nl: "Document uploaden", en: "Upload document", fa: "بارگذاری سند" },
   uploading:{ nl: "Bezig...", en: "Uploading...", fa: "در حال بارگذاری..." },
   empty:    { nl: "Geen documenten geüpload.", en: "No documents uploaded yet.", fa: "هنوز سندی بارگذاری نشده." },
-  accepted: { nl: "Geaccepteerd", en: "Types accepted", fa: "انواع قابل قبول" },
+  accepted: { nl: "Geaccepteerde typen", en: "Types accepted", fa: "انواع قابل قبول" },
   view:     { nl: "Bekijken", en: "View", fa: "مشاهده" },
   filename: { nl: "Bestandsnaam", en: "Filename", fa: "نام فایل" },
   status:   { nl: "Status", en: "Status", fa: "وضعیت" },
@@ -50,7 +59,7 @@ export default function ClientDocumentsPage() {
   useEffect(() => {
     if (!user) return;
     void load();
-    const id = setInterval(() => void load(true), 20_000);
+    const id = setInterval(() => void load(true), 10_000);
     return () => clearInterval(id);
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -130,7 +139,9 @@ export default function ClientDocumentsPage() {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "center", flexShrink: 0 }}>
-                  <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[doc.processing_status] }}>{doc.processing_status}</span>
+                  <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[doc.processing_status] }}>
+                    {STATUS_LABELS[doc.processing_status]?.[lang] ?? doc.processing_status}
+                  </span>
                   {doc.file_url && (
                     <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)" }}>{t("view", lang)}</a>
                   )}

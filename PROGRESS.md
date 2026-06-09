@@ -1,7 +1,84 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 9 Jun 2026 (session 4) — portal real-time refresh, EngagementPage stale data fixes, accountant/client portal audit.
+> Last updated: 9 Jun 2026 (session 5) — portal bug fixes: duplicate tasks, broken checklist dropdown, missing translations, Ask AI button.
+
+---
+
+## Session — 9 Jun 2026 (session 5) ✅ Complete
+
+### Accountant + client portal — 6 bug fixes
+
+Full audit of accountant/client portal followed by targeted fixes for every reported issue.
+
+---
+
+#### Fix 1 — Backend: duplicate tasks in client view (root cause)
+
+**Problem:** `ClientPortalTasksView` returned tasks from both `DocumentRequest` (status `"open"`) and `ChecklistItem` (status `"todo"`), causing the same task (e.g. "KVK number") to appear twice in the client list.
+
+**Root cause:** The standard checklist template auto-creates `ChecklistItem` rows for all standard ZZP tasks. When the accountant's `missing_info` service also created `DocumentRequest` rows for the same items, both were serialized and returned together.
+
+**Fix (`backend/apps/portal/views.py` — `ClientPortalTasksView`):**
+- Changed to return **only `ChecklistItem`** objects (the canonical data source for client tasks).
+- Returns **all statuses** (not filtered) so the frontend `doneTasks` filter can correctly show accepted/waived items.
+- Added `category` and `priority` fields to the response payload (DocumentRequests lacked these).
+- Counts (total/completed) now only use `ChecklistItem` rows.
+
+---
+
+#### Fix 2 — Accountant checklist dropdown: silent failures + missing toast feedback
+
+**Problem (`EngagementPage.tsx`):** `handleChecklistStatus()` had no try/catch. When the PATCH call failed, the error was silently swallowed — the dropdown appeared to change but reverted on next render with zero feedback to the accountant. Same issue on all other async handlers (`handleActionStatus`, `handleReviewDoc`, `handleApproveIncome`, `handleApproveExpense`, `handleSendReminder`, `handleRecalculate`, `handleGenerateActions`).
+
+**Fix (`frontend/src/pages/portal/EngagementPage.tsx` — full rewrite):**
+- `useToast` wired in.
+- `handleChecklistStatus`: optimistic update → on failure, reverts to previous status + shows error toast.
+- All other async handlers: try/catch with success/error toast.
+
+---
+
+#### Fix 3 — Full NL/EN/FA translations on EngagementPage
+
+**Problem:** `EngagementPage.tsx` had zero i18n — all 40+ strings hardcoded English (tab labels, status labels, button labels, section headings, table headers, empty states).
+
+**Fix:** Added comprehensive `TX` object in NL/EN/FA. All status labels (todo, waiting_client, uploaded, needs_review, accepted, rejected, waived) now render in the user's language. `useTranslation` reads `i18n.language`.
+
+---
+
+#### Fix 4 — Client tasks: translated statuses, correct ID type, error state, faster polling
+
+**Problem (`ClientTasksPage.tsx`):**
+- `Task.id` typed as `number` but backend sends `"chk_X"` strings → React key warnings.
+- Raw status string "todo" shown instead of translated label.
+- `doneTasks` always empty (backend previously filtered out accepted/waived).
+- 20 s polling, silent error handling.
+
+**Fix:**
+- `id: string` in `Task` interface.
+- `STATUS_LABELS` + `CATEGORY_LABELS` translation maps (NL/EN/FA, 7 statuses).
+- Error state with retry button on initial load failure.
+- Polling reduced to 10 s.
+
+---
+
+#### Fix 5 — Ask AI button on every task card
+
+Each open task card now has an "Ask AI" / "Vraag AI" / "پرسش از AI" button. On click, navigates to `/chat` with `location.state.prefillMessage` set to the task title + description so the chatbot can guide the user on that specific task.
+
+---
+
+#### Fix 6 — ClientPortalPage + ClientDocumentsPage hardcoded strings
+
+**`ClientPortalPage.tsx`:** "Upload & view" translated to NL/EN/FA. Polling 20 s → 10 s.
+
+**`ClientDocumentsPage.tsx`:** Raw `processing_status` values (uploaded/processing/extracted/needs_review/approved/rejected) replaced with `STATUS_LABELS` translation map. Polling 20 s → 10 s.
+
+---
+
+#### TypeScript check
+
+`npx tsc --noEmit` → **0 errors** after all changes.
 
 ---
 

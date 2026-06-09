@@ -879,7 +879,7 @@ class ClientPortalEngagementView(APIView):
 
 
 class ClientPortalTasksView(APIView):
-    """GET /api/portal/client/tasks/  — open document requests + checklist items for client."""
+    """GET /api/portal/client/tasks/  — all checklist items for client (all statuses)."""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -890,45 +890,33 @@ class ClientPortalTasksView(APIView):
 
         engagement = profile.engagements.order_by("-created_at").first()
         if not engagement:
-            return Response({"tasks": [], "total": 0, "completed": 0})
+            return Response({"tasks": [], "total": 0, "completed": 0, "readiness_score": 0})
 
-        open_requests = DocumentRequest.objects.filter(
-            engagement=engagement, status__in=("open", "rejected")
-        )
-        checklist_todo = ChecklistItem.objects.filter(
-            engagement=engagement, status__in=("todo", "waiting_client", "rejected")
-        )
+        # Return all ChecklistItems (all statuses so the frontend can split open/done).
+        # DocumentRequests are excluded — they are internal accountant tracking records;
+        # including both caused duplicate entries for the same task.
+        checklist_items = ChecklistItem.objects.filter(
+            engagement=engagement
+        ).order_by("-required", "priority", "created_at")
 
         tasks = []
-        for req in open_requests:
-            tasks.append({
-                "id": f"req_{req.id}",
-                "type": "document_request",
-                "title": req.title,
-                "description": req.description,
-                "required": req.required,
-                "status": req.status,
-                "due_date": str(req.due_date) if req.due_date else None,
-            })
-        for item in checklist_todo:
+        for item in checklist_items:
             tasks.append({
                 "id": f"chk_{item.id}",
                 "type": "checklist",
                 "title": item.title,
                 "description": item.description,
+                "category": item.category,
                 "required": item.required,
                 "status": item.status,
+                "priority": item.priority,
                 "due_date": None,
             })
 
-        total = (
-            DocumentRequest.objects.filter(engagement=engagement, required=True).count() +
-            ChecklistItem.objects.filter(engagement=engagement, required=True).count()
-        )
-        completed = (
-            DocumentRequest.objects.filter(engagement=engagement, required=True, status__in=("accepted","waived")).count() +
-            ChecklistItem.objects.filter(engagement=engagement, required=True, status__in=("accepted","waived")).count()
-        )
+        total = ChecklistItem.objects.filter(engagement=engagement, required=True).count()
+        completed = ChecklistItem.objects.filter(
+            engagement=engagement, required=True, status__in=("accepted", "waived")
+        ).count()
 
         return Response({
             "tasks": tasks,

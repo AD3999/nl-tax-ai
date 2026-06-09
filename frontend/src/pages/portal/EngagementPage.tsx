@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import {
   fetchEngagement, fetchChecklist, fetchDocuments,
   fetchIncome, fetchExpenses, fetchActions, generateActions, fetchRisks,
@@ -14,10 +16,233 @@ import type {
 } from "../../api/portal/types";
 
 type Tab = "overview" | "checklist" | "documents" | "income" | "expenses" | "risks" | "audit";
+type Lang = "nl" | "en" | "fa";
 
-const RISK_COLOR: Record<string, string> = {
-  low: "var(--sage-600)", medium: "oklch(0.62 0.13 50)", high: "var(--danger)",
+const TX: Record<Lang, Record<string, string>> = {
+  en: {
+    portal: "Accountant Portal",
+    back: "← Back",
+    recalculate: "Recalculate",
+    send_reminder: "Send reminder",
+    generate_actions: "Generate actions",
+    generating: "...",
+    tab_overview: "Overview",
+    tab_checklist: "Checklist",
+    tab_documents: "Documents",
+    tab_income: "Income",
+    tab_expenses: "Expenses",
+    tab_risks: "Risks & Deductions",
+    tab_audit: "Audit log",
+    readiness: "Readiness",
+    status: "Status",
+    risk: "Risk",
+    missing_items: "missing items",
+    next_actions: "Next actions",
+    open: "open",
+    no_actions: "No actions — click \"Generate actions\" to analyse the engagement",
+    done: "✓ Done",
+    dismiss: "Dismiss",
+    no_checklist: "No checklist items",
+    no_documents: "No documents uploaded",
+    upload_doc: "Upload document",
+    uploading: "Uploading...",
+    approve: "Approve",
+    reject: "Reject",
+    view: "View",
+    confidence: "Confidence",
+    extracted: "Extracted",
+    no_income: "No extracted income rows",
+    no_expenses: "No extracted expense rows",
+    deductions: "Deduction opportunities",
+    risk_warnings: "Risk warnings",
+    no_risks: "No risks detected",
+    loading_risks: "Loading...",
+    no_audit: "No audit events",
+    blocking: "Blocking",
+    none: "None",
+    reminder_preview: "Reminder preview",
+    reminder_missing: "missing",
+    status_todo: "To do",
+    status_waiting_client: "Waiting for client",
+    status_uploaded: "Uploaded",
+    status_needs_review: "Needs review",
+    status_accepted: "Accepted",
+    status_rejected: "Rejected",
+    status_waived: "Waived",
+    col_type: "Type",
+    col_description: "Description",
+    col_gross: "Gross",
+    col_tax_withheld: "Tax withheld",
+    col_status: "Status",
+    col_category: "Category",
+    col_supplier: "Supplier",
+    col_vat: "VAT",
+    source: "Source ↗",
+    updated: "updated",
+    checklist_updated: "Checklist item updated",
+    checklist_error: "Failed to update checklist item",
+    action_updated: "Action updated",
+    action_error: "Failed to update action",
+    doc_updated: "Document review updated",
+    doc_error: "Failed to update document",
+    income_updated: "Income record updated",
+    income_error: "Failed to update income",
+    expense_updated: "Expense record updated",
+    expense_error: "Failed to update expense",
+  },
+  nl: {
+    portal: "Accountant Portal",
+    back: "← Terug",
+    recalculate: "Herberekenen",
+    send_reminder: "Herinnering sturen",
+    generate_actions: "Acties genereren",
+    generating: "...",
+    tab_overview: "Overzicht",
+    tab_checklist: "Checklist",
+    tab_documents: "Documenten",
+    tab_income: "Inkomsten",
+    tab_expenses: "Kosten",
+    tab_risks: "Risico's & aftrekposten",
+    tab_audit: "Auditlog",
+    readiness: "Gereedheid",
+    status: "Status",
+    risk: "Risico",
+    missing_items: "ontbrekende items",
+    next_actions: "Volgende acties",
+    open: "open",
+    no_actions: "Geen acties — klik op \"Acties genereren\" om het dossier te analyseren",
+    done: "✓ Klaar",
+    dismiss: "Verwijderen",
+    no_checklist: "Geen checklistitems",
+    no_documents: "Geen documenten geüpload",
+    upload_doc: "Document uploaden",
+    uploading: "Bezig...",
+    approve: "Accepteren",
+    reject: "Afwijzen",
+    view: "Bekijken",
+    confidence: "Betrouwbaarheid",
+    extracted: "Geëxtraheerd",
+    no_income: "Geen geëxtraheerde inkomstenrijen",
+    no_expenses: "Geen geëxtraheerde kostenrijen",
+    deductions: "Aftrekmogelijkheden",
+    risk_warnings: "Risicowaarschuwingen",
+    no_risks: "Geen risico's gedetecteerd",
+    loading_risks: "Laden...",
+    no_audit: "Geen auditgebeurtenissen",
+    blocking: "Blokkerend",
+    none: "Geen",
+    reminder_preview: "Herinneringsvoorbeeld",
+    reminder_missing: "ontbreekt",
+    status_todo: "Te doen",
+    status_waiting_client: "Wacht op klant",
+    status_uploaded: "Geüpload",
+    status_needs_review: "Beoordeling nodig",
+    status_accepted: "Geaccepteerd",
+    status_rejected: "Afgewezen",
+    status_waived: "Vrijgesteld",
+    col_type: "Type",
+    col_description: "Omschrijving",
+    col_gross: "Bruto",
+    col_tax_withheld: "Ingehouden belasting",
+    col_status: "Status",
+    col_category: "Categorie",
+    col_supplier: "Leverancier",
+    col_vat: "BTW",
+    source: "Bron ↗",
+    updated: "bijgewerkt",
+    checklist_updated: "Checklistitem bijgewerkt",
+    checklist_error: "Bijwerken mislukt",
+    action_updated: "Actie bijgewerkt",
+    action_error: "Actie bijwerken mislukt",
+    doc_updated: "Documentbeoordeling bijgewerkt",
+    doc_error: "Documentbeoordeling mislukt",
+    income_updated: "Inkomstenrecord bijgewerkt",
+    income_error: "Inkomstenrecord bijwerken mislukt",
+    expense_updated: "Kostenrecord bijgewerkt",
+    expense_error: "Kostenrecord bijwerken mislukt",
+  },
+  fa: {
+    portal: "پورتال حسابدار",
+    back: "← بازگشت",
+    recalculate: "محاسبه مجدد",
+    send_reminder: "ارسال یادآوری",
+    generate_actions: "ایجاد اقدامات",
+    generating: "...",
+    tab_overview: "خلاصه",
+    tab_checklist: "چک‌لیست",
+    tab_documents: "اسناد",
+    tab_income: "درآمد",
+    tab_expenses: "هزینه‌ها",
+    tab_risks: "ریسک‌ها و کسورات",
+    tab_audit: "گزارش حسابرسی",
+    readiness: "آمادگی",
+    status: "وضعیت",
+    risk: "ریسک",
+    missing_items: "آیتم ناقص",
+    next_actions: "اقدامات بعدی",
+    open: "باز",
+    no_actions: "بدون اقدام — روی «ایجاد اقدامات» کلیک کنید",
+    done: "✓ انجام شد",
+    dismiss: "رد کردن",
+    no_checklist: "آیتمی در چک‌لیست وجود ندارد",
+    no_documents: "سندی بارگذاری نشده",
+    upload_doc: "بارگذاری سند",
+    uploading: "در حال بارگذاری...",
+    approve: "تأیید",
+    reject: "رد",
+    view: "مشاهده",
+    confidence: "اطمینان",
+    extracted: "استخراج‌شده",
+    no_income: "ردیف درآمد استخراج‌شده‌ای وجود ندارد",
+    no_expenses: "ردیف هزینه استخراج‌شده‌ای وجود ندارد",
+    deductions: "فرصت‌های کسر مالیات",
+    risk_warnings: "هشدارهای ریسک",
+    no_risks: "ریسکی شناسایی نشد",
+    loading_risks: "در حال بارگذاری...",
+    no_audit: "رویداد حسابرسی وجود ندارد",
+    blocking: "مسدودکننده",
+    none: "هیچ",
+    reminder_preview: "پیش‌نمایش یادآوری",
+    reminder_missing: "ناقص",
+    status_todo: "در انتظار",
+    status_waiting_client: "منتظر مشتری",
+    status_uploaded: "بارگذاری شده",
+    status_needs_review: "نیاز به بررسی",
+    status_accepted: "پذیرفته شده",
+    status_rejected: "رد شده",
+    status_waived: "معاف شده",
+    col_type: "نوع",
+    col_description: "توضیحات",
+    col_gross: "ناخالص",
+    col_tax_withheld: "مالیات کسر شده",
+    col_status: "وضعیت",
+    col_category: "دسته‌بندی",
+    col_supplier: "تأمین‌کننده",
+    col_vat: "مالیات بر ارزش افزوده",
+    source: "منبع ↗",
+    updated: "به‌روز شد",
+    checklist_updated: "آیتم چک‌لیست به‌روز شد",
+    checklist_error: "به‌روزرسانی ناموفق بود",
+    action_updated: "اقدام به‌روز شد",
+    action_error: "به‌روزرسانی اقدام ناموفق بود",
+    doc_updated: "بررسی سند به‌روز شد",
+    doc_error: "بررسی سند ناموفق بود",
+    income_updated: "رکورد درآمد به‌روز شد",
+    income_error: "به‌روزرسانی درآمد ناموفق بود",
+    expense_updated: "رکورد هزینه به‌روز شد",
+    expense_error: "به‌روزرسانی هزینه ناموفق بود",
+  },
 };
+
+const CHECKLIST_STATUS_OPTIONS: Array<{ value: string; labelKey: string }> = [
+  { value: "todo",           labelKey: "status_todo"           },
+  { value: "waiting_client", labelKey: "status_waiting_client" },
+  { value: "uploaded",       labelKey: "status_uploaded"       },
+  { value: "needs_review",   labelKey: "status_needs_review"   },
+  { value: "accepted",       labelKey: "status_accepted"       },
+  { value: "rejected",       labelKey: "status_rejected"       },
+  { value: "waived",         labelKey: "status_waived"         },
+];
 
 const CHECKLIST_STATUS_COLOR: Record<string, string> = {
   todo: "var(--ink-4)", waiting_client: "oklch(0.62 0.13 50)",
@@ -28,6 +253,10 @@ const CHECKLIST_STATUS_COLOR: Record<string, string> = {
 const REVIEW_STATUS_COLOR: Record<string, string> = {
   candidate: "oklch(0.62 0.13 50)", approved: "var(--sage-600)",
   rejected: "var(--danger)", manual: "var(--ink-3)",
+};
+
+const RISK_COLOR: Record<string, string> = {
+  low: "var(--sage-600)", medium: "oklch(0.62 0.13 50)", high: "var(--danger)",
 };
 
 function ReadinessRing({ score }: { score: number }) {
@@ -41,9 +270,6 @@ function ReadinessRing({ score }: { score: number }) {
       <circle cx={45} cy={45} r={r} fill="none" stroke={color} strokeWidth={7}
         strokeDasharray={circumference} strokeDashoffset={offset}
         strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.5s ease" }} />
-      <text x={45} y={49} textAnchor="middle" fill={color} fontSize={16} fontWeight={700} style={{ transform: "rotate(90deg) translate(-90px, 0)" }}>
-        {score}%
-      </text>
     </svg>
   );
 }
@@ -51,6 +277,10 @@ function ReadinessRing({ score }: { score: number }) {
 export default function EngagementPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const { i18n } = useTranslation();
+  const { showToast } = useToast();
+  const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as Lang;
+  const tx = TX[lang];
 
   const [engagement, setEngagement] = useState<TaxEngagement | null>(null);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
@@ -78,9 +308,8 @@ export default function EngagementPage() {
   useEffect(() => {
     if (!user || !engId) return;
     void loadAll();
-    // Poll the live-changing parts every 30 seconds (silently)
-    const id = setInterval(() => void loadLive(), 30_000);
-    return () => clearInterval(id);
+    const pollId = setInterval(() => void loadLive(), 10_000);
+    return () => clearInterval(pollId);
   }, [user, engId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadAll(silent = false) {
@@ -107,7 +336,6 @@ export default function EngagementPage() {
     if (!silent) setLoading(false);
   }
 
-  // Lightweight poll — only the fields most likely to change client-side
   async function loadLive() {
     try {
       const [eng, chk, docs, acts] = await Promise.all([
@@ -136,46 +364,93 @@ export default function EngagementPage() {
 
   async function handleGenerateActions() {
     setGeneratingActions(true);
-    const acts = await generateActions(engId);
-    setActions(acts);
+    try {
+      const acts = await generateActions(engId);
+      setActions(acts);
+    } catch {
+      showToast("Failed to generate actions", "error");
+    }
     setGeneratingActions(false);
   }
 
   async function handleRecalculate() {
-    const r = await recalculateReadiness(engId);
-    setReadiness(r);
-    const updated = await fetchEngagement(engId);
-    setEngagement(updated);
+    try {
+      const r = await recalculateReadiness(engId);
+      setReadiness(r);
+      const updated = await fetchEngagement(engId);
+      setEngagement(updated);
+    } catch {
+      showToast("Recalculate failed", "error");
+    }
   }
 
-  async function handleActionStatus(actionId: number, status: "done" | "dismissed") {
-    await updateAction(actionId, { status });
-    setActions(prev => prev.map(a => a.id === actionId ? { ...a, status } : a));
+  async function handleActionStatus(actionId: number, newStatus: "done" | "dismissed") {
+    // Optimistic update
+    setActions(prev => prev.map(a => a.id === actionId ? { ...a, status: newStatus } : a));
+    try {
+      await updateAction(actionId, { status: newStatus });
+      showToast(tx.action_updated, "success");
+    } catch {
+      // Revert
+      setActions(prev => prev.map(a => a.id === actionId ? { ...a, status: "open" } : a));
+      showToast(tx.action_error, "error");
+    }
   }
 
-  async function handleChecklistStatus(itemId: number, status: ChecklistItem["status"]) {
-    const updated = await updateChecklistItem(itemId, { status });
-    setChecklist(prev => prev.map(i => i.id === itemId ? updated : i));
+  async function handleChecklistStatus(itemId: number, newStatus: ChecklistItem["status"]) {
+    const oldStatus = checklist.find(i => i.id === itemId)?.status;
+    // Optimistic update
+    setChecklist(prev => prev.map(i => i.id === itemId ? { ...i, status: newStatus } : i));
+    try {
+      const updated = await updateChecklistItem(itemId, { status: newStatus });
+      setChecklist(prev => prev.map(i => i.id === itemId ? updated : i));
+      showToast(tx.checklist_updated, "success");
+    } catch {
+      // Revert to old status
+      if (oldStatus) {
+        setChecklist(prev => prev.map(i => i.id === itemId ? { ...i, status: oldStatus } : i));
+      }
+      showToast(tx.checklist_error, "error");
+    }
   }
 
   async function handleReviewDoc(docId: number, newStatus: string) {
-    const updated = await reviewDocument(docId, { processing_status: newStatus });
-    setDocuments(prev => prev.map(d => d.id === docId ? updated : d));
+    try {
+      const updated = await reviewDocument(docId, { processing_status: newStatus });
+      setDocuments(prev => prev.map(d => d.id === docId ? updated : d));
+      showToast(tx.doc_updated, "success");
+    } catch {
+      showToast(tx.doc_error, "error");
+    }
   }
 
-  async function handleApproveIncome(incomeId: number, status: "approved" | "rejected") {
-    const updated = await updateIncome(incomeId, { review_status: status });
-    setIncome(prev => prev.map(i => i.id === incomeId ? updated : i));
+  async function handleApproveIncome(incomeId: number, newStatus: "approved" | "rejected") {
+    try {
+      const updated = await updateIncome(incomeId, { review_status: newStatus });
+      setIncome(prev => prev.map(i => i.id === incomeId ? updated : i));
+      showToast(tx.income_updated, "success");
+    } catch {
+      showToast(tx.income_error, "error");
+    }
   }
 
-  async function handleApproveExpense(expenseId: number, status: "approved" | "rejected") {
-    const updated = await updateExpense(expenseId, { review_status: status });
-    setExpenses(prev => prev.map(e => e.id === expenseId ? updated : e));
+  async function handleApproveExpense(expenseId: number, newStatus: "approved" | "rejected") {
+    try {
+      const updated = await updateExpense(expenseId, { review_status: newStatus });
+      setExpenses(prev => prev.map(e => e.id === expenseId ? updated : e));
+      showToast(tx.expense_updated, "success");
+    } catch {
+      showToast(tx.expense_error, "error");
+    }
   }
 
   async function handleSendReminder() {
-    const result = await sendReminder(engId);
-    setReminderPreview(result);
+    try {
+      const result = await sendReminder(engId);
+      setReminderPreview(result);
+    } catch {
+      showToast("Failed to generate reminder", "error");
+    }
   }
 
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -194,24 +469,24 @@ export default function EngagementPage() {
   }
 
   if (loading) return (
-    <main style={{ flex: 1, padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-4)" }}>Loading engagement...</main>
+    <main style={{ flex: 1, padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-4)" }}>{lang === "fa" ? "در حال بارگذاری..." : lang === "nl" ? "Laden..." : "Loading engagement..."}</main>
   );
 
   if (!engagement) return (
     <main style={{ flex: 1, padding: "var(--sp-8)", textAlign: "center" }}>
       <p style={{ color: "var(--ink-3)" }}>{error || "Engagement not found"}</p>
-      <Link to="/accountant" className="btn btn-ghost btn-sm" style={{ marginTop: 16 }}>← Back</Link>
+      <Link to="/accountant" className="btn btn-ghost btn-sm" style={{ marginTop: 16 }}>{tx.back}</Link>
     </main>
   );
 
   const TABS: { key: Tab; label: string }[] = [
-    { key: "overview",  label: "Overview" },
-    { key: "checklist", label: `Checklist (${checklist.length})` },
-    { key: "documents", label: `Documents (${documents.length})` },
-    { key: "income",    label: `Income (${income.length})` },
-    { key: "expenses",  label: `Expenses (${expenses.length})` },
-    { key: "risks",     label: "Risks & Deductions" },
-    { key: "audit",     label: "Audit log" },
+    { key: "overview",  label: tx.tab_overview },
+    { key: "checklist", label: `${tx.tab_checklist} (${checklist.length})` },
+    { key: "documents", label: `${tx.tab_documents} (${documents.length})` },
+    { key: "income",    label: `${tx.tab_income} (${income.length})` },
+    { key: "expenses",  label: `${tx.tab_expenses} (${expenses.length})` },
+    { key: "risks",     label: tx.tab_risks },
+    { key: "audit",     label: tx.tab_audit },
   ];
 
   return (
@@ -220,7 +495,7 @@ export default function EngagementPage() {
 
         {/* Breadcrumb */}
         <div style={{ marginBottom: "var(--sp-4)", fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>
-          <Link to="/accountant" style={{ color: "var(--ink-4)", textDecoration: "none" }}>Accountant Portal</Link>
+          <Link to="/accountant" style={{ color: "var(--ink-4)", textDecoration: "none" }}>{tx.portal}</Link>
           <span style={{ margin: "0 var(--sp-2)" }}>›</span>
           <Link to={`/accountant/clients/${engagement.client_profile}`} style={{ color: "var(--ink-4)", textDecoration: "none" }}>{engagement.client_profile_display}</Link>
           <span style={{ margin: "0 var(--sp-2)" }}>›</span>
@@ -236,21 +511,21 @@ export default function EngagementPage() {
             <div style={{ display: "flex", gap: "var(--sp-3)", marginTop: "var(--sp-2)", fontSize: "var(--text-xs)", alignItems: "center", flexWrap: "wrap" }}>
               <span className="pill">{engagement.tax_year}</span>
               <span className="pill">{engagement.engagement_type}</span>
-              <span style={{ color: RISK_COLOR[engagement.risk_level] }}>Risk: {engagement.risk_level}</span>
+              <span style={{ color: RISK_COLOR[engagement.risk_level] }}>{tx.risk}: {engagement.risk_level}</span>
               <span style={{ color: engagement.missing_items_count > 0 ? "var(--danger)" : "var(--sage-600)" }}>
-                {engagement.missing_items_count} missing items
+                {engagement.missing_items_count} {tx.missing_items}
               </span>
             </div>
           </div>
           <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "center", flexWrap: "wrap" }}>
             {lastUpdated && (
-              <span style={{ fontSize: 10, color: "var(--ink-4)" }}>{lastUpdated.toLocaleTimeString()}</span>
+              <span style={{ fontSize: 10, color: "var(--ink-4)" }}>{tx.updated} {lastUpdated.toLocaleTimeString()}</span>
             )}
             <button title="Refresh" onClick={() => void loadAll(true)} style={{ background: "none", border: "1px solid var(--hairline-2)", borderRadius: 6, cursor: "pointer", color: "var(--ink-4)", fontSize: 13, padding: "2px 7px", lineHeight: 1 }}>↻</button>
-            <button className="btn btn-ghost btn-sm" onClick={handleRecalculate}>Recalculate</button>
-            <button className="btn btn-ghost btn-sm" onClick={handleSendReminder}>Send reminder</button>
+            <button className="btn btn-ghost btn-sm" onClick={handleRecalculate}>{tx.recalculate}</button>
+            <button className="btn btn-ghost btn-sm" onClick={handleSendReminder}>{tx.send_reminder}</button>
             <button className="btn btn-accent btn-sm" onClick={handleGenerateActions} disabled={generatingActions}>
-              {generatingActions ? "..." : "Generate actions"}
+              {generatingActions ? tx.generating : tx.generate_actions}
             </button>
           </div>
         </div>
@@ -259,7 +534,7 @@ export default function EngagementPage() {
         {reminderPreview && (
           <div className="card" style={{ padding: "var(--sp-4)", marginBottom: "var(--sp-4)", background: "var(--accent-soft)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--sp-2)" }}>
-              <strong style={{ fontSize: "var(--text-sm)" }}>Reminder preview ({reminderPreview.missing_count} missing)</strong>
+              <strong style={{ fontSize: "var(--text-sm)" }}>{tx.reminder_preview} ({reminderPreview.missing_count} {tx.reminder_missing})</strong>
               <button className="btn btn-ghost btn-sm" onClick={() => setReminderPreview(null)}>×</button>
             </div>
             <div style={{ fontWeight: 600, marginBottom: 4, fontSize: "var(--text-xs)" }}>{reminderPreview.subject}</div>
@@ -274,8 +549,8 @@ export default function EngagementPage() {
               key={t.key}
               onClick={() => {
                 setTab(t.key);
-                if (t.key === "risks") loadRisks();
-                if (t.key === "audit") loadAudit();
+                if (t.key === "risks") void loadRisks();
+                if (t.key === "audit") void loadAudit();
               }}
               className="btn btn-ghost btn-sm"
               style={{
@@ -305,13 +580,13 @@ export default function EngagementPage() {
                   {engagement.readiness_score}%
                 </div>
               </div>
-              <div style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--ink)", marginBottom: "var(--sp-2)" }}>Readiness</div>
-              <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>Status: {engagement.status}</div>
+              <div style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--ink)", marginBottom: "var(--sp-2)" }}>{tx.readiness}</div>
+              <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>{tx.status}: {engagement.status}</div>
               {readiness && (
                 <div style={{ marginTop: "var(--sp-3)", textAlign: "start", fontSize: "var(--text-xs)" }}>
                   <div style={{ color: "var(--ink-3)", marginBottom: "var(--sp-2)" }}>
-                    <strong>Blocking:</strong>
-                    {readiness.blocking_reasons.length === 0 ? " None" : (
+                    <strong>{tx.blocking}:</strong>
+                    {readiness.blocking_reasons.length === 0 ? ` ${tx.none}` : (
                       <ul style={{ margin: "4px 0 0 16px", padding: 0 }}>
                         {readiness.blocking_reasons.map((r, i) => <li key={i} style={{ color: "var(--danger)" }}>{r}</li>)}
                       </ul>
@@ -324,12 +599,12 @@ export default function EngagementPage() {
             {/* Actions */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--sp-3)" }}>
-                <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, margin: 0 }}>Next actions</h3>
-                <span className="pill pill-accent" style={{ fontSize: "var(--text-2xs)" }}>{actions.filter(a => a.status === "open").length} open</span>
+                <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, margin: 0 }}>{tx.next_actions}</h3>
+                <span className="pill pill-accent" style={{ fontSize: "var(--text-2xs)" }}>{actions.filter(a => a.status === "open").length} {tx.open}</span>
               </div>
               {actions.length === 0 ? (
                 <div className="card" style={{ padding: "var(--sp-4)", textAlign: "center", color: "var(--ink-3)", fontSize: "var(--text-sm)" }}>
-                  No actions — click "Generate actions" to analyse the engagement
+                  {tx.no_actions}
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
@@ -340,8 +615,8 @@ export default function EngagementPage() {
                         <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>{action.body}</div>
                       </div>
                       <div style={{ display: "flex", gap: "var(--sp-1)", flexShrink: 0 }}>
-                        <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)", padding: "2px 8px" }} onClick={() => handleActionStatus(action.id, "done")}>✓ Done</button>
-                        <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)", padding: "2px 8px", color: "var(--ink-4)" }} onClick={() => handleActionStatus(action.id, "dismissed")}>Dismiss</button>
+                        <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)", padding: "2px 8px" }} onClick={() => void handleActionStatus(action.id, "done")}>{tx.done}</button>
+                        <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)", padding: "2px 8px", color: "var(--ink-4)" }} onClick={() => void handleActionStatus(action.id, "dismissed")}>{tx.dismiss}</button>
                       </div>
                     </div>
                   ))}
@@ -355,7 +630,7 @@ export default function EngagementPage() {
         {tab === "checklist" && (
           <div>
             {checklist.length === 0 ? (
-              <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-3)" }}>No checklist items</div>
+              <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-3)" }}>{tx.no_checklist}</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
                 {checklist.map(item => (
@@ -372,15 +647,17 @@ export default function EngagementPage() {
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "center" }}>
-                      <span style={{ fontSize: "var(--text-xs)", color: CHECKLIST_STATUS_COLOR[item.status] }}>{item.status}</span>
+                      <span style={{ fontSize: "var(--text-xs)", color: CHECKLIST_STATUS_COLOR[item.status] }}>
+                        {tx[`status_${item.status}`] ?? item.status}
+                      </span>
                       <select
                         value={item.status}
-                        onChange={e => handleChecklistStatus(item.id, e.target.value as ChecklistItem["status"])}
+                        onChange={e => void handleChecklistStatus(item.id, e.target.value as ChecklistItem["status"])}
                         className="tw-input"
                         style={{ fontSize: 12, padding: "2px 6px", height: 28 }}
                       >
-                        {["todo","waiting_client","uploaded","needs_review","accepted","rejected","waived"].map(s => (
-                          <option key={s} value={s}>{s}</option>
+                        {CHECKLIST_STATUS_OPTIONS.map(opt => (
+                          <option key={opt.value} value={opt.value}>{tx[opt.labelKey]}</option>
                         ))}
                       </select>
                     </div>
@@ -397,13 +674,13 @@ export default function EngagementPage() {
             <div style={{ marginBottom: "var(--sp-4)", display: "flex", gap: "var(--sp-3)", alignItems: "center" }}>
               <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.heic,.csv,.xlsx" style={{ display: "none" }} onChange={handleFileUpload} />
               <button className="btn btn-accent btn-sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                {uploading ? "Uploading..." : "Upload document"}
+                {uploading ? tx.uploading : tx.upload_doc}
               </button>
               {uploadError && <span style={{ color: "var(--danger)", fontSize: "var(--text-xs)" }}>{uploadError}</span>}
             </div>
 
             {documents.length === 0 ? (
-              <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-3)" }}>No documents uploaded</div>
+              <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-3)" }}>{tx.no_documents}</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
                 {documents.map(doc => (
@@ -416,7 +693,7 @@ export default function EngagementPage() {
                         </div>
                         {doc.extracted_json && (
                           <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: 4 }}>
-                            Confidence: {((doc.confidence_score || 0) * 100).toFixed(0)}%
+                            {tx.confidence}: {((doc.confidence_score || 0) * 100).toFixed(0)}%
                           </div>
                         )}
                       </div>
@@ -425,15 +702,15 @@ export default function EngagementPage() {
                           {doc.processing_status}
                         </span>
                         {doc.file_url && (
-                          <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)" }}>View</a>
+                          <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)" }}>{tx.view}</a>
                         )}
-                        <button className="btn btn-ghost btn-sm" style={{ color: "var(--sage-600)", fontSize: "var(--text-2xs)" }} onClick={() => handleReviewDoc(doc.id, "approved")}>Approve</button>
-                        <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", fontSize: "var(--text-2xs)" }} onClick={() => handleReviewDoc(doc.id, "rejected")}>Reject</button>
+                        <button className="btn btn-ghost btn-sm" style={{ color: "var(--sage-600)", fontSize: "var(--text-2xs)" }} onClick={() => void handleReviewDoc(doc.id, "approved")}>{tx.approve}</button>
+                        <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", fontSize: "var(--text-2xs)" }} onClick={() => void handleReviewDoc(doc.id, "rejected")}>{tx.reject}</button>
                       </div>
                     </div>
                     {doc.extracted_json && (
                       <div style={{ marginTop: "var(--sp-3)", padding: "var(--sp-2)", background: "var(--paper-3)", borderRadius: "var(--r-sm)", fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>
-                        <strong>Extracted:</strong>{" "}
+                        <strong>{tx.extracted}:</strong>{" "}
                         {Object.entries(doc.extracted_json).filter(([k, v]) => v && k !== "issues").map(([k, v]) => `${k}: ${v}`).join(" · ")}
                       </div>
                     )}
@@ -448,13 +725,13 @@ export default function EngagementPage() {
         {tab === "income" && (
           <div>
             {income.length === 0 ? (
-              <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-3)" }}>No extracted income rows</div>
+              <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-3)" }}>{tx.no_income}</div>
             ) : (
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "var(--text-sm)" }}>
                   <thead>
                     <tr style={{ borderBottom: "2px solid var(--hairline)" }}>
-                      {["Type", "Description", "Gross", "Tax withheld", "Status", ""].map(h => (
+                      {[tx.col_type, tx.col_description, tx.col_gross, tx.col_tax_withheld, tx.col_status, ""].map(h => (
                         <th key={h} style={{ padding: "var(--sp-2) var(--sp-3)", fontWeight: 600, color: "var(--ink-3)", fontSize: "var(--text-xs)", textAlign: "start" }}>{h}</th>
                       ))}
                     </tr>
@@ -472,8 +749,8 @@ export default function EngagementPage() {
                         <td style={{ padding: "var(--sp-2) var(--sp-3)" }}>
                           {inc.review_status === "candidate" && (
                             <div style={{ display: "flex", gap: "var(--sp-1)" }}>
-                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--sage-600)", fontSize: "var(--text-2xs)" }} onClick={() => handleApproveIncome(inc.id, "approved")}>Approve</button>
-                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", fontSize: "var(--text-2xs)" }} onClick={() => handleApproveIncome(inc.id, "rejected")}>Reject</button>
+                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--sage-600)", fontSize: "var(--text-2xs)" }} onClick={() => void handleApproveIncome(inc.id, "approved")}>{tx.approve}</button>
+                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", fontSize: "var(--text-2xs)" }} onClick={() => void handleApproveIncome(inc.id, "rejected")}>{tx.reject}</button>
                             </div>
                           )}
                         </td>
@@ -490,13 +767,13 @@ export default function EngagementPage() {
         {tab === "expenses" && (
           <div>
             {expenses.length === 0 ? (
-              <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-3)" }}>No extracted expense rows</div>
+              <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-3)" }}>{tx.no_expenses}</div>
             ) : (
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "var(--text-sm)" }}>
                   <thead>
                     <tr style={{ borderBottom: "2px solid var(--hairline)" }}>
-                      {["Category", "Supplier", "Gross", "VAT", "Status", ""].map(h => (
+                      {[tx.col_category, tx.col_supplier, tx.col_gross, tx.col_vat, tx.col_status, ""].map(h => (
                         <th key={h} style={{ padding: "var(--sp-2) var(--sp-3)", fontWeight: 600, color: "var(--ink-3)", fontSize: "var(--text-xs)", textAlign: "start" }}>{h}</th>
                       ))}
                     </tr>
@@ -514,8 +791,8 @@ export default function EngagementPage() {
                         <td style={{ padding: "var(--sp-2) var(--sp-3)" }}>
                           {exp.review_status === "candidate" && (
                             <div style={{ display: "flex", gap: "var(--sp-1)" }}>
-                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--sage-600)", fontSize: "var(--text-2xs)" }} onClick={() => handleApproveExpense(exp.id, "approved")}>Approve</button>
-                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", fontSize: "var(--text-2xs)" }} onClick={() => handleApproveExpense(exp.id, "rejected")}>Reject</button>
+                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--sage-600)", fontSize: "var(--text-2xs)" }} onClick={() => void handleApproveExpense(exp.id, "approved")}>{tx.approve}</button>
+                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", fontSize: "var(--text-2xs)" }} onClick={() => void handleApproveExpense(exp.id, "rejected")}>{tx.reject}</button>
                             </div>
                           )}
                         </td>
@@ -532,9 +809,9 @@ export default function EngagementPage() {
         {tab === "risks" && (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-5)" }}>
             <div>
-              <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, marginBottom: "var(--sp-3)" }}>Deduction opportunities</h3>
+              <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, marginBottom: "var(--sp-3)" }}>{tx.deductions}</h3>
               {(!risks || (risks.opportunities as unknown[]).length === 0) ? (
-                <div className="card" style={{ padding: "var(--sp-4)", textAlign: "center", color: "var(--ink-3)" }}>Loading...</div>
+                <div className="card" style={{ padding: "var(--sp-4)", textAlign: "center", color: "var(--ink-3)" }}>{tx.loading_risks}</div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)" }}>
                   {(risks.opportunities as Array<{ id: string; title: string; description: string; confidence?: string; rule_id?: string; source_url?: string }>).map(opp => (
@@ -543,7 +820,7 @@ export default function EngagementPage() {
                       <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: 4 }}>{opp.description}</div>
                       <div style={{ display: "flex", gap: "var(--sp-2)", marginTop: "var(--sp-2)", alignItems: "center" }}>
                         <span className="pill" style={{ fontSize: "var(--text-2xs)", background: opp.confidence === "likely" ? "var(--accent-soft)" : "var(--paper-3)" }}>{opp.confidence || "—"}</span>
-                        {opp.source_url && <a href={opp.source_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "var(--text-2xs)", color: "var(--sage-600)" }}>Source ↗</a>}
+                        {opp.source_url && <a href={opp.source_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "var(--text-2xs)", color: "var(--sage-600)" }}>{tx.source}</a>}
                       </div>
                     </div>
                   ))}
@@ -551,9 +828,9 @@ export default function EngagementPage() {
               )}
             </div>
             <div>
-              <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, marginBottom: "var(--sp-3)" }}>Risk warnings</h3>
+              <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, marginBottom: "var(--sp-3)" }}>{tx.risk_warnings}</h3>
               {(!risks || (risks.risks as unknown[]).length === 0) ? (
-                <div className="card" style={{ padding: "var(--sp-4)", textAlign: "center", color: "var(--ink-3)" }}>No risks detected</div>
+                <div className="card" style={{ padding: "var(--sp-4)", textAlign: "center", color: "var(--ink-3)" }}>{tx.no_risks}</div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)" }}>
                   {(risks.risks as Array<{ id: string; title: string; description: string; level?: string; source_url?: string }>).map(risk => (
@@ -562,6 +839,7 @@ export default function EngagementPage() {
                       <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: 4 }}>{risk.description}</div>
                       <div style={{ marginTop: "var(--sp-2)" }}>
                         <span className="pill" style={{ fontSize: "var(--text-2xs)" }}>{risk.level}</span>
+                        {risk.source_url && <a href={risk.source_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "var(--text-2xs)", color: "var(--sage-600)", marginInlineStart: "var(--sp-2)" }}>{tx.source}</a>}
                       </div>
                     </div>
                   ))}
@@ -575,7 +853,7 @@ export default function EngagementPage() {
         {tab === "audit" && (
           <div>
             {auditLog.length === 0 ? (
-              <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-3)" }}>No audit events</div>
+              <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-3)" }}>{tx.no_audit}</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
                 {auditLog.map(log => (

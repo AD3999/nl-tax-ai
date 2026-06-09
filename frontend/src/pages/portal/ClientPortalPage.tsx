@@ -18,6 +18,7 @@ const TX = {
   viewTasks:   { nl: "Bekijk taken", en: "View tasks", fa: "مشاهده وظایف" },
   viewDocs:    { nl: "Bekijk documenten", en: "View documents", fa: "مشاهده اسناد" },
   noEng:       { nl: "Geen actieve aangifte gevonden. Neem contact op met uw accountant.", en: "No active engagement found. Contact your accountant.", fa: "هیچ تعاملی یافت نشد. با حسابدار خود تماس بگیرید." },
+  uploadView:  { nl: "Uploaden & bekijken", en: "Upload & view", fa: "بارگذاری و مشاهده" },
 };
 
 function t(key: keyof typeof TX, lang: "nl" | "en" | "fa") { return TX[key][lang]; }
@@ -37,7 +38,7 @@ export default function ClientPortalPage() {
   useEffect(() => {
     if (!user) return;
     void load();
-    const id = setInterval(() => void load(true), 20_000);
+    const id = setInterval(() => void load(true), 10_000);
     return () => clearInterval(id);
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -150,7 +151,7 @@ export default function ClientPortalPage() {
               onMouseLeave={e => (e.currentTarget.style.boxShadow = "")}>
               <div style={{ fontSize: "var(--text-2xl)", marginBottom: "var(--sp-2)" }}>📄</div>
               <div style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, color: "var(--ink)", marginBottom: "var(--sp-1)" }}>{t("documents", lang)}</div>
-              <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", marginBottom: "var(--sp-3)" }}>Upload &amp; view</div>
+              <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", marginBottom: "var(--sp-3)" }}>{t("uploadView", lang)}</div>
               <span style={{ fontSize: "var(--text-xs)", color: "var(--sage-600)", fontWeight: 600 }}>{t("viewDocs", lang)} →</span>
             </div>
           </Link>
