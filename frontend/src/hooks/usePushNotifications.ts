@@ -58,7 +58,7 @@ export function usePushNotifications() {
     const subJson = sub.toJSON();
     const keys = subJson.keys as { p256dh: string; auth: string };
     try {
-      await fetch(`${apiBase}/users/push/subscribe/`, {
+      const res = await fetch(`${apiBase}/users/push/subscribe/`, {
         method:  "POST",
         headers: { ...authHeader(), "Content-Type": "application/json" },
         body:    JSON.stringify({
@@ -67,9 +67,16 @@ export function usePushNotifications() {
           auth:     keys.auth,
         }),
       });
+      if (!res.ok) {
+        console.error("Push subscribe failed:", res.status, await res.text());
+        return false;
+      }
       setSubscribed(true);
       return true;
-    } catch { return false; }
+    } catch (err) {
+      console.error("Push subscribe error:", err);
+      return false;
+    }
   }, [isSupported]);
 
   const unsubscribe = useCallback(async (): Promise<void> => {
