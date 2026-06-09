@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import {
-  fetchClient, updateClient, fetchEngagements, createEngagement,
+  fetchClient, updateClient, fetchEngagements, createEngagement, archiveClient,
 } from "../../api/portal/client";
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
 
@@ -16,6 +17,8 @@ const STATUS_COLOR: Record<string, string> = {
 export default function AccountantClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [engagements, setEngagements] = useState<TaxEngagement[]>([]);
@@ -23,6 +26,7 @@ export default function AccountantClientDetailPage() {
   const [showNewEng, setShowNewEng] = useState(false);
   const [engForm, setEngForm] = useState({ tax_year: 2026, engagement_type: "income_tax" });
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -57,6 +61,20 @@ export default function AccountantClientDetailPage() {
     setSaving(false);
   }
 
+  async function handleDeleteClient() {
+    if (!profile) return;
+    if (!window.confirm(`Remove ${profile.display_name} from your clients? This cannot be undone.`)) return;
+    setDeleting(true);
+    try {
+      await archiveClient(profile.id);
+      showToast("Client removed.", "info");
+      navigate("/accountant/portal");
+    } catch {
+      showToast("Failed to remove client.", "error");
+    }
+    setDeleting(false);
+  }
+
   async function handleCreateEngagement(e: React.FormEvent) {
     e.preventDefault();
     if (!profile) return;
@@ -79,7 +97,7 @@ export default function AccountantClientDetailPage() {
   if (!profile) return (
     <main style={{ flex: 1, padding: "var(--sp-8)", textAlign: "center" }}>
       <p style={{ color: "var(--ink-3)" }}>Client not found</p>
-      <Link to="/accountant" className="btn btn-ghost btn-sm" style={{ marginTop: 16 }}>← Back</Link>
+      <Link to="/accountant/portal" className="btn btn-ghost btn-sm" style={{ marginTop: 16 }}>← Back</Link>
     </main>
   );
 
@@ -89,7 +107,7 @@ export default function AccountantClientDetailPage() {
 
         {/* Breadcrumb */}
         <div style={{ marginBottom: "var(--sp-5)", fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>
-          <Link to="/accountant" style={{ color: "var(--ink-4)", textDecoration: "none" }}>Accountant Portal</Link>
+          <Link to="/accountant/portal" style={{ color: "var(--ink-4)", textDecoration: "none" }}>Accountant Portal</Link>
           <span style={{ margin: "0 var(--sp-2)" }}>›</span>
           <span style={{ color: "var(--ink)" }}>{profile.display_name}</span>
         </div>
@@ -142,8 +160,16 @@ export default function AccountantClientDetailPage() {
               </div>
             )}
 
-            <div style={{ marginTop: "var(--sp-4)" }}>
-              <Link to="/accountant" className="btn btn-ghost btn-sm" style={{ width: "100%", justifyContent: "center" }}>← Back to portal</Link>
+            <div style={{ marginTop: "var(--sp-4)", display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
+              <Link to="/accountant/portal" className="btn btn-ghost btn-sm" style={{ width: "100%", justifyContent: "center" }}>← Back to portal</Link>
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ width: "100%", justifyContent: "center", color: "var(--danger)" }}
+                onClick={handleDeleteClient}
+                disabled={deleting}
+              >
+                {deleting ? "Removing…" : "Remove client"}
+              </button>
             </div>
           </div>
 

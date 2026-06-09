@@ -19,6 +19,7 @@ import {
 import { apiBase, authHeader } from "../api/client";
 import InvitationBanner from "../components/InvitationBanner";
 import { usePushNotifications } from "../hooks/usePushNotifications";
+import { useToast } from "../context/ToastContext";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -824,7 +825,8 @@ export default function DashboardPage() {
   const lang = i18n.language as "nl" | "en" | "fa";
   const isRtl = lang === "fa";
 
-  const { permission: pushPermission, subscribe: subscribePush, isSupported: pushSupported } = usePushNotifications();
+  const { permission: pushPermission, subscribed: pushSubscribed, subscribe: subscribePush, unsubscribe: unsubscribePush, isSupported: pushSupported } = usePushNotifications();
+  const { showToast } = useToast();
 
   const [calcResult, setCalcResult]   = useState<CalcResult | null>(null);
   const [alerts, setAlerts]           = useState<Alert[]>([]);
@@ -1095,15 +1097,41 @@ export default function DashboardPage() {
       {/* ── Accountant invitation banners ─────────────────────────────────── */}
       {user && <InvitationBanner />}
 
-      {/* ── Push notification opt-in (shown once, only if not yet granted) ── */}
-      {pushSupported && pushPermission === "default" && user && (
-        <div className="card" style={{ padding: "14px 18px", marginBottom: 20, background: "var(--accent-soft)", border: "1px solid var(--accent-line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+      {/* ── Push notification opt-in / status ─────────────────────────────── */}
+      {pushSupported && user && pushPermission !== "denied" && (
+        <div className="card" style={{ padding: "14px 18px", marginBottom: 20, background: pushSubscribed ? "var(--paper-3)" : "var(--accent-soft)", border: `1px solid ${pushSubscribed ? "var(--hairline)" : "var(--accent-line)"}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-2)" }}>
-            🔔 {L("Ontvang meldingen voor belastingdeadlines en accountant-updates", "Get notified about tax deadlines and accountant updates", "اعلان‌های مهلت مالیاتی و به‌روزرسانی‌های حسابدار را دریافت کنید")}
+            {pushSubscribed
+              ? `🔔 ${L("Meldingen actief — u ontvangt belastingdeadlines en accountant-updates", "Notifications active — you'll receive tax deadlines and accountant updates", "اعلان‌ها فعال است — مهلت‌های مالیاتی و به‌روزرسانی‌های حسابدار")}`
+              : `🔔 ${L("Ontvang meldingen voor belastingdeadlines en accountant-updates", "Get notified about tax deadlines and accountant updates", "اعلان‌های مهلت مالیاتی و به‌روزرسانی‌های حسابدار را دریافت کنید")}`
+            }
           </div>
-          <button className="btn btn-accent btn-sm" onClick={() => subscribePush()}>
-            {L("Meldingen aanzetten", "Enable notifications", "فعال‌سازی اعلان‌ها")}
-          </button>
+          {pushSubscribed ? (
+            <button
+              className="btn btn-ghost btn-sm"
+              style={{ color: "var(--ink-3)" }}
+              onClick={async () => {
+                await unsubscribePush();
+                showToast(L("Meldingen uitgeschakeld", "Notifications disabled", "اعلان‌ها غیرفعال شد"), "info");
+              }}
+            >
+              {L("Uitschakelen", "Disable", "غیرفعال")}
+            </button>
+          ) : (
+            <button
+              className="btn btn-accent btn-sm"
+              onClick={async () => {
+                const ok = await subscribePush();
+                if (ok) {
+                  showToast(L("Meldingen ingeschakeld!", "Notifications enabled!", "اعلان‌ها فعال شد!"), "success");
+                } else if (Notification.permission === "denied") {
+                  showToast(L("Meldingen geblokkeerd in browser-instellingen", "Notifications blocked in browser settings", "اعلان‌ها در مرورگر مسدود شده"), "error");
+                }
+              }}
+            >
+              {L("Meldingen aanzetten", "Enable notifications", "فعال‌سازی اعلان‌ها")}
+            </button>
+          )}
         </div>
       )}
 

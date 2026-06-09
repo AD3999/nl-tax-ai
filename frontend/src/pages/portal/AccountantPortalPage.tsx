@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useMobile } from "../../hooks/useMobile";
 import {
-  fetchClients, fetchEngagements, createClient,
+  fetchClients, fetchEngagements, createClient, archiveClient,
 } from "../../api/portal/client";
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
 import {
@@ -433,7 +433,18 @@ export default function AccountantPortalPage() {
                       </td>
                       <td style={{ padding: "var(--sp-3)" }}>—</td>
                       <td style={{ padding: "var(--sp-3)" }}>
-                        <Link to={`/accountant/clients/${c.id}`} className="btn btn-ghost btn-sm">{tx.view_client} →</Link>
+                        <div style={{ display: "flex", gap: "var(--sp-2)" }}>
+                          <Link to={`/accountant/clients/${c.id}`} className="btn btn-ghost btn-sm">{tx.view_client} →</Link>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            style={{ color: "var(--danger)" }}
+                            onClick={async () => {
+                              if (!window.confirm(`Remove ${c.display_name}?`)) return;
+                              await archiveClient(c.id);
+                              setClients(prev => prev.filter(x => x.id !== c.id));
+                            }}
+                          >✕</button>
+                        </div>
                       </td>
                     </tr>
                   ))}

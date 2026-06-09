@@ -2,34 +2,57 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchClientInvitations, respondToInvitation, type ClientInvitation } from "../api/invitations";
 import { useToast } from "../context/ToastContext";
+import { apiBase, authHeader } from "../api/client";
+
+interface ConnectedAccountant {
+  id: number;
+  firm_name: string;
+  accountant_email: string;
+  connected_since: string;
+}
 
 const TX = {
   en: {
-    title:    "Accountant invitation",
-    body:     (firm: string) => `${firm} has invited you to connect as your tax advisor.`,
-    message:  "Message",
-    accept:   "Accept",
-    decline:  "Decline",
-    accepted: "You are now connected with",
-    declined: "Invitation declined.",
+    title:        "Accountant invitation",
+    body:         (firm: string) => `${firm} has invited you to connect as your tax advisor.`,
+    message:      "Message",
+    accept:       "Accept",
+    decline:      "Decline",
+    accepted:     "You are now connected with",
+    declined:     "Invitation declined.",
+    my_accountant:"Your tax advisor",
+    connected:    (firm: string) => `Connected with ${firm}`,
+    disconnect:   "Disconnect",
+    disconnected: "Disconnected from accountant.",
+    confirm_disc: (firm: string) => `Disconnect from ${firm}? They will lose access to your file.`,
   },
   nl: {
-    title:    "Accountant uitnodiging",
-    body:     (firm: string) => `${firm} heeft u uitgenodigd om te verbinden als uw belastingadviseur.`,
-    message:  "Bericht",
-    accept:   "Accepteren",
-    decline:  "Weigeren",
-    accepted: "U bent nu verbonden met",
-    declined: "Uitnodiging geweigerd.",
+    title:        "Accountant uitnodiging",
+    body:         (firm: string) => `${firm} heeft u uitgenodigd om te verbinden als uw belastingadviseur.`,
+    message:      "Bericht",
+    accept:       "Accepteren",
+    decline:      "Weigeren",
+    accepted:     "U bent nu verbonden met",
+    declined:     "Uitnodiging geweigerd.",
+    my_accountant:"Uw belastingadviseur",
+    connected:    (firm: string) => `Verbonden met ${firm}`,
+    disconnect:   "Verbinding verbreken",
+    disconnected: "Verbinding met accountant verbroken.",
+    confirm_disc: (firm: string) => `Verbinding verbreken met ${firm}? Zij verliezen toegang tot uw dossier.`,
   },
   fa: {
-    title:    "دعوت‌نامه حسابدار",
-    body:     (firm: string) => `${firm} شما را دعوت کرده تا به عنوان مشاور مالیاتی‌تان متصل شوید.`,
-    message:  "پیام",
-    accept:   "قبول",
-    decline:  "رد",
-    accepted: "اکنون با",
-    declined: "دعوت‌نامه رد شد.",
+    title:        "دعوت‌نامه حسابدار",
+    body:         (firm: string) => `${firm} شما را دعوت کرده تا به عنوان مشاور مالیاتی‌تان متصل شوید.`,
+    message:      "پیام",
+    accept:       "قبول",
+    decline:      "رد",
+    accepted:     "اکنون با",
+    declined:     "دعوت‌نامه رد شد.",
+    my_accountant:"مشاور مالیاتی شما",
+    connected:    (firm: string) => `متصل به ${firm}`,
+    disconnect:   "قطع اتصال",
+    disconnected: "از حسابدار جدا شدید.",
+    confirm_disc: (firm: string) => `از ${firm} جدا می‌شوید؟ آنها دسترسی به پرونده شما را از دست می‌دهند.`,
   },
 } as const;
 
@@ -41,13 +64,16 @@ export default function InvitationBanner() {
 
   const [invitations, setInvitations] = useState<ClientInvitation[]>([]);
   const [responding, setResponding] = useState<number | null>(null);
+  const [accountants, setAccountants] = useState<ConnectedAccountant[]>([]);
+  const [disconnecting, setDisconnecting] = useState<number | null>(null);
 
   useEffect(() => {
     fetchClientInvitations().then(setInvitations).catch(() => null);
+    fetch(`${apiBase}/users/client/my-accountant/`, { headers: authHeader() })
+      .then(r => r.ok ? r.json() as Promise<ConnectedAccountant[]> : [])
+      .then(setAccountants)
+      .catch(() => null);
   }, []);
-
-  const pending = invitations.filter((inv) => inv.status === "pending");
-  if (pending.length === 0) return null;
 
   async function handle(id: number, action: "accept" | "decline") {
     setResponding(id);
@@ -59,6 +85,11 @@ export default function InvitationBanner() {
       const inv = invitations.find((i) => i.id === id);
       if (action === "accept" && inv) {
         showToast(`${tx.accepted} ${inv.firm_name} ✓`, "success");
+        // Refresh connected accountants list after acceptance
+        fetch(`${apiBase}/users/client/my-accountant/`, { headers: authHeader() })
+          .then(r => r.ok ? r.json() as Promise<ConnectedAccountant[]> : [])
+          .then(setAccountants)
+          .catch(() => null);
       } else {
         showToast(tx.declined, "info");
       }
@@ -69,8 +100,60 @@ export default function InvitationBanner() {
     }
   }
 
+  async function handleDisconnect(acc: ConnectedAccountant) {
+    if (!window.confirm(tx.confirm_disc(acc.firm_name))) return;
+    setDisconnecting(acc.id);
+    try {
+      await fetch(`${apiBase}/users/client/my-accountant/${acc.id}/`, {
+        method: "DELETE",
+        headers: authHeader(),
+      });
+      setAccountants(prev => prev.filter(a => a.id !== acc.id));
+      showToast(tx.disconnected, "info");
+    } catch {
+      showToast("Something went wrong.", "error");
+    }
+    setDisconnecting(null);
+  }
+
+  const pending = invitations.filter((inv) => inv.status === "pending");
+  if (pending.length === 0 && accountants.length === 0) return null;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
+
+      {/* Connected accountant(s) */}
+      {accountants.map(acc => (
+        <div
+          key={acc.id}
+          style={{
+            padding: "12px 18px",
+            borderRadius: "var(--r)",
+            border: "1px solid var(--hairline)",
+            background: "var(--paper-3)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <div>
+            <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", marginBottom: 2 }}>{tx.my_accountant}</div>
+            <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ink)" }}>{tx.connected(acc.firm_name)}</div>
+            <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>{acc.accountant_email}</div>
+          </div>
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ color: "var(--danger)", flexShrink: 0 }}
+            disabled={disconnecting === acc.id}
+            onClick={() => handleDisconnect(acc)}
+          >
+            {disconnecting === acc.id ? "…" : tx.disconnect}
+          </button>
+        </div>
+      ))}
+
+      {/* Pending invitations */}
       {pending.map((inv) => (
         <div
           key={inv.id}

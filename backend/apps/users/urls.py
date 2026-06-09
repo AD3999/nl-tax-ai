@@ -8,6 +8,7 @@ from .views import (
     AccountantSetupView, PDFReportView,
     AccountantInvitationsView, ClientInvitationsView,
     PushVapidKeyView, PushSubscribeView,
+    ClientMyAccountantView,
 )
 from .admin_views import AdminUserListView, AdminUserDetailView
 
@@ -37,6 +38,8 @@ urlpatterns = [
     path("accountant/invitations/<int:pk>/", AccountantInvitationsView.as_view(), name="accountant-invitation-detail"),
     path("client/invitations/",              ClientInvitationsView.as_view(),     name="client-invitations"),
     path("client/invitations/<int:pk>/respond/", ClientInvitationsView.as_view(), name="client-invitation-respond"),
+    path("client/my-accountant/",          ClientMyAccountantView.as_view(),    name="client-my-accountant"),
+    path("client/my-accountant/<int:pk>/", ClientMyAccountantView.as_view(),    name="client-my-accountant-detail"),
     # Web Push
     path("push/vapid-key/",  PushVapidKeyView.as_view(),   name="push-vapid-key"),
     path("push/subscribe/",  PushSubscribeView.as_view(),  name="push-subscribe"),

@@ -827,9 +827,11 @@ class AccountantInvitationsView(APIView):
             message=message,
         )
 
+        firm = profile.firm_name or request.user.get_full_name() or request.user.email
+        frontend_url = getattr(__import__("django.conf", fromlist=["settings"]).settings, "FRONTEND_URL", "https://taxwijs.nl")
+
         # Push notification to client (if registered and has a device)
         if client_user:
-            firm = profile.firm_name or request.user.get_full_name() or request.user.email
             from .push_utils import send_push_notification
             send_push_notification(
                 client_user,
@@ -837,6 +839,24 @@ class AccountantInvitationsView(APIView):
                 body=f"{firm} has invited you to connect on TaxWijs.",
                 url="/dashboard",
             )
+
+        # Email notification — always send regardless of push subscription status
+        from django.core.mail import send_mail
+        subject = f"Invitation from {firm} on TaxWijs"
+        body_text = (
+            f"Hello,\n\n"
+            f"{firm} has invited you to connect as your tax advisor on TaxWijs.\n\n"
+        )
+        if message:
+            body_text += f"Message from {firm}:\n{message}\n\n"
+        body_text += (
+            f"Log in to your account to accept or decline:\n{frontend_url}/dashboard\n\n"
+            f"— TaxWijs"
+        )
+        try:
+            send_mail(subject, body_text, None, [email], fail_silently=True)
+        except Exception:
+            pass
 
         return Response({
             "id":            inv.id,
@@ -1001,4 +1021,33 @@ class PushSubscribeView(APIView):
             PushSubscription.objects.filter(user=request.user, endpoint=endpoint).delete()
         else:
             PushSubscription.objects.filter(user=request.user).delete()
+        return Response(status=204)
+
+
+class ClientMyAccountantView(APIView):
+    """
+    GET    /api/users/client/my-accountant/        — list accountants connected to this user
+    DELETE /api/users/client/my-accountant/<pk>/   — disconnect from an accountant
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from .models import AccountantClient
+        links = AccountantClient.objects.filter(
+            client_user=request.user,
+        ).select_related("accountant__user")
+        return Response([
+            {
+                "id":               link.id,
+                "firm_name":        link.accountant.firm_name or link.accountant.user.get_full_name() or link.accountant.user.email,
+                "accountant_email": link.accountant.user.email,
+                "connected_since":  link.created_at.date().isoformat(),
+            }
+            for link in links
+        ])
+
+    def delete(self, request, pk=None):
+        from .models import AccountantClient
+        AccountantClient.objects.filter(pk=pk, client_user=request.user).delete()
         return Response(status=204)
