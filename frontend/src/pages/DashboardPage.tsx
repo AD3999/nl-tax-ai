@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
@@ -815,6 +815,42 @@ function EmptySection({ icon, text }: { icon: string; text: string }) {
   );
 }
 
+function AccordionSection({
+  label, count, badge, id, defaultOpen = true, children,
+}: {
+  label: string; count?: number; badge?: "danger" | "warn"; id?: string;
+  defaultOpen?: boolean; children: ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const badgeBg = badge === "danger" ? "var(--danger)" : badge === "warn" ? "var(--warn)" : "var(--sage-600)";
+  return (
+    <div id={id}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{
+          display: "flex", alignItems: "center", gap: 8, width: "100%",
+          background: "none", border: "none", padding: "6px 0 10px",
+          cursor: "pointer", textAlign: "start",
+        }}
+      >
+        <span className="eyebrow eyebrow-accent">{label}</span>
+        {count !== undefined && count > 0 && (
+          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 999, background: badgeBg, color: "white" }}>
+            {count}
+          </span>
+        )}
+        <svg
+          width="13" height="13" viewBox="0 0 16 16" fill="none"
+          style={{ marginInlineStart: "auto", flexShrink: 0, color: "var(--ink-4)", transition: "transform .2s", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+        >
+          <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      {open && children}
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
@@ -1177,8 +1213,12 @@ export default function DashboardPage() {
 
           {/* Action Feed */}
           {profile && (
-            <div id="actions-section">
-              <SectionHead label={L("Uw acties", "Your actions", "اقدامات شما")} count={openActions.length} />
+            <AccordionSection
+              id="actions-section"
+              label={L("Uw acties", "Your actions", "اقدامات شما")}
+              count={openActions.length}
+              defaultOpen={openActions.length > 0}
+            >
               {loadingActions ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {[1,2,3].map(i => <Skeleton key={i} height={64} radius="var(--r-lg)" />)}
@@ -1206,13 +1246,18 @@ export default function DashboardPage() {
                   )}
                 </div>
               )}
-            </div>
+            </AccordionSection>
           )}
 
           {/* Risks */}
           {profile && (
-            <div id="risks-section">
-              <SectionHead label={L("Risico's", "Risks", "ریسک‌ها")} count={riskAlerts.length} badge={criticalCount > 0 ? "danger" : riskAlerts.length > 0 ? "warn" : undefined} />
+            <AccordionSection
+              id="risks-section"
+              label={L("Risico's", "Risks", "ریسک‌ها")}
+              count={riskAlerts.length}
+              badge={criticalCount > 0 ? "danger" : riskAlerts.length > 0 ? "warn" : undefined}
+              defaultOpen={riskAlerts.length > 0}
+            >
               {loadingAlerts
                 ? <Skeleton height={72} radius="var(--r-lg)" />
                 : riskAlerts.length === 0
@@ -1221,17 +1266,21 @@ export default function DashboardPage() {
                     {riskAlerts.map(a => <AlertCard key={a.id} alert={a} onDismiss={dismissAlert} onExplain={explainAlert} onSnooze={handleSnoozeAlert} onMarkDone={markAlertDone} isDone={doneAlerts.has(a.id)} lang={lang} />)}
                   </div>
               }
-            </div>
+            </AccordionSection>
           )}
 
           {/* Deadlines (from alert engine — near-term only) */}
           {profile && deadlineAlerts.length > 0 && (
-            <div>
-              <SectionHead label={L("Aankomende deadlines", "Upcoming deadlines", "مهلت‌های نزدیک")} count={deadlineAlerts.length} badge="warn" />
+            <AccordionSection
+              label={L("Aankomende deadlines", "Upcoming deadlines", "مهلت‌های نزدیک")}
+              count={deadlineAlerts.length}
+              badge="warn"
+              defaultOpen
+            >
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {deadlineAlerts.map(a => <AlertCard key={a.id} alert={a} onDismiss={dismissAlert} onExplain={explainAlert} onSnooze={handleSnoozeAlert} onMarkDone={markAlertDone} isDone={doneAlerts.has(a.id)} lang={lang} />)}
               </div>
-            </div>
+            </AccordionSection>
           )}
 
           {/* Opportunities */}

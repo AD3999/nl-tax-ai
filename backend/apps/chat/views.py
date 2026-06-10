@@ -591,3 +591,58 @@ class ConversationDetailView(generics.RetrieveAPIView):
         return Conversation.objects.filter(user=self.request.user)
 
 
+class ChatHistoryView(APIView):
+    """
+    GET  /api/chat/history/         — return last 80 messages for authenticated user
+    POST /api/chat/history/save/    — save a client-side session batch to DB
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        messages = (
+            Message.objects
+            .filter(conversation__user=request.user)
+            .select_related("conversation")
+            .order_by("created_at")[:80]
+        )
+        return Response([
+            {
+                "id": f"db-{m.id}",
+                "role": m.role,
+                "content": m.content,
+                "created_at": m.created_at.isoformat(),
+            }
+            for m in messages
+        ])
+
+
+class SaveChatHistoryView(APIView):
+    """POST /api/chat/history/save/ — persist a localStorage session to DB on first login."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        messages = request.data.get("messages", [])
+        language = request.data.get("language", "nl")
+        tax_year = int(request.data.get("tax_year", 2026))
+
+        valid = [m for m in messages if m.get("role") in ("user", "assistant") and m.get("content", "").strip()]
+        if not valid:
+            return Response({"error": "No messages"}, status=status.HTTP_400_BAD_REQUEST)
+
+        first_user = next((m for m in valid if m.get("role") == "user"), None)
+        summary = (first_user["content"][:200] if first_user else "Migrated session")
+
+        conv = Conversation.objects.create(
+            user=request.user,
+            language=language,
+            tax_year=tax_year,
+            summary=summary,
+            message_count=len(valid),
+        )
+        Message.objects.bulk_create([
+            Message(conversation=conv, role=m["role"], content=m["content"])
+            for m in valid
+        ])
+        return Response({"id": conv.id, "message_count": len(valid)}, status=status.HTTP_201_CREATED)
+
+

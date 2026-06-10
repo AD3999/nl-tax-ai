@@ -1,7 +1,226 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 9 Jun 2026 (session 5) — portal bug fixes: duplicate tasks, broken checklist dropdown, missing translations, Ask AI button.
+> Last updated: 10 Jun 2026 (session 6 complete).
+
+---
+
+## Session — 10 Jun 2026 (session 6) ✅ Complete
+
+### UI polish + responsiveness + chat persistence
+
+Seven tasks shipped across frontend and backend. Branch `feat/session-6` merged to `master`.
+
+---
+
+#### T2 — Global font cleanup
+- Removed italic Lora variant from Google Fonts URL in `frontend/index.html`
+- Removed `fontStyle: "italic"` from `IntakePage.tsx` → replaced with `fontWeight: 600`
+- Eliminated `<em style={{fontStyle:"italic"}}>` from `LandingPage.tsx` (full rewrite)
+- Admin pages: Tailwind `italic` class retained for internal AI hint annotations only
+
+---
+
+#### T3 — Landing page: simplified, animated, auto-sliding, fully responsive
+- Full rewrite of `frontend/src/pages/LandingPage.tsx`
+- Added 7 CSS keyframes to `frontend/src/index.css`: `heroFadeUp`, `heroFadeIn`, `floatCard`, `slideInFromRight`, `slideInFromLeft`, `fadeSlideIn`, `progressBar`
+- `@media (prefers-reduced-motion)` overrides for all new animations
+- **Hero section**: staggered entrance animations, floating demo card (desktop), trust indicators
+- **Feature slider**: auto-cycling every 3.8s, direction-aware slide animations, dot + arrow nav, progress bar on active item, pause-on-hover, touch swipe support
+- **User type tabs**: auto-cycling every 4.5s, stops on manual click, fade-slide content animation
+- **Footer CTA**: dark sage (`var(--sage-900)`) background
+- Three-language parity: NL/EN/FA copy baked in, RTL-aware layout
+
+---
+
+#### T4 — Dashboard accordion: Actions / Risks / Deadlines
+- Added `AccordionSection` component to `frontend/src/pages/DashboardPage.tsx`
+- Wrapped Actions, Risks, and Upcoming Deadlines sections in collapsible accordions
+- Defaults open when items exist, closed when empty — reduces scroll on first load
+- Toggle chevron animates 180° open/closed with CSS `transition`
+
+---
+
+#### T5 — Clear chat: visible button
+- Changed tiny invisible text link → `className="btn btn-ghost btn-sm"` button with X icon
+- Located in `frontend/src/pages/ChatPage.tsx`
+
+---
+
+#### T6 — Chat history persistence to DB (cross-device)
+- **Backend**: Added `ChatHistoryView` at `GET /api/chat/history/` — returns last 80 messages flat, ordered by `created_at`
+- **Backend**: Added `SaveChatHistoryView` at `POST /api/chat/history/save/` — accepts a batch of messages and persists as one `Conversation` in DB
+- Both endpoints in `backend/apps/chat/views.py` and registered in `backend/apps/chat/urls.py`
+- **Frontend**: Added second `useEffect` in `ChatPage.tsx` that runs when `user` becomes available — fetches DB history if localStorage is empty (new device scenario), populates messages, caches to localStorage
+
+---
+
+#### T7 — Fix "Ask AI" on task cards
+- Bug: `ClientTasksPage.tsx` navigated to `/chat` with `{ prefillMessage: question }` but `ChatPage.tsx` reads `locState?.question`
+- Fix: changed to `navigate("/chat", { state: { question } })` — one line change
+
+---
+
+#### T8 — Accountant portal full responsiveness audit
+- `EngagementPage.tsx`: added `useMobile`, fixed overview grid (`1fr 2fr` → responsive), fixed risks grid (`1fr 1fr` → responsive)
+- `AccountantClientDetailPage.tsx`: added `useMobile`, fixed main grid (`1fr 2fr` → responsive), fixed new-engagement form grid (`1fr 1fr auto` → responsive on mobile)
+- `ClientPortalPage.tsx`: added `useMobile`, fixed info grid, fixed CTA cards grid, removed `minWidth: 200` constraint → `minWidth: 0`
+- `AccountantPortalPage.tsx`: changed textarea `fontSize: 15` → `fontSize: 16` (prevents iOS auto-zoom)
+- `ClientTasksPage.tsx`, `ClientDocumentsPage.tsx`: already fully responsive, no changes needed
+
+---
+
+#### TypeScript
+- `npx tsc --noEmit` → 0 errors
+
+---
+
+#### Checks
+- [x] No italic fonts anywhere in the user-facing UI
+- [x] Landing page slider auto-cycles and pauses on hover
+- [x] Landing page touch swipe works on mobile
+- [x] Dashboard accordions collapse/expand with chevron animation
+- [x] Clear chat button visible and styled
+- [x] Chat history loads from DB on new device login
+- [x] Ask AI from task cards passes question to ChatPage
+- [x] All portal pages collapse to single column on mobile
+- [x] `npx tsc --noEmit` → 0 errors
+
+---
+
+## Session — 10 Jun 2026 (session 6) — Planned (superseded above)
+
+### Chatbot → Dashboard: deliberate save flow
+
+**Design decision recorded:** The chatbot does NOT auto-save data to the dashboard. All dashboard writes are user-initiated. The chatbot asks the user to save after it produces a concrete result (numbers, deduction eligibility, IB return answers, risk assessment). General informational answers (no numbers) never trigger a save offer.
+
+---
+
+#### Architecture
+
+**Principle:** Chat is ephemeral. Dashboard is intentional.
+
+The current `PROFILE_UPDATE` auto-save (in `backend/apps/chat/views.py`) that silently PATCHes `intake_profile` on every AI response must be removed. In its place, a deliberate 3-step flow:
+
+1. User gives data → AI produces a result with numbers
+2. AI ends its response by asking: "Want me to save this to your dashboard?"
+3. User replies "yes" (or clicks a button) → structured data is written to the database
+
+---
+
+#### Save triggers — when the AI offers to save
+
+| Conversation type | Save offered? |
+|---|---|
+| Tax calculation (revenue + expenses → total tax) | Yes |
+| Deduction eligibility confirmed (checker result) | Yes |
+| IB return fields answered | Yes |
+| Wet DBA risk assessment (low/medium/high + reasons) | Yes |
+| General "how does X work" question | No |
+| Clarifying question with no concrete numbers | No |
+
+Detection rule: if the AI response contains a **calculated euro amount or a confirmed eligibility status**, offer to save. If it's pure explanation, don't.
+
+---
+
+#### What gets saved (structured, not raw chat)
+
+Dashboard stores structured records, never the raw conversation transcript:
+
+```json
+{
+  "type": "tax_estimate",
+  "year": 2026,
+  "revenue": 72000,
+  "total_tax": 13952,
+  "effective_rate": 19.4,
+  "monthly_reserve": 1162,
+  "deductions_applied": ["zelfstandigenaftrek", "mkb", "zvw"],
+  "saved_at": "2026-06-10T14:23:00Z"
+}
+```
+
+```json
+{
+  "type": "deduction_check",
+  "year": 2026,
+  "eligible": ["zelfstandigenaftrek", "mkb_winstvrijstelling", "zvw"],
+  "needs_confirmation": ["kia", "lijfrente"],
+  "saved_at": "2026-06-10T14:23:00Z"
+}
+```
+
+```json
+{
+  "type": "wet_dba_risk",
+  "year": 2026,
+  "risk_level": "medium",
+  "reasons": ["65%+ revenue from single client", "no substitution clause"],
+  "saved_at": "2026-06-10T14:23:00Z"
+}
+```
+
+```json
+{
+  "type": "ib_return",
+  "year": 2025,
+  "fields": { "1a": 72000, "1c": 1200, "1d": 8993, ... },
+  "saved_at": "2026-06-10T14:23:00Z"
+}
+```
+
+---
+
+#### Files to change
+
+**Backend:**
+
+| File | Change |
+|---|---|
+| `backend/apps/chat/views.py` | Remove `PROFILE_UPDATE` stream parser + auto-patch logic. Add `[SAVE_PROMPT]` marker detection: when AI emits this marker, frontend shows save UI. |
+| `backend/apps/chat/views.py` | Add save-intent detection to system prompt: AI must end responses with `[SAVE_PROMPT: {"type": "...", "data": {...}}]` when result type qualifies (see table above). |
+| `backend/apps/users/views.py` | New `DashboardSaveView` at `POST /api/users/dashboard/save/` — accepts `{type, data}`, writes to `User.dashboard_records` JSONField (new field, append-only list). |
+| `backend/apps/users/models.py` | Add `dashboard_records = JSONField(default=list)` to `User`. Each entry: `{id, type, year, data, saved_at}`. |
+| `backend/apps/users/migrations/` | New migration for `dashboard_records` field. |
+
+**Frontend:**
+
+| File | Change |
+|---|---|
+| `frontend/src/api/chat.ts` | Add `save_prompt?: { type: string; data: Record<string, unknown> }` to `TokenMeta`. SSE parser handles `[SAVE_PROMPT]` marker — strips from displayed text, routes to `onToken` as metadata. |
+| `frontend/src/pages/ChatPage.tsx` | On `meta.save_prompt`: render a `SaveToDashboardCard` inline in the chat thread below the AI message. Card shows a summary of what will be saved + "Save" / "No thanks" buttons. On confirm → `POST /api/users/dashboard/save/`. |
+| `frontend/src/components/SaveToDashboardCard.tsx` | NEW component. Shows structured summary of the result (e.g. "Tax estimate: €13,952 · Rate: 19.4%"), "Save to dashboard →" button, "No thanks" dismiss. Trilingual (NL/EN/FA). |
+| `frontend/src/pages/DashboardPage.tsx` | New "Saved results" section. Fetches `GET /api/users/dashboard/records/` and renders each record as a card by type (tax_estimate / deduction_check / wet_dba_risk / ib_return). |
+| `frontend/src/api/dashboard.ts` | NEW — `saveToDashboard(type, data)` and `fetchDashboardRecords()`. |
+
+**Anonymous users:**
+
+If `user` is null when save is attempted, `SaveToDashboardCard` shows "Create a free account to save this" with `[Register →]` and `[Log in →]` links instead of the save button. This is the registration conversion moment — after demonstrated value.
+
+---
+
+#### Intake wizard exception
+
+The intake wizard (`/intake`) continues to save automatically on completion. This is onboarding — users expect their setup choices to be remembered. Only chat auto-save is removed.
+
+---
+
+#### What is NOT changed
+
+- `tax_memory` (cross-session AI context) stays as-is. This is a separate concept — it helps the AI give better answers, it doesn't write user-visible records to the dashboard.
+- The calculator page (`/calculator`), deduction checker (`/deduction-checker`), and IB return guide already have their own save/export mechanisms — these are untouched in this session.
+- The accountant portal is completely separate and unaffected.
+
+---
+
+#### Checks before marking complete
+
+- [ ] `PROFILE_UPDATE` no longer appears in network requests during a chat session
+- [ ] `[SAVE_PROMPT]` stripped from displayed AI message text (never shown to user)
+- [ ] Save card renders correctly in NL, EN, and FA
+- [ ] Anonymous user sees register prompt instead of save button
+- [ ] Dashboard "Saved results" section renders all 4 record types
+- [ ] `npx tsc --noEmit` → 0 errors
 
 ---
 

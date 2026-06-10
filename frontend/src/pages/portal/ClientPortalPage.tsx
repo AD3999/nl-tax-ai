@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
+import { useMobile } from "../../hooks/useMobile";
 import { fetchClientProfile, fetchClientEngagement, fetchClientTasks } from "../../api/portal/client";
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
 
@@ -26,6 +27,7 @@ function t(key: keyof typeof TX, lang: "nl" | "en" | "fa") { return TX[key][lang
 export default function ClientPortalPage() {
   const { i18n } = useTranslation();
   const { user } = useAuth();
+  const isMobile = useMobile();
   const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as "nl" | "en" | "fa";
 
   const [profile, setProfile] = useState<ClientProfile | null>(null);
@@ -111,8 +113,8 @@ export default function ClientPortalPage() {
             <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>{t("readiness", lang)}</div>
           </div>
 
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-3)", fontSize: "var(--text-xs)" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-3)", fontSize: "var(--text-xs)" }}>
               {[
                 [t("year", lang), String(engagement.tax_year)],
                 [t("type", lang), engagement.engagement_type],
@@ -129,7 +131,7 @@ export default function ClientPortalPage() {
         </div>
 
         {/* CTA cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-4)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-4)" }}>
           <Link to="/client/tasks" style={{ textDecoration: "none" }}>
             <div className="card" style={{ padding: "var(--sp-5)", cursor: "pointer", borderTop: "3px solid var(--sage-600)", transition: "box-shadow 0.15s" }}
               onMouseEnter={e => (e.currentTarget.style.boxShadow = "var(--shadow-md)")}
