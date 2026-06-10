@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import { useMobile } from "../../hooks/useMobile";
 import {
   fetchClient, updateClient, fetchEngagements, createEngagement, archiveClient,
 } from "../../api/portal/client";
@@ -19,6 +20,7 @@ export default function AccountantClientDetailPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const isMobile = useMobile();
 
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [engagements, setEngagements] = useState<TaxEngagement[]>([]);
@@ -118,7 +120,7 @@ export default function AccountantClientDetailPage() {
           </div>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "var(--sp-6)", alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: "var(--sp-6)", alignItems: "start" }}>
 
           {/* Left: profile card */}
           <div className="card" style={{ padding: "var(--sp-5)" }}>
@@ -184,7 +186,7 @@ export default function AccountantClientDetailPage() {
 
             {showNewEng && (
               <div className="card" style={{ padding: "var(--sp-4)", marginBottom: "var(--sp-4)" }}>
-                <form onSubmit={handleCreateEngagement} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: "var(--sp-3)", alignItems: "end" }}>
+                <form onSubmit={handleCreateEngagement} style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr auto", gap: "var(--sp-3)", alignItems: "end" }}>
                   <div>
                     <label className="tw-label">Tax year</label>
                     <select className="tw-input" style={{ width: "100%", fontSize: 14 }} value={engForm.tax_year} onChange={e => setEngForm(f => ({ ...f, tax_year: Number(e.target.value) }))}>

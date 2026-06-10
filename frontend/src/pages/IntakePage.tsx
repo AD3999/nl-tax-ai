@@ -270,7 +270,7 @@ export default function IntakePage() {
             <div style={{ marginTop: "var(--sp-6)" }}>
               <h1 style={{ fontFamily: "var(--serif)", fontSize: isMobile ? "var(--text-3xl)" : "var(--text-4xl)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
                 {lang === "nl" ? "Uw " : lang === "fa" ? "درآمد " : "Your "}
-                <span style={{ color: "var(--sage-700)", fontStyle: "italic" }}>{USER_TYPES[userType].label}</span>
+                <span style={{ color: "var(--sage-700)", fontWeight: 600 }}>{USER_TYPES[userType].label}</span>
                 {lang === "nl" ? " inkomen" : lang === "fa" ? "" : " income"}
               </h1>
               <p style={{ marginTop: "var(--sp-2)", color: "var(--ink-3)", fontSize: "var(--text-base)" }}>

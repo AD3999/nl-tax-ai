@@ -469,7 +469,7 @@ export default function AccountantPortalPage() {
                   <label className="tw-label">{tx.invite_message}</label>
                   <textarea
                     className="tw-input"
-                    style={{ width: "100%", minHeight: 72, fontSize: 15, resize: "vertical" }}
+                    style={{ width: "100%", minHeight: 72, fontSize: 16, resize: "vertical" }}
                     value={invMessage}
                     onChange={e => setInvMessage(e.target.value)}
                     placeholder={lang === "nl" ? "Bijv. Ik ben uw nieuwe belastingadviseur…" : lang === "fa" ? "مثلاً: من مشاور مالیاتی جدید شما هستم…" : "e.g. I'm your new tax advisor for 2026…"}

@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import { useMobile } from "../../hooks/useMobile";
 import {
   fetchEngagement, fetchChecklist, fetchDocuments,
   fetchIncome, fetchExpenses, fetchActions, generateActions, fetchRisks,
@@ -279,6 +280,7 @@ export default function EngagementPage() {
   const { user } = useAuth();
   const { i18n } = useTranslation();
   const { showToast } = useToast();
+  const isMobile = useMobile();
   const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as Lang;
   const tx = TX[lang];
 
@@ -567,7 +569,7 @@ export default function EngagementPage() {
 
         {/* ── OVERVIEW ─────────────────────────────────────── */}
         {tab === "overview" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "var(--sp-6)", alignItems: "start" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: "var(--sp-6)", alignItems: "start" }}>
             {/* Readiness ring */}
             <div className="card" style={{ padding: "var(--sp-5)", textAlign: "center" }}>
               <div style={{ position: "relative", display: "inline-block", marginBottom: "var(--sp-3)" }}>
@@ -807,7 +809,7 @@ export default function EngagementPage() {
 
         {/* ── RISKS ─────────────────────────────────────────── */}
         {tab === "risks" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-5)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-5)" }}>
             <div>
               <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, marginBottom: "var(--sp-3)" }}>{tx.deductions}</h3>
               {(!risks || (risks.opportunities as unknown[]).length === 0) ? (

@@ -158,9 +158,7 @@ export default function ClientTasksPage() {
 
   function handleAskAI(task: Task) {
     const question = `${task.title}${task.description ? `. ${task.description}` : ""}`;
-    navigate("/chat", {
-      state: { prefillMessage: question },
-    });
+    navigate("/chat", { state: { question } });
   }
 
   if (loading) return (

@@ -297,6 +297,34 @@ export default function ChatPage() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Load DB chat history for authenticated users on a new device (localStorage is empty)
+  useEffect(() => {
+    if (!user) return;
+    if (messages.length > 0) return; // localStorage already restored or intake greeting shown
+    if (ibMode || simMode || loadingProfile) return;
+
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+
+    fetch("/api/chat/history/", { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() as Promise<Array<{ id: string; role: string; content: string }>> : null)
+      .then(data => {
+        if (!data || data.length === 0) return;
+        const msgs: ChatMsg[] = data
+          .filter(m => (m.role === "user" || m.role === "assistant") && m.content.trim())
+          .map(m => ({ id: m.id, role: m.role as "user" | "assistant", content: m.content, streaming: false }));
+        if (msgs.length === 0) return;
+        setMessages(msgs);
+        const userMsgs = msgs.filter(m => m.role === "user");
+        setSessionCount(userMsgs.length);
+        setAskedSet(new Set(userMsgs.map(m => m.content)));
+        if (profile) setIntakeComplete(true);
+        setShowCards(false);
+        localStorage.setItem(historyKey(), JSON.stringify(msgs));
+      })
+      .catch(() => null);
+  }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   // Auto-resize textarea
@@ -918,7 +946,8 @@ export default function ChatPage() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
             {messages.length > 1 ? (
               <button
-                style={{ background: "none", border: "none", fontSize: 11.5, color: "var(--ink-4)", cursor: "pointer", padding: 0 }}
+                className="btn btn-ghost btn-sm"
+                style={{ color: "var(--ink-3)", gap: 6 }}
                 onClick={() => {
                   setMessages([]);
                   setSessionCount(0);
@@ -932,6 +961,9 @@ export default function ChatPage() {
                   if (!profile) startIntakeGreeting();
                 }}
               >
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                  <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
                 {t("chat.clear")}
               </button>
             ) : (
