@@ -69,16 +69,16 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --bg:          oklch(0.09 0.016 265);
-  --bg-2:        oklch(0.11 0.018 265);
-  --bg-3:        oklch(0.13 0.020 265);
-  --bg-4:        oklch(0.16 0.022 265);
-  --bg-hover:    oklch(0.19 0.022 265);
-  --surface:     oklch(0.12 0.018 265);
+  --bg:          oklch(0.14 0.018 265);
+  --bg-2:        oklch(0.17 0.020 265);
+  --bg-3:        oklch(0.20 0.022 265);
+  --bg-4:        oklch(0.24 0.026 265);
+  --bg-hover:    oklch(0.27 0.028 265);
+  --surface:     oklch(0.18 0.022 265);
 
-  --border:      oklch(0.20 0.020 265);
-  --border-2:    oklch(0.26 0.024 265);
-  --border-3:    oklch(0.34 0.026 265);
+  --border:      oklch(0.30 0.026 265);
+  --border-2:    oklch(0.38 0.030 265);
+  --border-3:    oklch(0.48 0.034 265);
 
   --blue:        oklch(0.60 0.22 265);
   --blue-hover:  oklch(0.56 0.22 265);
@@ -121,7 +121,7 @@
   --paper-2:     var(--bg-2);
   --paper-3:     var(--bg-3);
   --paper-tint:  var(--bg-hover);
-  --paper-glass: oklch(0.09 0.016 265 / 0.88);
+  --paper-glass: oklch(0.14 0.018 265 / 0.90);
 
   --ink:         var(--text);
   --ink-2:       var(--text-2);
@@ -163,22 +163,22 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  --bg:          oklch(0.97 0.006 265);
-  --bg-2:        oklch(0.95 0.008 265);
-  --bg-3:        oklch(1.00 0.000 0);
-  --bg-4:        oklch(0.99 0.004 265);
-  --bg-hover:    oklch(0.92 0.010 265);
-  --surface:     oklch(1.00 0.000 0);
+  --bg:          oklch(0.92 0.016 265);
+  --bg-2:        oklch(0.88 0.022 265);
+  --bg-3:        oklch(0.95 0.010 265);
+  --bg-4:        oklch(0.93 0.014 265);
+  --bg-hover:    oklch(0.84 0.026 265);
+  --surface:     oklch(0.97 0.006 265);
 
-  --border:      oklch(0.90 0.010 265);
-  --border-2:    oklch(0.84 0.012 265);
-  --border-3:    oklch(0.76 0.015 265);
+  --border:      oklch(0.76 0.024 265);
+  --border-2:    oklch(0.68 0.028 265);
+  --border-3:    oklch(0.58 0.032 265);
 
   --blue:        oklch(0.48 0.22 265);
   --blue-hover:  oklch(0.44 0.22 265);
-  --blue-subtle: oklch(0.93 0.040 265);
-  --blue-border: oklch(0.76 0.10 265);
-  --blue-text:   oklch(0.42 0.22 265);
+  --blue-subtle: oklch(0.86 0.055 265);
+  --blue-border: oklch(0.68 0.12 265);
+  --blue-text:   oklch(0.38 0.22 265);
 
   --text:        oklch(0.13 0.020 265);
   --text-2:      oklch(0.36 0.028 265);
@@ -211,7 +211,7 @@
   --sh-blue:  0 0 0 1px var(--blue-border), 0 4px 20px oklch(0.48 0.22 265 / 0.12);
 
   /* Legacy aliases */
-  --paper-glass: oklch(0.97 0.006 265 / 0.88);
+  --paper-glass: oklch(0.92 0.016 265 / 0.90);
   --paper-tint:  var(--blue-subtle);
 
   --accent-soft: var(--blue-subtle);
@@ -250,6 +250,7 @@ body {
   margin: 0;
   font-family: var(--font);
   font-size: var(--text-base);
+  font-weight: 500;
   line-height: var(--leading-normal);
   letter-spacing: -0.005em;
   color: var(--text);
@@ -270,13 +271,20 @@ body {
 h1, h2, h3, h4 {
   font-family: var(--font);
   color: var(--text);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.03em;
   margin: 0;
 }
 p  { margin: 0; }
-a  { color: inherit; text-decoration: none; }
-button { font-family: inherit; cursor: pointer; border: none; background: none; line-height: 1; }
+a  { color: inherit; text-decoration: none; font-weight: 600; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; line-height: 1; font-weight: 600; }
+hr {
+  height: 1.5px;
+  background: var(--border-2);
+  border: none;
+  margin: var(--sp-10) 0;
+  border-radius: var(--r-full);
+}
 input, textarea, select { font-family: inherit; }
 img, svg { display: block; max-width: 100%; }
 
@@ -471,13 +479,13 @@ select:focus-visible {
   .pill-purple  { background: var(--purple-subtle); color: var(--purple-text); }
 
   /* ── Dividers ───────────────────────────────────────────────── */
-  .hair     { height: 1px;  background: var(--border); }
-  .hair-v   { width: 1px;   background: var(--border); }
-  .divider  { height: 1px;  background: var(--border); border: none; margin: 0; }
+  .hair     { height: 1.5px; background: var(--border-2); border-radius: var(--r-full); }
+  .hair-v   { width: 1.5px;  background: var(--border-2); border-radius: var(--r-full); }
+  .divider  { height: 1.5px; background: var(--border-2); border: none; margin: var(--sp-6) 0; border-radius: var(--r-full); }
   .dots {
-    height: 1px;
+    height: 1.5px;
     background-image: linear-gradient(to right, var(--border-2) 50%, transparent 0%);
-    background-size: 6px 1px;
+    background-size: 8px 1.5px;
     background-repeat: repeat-x;
   }
 
