@@ -303,6 +303,7 @@ export default function EngagementPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
@@ -473,17 +474,21 @@ export default function EngagementPage() {
   async function handleConfirmUpload() {
     if (!pendingFile || !engagement) return;
     setUploading(true);
+    setUploadProgress(0);
     setUploadError("");
     try {
       const doc = await uploadDocument(engId, engagement.client_profile, pendingFile, {
         userTitle: uploadTitle,
         userNote: uploadNote,
+        onProgress: (pct) => setUploadProgress(pct),
       });
       setDocuments(prev => [doc, ...prev]);
       setShowUploadModal(false);
       setPendingFile(null);
+      setUploadProgress(null);
     } catch (err: unknown) {
       setUploadError(err instanceof Error ? err.message : "Upload failed");
+      setUploadProgress(null);
     }
     setUploading(false);
   }
@@ -691,28 +696,62 @@ export default function EngagementPage() {
         {/* ── DOCUMENTS ─────────────────────────────────────── */}
         {showUploadModal && (
           <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "oklch(0 0 0 / 0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: "var(--sp-4)" }}
-            onClick={e => { if (e.target === e.currentTarget) setShowUploadModal(false); }}>
+            onClick={e => { if (e.target === e.currentTarget && !uploading) setShowUploadModal(false); }}>
             <div style={{ background: "var(--bg-2)", borderRadius: "var(--r-lg)", border: "1px solid var(--border-2)", padding: "var(--sp-6)", width: "100%", maxWidth: 440, boxShadow: "var(--sh-lg)" }}>
               <h2 style={{ fontSize: "var(--text-xl)", fontWeight: 800, color: "var(--text)", marginBottom: "var(--sp-5)" }}>{tx.upload_doc}</h2>
-              <div style={{ marginBottom: "var(--sp-3)" }}>
-                <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>File</label>
-                <div style={{ padding: "var(--sp-3)", background: "var(--bg-3)", borderRadius: "var(--r-sm)", border: "1px solid var(--border)", fontSize: "var(--text-sm)", color: "var(--text-2)", fontWeight: 600 }}>{pendingFile?.name ?? "—"}</div>
+
+              {/* Form fields — frozen during upload */}
+              <div style={{ opacity: uploading ? 0.55 : 1, pointerEvents: uploading ? "none" : "auto", transition: "opacity 0.2s" }}>
+                <div style={{ marginBottom: "var(--sp-3)" }}>
+                  <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>File</label>
+                  <div style={{ padding: "var(--sp-3)", background: "var(--bg-3)", borderRadius: "var(--r-sm)", border: "1px solid var(--border)", fontSize: "var(--text-sm)", color: "var(--text-2)", fontWeight: 600 }}>{pendingFile?.name ?? "—"}</div>
+                </div>
+                <div style={{ marginBottom: "var(--sp-3)" }}>
+                  <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>Title (optional)</label>
+                  <input type="text" value={uploadTitle} onChange={e => setUploadTitle(e.target.value)} style={{ width: "100%", padding: "var(--sp-3)", background: "var(--bg-3)", border: "1px solid var(--border-2)", borderRadius: "var(--r-sm)", color: "var(--text)", fontSize: "var(--text-sm)", fontFamily: "inherit", fontWeight: 600 }} />
+                </div>
+                <div style={{ marginBottom: "var(--sp-5)" }}>
+                  <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>Note (optional)</label>
+                  <textarea rows={3} value={uploadNote} onChange={e => setUploadNote(e.target.value)} style={{ width: "100%", padding: "var(--sp-3)", background: "var(--bg-3)", border: "1px solid var(--border-2)", borderRadius: "var(--r-sm)", color: "var(--text)", fontSize: "var(--text-sm)", fontFamily: "inherit", resize: "vertical" }} />
+                </div>
               </div>
-              <div style={{ marginBottom: "var(--sp-3)" }}>
-                <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>Title (optional)</label>
-                <input type="text" value={uploadTitle} onChange={e => setUploadTitle(e.target.value)} style={{ width: "100%", padding: "var(--sp-3)", background: "var(--bg-3)", border: "1px solid var(--border-2)", borderRadius: "var(--r-sm)", color: "var(--text)", fontSize: "var(--text-sm)", fontFamily: "inherit", fontWeight: 600 }} />
-              </div>
-              <div style={{ marginBottom: "var(--sp-5)" }}>
-                <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>Note (optional)</label>
-                <textarea rows={3} value={uploadNote} onChange={e => setUploadNote(e.target.value)} style={{ width: "100%", padding: "var(--sp-3)", background: "var(--bg-3)", border: "1px solid var(--border-2)", borderRadius: "var(--r-sm)", color: "var(--text)", fontSize: "var(--text-sm)", fontFamily: "inherit", resize: "vertical" }} />
-              </div>
-              {uploadError && <div style={{ marginBottom: "var(--sp-3)", padding: "var(--sp-3)", background: "var(--danger-subtle)", borderRadius: "var(--r-sm)", color: "var(--danger-text)", fontSize: "var(--text-sm)", fontWeight: 600 }}>{uploadError}</div>}
-              <div style={{ display: "flex", gap: "var(--sp-3)", justifyContent: "flex-end" }}>
-                <button className="btn btn-ghost btn-sm" onClick={() => { setShowUploadModal(false); setPendingFile(null); }}>Cancel</button>
-                <button className="btn btn-accent btn-sm" onClick={() => void handleConfirmUpload()} disabled={uploading}>
-                  {uploading ? tx.uploading : "Upload"}
-                </button>
-              </div>
+
+              {/* Progress bar */}
+              {uploading && uploadProgress !== null && (
+                <div style={{ marginBottom: "var(--sp-4)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                    <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)" }}>
+                      {uploadProgress < 100 ? "Uploading…" : "Saving…"}
+                    </span>
+                    <span style={{ fontSize: "var(--text-sm)", fontWeight: 800, color: "var(--blue)", fontVariantNumeric: "tabular-nums" }}>
+                      {uploadProgress}%
+                    </span>
+                  </div>
+                  <div style={{ height: 8, borderRadius: 999, background: "var(--bg-3)", overflow: "hidden" }}>
+                    <div style={{ height: "100%", borderRadius: 999, background: "linear-gradient(90deg, var(--blue) 0%, var(--blue-text) 100%)", width: `${uploadProgress}%`, transition: "width 0.25s ease" }} />
+                  </div>
+                </div>
+              )}
+
+              {/* Error banner */}
+              {uploadError && (
+                <div style={{ marginBottom: "var(--sp-4)", padding: "var(--sp-3) var(--sp-4)", background: "var(--danger-subtle)", borderRadius: "var(--r-sm)", border: "1px solid var(--danger)", display: "flex", gap: "var(--sp-3)", alignItems: "flex-start" }}>
+                  <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>⚠️</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, color: "var(--danger-text)", fontSize: "var(--text-sm)", marginBottom: 2 }}>Upload failed</div>
+                    <div style={{ color: "var(--danger-text)", fontSize: "var(--text-xs)", fontWeight: 500, opacity: 0.85 }}>{uploadError}</div>
+                  </div>
+                  <button onClick={() => setUploadError("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger-text)", fontSize: 16, padding: 0, flexShrink: 0, opacity: 0.7 }}>✕</button>
+                </div>
+              )}
+
+              {/* Buttons — hidden while uploading */}
+              {!uploading && (
+                <div style={{ display: "flex", gap: "var(--sp-3)", justifyContent: "flex-end" }}>
+                  <button className="btn btn-ghost btn-sm" onClick={() => { setShowUploadModal(false); setPendingFile(null); setUploadError(""); }}>Cancel</button>
+                  <button className="btn btn-accent btn-sm" onClick={() => void handleConfirmUpload()}>Upload</button>
+                </div>
+              )}
             </div>
           </div>
         )}

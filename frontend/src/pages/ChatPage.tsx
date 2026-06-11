@@ -286,14 +286,17 @@ export default function ChatPage() {
             localStorage.setItem("taxwijs_calc_input", JSON.stringify(data.intake_profile));
             setProfile(data.intake_profile);
             if (q) void submit(q);
+            else startIntakeGreeting();
           } else {
-            startIntakeGreeting();
+            if (q) void submit(q);
+            else startIntakeGreeting();
           }
         })
-        .catch(() => startIntakeGreeting())
+        .catch(() => { if (q) void submit(q); else startIntakeGreeting(); })
         .finally(() => setLoadingProfile(false));
     } else {
-      startIntakeGreeting();
+      if (q) void submit(q);
+      else startIntakeGreeting();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
