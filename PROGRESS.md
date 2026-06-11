@@ -1,7 +1,7 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 10 Jun 2026 (session 6 complete).
+> Last updated: 11 Jun 2026 (theme refinement complete).
 
 ---
 
@@ -3693,6 +3693,89 @@ All files pass `npx tsc --noEmit` with strict mode. No errors.
 |------|--------|
 | Phase 2 RAG index | ChromaDB at `phase2/chroma_db/` is empty unless built. RAG calls fall back to `"=== No tax context available ==="` silently. To build: `python phase2/build_index.py --provider local` (or `--provider openai`) |
 | Admin UI redesign | `ui/src/screens/admin.jsx` has a new design spec. Admin pages (`/admin/*`) still use the Phase 10 Tailwind component library. Redesign is optional — functionality works. |
+
+---
+
+## Session — 11 Jun 2026 ✅ Complete
+
+### Theme: new blue dark-first design system (commit `fd8ac07`)
+
+Applied a completely new design system from `ui/new-ui/` to all existing pages. Only the **theme** changed — all page structure, content, navigation, and animations were kept intact.
+
+**Design system changes:**
+
+| Token group | Before | After |
+|---|---|---|
+| Color brand | Sage / green | Blue (oklch hue 265) |
+| Default mode | Light-first | Dark-first |
+| Primary font | Inter + Lora | Plus Jakarta Sans only |
+| Monospace | JetBrains Mono | JetBrains Mono (kept) |
+
+**Strategy:** All old variable names (`--paper`, `--ink`, `--sage-*`, `--hairline`) kept as CSS aliases pointing to the new values. This auto-updated ~40 existing TSX files without editing them.
+
+**Files changed:**
+- `frontend/index.html` — Google Fonts updated to Plus Jakarta Sans + JetBrains Mono
+- `frontend/src/index.css` — complete token rewrite (dark-first blue system + legacy aliases + new animation keyframes + new utility classes)
+- `frontend/src/components/Wordmark.tsx` — new blue rounded-square logo mark (triangle SVG), bold wordmark, blue "Wijs"
+- `frontend/src/components/LoadingScreen.tsx` — orbit ring, animated progress ring, dot-grid background, ambient glow, cycling tips
+- `frontend/src/components/TopNav.tsx` — blue active state indicators and borders
+- `frontend/src/pages/LandingPage.tsx` — CSS-var palettes (auto dark/light), blue user chat bubble, footer CTA updated
+- `frontend/src/pages/ChatPage.tsx` — blue message bubbles, blue AI avatar, updated mode chips, `dotBounce` typing animation
+- `frontend/src/pages/DashboardPage.tsx` — `.afu` page-entry animation
+- `frontend/src/pages/LoginPage.tsx` — blue logo gradients, blue radial background
+
+**New CSS utilities:** `.afu`, `.afi`, `.asi`, `.dot-grid`, `.skel`, `.card-elevated`, `.pill-blue`, `.pill-purple`, `.eyebrow-blue`
+
+**TypeScript:** 0 errors. Build: ✓ clean.
+
+---
+
+### Theme refinement — bolder fonts, visible dividers, balanced backgrounds (commit `21f4a06`)
+
+Four targeted UX improvements to `frontend/src/index.css` only.
+
+#### 1 — Dark mode backgrounds lifted
+
+| Token | Before | After |
+|---|---|---|
+| `--bg` | `oklch(0.09)` near-black | `oklch(0.14)` rich dark blue-gray |
+| `--bg-2` | `oklch(0.11)` | `oklch(0.17)` |
+| `--bg-3` | `oklch(0.13)` | `oklch(0.20)` |
+| `--bg-4` | `oklch(0.16)` | `oklch(0.24)` |
+| `--border` | `oklch(0.20)` barely visible | `oklch(0.30)` clearly defined |
+| `--border-2` | `oklch(0.26)` | `oklch(0.38)` |
+| `--border-3` | `oklch(0.34)` | `oklch(0.48)` |
+
+#### 2 — Light mode backgrounds deepened
+
+| Token | Before | After |
+|---|---|---|
+| `--bg` | `oklch(0.97)` near-white | `oklch(0.92)` noticeably tinted |
+| `--bg-2` | `oklch(0.95)` | `oklch(0.88)` |
+| `--bg-3` | `oklch(1.00)` pure white | `oklch(0.95)` |
+| `--border` | `oklch(0.90)` barely visible | `oklch(0.76)` clearly defined |
+| `--border-2` | `oklch(0.84)` | `oklch(0.68)` |
+| `--blue-subtle` | `oklch(0.93)` | `oklch(0.86)` more saturated |
+
+#### 3 — Font weights bumped globally
+
+| Element | Before | After |
+|---|---|---|
+| `body` | 400 (default) | **500** |
+| `h1–h4` | 700 | **800** |
+| `a` (links) | inherited 400 | **600** |
+| `button` | inherited 400 | **600** |
+
+#### 4 — Dividers made visible
+
+| Class | Before | After |
+|---|---|---|
+| `hr` (global) | browser default | 1.5px, `--border-2`, `margin: 40px 0`, rounded |
+| `.divider` | 1px, `--border`, no margin | 1.5px, `--border-2`, `margin: 24px 0` |
+| `.hair` / `.hair-v` | 1px, `--border` | 1.5px, `--border-2` |
+| `.dots` | 1px, 6px spacing | 1.5px, 8px spacing |
+
+**TypeScript:** 0 errors. Build: ✓ 1.82s clean.
 
 ---
 
