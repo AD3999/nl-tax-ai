@@ -37,15 +37,33 @@ const STATUS_BG: Record<string, string> = {
   waived:         "var(--bg-3)",
 };
 
-/** Category → route the "Take Action" button redirects to */
+/**
+ * Category → route the "Take Action" button redirects to.
+ * Categories come from accountant_checklists.py — must match exactly.
+ * For /chat routes, handleTakeAction also passes the task title as the question.
+ */
 const CATEGORY_ROUTE: Record<string, string> = {
-  income:     "/dashboard",
-  expenses:   "/deduction-checker",
-  deductions: "/deduction-checker",
-  bank:       "/client/documents",
+  // Upload a document
   identity:   "/client/documents",
-  mortgage:   "/chat",
+  income:     "/client/documents",
+  expense:    "/client/documents",   // NB: singular — backend uses "expense" not "expenses"
+  bank:       "/client/documents",
+  property:   "/client/documents",   // mortgage statements, WOZ
+  box3:       "/client/documents",   // bank/savings/investment statements
+  box2:       "/client/documents",   // dividend/shareholding docs (DGA)
+  business:   "/client/documents",   // BV annual accounts, KVK extract
+  payroll:    "/client/documents",   // loonheffingen declarations
+  household:  "/client/documents",   // partner/family documents
+
+  // Use the deduction checker
+  deductions: "/deduction-checker",
+
+  // Need AI explanation — send with task question pre-filled
+  vat:        "/chat",
+  compliance: "/chat",   // Wet DBA, urencriterium, M-form
   pension:    "/chat",
+  toeslagen:  "/chat",
+
   other:      "/client/documents",
 };
 
@@ -248,7 +266,13 @@ export default function ClientTasksPage() {
 
   function handleTakeAction(task: Task) {
     const route = CATEGORY_ROUTE[task.category] ?? "/client/documents";
-    navigate(route);
+    if (route === "/chat") {
+      // Pre-fill the chatbot with the task so the AI can guide the user directly.
+      const question = `${task.title}${task.description ? `. ${task.description}` : ""}`;
+      navigate(route, { state: { question } });
+    } else {
+      navigate(route);
+    }
   }
 
   if (loading) return (
