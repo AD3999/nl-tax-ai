@@ -6,20 +6,20 @@ import { useMobile } from "../hooks/useMobile";
 
 type Lang = "nl" | "en" | "fa";
 
-// ── Palettes ────────────────────────────────────────────────────────────────
+// ── Palettes — CSS-var based so they adapt to dark/light theme ───────────────
 const SLIDE_PAL = [
-  { accent: "oklch(0.50 0.105 118)", soft: "oklch(0.96 0.048 118)", symbol: "✓" }, // sage
-  { accent: "oklch(0.45 0.12 230)",  soft: "oklch(0.94 0.040 230)", symbol: "◎" }, // blue
-  { accent: "oklch(0.48 0.14 75)",   soft: "oklch(0.96 0.048 75)",  symbol: "∑" }, // amber
-  { accent: "oklch(0.44 0.11 290)",  soft: "oklch(0.94 0.038 290)", symbol: "▦" }, // violet
-] as const;
+  { accent: "var(--blue)",   soft: "var(--blue-subtle)",   border: "var(--blue-border)",   symbol: "✓" },
+  { accent: "var(--ok)",     soft: "var(--ok-subtle)",     border: "var(--ok-border)",     symbol: "◎" },
+  { accent: "var(--warn)",   soft: "var(--warn-subtle)",   border: "var(--warn-border)",   symbol: "∑" },
+  { accent: "var(--purple)", soft: "var(--purple-subtle)", border: "var(--purple-subtle)", symbol: "▦" },
+];
 
 const USER_PAL = [
-  "oklch(0.50 0.105 118)", // sage   — ZZP
-  "oklch(0.45 0.12 230)",  // blue   — Employee
-  "oklch(0.48 0.14 75)",   // amber  — Expat
-  "oklch(0.44 0.11 290)",  // violet — DGA
-] as const;
+  "var(--blue)",   // ZZP
+  "var(--ok)",     // Employee
+  "var(--warn)",   // Expat
+  "var(--purple)", // DGA
+];
 
 // ── Copy — three languages ────────────────────────────────────────────────
 const TX = {
@@ -246,7 +246,7 @@ export default function LandingPage() {
               <span style={{ display: "block", animation: "heroFadeUp 0.65s ease both", animationDelay: "0.15s" }}>
                 {TX.hero.h1a[lang]}
               </span>
-              <span style={{ display: "block", color: "var(--sage-700)", animation: "heroFadeUp 0.65s ease both", animationDelay: "0.28s" }}>
+              <span style={{ display: "block", color: "var(--blue-text)", animation: "heroFadeUp 0.65s ease both", animationDelay: "0.28s" }}>
                 {TX.hero.h1b[lang]}
               </span>
             </h1>
@@ -318,7 +318,7 @@ export default function LandingPage() {
 
                 {/* User question bubble */}
                 <div style={{ padding: "14px 0 10px", display: "flex", justifyContent: "flex-end" }}>
-                  <div style={{ padding: "10px 16px", borderRadius: "16px 16px 4px 16px", background: "var(--ink)", color: "var(--paper)", fontSize: 13.5, maxWidth: 280, lineHeight: 1.5 }}>
+                  <div style={{ padding: "10px 16px", borderRadius: "16px 16px 4px 16px", background: "var(--blue)", color: "#fff", fontSize: 13.5, maxWidth: 280, lineHeight: 1.5 }}>
                     {hc.q[lang]}
                   </div>
                 </div>
@@ -441,7 +441,7 @@ export default function LandingPage() {
               style={{
                 padding: isMobile ? "28px 22px" : "44px 40px",
                 background: "var(--paper)",
-                border: `1px solid ${pal.soft}`,
+                border: `1px solid ${pal.border}`,
                 borderRadius: "var(--r-xl)",
                 boxShadow: "var(--shadow)",
                 animation: (slideDir === "next")
@@ -629,39 +629,38 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════ FOOTER CTA ══════════════════════════ */}
-      <section style={{ padding: isMobile ? "60px 20px" : "96px 64px", background: "var(--sage-900)", color: "white" }}>
-        <div style={{ maxWidth: 600, margin: "0 auto", textAlign: "center" }}>
+      <section style={{ padding: isMobile ? "60px 20px" : "96px 64px", background: "var(--bg-2)", borderTop: "1px solid var(--border)", position: "relative", overflow: "hidden" }}>
+        <div className="dot-grid" style={{ position: "absolute", inset: 0, opacity: 0.2, pointerEvents: "none", maskImage: "radial-gradient(ellipse 60% 80% at 50% 50%, #000 30%, transparent 75%)", WebkitMaskImage: "radial-gradient(ellipse 60% 80% at 50% 50%, #000 30%, transparent 75%)" }} />
+        <div style={{ maxWidth: 600, margin: "0 auto", textAlign: "center", position: "relative" }}>
           <h2 style={{
-            fontFamily: "var(--serif)",
+            fontFamily: "var(--font)",
             fontSize: isMobile ? "var(--text-3xl)" : "var(--text-5xl)",
-            fontWeight: 400,
-            color: "oklch(0.93 0.030 115)",
-            letterSpacing: "-0.025em",
-            lineHeight: 1.18,
+            fontWeight: 800,
+            color: "var(--text)",
+            letterSpacing: "-0.03em",
+            lineHeight: 1.12,
             margin: 0,
           }}>
             {TX.cta.h2[lang]}
           </h2>
-          <p style={{ marginTop: 16, fontSize: 15, color: "oklch(0.72 0.020 115)", lineHeight: 1.6 }}>
+          <p style={{ marginTop: 16, fontSize: 15, color: "var(--text-2)", lineHeight: 1.6 }}>
             {TX.cta.sub[lang]}
           </p>
           <div style={{ marginTop: 32, display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
             <button
-              className="btn btn-lg"
-              style={{ background: "white", color: "var(--sage-800)", border: "none", fontWeight: 600 }}
+              className="btn btn-lg btn-accent"
               onClick={() => navigate("/register")}
             >
-              {TX.cta.btn1[lang]}
+              {TX.cta.btn1[lang]} <Icon.arrow />
             </button>
             <button
               className="btn btn-ghost btn-lg"
-              style={{ borderColor: "oklch(0.40 0.030 118)", color: "oklch(0.80 0.030 115)" }}
               onClick={() => navigate("/chat")}
             >
               {TX.cta.btn2[lang]}
             </button>
           </div>
-          <p style={{ marginTop: 28, fontSize: 11.5, color: "oklch(0.48 0.018 118)", lineHeight: 1.7 }}>
+          <p style={{ marginTop: 28, fontSize: 11.5, color: "var(--text-4)", lineHeight: 1.7 }}>
             {t("chat.disclaimer")}
           </p>
         </div>

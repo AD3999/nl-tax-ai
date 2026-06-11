@@ -1107,9 +1107,9 @@ export default function DashboardPage() {
     <div dir={isRtl ? "rtl" : "ltr"} style={{ flex: 1, padding: isMobile ? "24px 16px" : "40px 28px", maxWidth: 1120, margin: "0 auto", width: "100%" }}>
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div style={{ marginBottom: 28 }}>
+      <div className="afu" style={{ marginBottom: 28 }}>
         <div className="eyebrow eyebrow-accent">{L("Dashboard", "Dashboard", "داشبورد")}</div>
-        <h1 style={{ marginTop: 6, fontFamily: "var(--serif)", fontSize: isMobile ? 26 : 34, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+        <h1 style={{ marginTop: 6, fontFamily: "var(--serif)", fontSize: isMobile ? 26 : 34, fontWeight: 700, color: "var(--ink)", letterSpacing: "-0.03em" }}>
           {L("Welkom terug", "Welcome back", "خوش آمدید")}
           {user?.email && <span style={{ color: "var(--ink-3)", fontWeight: 400, fontSize: "0.62em" }}>, {user.email.split("@")[0]}</span>}
         </h1>

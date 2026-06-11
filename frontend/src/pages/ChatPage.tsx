@@ -697,29 +697,34 @@ export default function ChatPage() {
 
           {/* Empty state (with profile, before first real message) */}
           {profile && !hasRealMessages && !loadingProfile && (
-            <div style={{ textAlign: "center", paddingBottom: 24 }}>
-              <span style={{ display: "inline-grid", placeItems: "center", width: 56, height: 56, borderRadius: 999, background: "var(--accent-soft)", color: "var(--sage-700)", fontFamily: "var(--serif)", fontSize: 24 }}>T</span>
-              <h2 style={{ marginTop: 16, fontFamily: "var(--serif)", fontSize: 32, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+            <div className="afu" style={{ textAlign: "center", paddingBottom: 24 }}>
+              <span style={{ display: "inline-grid", placeItems: "center", width: 56, height: 56, borderRadius: "var(--r-md)", background: "var(--blue)", fontSize: 24, color: "#fff" }}>
+                <svg width="22" height="22" viewBox="0 0 20 20" fill="none">
+                  <path d="M4 16L10 4l6 12H4z" fill="white" fillOpacity="0.9"/>
+                  <path d="M7 16L10 10.5l3 5.5" fill="white" fillOpacity="0.45"/>
+                </svg>
+              </span>
+              <h2 style={{ marginTop: 16, fontFamily: "var(--font)", fontSize: 28, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.03em" }}>
                 {t("chat.ready_title")}
               </h2>
-              <p style={{ marginTop: 8, color: "var(--ink-3)", fontSize: 15 }}>{t("chat.ready_subtitle")}</p>
+              <p style={{ marginTop: 8, color: "var(--text-3)", fontSize: 15 }}>{t("chat.ready_subtitle")}</p>
               {/* Mode chips */}
               <div style={{ marginTop: 20, display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
                 <button
                   onClick={() => { setIbMode(true); void submit(IB_TRIGGER[lang] ?? IB_TRIGGER.en, false, true); }}
                   disabled={loading}
-                  style={{ padding: "10px 20px", borderRadius: 999, border: "1px solid var(--sage-600)", background: "var(--accent-soft)", color: "var(--sage-700)", fontSize: 14, fontWeight: 500, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, transition: "background .15s" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "var(--sage-100)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "var(--accent-soft)"; }}
+                  style={{ padding: "10px 20px", borderRadius: 999, border: "1px solid var(--blue-border)", background: "var(--blue-subtle)", color: "var(--blue-text)", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, transition: "background var(--t-fast)" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-hover)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "var(--blue-subtle)"; }}
                 >
                   {IB_CHIP_LABEL[lang] ?? IB_CHIP_LABEL.en}
                 </button>
                 <button
                   onClick={() => startSimulation()}
                   disabled={loading}
-                  style={{ padding: "10px 20px", borderRadius: 999, border: "2px solid var(--sage-600)", background: "var(--sage-100)", color: "var(--sage-700)", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, transition: "background .15s" }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "var(--accent-soft)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "var(--sage-100)"; }}
+                  style={{ padding: "10px 20px", borderRadius: 999, border: "1px solid var(--border-2)", background: "var(--bg-3)", color: "var(--text-2)", fontSize: 14, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8, transition: "background var(--t-fast)" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-hover)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "var(--bg-3)"; }}
                 >
                   {SIM_CHIP_LABEL[lang] ?? SIM_CHIP_LABEL.en}
                 </button>
@@ -731,13 +736,15 @@ export default function ChatPage() {
           {messages.map(msg => {
             return msg.role === "user" ? (
               <div key={msg.id} style={{ display: "flex", justifyContent: "flex-end" }}>
-                <div style={{ padding: "10px 16px", borderRadius: "18px 18px 4px 18px", background: "var(--ink)", color: "var(--paper)", fontSize: 14, maxWidth: "78%" }}>
+                <div style={{ padding: "10px 16px", borderRadius: "18px 18px 4px 18px", background: "var(--blue)", color: "#fff", fontSize: 14, maxWidth: "78%" }}>
                   {msg.content}
                 </div>
               </div>
             ) : (
               <div key={msg.id} style={{ display: "flex", gap: 10, alignItems: "flex-start", maxWidth: "92%" }}>
-                <span style={{ width: 30, height: 30, borderRadius: 999, background: "var(--sage-100)", color: "var(--sage-700)", display: "grid", placeItems: "center", fontFamily: "var(--serif)", fontSize: 14, marginTop: 2, flexShrink: 0 }}>T</span>
+                <span style={{ width: 30, height: 30, borderRadius: "var(--r-sm)", background: "var(--blue-subtle)", color: "var(--blue-text)", display: "grid", placeItems: "center", fontSize: 14, marginTop: 2, flexShrink: 0 }}>
+                  <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M4 16L10 4l6 12H4z" fill="currentColor" fillOpacity="0.9"/></svg>
+                </span>
                 <div className="card" style={{ flex: 1, padding: 18 }}>
                   {msg.streaming && !msg.content ? (
                     /* Typing indicator — shown while waiting for first token */
@@ -745,9 +752,9 @@ export default function ChatPage() {
                       {[0, 1, 2].map(i => (
                         <span key={i} style={{
                           width: 9, height: 9, borderRadius: "50%",
-                          background: "var(--sage-400)",
+                          background: "var(--text-3)",
                           display: "inline-block",
-                          animation: "typingBounce 1.3s ease-in-out infinite",
+                          animation: "dotBounce 1.3s ease-in-out infinite",
                           animationDelay: `${i * 0.18}s`,
                         }} />
                       ))}
@@ -930,7 +937,7 @@ export default function ChatPage() {
                   maxHeight: 140,
                   overflowY: "auto",
                 }}
-                onFocus={e => { e.currentTarget.style.borderColor = "var(--sage-600)"; e.currentTarget.style.boxShadow = "0 0 0 3px oklch(0.92 0.07 115)"; }}
+                onFocus={e => { e.currentTarget.style.borderColor = "var(--blue)"; e.currentTarget.style.boxShadow = "var(--sh-focus)"; }}
                 onBlur={e => { e.currentTarget.style.borderColor = "var(--hairline-2)"; e.currentTarget.style.boxShadow = "none"; }}
               />
               <button

@@ -74,10 +74,10 @@ export default function TopNav() {
     padding: "0 8px",
     fontSize: "var(--text-sm)" as string,
     fontWeight: isActive ? 600 : 500,
-    color: isActive ? "var(--ink)" : "var(--ink-3)",
-    borderBottom: isActive ? "2px solid var(--ink)" : "2px solid transparent",
+    color: isActive ? "var(--blue-text)" : "var(--text-3)",
+    borderBottom: isActive ? "2px solid var(--blue)" : "2px solid transparent",
     textDecoration: "none",
-    transition: "color .15s, border-color .15s",
+    transition: "color var(--t-fast), border-color var(--t-fast)",
     letterSpacing: "-0.01em",
   });
 
@@ -91,11 +91,11 @@ export default function TopNav() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          borderBottom: scrolled ? "1px solid rgba(0,0,0,0.06)" : "1px solid var(--hairline)",
-          background: scrolled ? "var(--paper-glass)" : "var(--paper)",
+          borderBottom: "1px solid var(--border)",
+          background: scrolled ? "var(--paper-glass)" : "var(--bg)",
           backdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
           WebkitBackdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
-          boxShadow: scrolled ? "0 2px 16px rgba(0,0,0,0.06)" : "none",
+          boxShadow: scrolled ? "var(--sh-sm)" : "none",
           transition: "background .25s, box-shadow .25s, border-color .25s",
           position: "sticky",
           top: 0,
@@ -173,7 +173,7 @@ export default function TopNav() {
             </>
           ) : !isMobile ? (
             <>
-              <NavLink to="/login" style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", textDecoration: "none", padding: "0 8px", height: 44, display: "inline-flex", alignItems: "center" }}>
+              <NavLink to="/login" style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", textDecoration: "none", padding: "0 8px", height: 44, display: "inline-flex", alignItems: "center" }}>
                 {t("nav.login")}
               </NavLink>
               <NavLink to="/register" className="btn btn-accent btn-sm" style={{ textDecoration: "none" }}>
@@ -191,14 +191,14 @@ export default function TopNav() {
               aria-controls="mobile-nav"
               style={{
                 background: "none",
-                border: "1px solid var(--hairline-2)",
+                border: "1px solid var(--border-2)",
                 borderRadius: "var(--r-sm)",
                 width: 44,
                 height: 44,
                 display: "grid",
                 placeItems: "center",
                 cursor: "pointer",
-                color: "var(--ink)",
+                color: "var(--text)",
                 flexShrink: 0,
               }}
             >
@@ -220,7 +220,7 @@ export default function TopNav() {
               inset: 0,
               top: 64,
               zIndex: 25,
-              background: "rgba(0,0,0,0.20)",
+              background: "oklch(0 0 0 / 0.5)",
               opacity: menuOpen ? 1 : 0,
               pointerEvents: menuOpen ? "auto" : "none",
               transition: "opacity .22s",
@@ -237,8 +237,8 @@ export default function TopNav() {
               left: 0,
               right: 0,
               zIndex: 26,
-              background: "var(--paper)",
-              borderBottom: "1px solid var(--hairline)",
+              background: "var(--bg-2)",
+              borderBottom: "1px solid var(--border)",
               paddingBottom: 16,
               boxShadow: "var(--shadow)",
               transform: menuOpen ? "translateY(0)" : "translateY(-10px)",
@@ -259,10 +259,10 @@ export default function TopNav() {
                   padding: "0 var(--sp-5)",
                   fontSize: "var(--text-md)",
                   fontWeight: isActive ? 600 : 500,
-                  color: isActive ? "var(--sage-700)" : "var(--ink-2)",
+                  color: isActive ? "var(--blue-text)" : "var(--text-2)",
                   textDecoration: "none",
-                  background: isActive ? "var(--accent-soft)" : "transparent",
-                  borderInlineStart: isActive ? "3px solid var(--sage-600)" : "3px solid transparent",
+                  background: isActive ? "var(--blue-subtle)" : "transparent",
+                  borderInlineStart: isActive ? "3px solid var(--blue)" : "3px solid transparent",
                 })}
               >
                 {t(item.labelKey)}
@@ -276,9 +276,9 @@ export default function TopNav() {
                 style={({ isActive }) => ({
                   display: "flex", alignItems: "center", height: 52,
                   padding: "0 var(--sp-5)", fontSize: "var(--text-md)", fontWeight: 500,
-                  color: isActive ? "var(--sage-700)" : "var(--ink-3)", textDecoration: "none",
-                  background: isActive ? "var(--accent-soft)" : "transparent",
-                  borderInlineStart: isActive ? "3px solid var(--sage-600)" : "3px solid transparent",
+                  color: isActive ? "var(--blue-text)" : "var(--text-3)", textDecoration: "none",
+                  background: isActive ? "var(--blue-subtle)" : "transparent",
+                  borderInlineStart: isActive ? "3px solid var(--blue)" : "3px solid transparent",
                 })}
               >
                 Accountant
@@ -291,9 +291,9 @@ export default function TopNav() {
                 style={({ isActive }) => ({
                   display: "flex", alignItems: "center", height: 52,
                   padding: "0 var(--sp-5)", fontSize: "var(--text-md)", fontWeight: 500,
-                  color: isActive ? "var(--sage-700)" : "var(--ink-3)", textDecoration: "none",
-                  background: isActive ? "var(--accent-soft)" : "transparent",
-                  borderInlineStart: isActive ? "3px solid var(--sage-600)" : "3px solid transparent",
+                  color: isActive ? "var(--blue-text)" : "var(--text-3)", textDecoration: "none",
+                  background: isActive ? "var(--blue-subtle)" : "transparent",
+                  borderInlineStart: isActive ? "3px solid var(--blue)" : "3px solid transparent",
                 })}
               >
                 My Portal

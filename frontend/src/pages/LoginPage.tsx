@@ -97,8 +97,8 @@ export default function LoginPage() {
             <div style={{
               position: "absolute", inset: 0, pointerEvents: "none",
               background: [
-                "radial-gradient(60% 50% at 80% 0%, oklch(0.95 0.05 115 / 0.5), transparent 60%)",
-                "radial-gradient(50% 40% at 0% 100%, oklch(0.95 0.03 95 / 0.55), transparent 60%)",
+                "radial-gradient(60% 50% at 80% 0%, var(--blue-subtle), transparent 60%)",
+                "radial-gradient(50% 40% at 0% 100%, var(--blue-subtle), transparent 60%)",
               ].join(", "),
             }} />
 
@@ -107,7 +107,7 @@ export default function LoginPage() {
               {[0, 1, 2].map(i => (
                 <div key={i} style={{
                   position: "absolute", width: 72, height: 72, borderRadius: "50%",
-                  border: "1px solid oklch(0.79 0.110 117 / 0.4)",
+                  border: "1px solid var(--blue-border)",
                   animation: `tw-breath 2.6s ease-out ${i * 0.6}s infinite`,
                   opacity: 0,
                 }} />
@@ -115,8 +115,8 @@ export default function LoginPage() {
               <svg width={72} height={72} viewBox="0 0 64 64" fill="none">
                 <defs>
                   <linearGradient id="lo-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stopColor="oklch(0.50 0.105 118)" />
-                    <stop offset="1" stopColor="oklch(0.40 0.085 118)" />
+                    <stop offset="0" stopColor="oklch(0.60 0.22 265)" />
+                    <stop offset="1" stopColor="oklch(0.52 0.20 265)" />
                   </linearGradient>
                 </defs>
                 <path d="M32 4 L56 11 V32 C56 46 45.5 56.5 32 60 C18.5 56.5 8 46 8 32 V11 Z" fill="url(#lo-grad)" />
