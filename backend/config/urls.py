@@ -1,4 +1,5 @@
 from pathlib import Path
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.http import HttpResponse, Http404
@@ -29,3 +30,8 @@ urlpatterns = [
     # SPA catch-all — must be last
     re_path(r"^(?!api/|admin/).*$", spa_index),
 ]
+
+# Serve uploaded media files in development
+if settings.DEBUG:
+    from django.conf.urls.static import static
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

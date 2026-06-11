@@ -234,6 +234,8 @@ class ClientDocument(models.Model):
         related_name="portal_uploads"
     )
     original_filename = models.CharField(max_length=255)
+    user_title        = models.CharField(max_length=200, blank=True)
+    user_note         = models.TextField(blank=True)
     file              = models.FileField(upload_to="portal/documents/%Y/%m/")
     mime_type         = models.CharField(max_length=100, blank=True)
     file_size         = models.PositiveIntegerField(default=0)

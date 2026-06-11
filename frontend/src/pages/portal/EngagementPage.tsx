@@ -304,6 +304,10 @@ export default function EngagementPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [uploadTitle, setUploadTitle] = useState("");
+  const [uploadNote, setUploadNote] = useState("");
 
   const engId = Number(id);
 
@@ -455,19 +459,33 @@ export default function EngagementPage() {
     }
   }
 
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileChosen(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file || !engagement) return;
+    if (!file) return;
+    setPendingFile(file);
+    setUploadTitle(file.name.replace(/\.[^.]+$/, ""));
+    setUploadNote("");
+    setUploadError("");
+    setShowUploadModal(true);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function handleConfirmUpload() {
+    if (!pendingFile || !engagement) return;
     setUploading(true);
     setUploadError("");
     try {
-      const doc = await uploadDocument(engId, engagement.client_profile, file);
+      const doc = await uploadDocument(engId, engagement.client_profile, pendingFile, {
+        userTitle: uploadTitle,
+        userNote: uploadNote,
+      });
       setDocuments(prev => [doc, ...prev]);
+      setShowUploadModal(false);
+      setPendingFile(null);
     } catch (err: unknown) {
       setUploadError(err instanceof Error ? err.message : "Upload failed");
     }
     setUploading(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   if (loading) return (
@@ -671,14 +689,41 @@ export default function EngagementPage() {
         )}
 
         {/* ── DOCUMENTS ─────────────────────────────────────── */}
+        {showUploadModal && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "oklch(0 0 0 / 0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: "var(--sp-4)" }}
+            onClick={e => { if (e.target === e.currentTarget) setShowUploadModal(false); }}>
+            <div style={{ background: "var(--bg-2)", borderRadius: "var(--r-lg)", border: "1px solid var(--border-2)", padding: "var(--sp-6)", width: "100%", maxWidth: 440, boxShadow: "var(--sh-lg)" }}>
+              <h2 style={{ fontSize: "var(--text-xl)", fontWeight: 800, color: "var(--text)", marginBottom: "var(--sp-5)" }}>{tx.upload_doc}</h2>
+              <div style={{ marginBottom: "var(--sp-3)" }}>
+                <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>File</label>
+                <div style={{ padding: "var(--sp-3)", background: "var(--bg-3)", borderRadius: "var(--r-sm)", border: "1px solid var(--border)", fontSize: "var(--text-sm)", color: "var(--text-2)", fontWeight: 600 }}>{pendingFile?.name ?? "—"}</div>
+              </div>
+              <div style={{ marginBottom: "var(--sp-3)" }}>
+                <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>Title (optional)</label>
+                <input type="text" value={uploadTitle} onChange={e => setUploadTitle(e.target.value)} style={{ width: "100%", padding: "var(--sp-3)", background: "var(--bg-3)", border: "1px solid var(--border-2)", borderRadius: "var(--r-sm)", color: "var(--text)", fontSize: "var(--text-sm)", fontFamily: "inherit", fontWeight: 600 }} />
+              </div>
+              <div style={{ marginBottom: "var(--sp-5)" }}>
+                <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>Note (optional)</label>
+                <textarea rows={3} value={uploadNote} onChange={e => setUploadNote(e.target.value)} style={{ width: "100%", padding: "var(--sp-3)", background: "var(--bg-3)", border: "1px solid var(--border-2)", borderRadius: "var(--r-sm)", color: "var(--text)", fontSize: "var(--text-sm)", fontFamily: "inherit", resize: "vertical" }} />
+              </div>
+              {uploadError && <div style={{ marginBottom: "var(--sp-3)", padding: "var(--sp-3)", background: "var(--danger-subtle)", borderRadius: "var(--r-sm)", color: "var(--danger-text)", fontSize: "var(--text-sm)", fontWeight: 600 }}>{uploadError}</div>}
+              <div style={{ display: "flex", gap: "var(--sp-3)", justifyContent: "flex-end" }}>
+                <button className="btn btn-ghost btn-sm" onClick={() => { setShowUploadModal(false); setPendingFile(null); }}>Cancel</button>
+                <button className="btn btn-accent btn-sm" onClick={() => void handleConfirmUpload()} disabled={uploading}>
+                  {uploading ? tx.uploading : "Upload"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {tab === "documents" && (
           <div>
             <div style={{ marginBottom: "var(--sp-4)", display: "flex", gap: "var(--sp-3)", alignItems: "center" }}>
-              <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.heic,.csv,.xlsx" style={{ display: "none" }} onChange={handleFileUpload} />
+              <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.heic,.csv,.xlsx" style={{ display: "none" }} onChange={handleFileChosen} />
               <button className="btn btn-accent btn-sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-                {uploading ? tx.uploading : tx.upload_doc}
+                {tx.upload_doc}
               </button>
-              {uploadError && <span style={{ color: "var(--danger)", fontSize: "var(--text-xs)" }}>{uploadError}</span>}
             </div>
 
             {documents.length === 0 ? (
@@ -689,9 +734,12 @@ export default function EngagementPage() {
                   <div key={doc.id} className="card" style={{ padding: "var(--sp-3)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--sp-3)" }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ink)" }}>{doc.original_filename}</div>
+                        <div style={{ fontWeight: 700, fontSize: "var(--text-sm)", color: "var(--text)" }}>
+                          {doc.user_title || doc.original_filename}
+                        </div>
+                        {doc.user_note && <div style={{ fontSize: "var(--text-xs)", color: "var(--text-3)", marginTop: 2 }}>{doc.user_note}</div>}
                         <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: 2 }}>
-                          {doc.document_type} · {(doc.file_size / 1024).toFixed(0)} KB · {new Date(doc.created_at).toLocaleDateString()}
+                          {doc.original_filename} · {(doc.file_size / 1024).toFixed(0)} KB · {new Date(doc.created_at).toLocaleDateString()}
                         </div>
                         {doc.extracted_json && (
                           <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: 4 }}>

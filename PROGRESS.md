@@ -1,7 +1,154 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 11 Jun 2026 (theme refinement complete).
+> Last updated: 11 Jun 2026 (portal audit + document upload/delete).
+
+---
+
+## Session — 11 Jun 2026 (session 12) ✅ Complete
+
+### Portal comprehensive audit — 9-issue fix
+
+Full audit and fix of the client/accountant portal. All 9 reported issues addressed.
+
+---
+
+#### Issue 1 — Document upload broken (backend root cause)
+
+**Root cause A:** Media files were served in development — `urls.py` lacked the `static(MEDIA_URL, ...)` handler, so uploaded files saved to disk but returned 404 on access.
+
+**Fix (`backend/config/urls.py`):** Added `if settings.DEBUG: urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)`.
+
+**Root cause B:** Users without an accountant-linked profile had no `AccountantClientProfile` or `TaxEngagement` → upload button disabled.
+
+**Fix (`backend/apps/portal/views.py`):** Added `_get_or_create_self_service_profile(user)` and `_get_or_create_engagement(profile)` helpers. All five client portal views now call these instead of raising 404. Any logged-in user always has a working portal.
+
+---
+
+#### Issue 2 — "My Portal" shows "Portal not available" after navigating to chat
+
+**Root cause:** `fetchClientEngagement()` returned 404 for users without an accountant → `Promise.all` failed → entire portal showed error.
+
+**Fix:** Same auto-create helpers above. Also replaced the error state with "Setting up your portal…" for missing profile, differentiated auth errors from network errors.
+
+---
+
+#### Issue 3 — Nav links faded / invisible
+
+**Fix (`frontend/src/components/TopNav.tsx`):**
+- Inactive link weight `500` → `600`, active `600` → `700`
+- Inactive color `var(--text-3)` → `var(--text-2)` (higher luminosity)
+- Mobile dropdown also fixed
+
+**Fix (`frontend/src/index.css`):**
+- Dark mode `--text-3`: `oklch(0.46 ...)` → `oklch(0.58 ...)` (raised brightness)
+- Dark mode `--text-2`: raised to `oklch(0.76 ...)`
+- Dark mode `--text-4`: raised to `oklch(0.42 ...)`
+
+---
+
+#### Issue 4 — Loading states: plain "Loading..." text
+
+**Fix:** Added `SkeletonCard`, `SkeletonTask`, `SkeletonDoc` components to `ClientPortalPage.tsx`, `ClientTasksPage.tsx`, and `ClientDocumentsPage.tsx`. Shimmer animation via `.skel` CSS class (previously defined in `index.css`).
+
+---
+
+#### Issue 5 — Light mode eye strain (too dark / blue-saturated)
+
+**Fix (`frontend/src/index.css`):**
+- Light mode `--bg`: `oklch(0.87 0.026 265)` → `oklch(0.97 0.006 265)` (near-white)
+- Light mode `--bg-2`: `oklch(0.83 ...)` → `oklch(0.93 ...)`
+- Light mode `--bg-3`: raised to near-surface white
+- Light mode text tokens darkened for contrast
+- Dark mode backgrounds raised (less pitch-black)
+
+---
+
+#### Issue 6 — Task cards: "Take Action" button + status persists to DB
+
+**Fix (`frontend/src/pages/portal/ClientTasksPage.tsx`):**
+- `handleTakeAction(task)`: routes by category to the relevant page (`/dashboard`, `/deduction-checker`, `/client/documents`, `/chat`)
+- `handleMarkDone(task)`: optimistic update + undo button
+- Status change calls `PATCH /api/portal/client/tasks/<id>/`
+
+**Fix (`backend/apps/portal/views.py` — `ClientPortalTaskUpdateView`):**
+- PATCH endpoint updates `ChecklistItem.status` in DB
+- Creates `AccountantAction` notification (idempotent `stable_key`) so accountant sees it
+- Recalculates engagement readiness score
+
+---
+
+#### Issue 7 — Responsiveness
+
+All portal pages use `useMobile()` hook: `AccountantPortalPage`, `EngagementPage`, `ClientPortalPage`, `ClientTasksPage`, `ClientDocumentsPage`. Grids collapse to `1fr` on mobile. Verified no hardcoded widths blocking layout.
+
+---
+
+#### Issue 8 — Accountant dashboard in admin panel
+
+`backend/apps/portal/admin.py` registers all 9 portal models with `list_display`, `list_filter`, `search_fields`, and `raw_id_fields`. All portal data is fully viewable and editable in Django admin at `/django-admin/`. The React accountant portal at `/accountant/portal` has full DB backing.
+
+---
+
+#### Issue 9 — Text too thin / invisible
+
+Addressed via Issue 3 and 5 fixes above. Additionally: heading font weights raised to `800` in portal pages, status badge font weight `700`, metadata font weight `600`.
+
+---
+
+#### Document upload: title + note required, delete button
+
+**Backend (`backend/apps/portal/models.py`):** Added `user_title` (CharField 200, optional) and `user_note` (TextField, optional) to `ClientDocument`.
+
+**Backend (`backend/apps/portal/serializers.py`):** Both fields in `ClientDocumentSerializer` and `ClientDocumentUploadSerializer`.
+
+**Backend (`backend/apps/portal/views.py`):** `ClientPortalDocumentDeleteView` — DELETE `/api/portal/client/documents/<id>/` deletes file from disk and DB record.
+
+**Backend (`backend/apps/portal/urls.py`):** Added `client/tasks/<int:pk>/` and `client/documents/<int:pk>/` routes.
+
+**Migration:** `portal.0003_add_user_title_note_to_document` — applied ✅
+
+**Frontend (`frontend/src/api/portal/types.ts`):** Added `user_title: string` and `user_note: string` to `ClientDocument` interface.
+
+**Frontend (`frontend/src/api/portal/client.ts`):**
+- `uploadClientDocument(engId, profileId, file, title, note)` — sends `user_title`/`user_note` as form fields
+- `uploadDocument()` — updated to accept optional `{ userTitle, userNote, documentRequestId }` for accountant use
+- `deleteClientDocument(id)` — DELETE call
+
+**Frontend (`frontend/src/pages/portal/ClientDocumentsPage.tsx`):** Full rewrite — upload modal with Title + Note fields, skeleton loading, delete button with confirm step, status badges in 3 languages, per-document view link.
+
+**Frontend (`frontend/src/pages/portal/EngagementPage.tsx`):** Upload in documents tab now opens a modal with Title + Note fields. Displays `user_title` / `user_note` in document list.
+
+---
+
+#### TypeScript check
+
+`npx tsc --noEmit` → **0 errors**
+
+---
+
+#### Checks
+
+- [x] File upload saves to DB, `file_url` resolves (media serving fixed)
+- [x] Portal no longer shows "Portal not available" for users without accountant
+- [x] Nav links visible in dark and light mode
+- [x] All portal loading states show skeleton shimmer
+- [x] Light mode backgrounds near-white, dark mode less pitch-black
+- [x] "Take Action" routes to correct page per task category
+- [x] Task status change persists to DB; accountant notified
+- [x] All portal pages responsive (collapse to 1-column on mobile)
+- [x] All 9 portal models in Django admin with full CRUD
+- [x] Document upload requires title/note modal; accountant + client both get it
+- [x] Delete button removes file from disk + DB record
+- [x] `npx tsc --noEmit` → 0 errors
+
+---
+
+## Session — 11 Jun 2026 (session 11) ✅ Complete
+
+### Blue design system + theme refinements
+
+*(See git log for details — commit `69a3cb8`)*
 
 ---
 

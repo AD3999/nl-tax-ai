@@ -73,8 +73,8 @@ export default function TopNav() {
     height: 44,
     padding: "0 8px",
     fontSize: "var(--text-sm)" as string,
-    fontWeight: isActive ? 600 : 500,
-    color: isActive ? "var(--blue-text)" : "var(--text-3)",
+    fontWeight: isActive ? 700 : 600,
+    color: isActive ? "var(--blue-text)" : "var(--text-2)",
     borderBottom: isActive ? "2px solid var(--blue)" : "2px solid transparent",
     textDecoration: "none",
     transition: "color var(--t-fast), border-color var(--t-fast)",
@@ -117,36 +117,17 @@ export default function TopNav() {
                 </NavLink>
               ))}
               {(user?.role === "accountant" || user?.is_admin) && (
-                <NavLink
-                  to="/accountant/portal"
-                  style={({ isActive }) => ({
-                    ...navLinkStyle({ isActive }),
-                    color: isActive ? "var(--ink)" : "var(--ink-4)",
-                  })}
-                >
+                <NavLink to="/accountant/portal" style={navLinkStyle}>
                   Accountant
                 </NavLink>
               )}
               {user && user.role !== "accountant" && !user.is_admin && (
-                <NavLink
-                  to="/client"
-                  style={({ isActive }) => ({
-                    ...navLinkStyle({ isActive }),
-                    color: isActive ? "var(--ink)" : "var(--ink-4)",
-                  })}
-                >
+                <NavLink to="/client" style={navLinkStyle}>
                   My Portal
                 </NavLink>
               )}
               {user?.is_admin && (
-                <NavLink
-                  to="/admin"
-                  end
-                  style={({ isActive }) => ({
-                    ...navLinkStyle({ isActive }),
-                    color: isActive ? "var(--ink)" : "var(--ink-4)",
-                  })}
-                >
+                <NavLink to="/admin" end style={navLinkStyle}>
                   Admin
                 </NavLink>
               )}
@@ -258,7 +239,7 @@ export default function TopNav() {
                   height: 52,
                   padding: "0 var(--sp-5)",
                   fontSize: "var(--text-md)",
-                  fontWeight: isActive ? 600 : 500,
+                  fontWeight: isActive ? 700 : 600,
                   color: isActive ? "var(--blue-text)" : "var(--text-2)",
                   textDecoration: "none",
                   background: isActive ? "var(--blue-subtle)" : "transparent",
@@ -275,8 +256,8 @@ export default function TopNav() {
                 onClick={closeMenu}
                 style={({ isActive }) => ({
                   display: "flex", alignItems: "center", height: 52,
-                  padding: "0 var(--sp-5)", fontSize: "var(--text-md)", fontWeight: 500,
-                  color: isActive ? "var(--blue-text)" : "var(--text-3)", textDecoration: "none",
+                  padding: "0 var(--sp-5)", fontSize: "var(--text-md)", fontWeight: isActive ? 700 : 600,
+                  color: isActive ? "var(--blue-text)" : "var(--text-2)", textDecoration: "none",
                   background: isActive ? "var(--blue-subtle)" : "transparent",
                   borderInlineStart: isActive ? "3px solid var(--blue)" : "3px solid transparent",
                 })}
@@ -290,8 +271,8 @@ export default function TopNav() {
                 onClick={closeMenu}
                 style={({ isActive }) => ({
                   display: "flex", alignItems: "center", height: 52,
-                  padding: "0 var(--sp-5)", fontSize: "var(--text-md)", fontWeight: 500,
-                  color: isActive ? "var(--blue-text)" : "var(--text-3)", textDecoration: "none",
+                  padding: "0 var(--sp-5)", fontSize: "var(--text-md)", fontWeight: isActive ? 700 : 600,
+                  color: isActive ? "var(--blue-text)" : "var(--text-2)", textDecoration: "none",
                   background: isActive ? "var(--blue-subtle)" : "transparent",
                   borderInlineStart: isActive ? "3px solid var(--blue)" : "3px solid transparent",
                 })}
@@ -304,16 +285,11 @@ export default function TopNav() {
                 to="/admin"
                 onClick={closeMenu}
                 style={({ isActive }) => ({
-                  display: "flex",
-                  alignItems: "center",
-                  height: 52,
-                  padding: "0 var(--sp-5)",
-                  fontSize: "var(--text-md)",
-                  fontWeight: 500,
-                  color: isActive ? "var(--sage-700)" : "var(--ink-3)",
-                  textDecoration: "none",
-                  background: isActive ? "var(--accent-soft)" : "transparent",
-                  borderInlineStart: isActive ? "3px solid var(--sage-600)" : "3px solid transparent",
+                  display: "flex", alignItems: "center", height: 52,
+                  padding: "0 var(--sp-5)", fontSize: "var(--text-md)", fontWeight: isActive ? 700 : 600,
+                  color: isActive ? "var(--blue-text)" : "var(--text-2)", textDecoration: "none",
+                  background: isActive ? "var(--blue-subtle)" : "transparent",
+                  borderInlineStart: isActive ? "3px solid var(--blue)" : "3px solid transparent",
                 })}
               >
                 Admin

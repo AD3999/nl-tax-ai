@@ -363,6 +363,8 @@ class ClientDocumentUploadView(APIView):
             document_request=serializer.validated_data.get("document_request"),
             uploaded_by=request.user,
             original_filename=uploaded_file.name,
+            user_title=serializer.validated_data.get("user_title", ""),
+            user_note=serializer.validated_data.get("user_note", ""),
             file=uploaded_file,
             mime_type=uploaded_file.content_type,
             file_size=uploaded_file.size,
@@ -851,30 +853,75 @@ class AuditLogView(APIView):
 
 # ── Client Portal views (self-service) ───────────────────────────────────────
 
+def _get_or_create_self_service_profile(user):
+    """
+    Return the best AccountantClientProfile for this user.
+    Prefers accountant-managed profiles over self-managed ones.
+    Creates a self-managed profile + engagement if none exist.
+    """
+    # First prefer profiles created by a *different* accountant (real engagement)
+    profile = AccountantClientProfile.objects.filter(
+        client_user=user
+    ).exclude(
+        accountant_user=user
+    ).order_by("-created_at").first()
+
+    if not profile:
+        # Fall back to self-managed profile
+        profile = AccountantClientProfile.objects.filter(
+            client_user=user,
+            accountant_user=user,
+        ).order_by("-created_at").first()
+
+    if not profile:
+        # Create a self-managed profile so the portal is immediately usable
+        profile = AccountantClientProfile.objects.create(
+            accountant_user=user,
+            client_user=user,
+            email=user.email,
+            first_name=getattr(user, "first_name", ""),
+            last_name=getattr(user, "last_name", ""),
+            status="active",
+            client_type="other",
+        )
+
+    return profile
+
+
+def _get_or_create_engagement(profile):
+    """Return the latest engagement for profile, creating one if none exists."""
+    engagement = profile.engagements.order_by("-created_at").first()
+    if not engagement:
+        engagement = TaxEngagement.objects.create(
+            accountant=profile.accountant_user,
+            client_profile=profile,
+            status="collecting",
+            tax_year=2026,
+        )
+        from apps.portal.services.accountant_checklists import create_checklist_for_engagement
+        try:
+            create_checklist_for_engagement(engagement)
+        except Exception:
+            pass
+    return engagement
+
+
 class ClientPortalProfileView(APIView):
-    """GET /api/portal/client/profile/  — returns the client's own portal profile."""
+    """GET /api/portal/client/profile/  — returns (or auto-creates) the client's portal profile."""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        try:
-            profile = AccountantClientProfile.objects.get(client_user=request.user)
-        except AccountantClientProfile.DoesNotExist:
-            return Response({"detail": "No client portal profile found."}, status=status.HTTP_404_NOT_FOUND)
+        profile = _get_or_create_self_service_profile(request.user)
         return Response(AccountantClientProfileSerializer(profile, context={"request": request}).data)
 
 
 class ClientPortalEngagementView(APIView):
-    """GET /api/portal/client/engagement/  — client's active engagement."""
+    """GET /api/portal/client/engagement/  — client's active engagement (auto-created if missing)."""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        try:
-            profile = AccountantClientProfile.objects.get(client_user=request.user)
-        except AccountantClientProfile.DoesNotExist:
-            return Response({"detail": "No client portal profile found."}, status=status.HTTP_404_NOT_FOUND)
-        engagement = profile.engagements.order_by("-created_at").first()
-        if not engagement:
-            return Response({"detail": "No engagement found."}, status=status.HTTP_404_NOT_FOUND)
+        profile = _get_or_create_self_service_profile(request.user)
+        engagement = _get_or_create_engagement(profile)
         return Response(TaxEngagementSerializer(engagement, context={"request": request}).data)
 
 
@@ -883,12 +930,8 @@ class ClientPortalTasksView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        try:
-            profile = AccountantClientProfile.objects.get(client_user=request.user)
-        except AccountantClientProfile.DoesNotExist:
-            return Response({"detail": "No client portal profile found."}, status=status.HTTP_404_NOT_FOUND)
-
-        engagement = profile.engagements.order_by("-created_at").first()
+        profile = _get_or_create_self_service_profile(request.user)
+        engagement = _get_or_create_engagement(profile)
         if not engagement:
             return Response({"tasks": [], "total": 0, "completed": 0, "readiness_score": 0})
 
@@ -931,9 +974,81 @@ class ClientPortalDocumentsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        try:
-            profile = AccountantClientProfile.objects.get(client_user=request.user)
-        except AccountantClientProfile.DoesNotExist:
-            return Response({"detail": "No client portal profile found."}, status=status.HTTP_404_NOT_FOUND)
+        profile = _get_or_create_self_service_profile(request.user)
         docs = ClientDocument.objects.filter(client_profile=profile).order_by("-created_at")
         return Response(ClientDocumentSerializer(docs, many=True, context={"request": request}).data)
+
+
+class ClientPortalDocumentDeleteView(APIView):
+    """DELETE /api/portal/client/documents/<id>/  — client deletes their own document."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, pk):
+        doc = get_object_or_404(ClientDocument, pk=pk)
+        profile = _get_or_create_self_service_profile(request.user)
+
+        # Allow: uploader, or owner of the client profile, or accountant, or staff
+        if (doc.uploaded_by_id != request.user.id
+                and doc.client_profile_id != profile.id
+                and not request.user.is_staff):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        _audit(request, "document_deleted", "ClientDocument", doc.id,
+               client_profile=doc.client_profile, engagement=doc.engagement,
+               before={"filename": doc.original_filename})
+        doc.file.delete(save=False)  # remove the actual file from disk
+        doc.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ClientPortalTaskUpdateView(APIView):
+    """
+    PATCH /api/portal/client/tasks/<id>/
+    Allows a client to mark their own checklist item as uploaded/done.
+    Creates an AccountantAction to notify the accountant.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        item = get_object_or_404(ChecklistItem, pk=pk)
+        profile = _get_or_create_self_service_profile(request.user)
+
+        if item.client_profile_id != profile.id:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        new_status = request.data.get("status")
+        allowed = ("uploaded", "todo")
+        if new_status not in allowed:
+            return Response({"detail": f"status must be one of {allowed}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        old_status = item.status
+        item.status = new_status
+        item.save(update_fields=["status", "updated_at"])
+
+        # Notify accountant when client marks item as done
+        if new_status == "uploaded" and old_status != "uploaded":
+            AccountantAction.objects.get_or_create(
+                engagement=item.engagement,
+                client_profile=item.client_profile,
+                stable_key=f"client_done_{item.id}",
+                defaults={
+                    "title": f"Client completed: {item.title}",
+                    "body": f"The client marked '{item.title}' as done. Please review.",
+                    "action_type": "review_document",
+                    "priority": "medium",
+                    "source": "manual",
+                    "status": "open",
+                },
+            )
+            # Recalculate readiness score
+            try:
+                from apps.portal.services.readiness import calculate_readiness
+                calculate_readiness(item.engagement)
+            except Exception:
+                pass
+
+        _audit(request, f"client_task_{new_status}", "ChecklistItem", item.id,
+               client_profile=item.client_profile, engagement=item.engagement,
+               before={"status": old_status}, after={"status": new_status})
+
+        return Response(ChecklistItemSerializer(item).data)

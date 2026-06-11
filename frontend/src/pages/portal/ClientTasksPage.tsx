@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
-import { fetchClientTasks } from "../../api/portal/client";
+import { fetchClientTasks, updateClientTask } from "../../api/portal/client";
 
 interface Task {
   id: string;
+  raw_id: number;
   type: string;
   title: string;
   description: string;
@@ -18,104 +19,162 @@ interface Task {
 type Lang = "nl" | "en" | "fa";
 
 const STATUS_COLOR: Record<string, string> = {
-  todo: "var(--ink-4)", waiting_client: "oklch(0.62 0.13 50)",
-  uploaded: "var(--sage-600)", needs_review: "oklch(0.62 0.13 50)",
-  accepted: "var(--sage-600)", rejected: "var(--danger)", waived: "var(--ink-4)",
+  todo:           "var(--text-3)",
+  waiting_client: "var(--warn-text)",
+  uploaded:       "var(--ok-text)",
+  needs_review:   "var(--warn-text)",
+  accepted:       "var(--ok-text)",
+  rejected:       "var(--danger-text)",
+  waived:         "var(--text-4)",
+};
+const STATUS_BG: Record<string, string> = {
+  todo:           "var(--bg-3)",
+  waiting_client: "var(--warn-subtle)",
+  uploaded:       "var(--ok-subtle)",
+  needs_review:   "var(--warn-subtle)",
+  accepted:       "var(--ok-subtle)",
+  rejected:       "var(--danger-subtle)",
+  waived:         "var(--bg-3)",
+};
+
+/** Category → route the "Take Action" button redirects to */
+const CATEGORY_ROUTE: Record<string, string> = {
+  income:     "/dashboard",
+  expenses:   "/deduction-checker",
+  deductions: "/deduction-checker",
+  bank:       "/client/documents",
+  identity:   "/client/documents",
+  mortgage:   "/chat",
+  pension:    "/chat",
+  other:      "/client/documents",
 };
 
 const TX: Record<Lang, Record<string, string>> = {
   en: {
-    title:           "My tasks",
-    back:            "← Back",
-    done_section:    "Done",
-    required:        "Required",
-    all_done:        "All tasks done!",
-    empty:           "No tasks found.",
-    loading:         "Loading...",
-    error:           "Could not load tasks.",
-    ask_ai:          "Ask AI",
-    status_todo:            "To do",
-    status_waiting_client:  "Waiting for client",
-    status_uploaded:        "Uploaded",
-    status_needs_review:    "Needs review",
-    status_accepted:        "Accepted",
-    status_rejected:        "Rejected",
-    status_waived:          "Waived",
-    cat_identity:    "Identity",
-    cat_income:      "Income",
-    cat_expenses:    "Expenses",
-    cat_deductions:  "Deductions",
-    cat_bank:        "Bank",
-    cat_other:       "Other",
-    pri_high:        "High",
-    pri_medium:      "Medium",
-    pri_low:         "Low",
-    completed_of:    "completed of",
+    title:          "My tasks",
+    back:           "← Back",
+    done_section:   "Done",
+    required:       "Required",
+    all_done:       "All tasks done!",
+    all_done_sub:   "Your file is ready — your accountant will be in touch.",
+    empty:          "No tasks found.",
+    loading:        "Loading...",
+    error:          "Could not load tasks.",
+    ask_ai:         "Ask AI",
+    take_action:    "Take action →",
+    mark_done:      "Mark as done",
+    marking:        "Saving…",
+    undo:           "Undo",
+    completed_of:   "completed of",
+    status_todo:           "To do",
+    status_waiting_client: "Waiting for client",
+    status_uploaded:       "Uploaded",
+    status_needs_review:   "Needs review",
+    status_accepted:       "Accepted",
+    status_rejected:       "Rejected",
+    status_waived:         "Waived",
+    cat_identity:   "Identity",
+    cat_income:     "Income",
+    cat_expenses:   "Expenses",
+    cat_deductions: "Deductions",
+    cat_bank:       "Bank",
+    cat_mortgage:   "Mortgage",
+    cat_pension:    "Pension",
+    cat_other:      "Other",
+    pri_high:       "High",
+    pri_medium:     "Medium",
+    pri_low:        "Low",
   },
   nl: {
-    title:           "Mijn taken",
-    back:            "← Terug",
-    done_section:    "Voltooid",
-    required:        "Vereist",
-    all_done:        "Alle taken voltooid!",
-    empty:           "Geen taken gevonden.",
-    loading:         "Laden...",
-    error:           "Taken konden niet worden geladen.",
-    ask_ai:          "Vraag AI",
-    status_todo:            "Te doen",
-    status_waiting_client:  "Wacht op klant",
-    status_uploaded:        "Geüpload",
-    status_needs_review:    "Beoordeling nodig",
-    status_accepted:        "Geaccepteerd",
-    status_rejected:        "Afgewezen",
-    status_waived:          "Vrijgesteld",
-    cat_identity:    "Identiteit",
-    cat_income:      "Inkomsten",
-    cat_expenses:    "Kosten",
-    cat_deductions:  "Aftrekposten",
-    cat_bank:        "Bank",
-    cat_other:       "Overig",
-    pri_high:        "Hoog",
-    pri_medium:      "Gemiddeld",
-    pri_low:         "Laag",
-    completed_of:    "voltooid van",
+    title:          "Mijn taken",
+    back:           "← Terug",
+    done_section:   "Voltooid",
+    required:       "Vereist",
+    all_done:       "Alle taken voltooid!",
+    all_done_sub:   "Uw dossier is klaar — uw accountant neemt contact op.",
+    empty:          "Geen taken gevonden.",
+    loading:        "Laden...",
+    error:          "Taken konden niet worden geladen.",
+    ask_ai:         "Vraag AI",
+    take_action:    "Actie ondernemen →",
+    mark_done:      "Als gedaan markeren",
+    marking:        "Opslaan…",
+    undo:           "Ongedaan maken",
+    completed_of:   "voltooid van",
+    status_todo:           "Te doen",
+    status_waiting_client: "Wacht op klant",
+    status_uploaded:       "Geüpload",
+    status_needs_review:   "Beoordeling nodig",
+    status_accepted:       "Geaccepteerd",
+    status_rejected:       "Afgewezen",
+    status_waived:         "Vrijgesteld",
+    cat_identity:   "Identiteit",
+    cat_income:     "Inkomsten",
+    cat_expenses:   "Kosten",
+    cat_deductions: "Aftrekposten",
+    cat_bank:       "Bank",
+    cat_mortgage:   "Hypotheek",
+    cat_pension:    "Pensioen",
+    cat_other:      "Overig",
+    pri_high:       "Hoog",
+    pri_medium:     "Gemiddeld",
+    pri_low:        "Laag",
   },
   fa: {
-    title:           "وظایف من",
-    back:            "← بازگشت",
-    done_section:    "انجام شده",
-    required:        "ضروری",
-    all_done:        "تمام وظایف انجام شد!",
-    empty:           "وظیفه‌ای یافت نشد.",
-    loading:         "در حال بارگذاری...",
-    error:           "بارگذاری وظایف ناموفق بود.",
-    ask_ai:          "پرسش از AI",
-    status_todo:            "در انتظار",
-    status_waiting_client:  "منتظر مشتری",
-    status_uploaded:        "بارگذاری شده",
-    status_needs_review:    "نیاز به بررسی",
-    status_accepted:        "پذیرفته شده",
-    status_rejected:        "رد شده",
-    status_waived:          "معاف شده",
-    cat_identity:    "هویت",
-    cat_income:      "درآمد",
-    cat_expenses:    "هزینه‌ها",
-    cat_deductions:  "کسورات",
-    cat_bank:        "بانک",
-    cat_other:       "سایر",
-    pri_high:        "بالا",
-    pri_medium:      "متوسط",
-    pri_low:         "پایین",
-    completed_of:    "تکمیل از",
+    title:          "وظایف من",
+    back:           "← بازگشت",
+    done_section:   "انجام شده",
+    required:       "ضروری",
+    all_done:       "تمام وظایف انجام شد!",
+    all_done_sub:   "پرونده شما آماده است — حسابدار شما تماس خواهد گرفت.",
+    empty:          "وظیفه‌ای یافت نشد.",
+    loading:        "در حال بارگذاری...",
+    error:          "بارگذاری وظایف ناموفق بود.",
+    ask_ai:         "پرسش از AI",
+    take_action:    "اقدام کنید →",
+    mark_done:      "علامت‌گذاری به عنوان انجام شده",
+    marking:        "ذخیره‌سازی…",
+    undo:           "بازگشت",
+    completed_of:   "تکمیل از",
+    status_todo:           "در انتظار",
+    status_waiting_client: "منتظر مشتری",
+    status_uploaded:       "بارگذاری شده",
+    status_needs_review:   "نیاز به بررسی",
+    status_accepted:       "پذیرفته شده",
+    status_rejected:       "رد شده",
+    status_waived:         "معاف شده",
+    cat_identity:   "هویت",
+    cat_income:     "درآمد",
+    cat_expenses:   "هزینه‌ها",
+    cat_deductions: "کسورات",
+    cat_bank:       "بانک",
+    cat_mortgage:   "رهن",
+    cat_pension:    "بازنشستگی",
+    cat_other:      "سایر",
+    pri_high:       "بالا",
+    pri_medium:     "متوسط",
+    pri_low:        "پایین",
   },
 };
 
 function statusLabel(status: string, tx: Record<string, string>): string {
   return tx[`status_${status}`] ?? status;
 }
-
 function categoryLabel(cat: string, tx: Record<string, string>): string {
   return tx[`cat_${cat}`] ?? cat;
+}
+
+function SkeletonTask() {
+  return (
+    <div className="card" style={{ padding: "var(--sp-4)", marginBottom: "var(--sp-2)" }}>
+      <div className="skel" style={{ height: 14, width: "60%", marginBottom: 10 }} />
+      <div className="skel" style={{ height: 10, width: "80%", marginBottom: 8 }} />
+      <div style={{ display: "flex", gap: 8 }}>
+        <div className="skel" style={{ height: 20, width: 60, borderRadius: 999 }} />
+        <div className="skel" style={{ height: 20, width: 80, borderRadius: 999 }} />
+      </div>
+    </div>
+  );
 }
 
 export default function ClientTasksPage() {
@@ -132,11 +191,12 @@ export default function ClientTasksPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [markingId, setMarkingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!user) return;
     void load();
-    const id = setInterval(() => void load(true), 10_000);
+    const id = setInterval(() => void load(true), 15_000);
     return () => clearInterval(id);
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -144,7 +204,12 @@ export default function ClientTasksPage() {
     if (!silent) setLoading(true);
     try {
       const result = await fetchClientTasks();
-      setTasks((result.tasks as Task[]) || []);
+      // Enrich task objects with raw numeric id
+      const enriched = ((result.tasks as Task[]) || []).map(t => ({
+        ...t,
+        raw_id: parseInt(t.id.replace("chk_", ""), 10),
+      }));
+      setTasks(enriched);
       setTotal(result.total);
       setCompleted(result.completed);
       setReadiness(result.readiness_score);
@@ -161,13 +226,43 @@ export default function ClientTasksPage() {
     navigate("/chat", { state: { question } });
   }
 
+  async function handleMarkDone(task: Task) {
+    const newStatus = task.status === "uploaded" ? "todo" : "uploaded";
+    setMarkingId(task.raw_id);
+    try {
+      await updateClientTask(task.raw_id, { status: newStatus });
+      setTasks(prev => prev.map(t =>
+        t.raw_id === task.raw_id ? { ...t, status: newStatus } : t
+      ));
+      // Optimistically update counter
+      if (newStatus === "uploaded") {
+        setCompleted(c => c + 1);
+      } else {
+        setCompleted(c => Math.max(0, c - 1));
+      }
+    } catch {
+      /* fail silently — server state will reconcile on next poll */
+    }
+    setMarkingId(null);
+  }
+
+  function handleTakeAction(task: Task) {
+    const route = CATEGORY_ROUTE[task.category] ?? "/client/documents";
+    navigate(route);
+  }
+
   if (loading) return (
-    <main style={{ flex: 1, padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-4)" }}>{tx.loading}</main>
+    <main style={{ flex: 1, padding: "var(--sp-8) var(--sp-6)", maxWidth: 740, margin: "0 auto", width: "100%" }}>
+      <div className="skel" style={{ height: 14, width: 80, marginBottom: 20 }} />
+      <div className="skel" style={{ height: 22, width: 180, marginBottom: 24 }} />
+      <div className="skel" style={{ height: 6, marginBottom: 20, borderRadius: 3 }} />
+      {[1,2,3].map(i => <SkeletonTask key={i} />)}
+    </main>
   );
 
   if (error && tasks.length === 0) return (
     <main style={{ flex: 1, padding: "var(--sp-8)", textAlign: "center" }}>
-      <p style={{ color: "var(--danger)" }}>{error}</p>
+      <p style={{ color: "var(--danger-text)", fontWeight: 600 }}>{error}</p>
       <button className="btn btn-ghost btn-sm" onClick={() => void load()} style={{ marginTop: 8 }}>↻ Retry</button>
     </main>
   );
@@ -176,80 +271,119 @@ export default function ClientTasksPage() {
   const doneTasks = tasks.filter(t => ["accepted", "waived"].includes(t.status));
 
   return (
-    <main style={{ background: "var(--paper)", flex: 1 }}>
+    <main style={{ background: "var(--bg)", flex: 1 }}>
       <div style={{ maxWidth: 740, margin: "0 auto", padding: "var(--sp-8) var(--sp-6)" }}>
 
-        <Link to="/client" style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", textDecoration: "none" }}>{tx.back}</Link>
+        <Link to="/client" style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", textDecoration: "none", fontWeight: 600 }}>{tx.back}</Link>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "var(--sp-3) 0 var(--sp-5)" }}>
-          <h1 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-3xl)", fontWeight: 400, color: "var(--ink)", margin: 0 }}>{tx.title}</h1>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "var(--sp-3) 0 var(--sp-4)" }}>
+          <h1 style={{ fontSize: "var(--text-3xl)", fontWeight: 800, color: "var(--text)", margin: 0, letterSpacing: "-0.03em" }}>{tx.title}</h1>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)" }}>{completed} {tx.completed_of} {total}</span>
-            {lastUpdated && <span style={{ fontSize: 10, color: "var(--ink-4)" }}>{lastUpdated.toLocaleTimeString()}</span>}
-            <button onClick={() => void load(true)} title="Refresh" style={{ background: "none", border: "1px solid var(--hairline-2)", borderRadius: 6, cursor: "pointer", color: "var(--ink-4)", fontSize: 13, padding: "2px 7px", lineHeight: 1 }}>↻</button>
+            <span style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", fontWeight: 600 }}>{completed} {tx.completed_of} {total}</span>
+            {lastUpdated && <span style={{ fontSize: 10, color: "var(--text-4)" }}>{lastUpdated.toLocaleTimeString()}</span>}
+            <button onClick={() => void load(true)} title="Refresh" style={{ background: "none", border: "1px solid var(--border-2)", borderRadius: 6, cursor: "pointer", color: "var(--text-3)", fontSize: 14, width: 30, height: 30, display: "grid", placeItems: "center" }}>↻</button>
           </div>
         </div>
 
         {/* Progress bar */}
-        <div style={{ height: 6, borderRadius: 3, background: "var(--hairline)", marginBottom: "var(--sp-5)", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${readiness}%`, background: readiness >= 85 ? "var(--sage-600)" : "oklch(0.62 0.13 50)", borderRadius: 3, transition: "width 0.5s ease" }} />
+        <div style={{ height: 6, borderRadius: 3, background: "var(--border)", marginBottom: "var(--sp-5)", overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${readiness}%`, background: readiness >= 85 ? "var(--ok)" : "var(--warn)", borderRadius: 3, transition: "width 0.6s ease" }} />
         </div>
 
         {tasks.length === 0 && (
-          <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-3)" }}>{tx.empty}</div>
+          <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--text-3)" }}>{tx.empty}</div>
         )}
 
         {/* Open tasks */}
         {openTasks.length > 0 && (
           <div style={{ marginBottom: "var(--sp-5)" }}>
-            {openTasks.map(task => (
-              <div key={task.id} className="card" style={{
-                padding: "var(--sp-4)", marginBottom: "var(--sp-2)",
-                borderInlineStart: `3px solid ${task.required ? "var(--danger)" : "var(--hairline)"}`,
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--sp-3)" }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ink)" }}>
-                      {task.required && <span style={{ color: "var(--danger)", marginInlineEnd: 4 }}>*</span>}
-                      {task.title}
-                    </div>
-                    <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: 4 }}>{task.description}</div>
-                    <div style={{ display: "flex", gap: "var(--sp-2)", marginTop: "var(--sp-2)", flexWrap: "wrap" }}>
-                      <span className="pill" style={{ fontSize: "var(--text-2xs)" }}>{categoryLabel(task.category, tx)}</span>
-                      {task.required && (
-                        <span className="pill" style={{ fontSize: "var(--text-2xs)", color: "var(--danger)", background: "oklch(0.95 0.03 25)" }}>{tx.required}</span>
+            {openTasks.map(task => {
+              const isDone = task.status === "uploaded";
+              const isMarking = markingId === task.raw_id;
+              return (
+                <div key={task.id} className="card" style={{
+                  padding: "var(--sp-4)", marginBottom: "var(--sp-3)",
+                  borderInlineStart: `3px solid ${task.required ? "var(--danger)" : "var(--border-2)"}`,
+                  opacity: isDone ? 0.75 : 1,
+                  transition: "opacity 0.2s",
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--sp-3)" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: "var(--text-base)", color: "var(--text)", marginBottom: 4 }}>
+                        {task.required && <span style={{ color: "var(--danger)", marginInlineEnd: 4 }}>*</span>}
+                        {isDone ? <s style={{ opacity: 0.7 }}>{task.title}</s> : task.title}
+                      </div>
+                      {task.description && (
+                        <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", marginBottom: 8, fontWeight: 500 }}>{task.description}</div>
                       )}
+                      <div style={{ display: "flex", gap: "var(--sp-2)", flexWrap: "wrap", alignItems: "center" }}>
+                        <span className="pill" style={{ fontSize: "var(--text-2xs)", fontWeight: 700 }}>{categoryLabel(task.category, tx)}</span>
+                        {task.required && (
+                          <span className="pill pill-danger" style={{ fontSize: "var(--text-2xs)" }}>{tx.required}</span>
+                        )}
+                        <span style={{
+                          fontSize: "var(--text-xs)", fontWeight: 700, padding: "2px 8px", borderRadius: 999,
+                          color: STATUS_COLOR[task.status] ?? "var(--text-3)",
+                          background: STATUS_BG[task.status] ?? "var(--bg-3)",
+                        }}>
+                          {statusLabel(task.status, tx)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)", alignItems: "flex-end", flexShrink: 0 }}>
-                    <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[task.status] }}>
-                      {statusLabel(task.status, tx)}
-                    </span>
-                    <button
-                      className="btn btn-ghost btn-sm"
-                      style={{ fontSize: "var(--text-2xs)", border: "1px solid var(--sage-600)", color: "var(--sage-600)", padding: "2px 10px" }}
-                      onClick={() => handleAskAI(task)}
-                      title={tx.ask_ai}
-                    >
-                      {tx.ask_ai}
-                    </button>
+
+                    {/* Action buttons */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)", alignItems: "flex-end", flexShrink: 0 }}>
+                      {/* Mark as done / undo */}
+                      <button
+                        className={isDone ? "btn btn-ghost btn-sm" : "btn btn-accent btn-sm"}
+                        style={{ fontSize: "var(--text-xs)", minWidth: 110, fontWeight: 700 }}
+                        disabled={isMarking}
+                        onClick={() => handleMarkDone(task)}
+                      >
+                        {isMarking ? tx.marking : isDone ? `↩ ${tx.undo}` : `✓ ${tx.mark_done}`}
+                      </button>
+
+                      {/* Take action — redirects to relevant page */}
+                      {!isDone && (
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          style={{ fontSize: "var(--text-xs)", border: "1px solid var(--blue-border)", color: "var(--blue-text)", fontWeight: 700 }}
+                          onClick={() => handleTakeAction(task)}
+                        >
+                          {tx.take_action}
+                        </button>
+                      )}
+
+                      {/* Ask AI */}
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        style={{ fontSize: "var(--text-xs)", fontWeight: 600 }}
+                        onClick={() => handleAskAI(task)}
+                      >
+                        {tx.ask_ai}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
         {/* Done tasks */}
         {doneTasks.length > 0 && (
           <div>
-            <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "var(--sp-3)" }}>
+            <div style={{ fontSize: "var(--text-xs)", color: "var(--text-4)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "var(--sp-3)" }}>
               {tx.done_section} ({doneTasks.length})
             </div>
             {doneTasks.map(task => (
-              <div key={task.id} style={{ padding: "var(--sp-3) var(--sp-4)", marginBottom: "var(--sp-1)", opacity: 0.6, display: "flex", justifyContent: "space-between", borderBottom: "1px solid var(--hairline)", fontSize: "var(--text-sm)" }}>
-                <span style={{ textDecoration: "line-through", color: "var(--ink-3)" }}>{task.title}</span>
-                <span style={{ color: "var(--sage-600)", fontSize: "var(--text-xs)" }}>✓</span>
+              <div key={task.id} style={{
+                padding: "var(--sp-3) var(--sp-4)", marginBottom: "var(--sp-1)",
+                opacity: 0.55, display: "flex", justifyContent: "space-between",
+                borderBottom: "1px solid var(--border)", fontSize: "var(--text-sm)",
+              }}>
+                <span style={{ textDecoration: "line-through", color: "var(--text-3)", fontWeight: 600 }}>{task.title}</span>
+                <span style={{ color: "var(--ok-text)", fontSize: "var(--text-xs)", fontWeight: 700 }}>✓ {statusLabel(task.status, tx)}</span>
               </div>
             ))}
           </div>
@@ -257,9 +391,10 @@ export default function ClientTasksPage() {
 
         {/* All done celebration */}
         {openTasks.length === 0 && tasks.length > 0 && (
-          <div className="card" style={{ padding: "var(--sp-5)", textAlign: "center", background: "var(--accent-soft)", marginTop: "var(--sp-4)" }}>
-            <div style={{ fontSize: "var(--text-xl)", marginBottom: "var(--sp-2)" }}>🎉</div>
-            <div style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", color: "var(--sage-600)" }}>{tx.all_done}</div>
+          <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", background: "var(--ok-subtle)", border: "1px solid var(--ok-border)", marginTop: "var(--sp-5)" }}>
+            <div style={{ fontSize: 40, marginBottom: 8 }}>🎉</div>
+            <div style={{ fontSize: "var(--text-xl)", fontWeight: 800, color: "var(--ok-text)", marginBottom: 6 }}>{tx.all_done}</div>
+            <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", fontWeight: 500 }}>{tx.all_done_sub}</div>
           </div>
         )}
       </div>

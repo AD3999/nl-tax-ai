@@ -65,6 +65,8 @@ export interface ClientDocument {
   document_request: number | null;
   uploaded_by: number | null;
   original_filename: string;
+  user_title: string;
+  user_note: string;
   file_url: string | null;
   mime_type: string;
   file_size: number;

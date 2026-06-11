@@ -75,15 +75,15 @@ export async function uploadDocument(
   engagementId: number,
   clientProfileId: number,
   file: File,
-  documentRequestId?: number,
+  options?: { userTitle?: string; userNote?: string; documentRequestId?: number },
 ): Promise<ClientDocument> {
   const formData = new FormData();
   formData.append("engagement", String(engagementId));
   formData.append("client_profile", String(clientProfileId));
   formData.append("file", file);
-  if (documentRequestId) {
-    formData.append("document_request", String(documentRequestId));
-  }
+  if (options?.userTitle)  formData.append("user_title", options.userTitle);
+  if (options?.userNote)   formData.append("user_note",  options.userNote);
+  if (options?.documentRequestId) formData.append("document_request", String(options.documentRequestId));
   const r = await fetch(`${base}/documents/upload/`, {
     method: "POST",
     headers: authHeader(),  // NO Content-Type — browser sets multipart boundary
@@ -122,3 +122,39 @@ export const fetchClientProfile    = () => get<ClientProfile>("/client/profile/"
 export const fetchClientEngagement = () => get<TaxEngagement>("/client/engagement/");
 export const fetchClientTasks      = () => get<{ tasks: unknown[]; total: number; completed: number; readiness_score: number }>("/client/tasks/");
 export const fetchClientDocuments  = () => get<ClientDocument[]>("/client/documents/");
+export const updateClientTask      = (id: number, data: { status: string }) => patch<ChecklistItem>(`/client/tasks/${id}/`, data);
+
+export async function deleteClientDocument(id: number): Promise<void> {
+  const r = await fetch(`${base}/client/documents/${id}/`, {
+    method: "DELETE",
+    headers: authHeader(),
+  });
+  if (!r.ok) throw new Error(`${r.status}`);
+}
+
+export async function uploadClientDocument(
+  engagementId: number,
+  clientProfileId: number,
+  file: File,
+  title: string,
+  note: string,
+  documentRequestId?: number,
+): Promise<ClientDocument> {
+  const formData = new FormData();
+  formData.append("engagement", String(engagementId));
+  formData.append("client_profile", String(clientProfileId));
+  formData.append("file", file);
+  if (title) formData.append("user_title", title);
+  if (note)  formData.append("user_note", note);
+  if (documentRequestId) formData.append("document_request", String(documentRequestId));
+  const r = await fetch(`${base}/documents/upload/`, {
+    method: "POST",
+    headers: authHeader(),
+    body: formData,
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(JSON.stringify(err) || `${r.status}`);
+  }
+  return r.json();
+}

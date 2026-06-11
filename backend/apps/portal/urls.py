@@ -11,6 +11,7 @@ from .views import (
     ReadinessView, RisksDeductionsView, PortalReminderView, AuditLogView,
     ClientPortalProfileView, ClientPortalEngagementView,
     ClientPortalTasksView, ClientPortalDocumentsView,
+    ClientPortalTaskUpdateView, ClientPortalDocumentDeleteView,
 )
 
 urlpatterns = [
@@ -49,5 +50,7 @@ urlpatterns = [
     path("client/profile/",                ClientPortalProfileView.as_view(),           name="portal-client-profile"),
     path("client/engagement/",             ClientPortalEngagementView.as_view(),        name="portal-client-engagement"),
     path("client/tasks/",                  ClientPortalTasksView.as_view(),             name="portal-client-tasks"),
+    path("client/tasks/<int:pk>/",         ClientPortalTaskUpdateView.as_view(),        name="portal-client-task-update"),
     path("client/documents/",              ClientPortalDocumentsView.as_view(),         name="portal-client-documents"),
+    path("client/documents/<int:pk>/",     ClientPortalDocumentDeleteView.as_view(),    name="portal-client-document-delete"),
 ]

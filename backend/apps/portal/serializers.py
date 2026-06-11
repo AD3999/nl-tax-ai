@@ -73,7 +73,7 @@ class ClientDocumentSerializer(serializers.ModelSerializer):
         model = ClientDocument
         fields = [
             "id", "engagement", "client_profile", "document_request",
-            "uploaded_by", "original_filename", "file_url",
+            "uploaded_by", "original_filename", "user_title", "user_note", "file_url",
             "mime_type", "file_size", "document_type", "processing_status",
             "extracted_json", "confidence_score", "review_notes",
             "created_at", "updated_at",
@@ -89,7 +89,7 @@ class ClientDocumentUploadSerializer(serializers.ModelSerializer):
     """Handles the multipart file upload."""
     class Meta:
         model = ClientDocument
-        fields = ["engagement", "client_profile", "document_request", "file"]
+        fields = ["engagement", "client_profile", "document_request", "file", "user_title", "user_note"]
 
     def validate_file(self, value):
         if value.size > ClientDocument.MAX_FILE_SIZE:
