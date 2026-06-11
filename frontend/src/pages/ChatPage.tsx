@@ -305,6 +305,11 @@ export default function ChatPage() {
     if (!user) return;
     if (messages.length > 0) return; // localStorage already restored or intake greeting shown
     if (ibMode || simMode || loadingProfile) return;
+    // If the user navigated here with a question (e.g. "Ask AI" from portal), skip DB history
+    // restore entirely — the init effect already called submit(q) and restoring history would
+    // overwrite the in-flight question due to React async state batching.
+    const navQ = (location.state as { question?: string } | null)?.question;
+    if (navQ) return;
 
     const token = localStorage.getItem("access_token");
     if (!token) return;
