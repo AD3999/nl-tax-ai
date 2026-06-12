@@ -80,9 +80,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ flex: 1, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.1fr 1fr", minHeight: "calc(100vh - 64px)" }}>
+    <div style={{ flex: 1, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", minHeight: "calc(100vh - 64px)" }}>
       {/* Left — form */}
-      <div style={{ position: "relative", padding: isMobile ? "28px 20px" : "36px 56px", display: "flex", flexDirection: "column", background: "var(--paper)", overflow: "auto" }}>
+      <div style={{ position: "relative", padding: isMobile ? "var(--sp-8) var(--sp-5)" : "var(--sp-10) var(--sp-12)", display: "flex", flexDirection: "column", background: "var(--paper)", overflow: "auto" }}>
 
         {/* Loading overlay — left panel on desktop, full screen on mobile */}
         {loading && (
@@ -115,8 +115,8 @@ export default function LoginPage() {
               <svg width={72} height={72} viewBox="0 0 64 64" fill="none">
                 <defs>
                   <linearGradient id="lo-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0" stopColor="oklch(0.60 0.22 265)" />
-                    <stop offset="1" stopColor="oklch(0.52 0.20 265)" />
+                    <stop offset="0" stopColor="#4f8ef7" />
+                    <stop offset="1" stopColor="#3b6fd4" />
                   </linearGradient>
                 </defs>
                 <path d="M32 4 L56 11 V32 C56 46 45.5 56.5 32 60 C18.5 56.5 8 46 8 32 V11 Z" fill="url(#lo-grad)" />

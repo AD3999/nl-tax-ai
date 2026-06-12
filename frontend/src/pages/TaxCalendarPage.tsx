@@ -20,17 +20,17 @@ type Lang = "nl" | "en" | "fa";
 
 // Category meta — labels are now per-language (CAL-3)
 const CATEGORY_META: Record<string, { icon: string; color: string; label: Record<Lang, string> }> = {
-  income_tax:             { icon: "📄", color: "var(--sage-600)",        label: { nl: "Inkomstenbelasting", en: "Income Tax",      fa: "مالیات بر درآمد" } },
-  vat:                    { icon: "🧾", color: "oklch(0.55 0.14 230)",   label: { nl: "BTW / OB",           en: "BTW / VAT",       fa: "مالیات بر ارزش افزوده" } },
-  toeslagen:              { icon: "🏠", color: "oklch(0.55 0.12 50)",    label: { nl: "Toeslagen",          en: "Toeslagen",       fa: "یارانه‌ها" } },
-  provisional_assessment: { icon: "📊", color: "oklch(0.52 0.13 290)",   label: { nl: "Voorlopige aanslag", en: "Provisional",     fa: "ارزیابی اولیه" } },
-  expat:                  { icon: "✈️", color: "oklch(0.62 0.13 50)",    label: { nl: "Expat",              en: "Expat",           fa: "اکسپت" } },
-  dga:                    { icon: "🏢", color: "oklch(0.55 0.10 290)",   label: { nl: "DGA / BV",           en: "DGA / BV",        fa: "DGA / BV" } },
-  box3:                   { icon: "💰", color: "oklch(0.55 0.08 160)",   label: { nl: "Box 3",              en: "Box 3",           fa: "جعبه ۳" } },
-  zzp_admin:              { icon: "⏱️", color: "var(--sage-700)",        label: { nl: "ZZP Admin",          en: "ZZP Admin",       fa: "مدیریت ZZP" } },
-  corporate_tax:          { icon: "🏭", color: "oklch(0.48 0.12 290)",   label: { nl: "Vpb",                en: "Corp. Tax",       fa: "مالیات شرکتی" } },
-  payroll:                { icon: "💼", color: "oklch(0.50 0.14 170)",   label: { nl: "Loonheffing",        en: "Payroll",         fa: "مالیات حقوق" } },
-  dividend_tax:           { icon: "💹", color: "oklch(0.55 0.15 50)",    label: { nl: "Dividend",           en: "Dividend",        fa: "سود سهام" } },
+  income_tax:             { icon: "📄", color: "var(--blue)",     label: { nl: "Inkomstenbelasting", en: "Income Tax",      fa: "مالیات بر درآمد" } },
+  vat:                    { icon: "🧾", color: "var(--info)",     label: { nl: "BTW / OB",           en: "BTW / VAT",       fa: "مالیات بر ارزش افزوده" } },
+  toeslagen:              { icon: "🏠", color: "var(--warn)",     label: { nl: "Toeslagen",          en: "Toeslagen",       fa: "یارانه‌ها" } },
+  provisional_assessment: { icon: "📊", color: "var(--purple)",   label: { nl: "Voorlopige aanslag", en: "Provisional",     fa: "ارزیابی اولیه" } },
+  expat:                  { icon: "✈️", color: "var(--warn)",     label: { nl: "Expat",              en: "Expat",           fa: "اکسپت" } },
+  dga:                    { icon: "🏢", color: "var(--purple)",   label: { nl: "DGA / BV",           en: "DGA / BV",        fa: "DGA / BV" } },
+  box3:                   { icon: "💰", color: "var(--ok)",       label: { nl: "Box 3",              en: "Box 3",           fa: "جعبه ۳" } },
+  zzp_admin:              { icon: "⏱️", color: "var(--blue)",     label: { nl: "ZZP Admin",          en: "ZZP Admin",       fa: "مدیریت ZZP" } },
+  corporate_tax:          { icon: "🏭", color: "var(--purple)",   label: { nl: "Vpb",                en: "Corp. Tax",       fa: "مالیات شرکتی" } },
+  payroll:                { icon: "💼", color: "var(--ok)",       label: { nl: "Loonheffing",        en: "Payroll",         fa: "مالیات حقوق" } },
+  dividend_tax:           { icon: "💹", color: "var(--warn)",     label: { nl: "Dividend",           en: "Dividend",        fa: "سود سهام" } },
 };
 
 const TX: Record<Lang, {

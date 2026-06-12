@@ -165,27 +165,27 @@ const TX: Record<string, Record<string, string>> = {
 };
 
 const RISK_COLOR: Record<string, string> = {
-  low: "var(--sage-600)",
-  medium: "oklch(0.62 0.13 50)",
+  low: "var(--ok)",
+  medium: "var(--warn)",
   high: "var(--danger)",
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  draft: "var(--ink-4)",
-  collecting: "var(--sage-600)",
-  waiting_client: "oklch(0.62 0.13 50)",
-  needs_review: "oklch(0.62 0.13 50)",
-  ready_to_file: "var(--sage-600)",
-  filed: "var(--sage-600)",
-  completed: "var(--sage-600)",
+  draft: "var(--text-4)",
+  collecting: "var(--ok)",
+  waiting_client: "var(--warn)",
+  needs_review: "var(--warn)",
+  ready_to_file: "var(--ok)",
+  filed: "var(--ok)",
+  completed: "var(--ok)",
   blocked: "var(--danger)",
 };
 
 const STATUS_CHIP: Record<string, { bg: string; color: string }> = {
-  pending:   { bg: "oklch(0.96 0.04 75)",   color: "oklch(0.48 0.14 75)"  },
-  accepted:  { bg: "var(--accent-soft)",     color: "var(--sage-700)"      },
-  declined:  { bg: "oklch(0.96 0.03 25)",    color: "var(--danger)"        },
-  cancelled: { bg: "var(--paper-3)",         color: "var(--ink-4)"         },
+  pending:   { bg: "var(--warn-subtle)",  color: "var(--warn-text)"  },
+  accepted:  { bg: "var(--ok-subtle)",    color: "var(--ok-text)"    },
+  declined:  { bg: "var(--danger-subtle)", color: "var(--danger-text)" },
+  cancelled: { bg: "var(--bg-3)",         color: "var(--text-4)"     },
 };
 
 const ISSUE_LABEL: Record<"high_risk" | "needs_review" | "waiting_client", Record<"en" | "nl" | "fa", string>> = {
@@ -316,10 +316,10 @@ export default function AccountantPortalPage() {
         {/* KPI cards */}
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "var(--sp-3)", marginBottom: "var(--sp-5)" }}>
           {[
-            { label: tx.total_clients,       value: totalClients,    icon: <Users size={15} />,       iconColor: "var(--blue)",         iconBg: "oklch(0.93 0.04 265)" },
-            { label: tx.waiting,             value: waitingClient,   icon: <Clock size={15} />,       iconColor: "oklch(0.52 0.13 58)", iconBg: "oklch(0.96 0.04 70)"  },
-            { label: tx.needs_review,        value: needsReview,     icon: <AlertCircle size={15} />, iconColor: "var(--danger)",       iconBg: "oklch(0.96 0.03 25)"  },
-            { label: tx.pending_invitations, value: pendingInvCount, icon: <MailOpen size={15} />,    iconColor: "var(--blue)",         iconBg: "oklch(0.93 0.04 265)" },
+            { label: tx.total_clients,       value: totalClients,    icon: <Users size={15} />,       iconColor: "var(--blue)",        iconBg: "var(--blue-subtle)"   },
+            { label: tx.waiting,             value: waitingClient,   icon: <Clock size={15} />,       iconColor: "var(--warn-text)",   iconBg: "var(--warn-subtle)"   },
+            { label: tx.needs_review,        value: needsReview,     icon: <AlertCircle size={15} />, iconColor: "var(--danger-text)", iconBg: "var(--danger-subtle)" },
+            { label: tx.pending_invitations, value: pendingInvCount, icon: <MailOpen size={15} />,    iconColor: "var(--blue)",        iconBg: "var(--blue-subtle)"   },
           ].map(card => (
             <div key={card.label} className="card" style={{ padding: "var(--sp-5)", display: "flex", alignItems: "center", gap: "var(--sp-3)" }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: card.iconBg, display: "flex", alignItems: "center", justifyContent: "center", color: card.iconColor, flexShrink: 0 }}>
@@ -347,7 +347,7 @@ export default function AccountantPortalPage() {
             </div>
             {priorities.map((item, i) => (
               <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "var(--sp-3)", padding: "var(--sp-3) var(--sp-5)", borderBottom: i < priorities.length - 1 ? "1px solid var(--hairline)" : "none" }}>
-                <div style={{ width: 7, height: 7, borderRadius: "50%", background: item.issue === "high_risk" ? "var(--danger)" : "oklch(0.62 0.13 50)", flexShrink: 0 }} />
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: item.issue === "high_risk" ? "var(--danger)" : "var(--warn)", flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0, display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
                   <span style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--ink)" }}>{item.name}</span>
                   <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>{ISSUE_LABEL[item.issue][lang]}</span>
@@ -360,7 +360,7 @@ export default function AccountantPortalPage() {
           </div>
         )}
 
-        {error && <div className="card" style={{ padding: "var(--sp-3)", background: "oklch(0.95 0.03 25)", color: "var(--danger)", marginBottom: "var(--sp-4)", fontSize: "var(--text-sm)" }}>{error}</div>}
+        {error && <div className="card" style={{ padding: "var(--sp-3)", background: "var(--danger-subtle)", color: "var(--danger-text)", marginBottom: "var(--sp-4)", fontSize: "var(--text-sm)" }}>{error}</div>}
 
         {/* Tabs */}
         <div style={{ display: "flex", gap: "var(--sp-2)", marginBottom: "var(--sp-5)", borderBottom: "1px solid var(--hairline)", paddingBottom: "var(--sp-2)", flexWrap: "wrap" }}>
@@ -369,11 +369,11 @@ export default function AccountantPortalPage() {
               key={t}
               onClick={() => setTab(t)}
               className="btn btn-ghost btn-sm"
-              style={{ fontWeight: tab === t ? 600 : 400, borderBottom: tab === t ? "2px solid var(--sage-600)" : "none", borderRadius: 0, display: "flex", alignItems: "center", gap: 6 }}
+              style={{ fontWeight: tab === t ? 600 : 400, borderBottom: tab === t ? "2px solid var(--blue)" : "none", borderRadius: 0, display: "flex", alignItems: "center", gap: 6 }}
             >
               {t === "clients" ? tx.clients_tab : t === "engagements" ? tx.engagements_tab : tx.invitations_tab}
               {t === "invitations" && pendingInvCount > 0 && (
-                <span style={{ padding: "1px 7px", borderRadius: 99, background: "oklch(0.48 0.14 75)", color: "white", fontSize: 11, fontWeight: 700 }}>
+                <span style={{ padding: "1px 7px", borderRadius: 99, background: "var(--warn)", color: "var(--bg)", fontSize: 11, fontWeight: 700 }}>
                   {pendingInvCount}
                 </span>
               )}
@@ -414,7 +414,7 @@ export default function AccountantPortalPage() {
                       </td>
                       <td style={{ padding: "var(--sp-3)", textAlign: "center" }}>
                         {c.latest_readiness !== null ? (
-                          <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: c.latest_readiness >= 85 ? "var(--sage-600)" : c.latest_readiness >= 50 ? "oklch(0.62 0.13 50)" : "var(--danger)" }}>
+                          <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: c.latest_readiness >= 85 ? "var(--ok)" : c.latest_readiness >= 50 ? "var(--warn)" : "var(--danger)" }}>
                             {c.latest_readiness}%
                           </span>
                         ) : "—"}
@@ -473,7 +473,7 @@ export default function AccountantPortalPage() {
                         <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[eng.status] || "var(--ink-3)" }}>{eng.status}</span>
                       </td>
                       <td style={{ padding: "var(--sp-3)", textAlign: "center" }}>
-                        <span style={{ fontWeight: 600, color: eng.readiness_score >= 85 ? "var(--sage-600)" : eng.readiness_score >= 50 ? "oklch(0.62 0.13 50)" : "var(--danger)" }}>
+                        <span style={{ fontWeight: 600, color: eng.readiness_score >= 85 ? "var(--ok)" : eng.readiness_score >= 50 ? "var(--warn)" : "var(--danger)" }}>
                           {eng.readiness_score}%
                         </span>
                       </td>

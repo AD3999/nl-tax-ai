@@ -247,25 +247,25 @@ const CHECKLIST_STATUS_OPTIONS: Array<{ value: string; labelKey: string }> = [
 ];
 
 const CHECKLIST_STATUS_COLOR: Record<string, string> = {
-  todo: "var(--ink-4)", waiting_client: "oklch(0.62 0.13 50)",
-  uploaded: "var(--sage-600)", needs_review: "oklch(0.62 0.13 50)",
-  accepted: "var(--sage-600)", rejected: "var(--danger)", waived: "var(--ink-4)",
+  todo: "var(--ink-4)", waiting_client: "var(--warn)",
+  uploaded: "var(--ok)", needs_review: "var(--warn)",
+  accepted: "var(--ok)", rejected: "var(--danger)", waived: "var(--ink-4)",
 };
 
 const REVIEW_STATUS_COLOR: Record<string, string> = {
-  candidate: "oklch(0.62 0.13 50)", approved: "var(--sage-600)",
+  candidate: "var(--warn)", approved: "var(--ok)",
   rejected: "var(--danger)", manual: "var(--ink-3)",
 };
 
 const RISK_COLOR: Record<string, string> = {
-  low: "var(--sage-600)", medium: "oklch(0.62 0.13 50)", high: "var(--danger)",
+  low: "var(--ok)", medium: "var(--warn)", high: "var(--danger)",
 };
 
 function ReadinessRing({ score }: { score: number }) {
   const r = 36;
   const circumference = 2 * Math.PI * r;
   const offset = circumference * (1 - score / 100);
-  const color = score >= 85 ? "var(--sage-600)" : score >= 50 ? "oklch(0.62 0.13 50)" : "var(--danger)";
+  const color = score >= 85 ? "var(--ok)" : score >= 50 ? "var(--warn)" : "var(--danger)";
   return (
     <svg width={90} height={90} viewBox="0 0 90 90" style={{ transform: "rotate(-90deg)" }}>
       <circle cx={45} cy={45} r={r} fill="none" stroke="var(--hairline)" strokeWidth={7} />
@@ -541,7 +541,7 @@ export default function EngagementPage() {
               <span className="pill">{engagement.tax_year}</span>
               <span className="pill">{engagement.engagement_type}</span>
               <span style={{ color: RISK_COLOR[engagement.risk_level] }}>{tx.risk}: {engagement.risk_level}</span>
-              <span style={{ color: engagement.missing_items_count > 0 ? "var(--danger)" : "var(--sage-600)" }}>
+              <span style={{ color: engagement.missing_items_count > 0 ? "var(--danger)" : "var(--ok)" }}>
                 {engagement.missing_items_count} {tx.missing_items}
               </span>
             </div>
@@ -585,7 +585,7 @@ export default function EngagementPage() {
               style={{
                 borderRadius: 0,
                 fontWeight: tab === t.key ? 600 : 400,
-                borderBottom: tab === t.key ? "2px solid var(--sage-600)" : "2px solid transparent",
+                borderBottom: tab === t.key ? "2px solid var(--ok)" : "2px solid transparent",
                 whiteSpace: "nowrap",
               }}
             >
@@ -604,7 +604,7 @@ export default function EngagementPage() {
                 <div style={{
                   position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
                   fontSize: "var(--text-sm)", fontWeight: 700,
-                  color: engagement.readiness_score >= 85 ? "var(--sage-600)" : engagement.readiness_score >= 50 ? "oklch(0.62 0.13 50)" : "var(--danger)",
+                  color: engagement.readiness_score >= 85 ? "var(--ok)" : engagement.readiness_score >= 50 ? "var(--warn)" : "var(--danger)",
                 }}>
                   {engagement.readiness_score}%
                 </div>
@@ -638,7 +638,7 @@ export default function EngagementPage() {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
                   {actions.filter(a => a.status === "open").slice(0, 8).map(action => (
-                    <div key={action.id} className="card" style={{ padding: "var(--sp-3)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--sp-3)", borderInlineStart: `3px solid ${action.priority === "high" ? "var(--danger)" : action.priority === "medium" ? "oklch(0.62 0.13 50)" : "var(--sage-600)"}` }}>
+                    <div key={action.id} className="card" style={{ padding: "var(--sp-3)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--sp-3)", borderInlineStart: `3px solid ${action.priority === "high" ? "var(--danger)" : action.priority === "medium" ? "var(--warn)" : "var(--ok)"}` }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ink)", marginBottom: 4 }}>{action.title}</div>
                         <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>{action.body}</div>
@@ -699,7 +699,7 @@ export default function EngagementPage() {
 
         {/* ── DOCUMENTS ─────────────────────────────────────── */}
         {showUploadModal && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "oklch(0 0 0 / 0.55)", display: "flex", alignItems: "center", justifyContent: "center", padding: "var(--sp-4)" }}
+          <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "oklch(0 0 0 / 0.60)", display: "flex", alignItems: "center", justifyContent: "center", padding: "var(--sp-4)" }}
             onClick={e => { if (e.target === e.currentTarget && !uploading) setShowUploadModal(false); }}>
             <div style={{ background: "var(--bg-2)", borderRadius: "var(--r-lg)", border: "1px solid var(--border-2)", padding: "var(--sp-6)", width: "100%", maxWidth: 440, boxShadow: "var(--sh-lg)" }}>
               <h2 style={{ fontSize: "var(--text-xl)", fontWeight: 800, color: "var(--text)", marginBottom: "var(--sp-5)" }}>{tx.upload_doc}</h2>
@@ -845,7 +845,7 @@ export default function EngagementPage() {
                       {selectedDoc.file_url && (
                         <a href={selectedDoc.file_url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">{tx.view} ↗</a>
                       )}
-                      <button className="btn btn-ghost btn-sm" style={{ color: "var(--sage-600)" }} onClick={() => void handleReviewDoc(selectedDoc.id, "approved")}>{tx.approve}</button>
+                      <button className="btn btn-ghost btn-sm" style={{ color: "var(--ok)" }} onClick={() => void handleReviewDoc(selectedDoc.id, "approved")}>{tx.approve}</button>
                       <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)" }} onClick={() => void handleReviewDoc(selectedDoc.id, "rejected")}>{tx.reject}</button>
                     </div>
                   </div>
@@ -890,7 +890,7 @@ export default function EngagementPage() {
                         <td style={{ padding: "var(--sp-2) var(--sp-3)" }}>
                           {inc.review_status === "candidate" && (
                             <div style={{ display: "flex", gap: "var(--sp-1)" }}>
-                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--sage-600)", fontSize: "var(--text-2xs)" }} onClick={() => void handleApproveIncome(inc.id, "approved")}>{tx.approve}</button>
+                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--ok)", fontSize: "var(--text-2xs)" }} onClick={() => void handleApproveIncome(inc.id, "approved")}>{tx.approve}</button>
                               <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", fontSize: "var(--text-2xs)" }} onClick={() => void handleApproveIncome(inc.id, "rejected")}>{tx.reject}</button>
                             </div>
                           )}
@@ -932,7 +932,7 @@ export default function EngagementPage() {
                         <td style={{ padding: "var(--sp-2) var(--sp-3)" }}>
                           {exp.review_status === "candidate" && (
                             <div style={{ display: "flex", gap: "var(--sp-1)" }}>
-                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--sage-600)", fontSize: "var(--text-2xs)" }} onClick={() => void handleApproveExpense(exp.id, "approved")}>{tx.approve}</button>
+                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--ok)", fontSize: "var(--text-2xs)" }} onClick={() => void handleApproveExpense(exp.id, "approved")}>{tx.approve}</button>
                               <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", fontSize: "var(--text-2xs)" }} onClick={() => void handleApproveExpense(exp.id, "rejected")}>{tx.reject}</button>
                             </div>
                           )}
@@ -956,12 +956,12 @@ export default function EngagementPage() {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)" }}>
                   {(risks.opportunities as Array<{ id: string; title: string; description: string; confidence?: string; rule_id?: string; source_url?: string }>).map(opp => (
-                    <div key={opp.id} className="card" style={{ padding: "var(--sp-3)", borderInlineStart: `3px solid ${opp.confidence === "likely" ? "var(--sage-600)" : opp.confidence === "needs_confirmation" ? "oklch(0.62 0.13 50)" : "var(--ink-4)"}` }}>
+                    <div key={opp.id} className="card" style={{ padding: "var(--sp-3)", borderInlineStart: `3px solid ${opp.confidence === "likely" ? "var(--ok)" : opp.confidence === "needs_confirmation" ? "var(--warn)" : "var(--ink-4)"}` }}>
                       <div style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>{opp.title}</div>
                       <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: 4 }}>{opp.description}</div>
                       <div style={{ display: "flex", gap: "var(--sp-2)", marginTop: "var(--sp-2)", alignItems: "center" }}>
                         <span className="pill" style={{ fontSize: "var(--text-2xs)", background: opp.confidence === "likely" ? "var(--accent-soft)" : "var(--paper-3)" }}>{opp.confidence || "—"}</span>
-                        {opp.source_url && <a href={opp.source_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "var(--text-2xs)", color: "var(--sage-600)" }}>{tx.source}</a>}
+                        {opp.source_url && <a href={opp.source_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "var(--text-2xs)", color: "var(--ok)" }}>{tx.source}</a>}
                       </div>
                     </div>
                   ))}
@@ -975,12 +975,12 @@ export default function EngagementPage() {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)" }}>
                   {(risks.risks as Array<{ id: string; title: string; description: string; level?: string; source_url?: string }>).map(risk => (
-                    <div key={risk.id} className="card" style={{ padding: "var(--sp-3)", borderInlineStart: `3px solid ${risk.level === "needs_accountant_review" ? "var(--danger)" : "oklch(0.62 0.13 50)"}` }}>
+                    <div key={risk.id} className="card" style={{ padding: "var(--sp-3)", borderInlineStart: `3px solid ${risk.level === "needs_accountant_review" ? "var(--danger)" : "var(--warn)"}` }}>
                       <div style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>{risk.title}</div>
                       <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: 4 }}>{risk.description}</div>
                       <div style={{ marginTop: "var(--sp-2)" }}>
                         <span className="pill" style={{ fontSize: "var(--text-2xs)" }}>{risk.level}</span>
-                        {risk.source_url && <a href={risk.source_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "var(--text-2xs)", color: "var(--sage-600)", marginInlineStart: "var(--sp-2)" }}>{tx.source}</a>}
+                        {risk.source_url && <a href={risk.source_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: "var(--text-2xs)", color: "var(--ok)", marginInlineStart: "var(--sp-2)" }}>{tx.source}</a>}
                       </div>
                     </div>
                   ))}

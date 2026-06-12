@@ -141,10 +141,10 @@ function getCards(userType: string, lang: string) {
 }
 
 const USER_TYPE_META: Record<string, { color: string; glyph: string }> = {
-  zzp:      { color: "var(--sage-600)",      glyph: "ZZ" },
-  employee: { color: "oklch(0.55 0.12 230)", glyph: "EM" },
-  expat:    { color: "oklch(0.62 0.13 50)",  glyph: "EX" },
-  dga:      { color: "oklch(0.55 0.10 290)", glyph: "DG" },
+  zzp:      { color: "var(--blue)",   glyph: "ZZ" },
+  employee: { color: "var(--info)",   glyph: "EM" },
+  expat:    { color: "var(--warn)",   glyph: "EX" },
+  dga:      { color: "var(--purple)", glyph: "DG" },
 };
 
 // Greeting the bot sends when there's no profile — starts the conversational intake

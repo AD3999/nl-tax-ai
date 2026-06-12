@@ -15,14 +15,14 @@ const EUR = (n: number) => "€ " + n.toLocaleString("nl-NL");
 const PCT = (n: number) => (n * 100).toFixed(1) + "%";
 
 const USER_TYPES = {
-  zzp:      { color: "var(--sage-600)",      dot: "var(--sage-600)",      labels: { nl: "ZZP",        en: "ZZP",      fa: "ZZP"            } },
-  employee: { color: "oklch(0.55 0.12 230)", dot: "oklch(0.55 0.12 230)", labels: { nl: "Werknemer",  en: "Employee", fa: "کارمند"         } },
-  expat:    { color: "oklch(0.62 0.13 50)",  dot: "oklch(0.62 0.13 50)",  labels: { nl: "Expat",      en: "Expat",    fa: "مهاجر خارجی"   } },
-  dga:      { color: "oklch(0.55 0.10 290)", dot: "oklch(0.55 0.10 290)", labels: { nl: "DGA",        en: "DGA",      fa: "DGA"            } },
+  zzp:      { color: "var(--blue)",    dot: "var(--blue)",    labels: { nl: "ZZP",        en: "ZZP",      fa: "ZZP"            } },
+  employee: { color: "var(--info)",    dot: "var(--info)",    labels: { nl: "Werknemer",  en: "Employee", fa: "کارمند"         } },
+  expat:    { color: "var(--warn)",    dot: "var(--warn)",    labels: { nl: "Expat",      en: "Expat",    fa: "مهاجر خارجی"   } },
+  dga:      { color: "var(--purple)",  dot: "var(--purple)",  labels: { nl: "DGA",        en: "DGA",      fa: "DGA"            } },
 } as const;
 
 const DBA_TONE: Record<string, string> = {
-  high: "var(--danger)", medium: "oklch(0.45 0.15 75)", low: "var(--ok)",
+  high: "var(--danger)", medium: "var(--warn)", low: "var(--ok)",
 };
 
 type FormState = Record<string, string | boolean>;
@@ -78,9 +78,9 @@ function Toggle({ label, k, form, set, yesNo = ["Yes", "No"] }: {
 }
 
 function SummaryCard({ label, value, kind }: { label: string; value: string; kind?: "primary" | "ink" | "warn" | "ok" }) {
-  const bg = kind === "ink" ? "var(--ink)" : kind === "primary" ? "var(--sage-100)" : kind === "warn" ? "oklch(0.96 0.06 75)" : kind === "ok" ? "oklch(0.96 0.05 150)" : "var(--paper-2)";
-  const fg = kind === "ink" ? "var(--paper)" : kind === "primary" ? "var(--sage-800)" : kind === "warn" ? "oklch(0.42 0.16 75)" : kind === "ok" ? "oklch(0.40 0.15 150)" : "var(--ink)";
-  const sub = kind === "ink" ? "oklch(0.82 0.01 95)" : kind === "primary" ? "var(--sage-700)" : kind === "warn" ? "oklch(0.55 0.17 75)" : kind === "ok" ? "oklch(0.55 0.14 150)" : "var(--ink-3)";
+  const bg = kind === "ink" ? "var(--bg-4)" : kind === "primary" ? "var(--blue-subtle)" : kind === "warn" ? "var(--warn-subtle)" : kind === "ok" ? "var(--ok-subtle)" : "var(--bg-2)";
+  const fg = kind === "ink" ? "var(--text)" : kind === "primary" ? "var(--blue-text)" : kind === "warn" ? "var(--warn-text)" : kind === "ok" ? "var(--ok-text)" : "var(--text)";
+  const sub = kind === "ink" ? "var(--text-2)" : kind === "primary" ? "var(--blue-text)" : kind === "warn" ? "var(--warn-text)" : kind === "ok" ? "var(--ok-text)" : "var(--text-3)";
   return (
     <div style={{ padding: 18, background: bg, borderRadius: "var(--r-lg)", border: kind ? "none" : "1px solid var(--hairline)" }}>
       <div className="eyebrow" style={{ color: sub }}>{label}</div>

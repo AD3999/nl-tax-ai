@@ -11,10 +11,10 @@ import { useMobile } from "../hooks/useMobile";
 type UserType = "zzp" | "employee" | "expat" | "dga";
 
 const USER_TYPES = {
-  zzp:      { label: "ZZP",      glyph: "ZZ", desc: "Freelance · self-employed",   color: "var(--sage-600)",      tags: ["Wet DBA", "Zelfstandigenaftrek", "MKB"] },
-  employee: { label: "Employee", glyph: "EM", desc: "Salaried · payslip",          color: "oklch(0.55 0.12 230)", tags: ["Loonheffing", "IACK"] },
-  expat:    { label: "Expat",    glyph: "EX", desc: "30% ruling · foreign income", color: "oklch(0.62 0.13 50)",  tags: ["30% ruling", "Foreign income"] },
-  dga:      { label: "DGA",      glyph: "DG", desc: "Director · own BV",           color: "oklch(0.55 0.10 290)", tags: ["Box 2", "Salary + dividend"] },
+  zzp:      { label: "ZZP",      glyph: "ZZ", desc: "Freelance · self-employed",   color: "var(--blue)",   tags: ["Wet DBA", "Zelfstandigenaftrek", "MKB"] },
+  employee: { label: "Employee", glyph: "EM", desc: "Salaried · payslip",          color: "var(--info)",   tags: ["Loonheffing", "IACK"] },
+  expat:    { label: "Expat",    glyph: "EX", desc: "30% ruling · foreign income", color: "var(--warn)",   tags: ["30% ruling", "Foreign income"] },
+  dga:      { label: "DGA",      glyph: "DG", desc: "Director · own BV",           color: "var(--purple)", tags: ["Box 2", "Salary + dividend"] },
 } as const;
 
 const WHY_TEXT: Record<number, string> = {
@@ -388,7 +388,7 @@ export default function IntakePage() {
               <span className="eyebrow" style={{ color: "var(--sage-300)" }}>
                 {lang === "nl" ? "Waarom vragen we dit" : lang === "fa" ? "چرا می‌پرسیم" : "Why we ask"}
               </span>
-              <p style={{ marginTop: "var(--sp-3)", fontSize: "var(--text-sm)", lineHeight: "var(--leading-relaxed)", color: "oklch(0.88 0.01 95)" }}>
+              <p style={{ marginTop: "var(--sp-3)", fontSize: "var(--text-sm)", lineHeight: "var(--leading-relaxed)", color: "var(--text-3)" }}>
                 {WHY_TEXT[step]}
               </p>
             </div>

@@ -186,7 +186,7 @@ export default function ClientPortalPage() {
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-4)" }}>
           <Link to="/client/tasks" style={{ textDecoration: "none" }}>
             <div className="card portal-cta-card" style={{ padding: "var(--sp-5)", cursor: "pointer" }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: "oklch(0.93 0.04 265)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--blue)", marginBottom: "var(--sp-3)" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--blue-subtle)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--blue)", marginBottom: "var(--sp-3)" }}>
                 <CheckSquare size={18} />
               </div>
               <div style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--text)", marginBottom: "var(--sp-1)", letterSpacing: "-0.02em" }}>{t("tasks", lang)}</div>
@@ -201,7 +201,7 @@ export default function ClientPortalPage() {
 
           <Link to="/client/documents" style={{ textDecoration: "none" }}>
             <div className="card portal-cta-card" style={{ padding: "var(--sp-5)", cursor: "pointer" }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: "oklch(0.93 0.04 265)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--blue)", marginBottom: "var(--sp-3)" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--blue-subtle)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--blue)", marginBottom: "var(--sp-3)" }}>
                 <FolderOpen size={18} />
               </div>
               <div style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--text)", marginBottom: "var(--sp-1)", letterSpacing: "-0.02em" }}>{t("documents", lang)}</div>
