@@ -589,7 +589,7 @@ export default function ChatPage() {
 
   return (
     <div
-      style={{ flex: 1, display: "flex", flexDirection: "column", height: "calc(100vh - 64px)", overflow: "hidden" }}
+      style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", minHeight: 0, overflow: "hidden" }}
       dir={isRtl ? "rtl" : "ltr"}
     >
       {upgradeModal && <UpgradeModal reason={upgradeModal.reason} onClose={() => setUpgradeModal(null)} />}

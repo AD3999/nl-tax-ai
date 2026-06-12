@@ -1,13 +1,13 @@
 import { lazy, Suspense, useEffect, useState, Component, type ReactNode } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import TopNav from "./components/TopNav";
-import Footer from "./components/Footer";
+import PublicLayout from "./components/PublicLayout";
+import AppLayout from "./components/AppLayout";
 import LoadingScreen from "./components/LoadingScreen";
 import { useAuth } from "./context/AuthContext";
 import { trackPageView } from "./lib/analytics";
 
-// ── Error Boundary — prevents a rendering crash from blank-screening the app ──
+// ── Error Boundary ─────────────────────────────────────────────────────────────
 class ErrorBoundary extends Component<
   { children: ReactNode },
   { hasError: boolean; message: string }
@@ -23,20 +23,15 @@ class ErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         <div style={{
-          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-          minHeight: "60vh", gap: 16, padding: 32, textAlign: "center",
+          display: "flex", flexDirection: "column", alignItems: "center",
+          justifyContent: "center", minHeight: "60vh", gap: 16, padding: 32, textAlign: "center",
         }}>
           <div style={{ fontSize: 32 }}>⚠️</div>
-          <h2 style={{ fontFamily: "var(--serif)", fontSize: 22, color: "var(--ink)", margin: 0 }}>
-            Something went wrong
-          </h2>
-          <p style={{ fontSize: 14, color: "var(--ink-3)", maxWidth: 400, margin: 0 }}>
+          <h2 style={{ fontSize: 22, color: "var(--text)", margin: 0 }}>Something went wrong</h2>
+          <p style={{ fontSize: 14, color: "var(--text-3)", maxWidth: 400, margin: 0 }}>
             An unexpected error occurred. Please refresh the page to continue.
           </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="btn btn-accent btn-sm"
-          >
+          <button onClick={() => window.location.reload()} className="btn btn-accent btn-sm">
             Refresh page
           </button>
           {import.meta.env.DEV && (
@@ -51,53 +46,50 @@ class ErrorBoundary extends Component<
   }
 }
 
-const CalculatorPage       = lazy(() => import("./pages/CalculatorPage"));
-const ChatPage             = lazy(() => import("./pages/ChatPage"));
-const IntakePage           = lazy(() => import("./pages/IntakePage"));
-// SimulationPage removed — /simulation now redirects to /chat?mode=simulation
-const LandingPage          = lazy(() => import("./pages/LandingPage"));
-const LoginPage            = lazy(() => import("./pages/LoginPage"));
-const RegisterPage         = lazy(() => import("./pages/RegisterPage"));
-const DashboardPage        = lazy(() => import("./pages/DashboardPage"));
-const TaxHistoryPage       = lazy(() => import("./pages/TaxHistoryPage"));
-const DeductionCheckerPage = lazy(() => import("./pages/DeductionCheckerPage"));
-const ZZPTaxPage           = lazy(() => import("./pages/ZZPTaxPage"));
-const ExpatTaxPage         = lazy(() => import("./pages/ExpatTaxPage"));
-const TaxCalendarPage      = lazy(() => import("./pages/TaxCalendarPage"));
+// ── Lazy page imports ──────────────────────────────────────────────────────────
+const CalculatorPage          = lazy(() => import("./pages/CalculatorPage"));
+const ChatPage                = lazy(() => import("./pages/ChatPage"));
+const IntakePage              = lazy(() => import("./pages/IntakePage"));
+const LandingPage             = lazy(() => import("./pages/LandingPage"));
+const LoginPage               = lazy(() => import("./pages/LoginPage"));
+const RegisterPage            = lazy(() => import("./pages/RegisterPage"));
+const DashboardPage           = lazy(() => import("./pages/DashboardPage"));
+const TaxHistoryPage          = lazy(() => import("./pages/TaxHistoryPage"));
+const DeductionCheckerPage    = lazy(() => import("./pages/DeductionCheckerPage"));
+const ZZPTaxPage              = lazy(() => import("./pages/ZZPTaxPage"));
+const ExpatTaxPage            = lazy(() => import("./pages/ExpatTaxPage"));
+const TaxCalendarPage         = lazy(() => import("./pages/TaxCalendarPage"));
 const AccountantPortalPage    = lazy(() => import("./pages/portal/AccountantPortalPage"));
 const AccountantClientPage    = lazy(() => import("./pages/portal/AccountantClientDetailPage"));
 const AccountantEngagementPage = lazy(() => import("./pages/portal/EngagementPage"));
 const ClientPortalPage        = lazy(() => import("./pages/portal/ClientPortalPage"));
 const ClientTasksPage         = lazy(() => import("./pages/portal/ClientTasksPage"));
 const ClientDocumentsPage     = lazy(() => import("./pages/portal/ClientDocumentsPage"));
+const GoogleCallbackPage      = lazy(() => import("./pages/GoogleCallbackPage"));
 
-const GoogleCallbackPage   = lazy(() => import("./pages/GoogleCallbackPage"));
+const AdminDashboard          = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminUsersPage          = lazy(() => import("./pages/admin/AdminUsersPage"));
+const AdminChatLogsPage       = lazy(() => import("./pages/admin/AdminChatLogsPage"));
+const AdminRulesPage          = lazy(() => import("./pages/admin/AdminRulesPage"));
+const AdminRuleEditorPage     = lazy(() => import("./pages/admin/AdminRuleEditorPage"));
+const AdminCalcPreviewPage    = lazy(() => import("./pages/admin/AdminCalculatorPreviewPage"));
+const AdminRAGPreviewPage     = lazy(() => import("./pages/admin/AdminRAGPreviewPage"));
+const AdminSettingsPage       = lazy(() => import("./pages/admin/AdminSettingsPage"));
 
-const AdminDashboard       = lazy(() => import("./pages/admin/AdminDashboard"));
-const AdminUsersPage       = lazy(() => import("./pages/admin/AdminUsersPage"));
-const AdminChatLogsPage    = lazy(() => import("./pages/admin/AdminChatLogsPage"));
-const AdminRulesPage       = lazy(() => import("./pages/admin/AdminRulesPage"));
-const AdminRuleEditorPage  = lazy(() => import("./pages/admin/AdminRuleEditorPage"));
-const AdminCalcPreviewPage = lazy(() => import("./pages/admin/AdminCalculatorPreviewPage"));
-const AdminRAGPreviewPage  = lazy(() => import("./pages/admin/AdminRAGPreviewPage"));
-const AdminSettingsPage    = lazy(() => import("./pages/admin/AdminSettingsPage"));
-
-function AdminRoute({ children }: { children: React.ReactNode }) {
+function AdminRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return null;
   if (!user?.is_admin) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
-const SPLASH_DURATION = 2400; // ms until fade starts
-const SPLASH_FADE     = 500;  // ms for the fade-out transition
+const SPLASH_DURATION = 2400;
+const SPLASH_FADE     = 500;
 
 function App() {
   const { i18n } = useTranslation();
   const location = useLocation();
   const isRtl = i18n.language === "fa";
-  // Footer hidden on chat (full viewport) and admin pages
-  const hideFooter = location.pathname === "/chat" || location.pathname.startsWith("/admin");
 
   const [splashFading, setSplashFading] = useState(false);
   const [splashDone,   setSplashDone]   = useState(false);
@@ -108,63 +100,69 @@ function App() {
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
-  // Track page views on route change
   useEffect(() => {
     trackPageView(location.pathname);
   }, [location.pathname]);
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} style={{ display: "flex", flexDirection: "column", minHeight: "100svh" }}>
-      <TopNav />
+    <div dir={isRtl ? "rtl" : "ltr"}>
       <ErrorBoundary>
-      <Suspense fallback={<LoadingScreen />}>
-        <Routes>
-          <Route path="/"                      element={<LandingPage />} />
-          <Route path="/login"               element={<LoginPage />} />
-          <Route path="/register"            element={<RegisterPage />} />
-          <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
-          <Route path="/chat"                element={<ChatPage />} />
-          <Route path="/intake"              element={<IntakePage />} />
-          <Route path="/ib-guide"            element={<Navigate to="/chat?mode=ib-return" replace />} />
-          <Route path="/simulation"          element={<Navigate to="/chat?mode=simulation" replace />} />
-          <Route path="/pricing"             element={<Navigate to="/" replace />} />
-          <Route path="/dashboard"           element={<DashboardPage />} />
-          <Route path="/tax-history"         element={<TaxHistoryPage />} />
-          <Route path="/deduction-checker"   element={<DeductionCheckerPage />} />
-          <Route path="/zzp-tax-netherlands" element={<ZZPTaxPage />} />
-          <Route path="/expat-tax-netherlands" element={<ExpatTaxPage />} />
-          <Route path="/tax-calendar"        element={<TaxCalendarPage />} />
-          <Route path="/accountant"              element={<Navigate to="/accountant/portal" replace />} />
-          <Route path="/accountant/portal"       element={<AccountantPortalPage />} />
-          <Route path="/accountant/clients/:id"  element={<AccountantClientPage />} />
-          <Route path="/accountant/engagements/:id" element={<AccountantEngagementPage />} />
-          <Route path="/client"              element={<ClientPortalPage />} />
-          <Route path="/client/tasks"        element={<ClientTasksPage />} />
-          <Route path="/client/documents"    element={<ClientDocumentsPage />} />
-          {/* Calculator: kept at URL but hidden from user nav */}
-          <Route path="/calculator"          element={<CalculatorPage />} />
-          {/* Admin routes — redirect to home if not staff */}
-          <Route path="/admin"                    element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-          <Route path="/admin/users"              element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
-          <Route path="/admin/chat-logs"          element={<AdminRoute><AdminChatLogsPage /></AdminRoute>} />
-          <Route path="/admin/rules"              element={<AdminRoute><AdminRulesPage /></AdminRoute>} />
-          <Route path="/admin/rules/new"          element={<AdminRoute><AdminRuleEditorPage /></AdminRoute>} />
-          <Route path="/admin/rules/:id"          element={<AdminRoute><AdminRuleEditorPage /></AdminRoute>} />
-          <Route path="/admin/calculator-preview" element={<AdminRoute><AdminCalcPreviewPage /></AdminRoute>} />
-          <Route path="/admin/rag-preview"        element={<AdminRoute><AdminRAGPreviewPage /></AdminRoute>} />
-          <Route path="/admin/settings"           element={<AdminRoute><AdminSettingsPage /></AdminRoute>} />
-          <Route path="*"            element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-      </ErrorBoundary>
-      {!hideFooter && <Footer />}
+        <Suspense fallback={<LoadingScreen />}>
+          <Routes>
 
-      {/* Initial splash — rendered as overlay so the app hydrates behind it */}
+            {/* ── Public routes: TopNav + Footer ── */}
+            <Route element={<PublicLayout />}>
+              <Route path="/"                        element={<LandingPage />} />
+              <Route path="/login"                   element={<LoginPage />} />
+              <Route path="/register"                element={<RegisterPage />} />
+              <Route path="/auth/google/callback"    element={<GoogleCallbackPage />} />
+              <Route path="/zzp-tax-netherlands"     element={<ZZPTaxPage />} />
+              <Route path="/expat-tax-netherlands"   element={<ExpatTaxPage />} />
+              <Route path="/deduction-checker"       element={<DeductionCheckerPage />} />
+            </Route>
+
+            {/* ── App routes: Sidebar layout ── */}
+            <Route element={<AppLayout />}>
+              <Route path="/dashboard"              element={<DashboardPage />} />
+              <Route path="/chat"                   element={<ChatPage />} />
+              <Route path="/intake"                 element={<IntakePage />} />
+              <Route path="/tax-history"            element={<TaxHistoryPage />} />
+              <Route path="/tax-calendar"           element={<TaxCalendarPage />} />
+              <Route path="/calculator"             element={<CalculatorPage />} />
+              <Route path="/accountant/portal"      element={<AccountantPortalPage />} />
+              <Route path="/accountant/clients/:id" element={<AccountantClientPage />} />
+              <Route path="/accountant/engagements/:id" element={<AccountantEngagementPage />} />
+              <Route path="/client"                 element={<ClientPortalPage />} />
+              <Route path="/client/tasks"           element={<ClientTasksPage />} />
+              <Route path="/client/documents"       element={<ClientDocumentsPage />} />
+
+              {/* Admin routes */}
+              <Route path="/admin"                    element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/admin/users"              element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+              <Route path="/admin/chat-logs"          element={<AdminRoute><AdminChatLogsPage /></AdminRoute>} />
+              <Route path="/admin/rules"              element={<AdminRoute><AdminRulesPage /></AdminRoute>} />
+              <Route path="/admin/rules/new"          element={<AdminRoute><AdminRuleEditorPage /></AdminRoute>} />
+              <Route path="/admin/rules/:id"          element={<AdminRoute><AdminRuleEditorPage /></AdminRoute>} />
+              <Route path="/admin/calculator-preview" element={<AdminRoute><AdminCalcPreviewPage /></AdminRoute>} />
+              <Route path="/admin/rag-preview"        element={<AdminRoute><AdminRAGPreviewPage /></AdminRoute>} />
+              <Route path="/admin/settings"           element={<AdminRoute><AdminSettingsPage /></AdminRoute>} />
+            </Route>
+
+            {/* ── Redirects ── */}
+            <Route path="/ib-guide"    element={<Navigate to="/chat?mode=ib-return" replace />} />
+            <Route path="/simulation"  element={<Navigate to="/chat?mode=simulation" replace />} />
+            <Route path="/pricing"     element={<Navigate to="/" replace />} />
+            <Route path="/accountant"  element={<Navigate to="/accountant/portal" replace />} />
+            <Route path="*"            element={<Navigate to="/" replace />} />
+
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
+
+      {/* Splash overlay */}
       {!splashDone && (
         <div style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 9999,
+          position: "fixed", inset: 0, zIndex: 9999,
           opacity: splashFading ? 0 : 1,
           transition: `opacity ${SPLASH_FADE}ms ease-out`,
           pointerEvents: splashFading ? "none" : "auto",
