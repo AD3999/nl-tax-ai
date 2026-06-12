@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { TrendingUp, Percent, PiggyBank, ShieldAlert, Activity, BarChart3 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useMobile } from "../hooks/useMobile";
@@ -186,29 +187,38 @@ function buildComplianceItems(
 // ── Sub-components ────────────────────────────────────────────────────────────
 
 function SummaryCard({
-  title, value, subtitle, accent, loading, valueColor,
+  title, value, subtitle, accent, loading, valueColor, icon, iconBg, iconColor,
 }: {
   title: string; value: string; subtitle?: string; accent?: boolean;
   loading?: boolean; valueColor?: string;
+  icon?: React.ReactNode; iconBg?: string; iconColor?: string;
 }) {
   return (
     <div className="card" style={{
-      padding: "22px 24px",
+      padding: "var(--sp-5)",
       background: accent ? "var(--accent-soft)" : "var(--paper-2)",
       border: `1px solid ${accent ? "var(--accent-line)" : "var(--hairline)"}`,
+      display: "flex", alignItems: "center", gap: "var(--sp-3)",
     }}>
-      <div className="eyebrow" style={{ color: accent ? "var(--sage-700)" : "var(--ink-3)" }}>{title}</div>
-      <div style={{ marginTop: 8, minHeight: 44, display: "flex", alignItems: "center" }}>
-        {loading
-          ? <Skeleton height={36} width="70%" radius="var(--r-sm)" />
-          : <span style={{
-              fontFamily: "var(--serif)", fontSize: value === "—" ? 26 : 36,
-              color: valueColor ?? (value === "—" ? "var(--ink-4)" : "var(--ink)"),
-              letterSpacing: "-0.02em",
-            }}>{value}</span>
-        }
+      {icon && (
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: iconBg ?? "var(--paper-3)", display: "flex", alignItems: "center", justifyContent: "center", color: iconColor ?? "var(--ink-3)", flexShrink: 0 }}>
+          {icon}
+        </div>
+      )}
+      <div style={{ minWidth: 0 }}>
+        <div className="eyebrow" style={{ color: accent ? "var(--sage-700)" : "var(--ink-3)" }}>{title}</div>
+        <div style={{ marginTop: 4 }}>
+          {loading
+            ? <Skeleton height={28} width="70%" radius="var(--r-sm)" />
+            : <span style={{
+                fontFamily: "var(--serif)", fontSize: value === "—" ? 22 : 28,
+                color: valueColor ?? (value === "—" ? "var(--ink-4)" : "var(--ink)"),
+                letterSpacing: "-0.02em",
+              }}>{value}</span>
+          }
+        </div>
+        {subtitle && <div style={{ marginTop: 2, fontSize: 11, color: "var(--ink-3)" }}>{subtitle}</div>}
       </div>
-      {subtitle && <div style={{ marginTop: 4, fontSize: 12, color: "var(--ink-3)" }}>{subtitle}</div>}
     </div>
   );
 }
@@ -335,7 +345,9 @@ function PDFDownloadCard({ lang }: { lang: "nl" | "en" | "fa" }) {
   return (
     <div className="card" style={{ padding: "18px 20px", background: "var(--accent-soft)", border: "1px solid var(--accent-line)" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-        <span style={{ fontSize: 20 }}>📊</span>
+        <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--accent-line)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--sage-700)", flexShrink: 0 }}>
+          <BarChart3 size={15} />
+        </div>
         <div>
           <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ink)" }}>
             {L("Belastingrapport PDF", "Tax Health Report PDF", "گزارش سلامت مالیاتی PDF")}
@@ -557,9 +569,7 @@ function ComplianceStatusCard({
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {items.map((item, i) => (
           <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-            <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>
-              {item.ok ? "✅" : "⚠️"}
-            </span>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: item.ok ? "var(--ok)" : "var(--warn)", flexShrink: 0, marginTop: 5 }} />
             <div>
               <div style={{ fontSize: 12.5, fontWeight: 500, color: item.ok ? "var(--ink)" : "var(--warn)" }}>
                 {item.label}
@@ -1187,20 +1197,25 @@ export default function DashboardPage() {
       {/* ── Summary cards ──────────────────────────────────────────────────── */}
       {profile && (
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 14, marginBottom: 28 }}>
-          <SummaryCard title={L("Totale belasting", "Total tax", "مجموع مالیات")} value={`€${Math.round(totalTax).toLocaleString("nl-NL")}`} subtitle="2026" accent loading={loadingCalc} />
-          <SummaryCard title={L("Effectief tarief", "Effective rate", "نرخ مؤثر")} value={loadingCalc ? "—" : `${(effectiveRate * 100).toFixed(1)}%`} subtitle={loadingCalc ? undefined : `~€${Math.round(effectiveRate * 100)} per €100`} loading={loadingCalc} />
-          <SummaryCard title={L("Maandelijks reserveren", "Monthly reserve", "ذخیره ماهانه")} value={`€${Math.round(monthlyRsrv).toLocaleString("nl-NL")}`} subtitle={L("Apart zetten", "Set aside", "کنار بگذارید")} loading={loadingCalc} />
+          <SummaryCard title={L("Totale belasting", "Total tax", "مجموع مالیات")} value={`€${Math.round(totalTax).toLocaleString("nl-NL")}`} subtitle="2026" accent loading={loadingCalc}
+            icon={<TrendingUp size={16} />} iconBg="var(--accent-soft)" iconColor="var(--sage-600)" />
+          <SummaryCard title={L("Effectief tarief", "Effective rate", "نرخ مؤثر")} value={loadingCalc ? "—" : `${(effectiveRate * 100).toFixed(1)}%`} subtitle={loadingCalc ? undefined : `~€${Math.round(effectiveRate * 100)} per €100`} loading={loadingCalc}
+            icon={<Percent size={16} />} iconBg="oklch(0.93 0.04 265)" iconColor="var(--blue)" />
+          <SummaryCard title={L("Maandelijks reserveren", "Monthly reserve", "ذخیره ماهانه")} value={`€${Math.round(monthlyRsrv).toLocaleString("nl-NL")}`} subtitle={L("Apart zetten", "Set aside", "کنار بگذارید")} loading={loadingCalc}
+            icon={<PiggyBank size={16} />} iconBg="oklch(0.93 0.04 265)" iconColor="var(--blue)" />
           {userType === "zzp" ? (
             <SummaryCard title={L("Wet DBA risico", "Wet DBA risk", "ریسک Wet DBA")}
               value={wetDba ? wetDba.charAt(0).toUpperCase() + wetDba.slice(1).toLowerCase() : "—"}
               subtitle={wetDba ? undefined : L("Nog niet berekend", "Not yet calculated", "هنوز محاسبه نشده")}
               valueColor={wetDba === "high" ? "var(--danger)" : wetDba === "medium" ? "var(--warn)" : wetDba === "low" ? "var(--ok)" : undefined}
-              loading={loadingCalc} />
+              loading={loadingCalc}
+              icon={<ShieldAlert size={16} />} iconBg={wetDba === "high" ? "oklch(0.96 0.03 25)" : wetDba === "medium" ? "oklch(0.96 0.04 70)" : "oklch(0.93 0.04 265)"} iconColor={wetDba === "high" ? "var(--danger)" : wetDba === "medium" ? "var(--warn)" : "var(--blue)"} />
           ) : (
             <SummaryCard title="Tax Health" value={loadingCalc || loadingAlerts ? "—" : String(healthScore)}
               subtitle={healthScore >= 80 ? "Good" : healthScore >= 55 ? "Fair" : "Needs attention"}
               valueColor={healthScore >= 80 ? "var(--ok)" : healthScore >= 55 ? "var(--warn)" : "var(--danger)"}
-              loading={loadingCalc || loadingAlerts} />
+              loading={loadingCalc || loadingAlerts}
+              icon={<Activity size={16} />} iconBg="oklch(0.93 0.04 265)" iconColor="var(--blue)" />
           )}
         </div>
       )}

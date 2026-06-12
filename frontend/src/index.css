@@ -628,4 +628,14 @@ select:focus-visible {
 
   /* ── App layout page wrapper ─────────────────────────────────── */
   .app-page { width: 100%; max-width: 1200px; margin: 0 auto; }
+
+  /* ── Client portal CTA cards ─────────────────────────────────── */
+  .portal-cta-card {
+    transition: box-shadow 150ms, transform 150ms;
+    border-top: 3px solid var(--blue) !important;
+  }
+  .portal-cta-card:hover {
+    box-shadow: var(--sh-md);
+    transform: translateY(-2px);
+  }
 }

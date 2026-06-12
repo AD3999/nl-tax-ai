@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { CheckSquare, FolderOpen } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useMobile } from "../../hooks/useMobile";
 import { fetchClientProfile, fetchClientEngagement, fetchClientTasks } from "../../api/portal/client";
@@ -167,10 +168,10 @@ export default function ClientPortalPage() {
           </div>
         </div>
 
-        {/* Score badge */}
+        {/* Score banner */}
         {score < 100 && (
-          <div style={{ background: scoreBg, border: `1px solid ${scoreColor}30`, borderRadius: "var(--r)", padding: "var(--sp-3) var(--sp-4)", marginBottom: "var(--sp-5)", display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: 20 }}>{score >= 85 ? "✅" : score >= 50 ? "⏳" : "⚠️"}</div>
+          <div style={{ background: scoreBg, border: `1px solid ${scoreColor}40`, borderRadius: "var(--r)", padding: "var(--sp-3) var(--sp-4)", marginBottom: "var(--sp-5)", display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 8, height: 8, borderRadius: "50%", background: scoreColor, flexShrink: 0 }} />
             <div style={{ fontSize: "var(--text-sm)", color: "var(--text-2)", fontWeight: 600 }}>
               {score >= 85
                 ? (lang === "nl" ? "Bijna klaar om in te dienen!" : lang === "fa" ? "تقریباً آماده برای ارسال!" : "Almost ready to file!")
@@ -184,28 +185,28 @@ export default function ClientPortalPage() {
         {/* CTA cards */}
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-4)" }}>
           <Link to="/client/tasks" style={{ textDecoration: "none" }}>
-            <div className="card" style={{ padding: "var(--sp-5)", cursor: "pointer", borderTop: `3px solid var(--blue)`, transition: "box-shadow 0.15s, transform 0.15s" }}
-              onMouseEnter={e => { e.currentTarget.style.boxShadow = "var(--sh-md)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.transform = ""; }}>
-              <div style={{ fontSize: 28, marginBottom: "var(--sp-2)" }}>✓</div>
-              <div style={{ fontSize: "var(--text-xl)", fontWeight: 800, color: "var(--text)", marginBottom: "var(--sp-1)", letterSpacing: "-0.02em" }}>{t("tasks", lang)}</div>
+            <div className="card portal-cta-card" style={{ padding: "var(--sp-5)", cursor: "pointer" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: "oklch(0.93 0.04 265)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--blue)", marginBottom: "var(--sp-3)" }}>
+                <CheckSquare size={18} />
+              </div>
+              <div style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--text)", marginBottom: "var(--sp-1)", letterSpacing: "-0.02em" }}>{t("tasks", lang)}</div>
               {taskSummary && (
-                <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", marginBottom: "var(--sp-3)", fontWeight: 600 }}>
+                <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", marginBottom: "var(--sp-3)" }}>
                   {taskSummary.total - taskSummary.completed} {t("open", lang)}
                 </div>
               )}
-              <span style={{ fontSize: "var(--text-sm)", color: "var(--blue-text)", fontWeight: 700 }}>{t("viewTasks", lang)} →</span>
+              <span style={{ fontSize: "var(--text-sm)", color: "var(--blue)", fontWeight: 600 }}>{t("viewTasks", lang)} →</span>
             </div>
           </Link>
 
           <Link to="/client/documents" style={{ textDecoration: "none" }}>
-            <div className="card" style={{ padding: "var(--sp-5)", cursor: "pointer", borderTop: `3px solid var(--blue)`, transition: "box-shadow 0.15s, transform 0.15s" }}
-              onMouseEnter={e => { e.currentTarget.style.boxShadow = "var(--sh-md)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={e => { e.currentTarget.style.boxShadow = ""; e.currentTarget.style.transform = ""; }}>
-              <div style={{ fontSize: 28, marginBottom: "var(--sp-2)" }}>📄</div>
-              <div style={{ fontSize: "var(--text-xl)", fontWeight: 800, color: "var(--text)", marginBottom: "var(--sp-1)", letterSpacing: "-0.02em" }}>{t("documents", lang)}</div>
-              <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", marginBottom: "var(--sp-3)", fontWeight: 600 }}>{t("uploadView", lang)}</div>
-              <span style={{ fontSize: "var(--text-sm)", color: "var(--blue-text)", fontWeight: 700 }}>{t("viewDocs", lang)} →</span>
+            <div className="card portal-cta-card" style={{ padding: "var(--sp-5)", cursor: "pointer" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: "oklch(0.93 0.04 265)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--blue)", marginBottom: "var(--sp-3)" }}>
+                <FolderOpen size={18} />
+              </div>
+              <div style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--text)", marginBottom: "var(--sp-1)", letterSpacing: "-0.02em" }}>{t("documents", lang)}</div>
+              <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", marginBottom: "var(--sp-3)" }}>{t("uploadView", lang)}</div>
+              <span style={{ fontSize: "var(--text-sm)", color: "var(--blue)", fontWeight: 600 }}>{t("viewDocs", lang)} →</span>
             </div>
           </Link>
         </div>
