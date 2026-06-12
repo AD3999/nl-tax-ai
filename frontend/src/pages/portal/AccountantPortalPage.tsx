@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { Users, Clock, AlertCircle, MailOpen, ArrowRight, Zap } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useMobile } from "../../hooks/useMobile";
@@ -187,6 +188,12 @@ const STATUS_CHIP: Record<string, { bg: string; color: string }> = {
   cancelled: { bg: "var(--paper-3)",         color: "var(--ink-4)"         },
 };
 
+const ISSUE_LABEL: Record<"high_risk" | "needs_review" | "waiting_client", Record<"en" | "nl" | "fa", string>> = {
+  high_risk:      { en: "High risk / Blocked", nl: "Hoog risico",       fa: "ریسک بالا"        },
+  needs_review:   { en: "Needs review",        nl: "Beoordeling nodig", fa: "نیاز به بررسی"     },
+  waiting_client: { en: "Waiting on client",   nl: "Wacht op klant",    fa: "منتظر مشتری"      },
+};
+
 export default function AccountantPortalPage() {
   const { i18n } = useTranslation();
   const { user, loading } = useAuth();
@@ -258,6 +265,12 @@ export default function AccountantPortalPage() {
   const needsReview       = engagements.filter(e => e.status === "needs_review").length;
   const pendingInvCount   = invitations.filter(i => i.status === "pending").length;
 
+  const priorities = [
+    ...engagements.filter(e => e.status === "blocked" || e.risk_level === "high").map(e => ({ name: e.client_profile_display, issue: "high_risk" as const, id: e.id })),
+    ...engagements.filter(e => e.status === "needs_review").map(e => ({ name: e.client_profile_display, issue: "needs_review" as const, id: e.id })),
+    ...engagements.filter(e => e.status === "waiting_client").map(e => ({ name: e.client_profile_display, issue: "waiting_client" as const, id: e.id })),
+  ].slice(0, 5);
+
   if (loading) return null;
 
   if (!user) {
@@ -300,20 +313,52 @@ export default function AccountantPortalPage() {
           </div>
         </div>
 
-        {/* Summary cards */}
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "var(--sp-3)", marginBottom: "var(--sp-6)" }}>
+        {/* KPI cards */}
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "var(--sp-3)", marginBottom: "var(--sp-5)" }}>
           {[
-            { label: tx.total_clients,      value: totalClients,    color: "var(--sage-600)"        },
-            { label: tx.waiting,            value: waitingClient,   color: "oklch(0.62 0.13 50)"    },
-            { label: tx.needs_review,       value: needsReview,     color: "oklch(0.62 0.13 50)"    },
-            { label: tx.pending_invitations,value: pendingInvCount, color: "oklch(0.48 0.14 75)"    },
+            { label: tx.total_clients,       value: totalClients,    icon: <Users size={15} />,       iconColor: "var(--blue)",         iconBg: "oklch(0.93 0.04 265)" },
+            { label: tx.waiting,             value: waitingClient,   icon: <Clock size={15} />,       iconColor: "oklch(0.52 0.13 58)", iconBg: "oklch(0.96 0.04 70)"  },
+            { label: tx.needs_review,        value: needsReview,     icon: <AlertCircle size={15} />, iconColor: "var(--danger)",       iconBg: "oklch(0.96 0.03 25)"  },
+            { label: tx.pending_invitations, value: pendingInvCount, icon: <MailOpen size={15} />,    iconColor: "var(--blue)",         iconBg: "oklch(0.93 0.04 265)" },
           ].map(card => (
-            <div key={card.label} className="card" style={{ padding: "var(--sp-4)", textAlign: "center" }}>
-              <div style={{ fontSize: "var(--text-3xl)", fontFamily: "var(--serif)", color: card.color, fontWeight: 400 }}>{card.value}</div>
-              <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: "var(--sp-1)" }}>{card.label}</div>
+            <div key={card.label} className="card" style={{ padding: "var(--sp-5)", display: "flex", alignItems: "center", gap: "var(--sp-3)" }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: card.iconBg, display: "flex", alignItems: "center", justifyContent: "center", color: card.iconColor, flexShrink: 0 }}>
+                {card.icon}
+              </div>
+              <div>
+                <div style={{ fontSize: "var(--text-2xl)", fontWeight: 700, color: "var(--ink)", lineHeight: 1.1, fontVariantNumeric: "tabular-nums" }}>{card.value}</div>
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: 2 }}>{card.label}</div>
+              </div>
             </div>
           ))}
         </div>
+
+        {/* Priority Actions */}
+        {!loadingData && priorities.length > 0 && (
+          <div className="card" style={{ marginBottom: "var(--sp-5)", overflow: "hidden" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "var(--sp-3) var(--sp-5)", borderBottom: "1px solid var(--hairline)" }}>
+              <Zap size={13} style={{ color: "var(--blue)" }} />
+              <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--ink)" }}>
+                {lang === "nl" ? "Prioritaire acties" : lang === "fa" ? "اقدامات اولویت‌دار" : "Priority Actions"}
+              </span>
+              <span style={{ marginInlineStart: "auto", fontSize: 11, color: "var(--ink-4)" }}>
+                {priorities.length} {lang === "fa" ? "مورد" : "items"}
+              </span>
+            </div>
+            {priorities.map((item, i) => (
+              <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "var(--sp-3)", padding: "var(--sp-3) var(--sp-5)", borderBottom: i < priorities.length - 1 ? "1px solid var(--hairline)" : "none" }}>
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: item.issue === "high_risk" ? "var(--danger)" : "oklch(0.62 0.13 50)", flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0, display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--ink)" }}>{item.name}</span>
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>{ISSUE_LABEL[item.issue][lang]}</span>
+                </div>
+                <Link to={`/accountant/engagements/${item.id}`} style={{ display: "flex", alignItems: "center", color: "var(--ink-4)", flexShrink: 0, padding: 4 }}>
+                  <ArrowRight size={13} />
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
 
         {error && <div className="card" style={{ padding: "var(--sp-3)", background: "oklch(0.95 0.03 25)", color: "var(--danger)", marginBottom: "var(--sp-4)", fontSize: "var(--text-sm)" }}>{error}</div>}
 

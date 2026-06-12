@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
+import { ChevronRight, FileText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -300,6 +301,9 @@ export default function EngagementPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [generatingActions, setGeneratingActions] = useState(false);
   const [reminderPreview, setReminderPreview] = useState<{ subject: string; body: string; missing_count: number } | null>(null);
+
+  const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
+  const selectedDoc = documents.find(d => d.id === selectedDocId) ?? null;
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -768,43 +772,91 @@ export default function EngagementPage() {
             {documents.length === 0 ? (
               <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-3)" }}>{tx.no_documents}</div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
-                {documents.map(doc => (
-                  <div key={doc.id} className="card" style={{ padding: "var(--sp-3)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--sp-3)" }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700, fontSize: "var(--text-sm)", color: "var(--text)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "280px 1fr", gap: "var(--sp-4)", alignItems: "start" }}>
+
+                {/* Left: file list */}
+                <div style={{ border: "1px solid var(--hairline)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--paper-2)" }}>
+                  {documents.map((doc, i) => (
+                    <button
+                      key={doc.id}
+                      onClick={() => setSelectedDocId(doc.id)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: "var(--sp-3)",
+                        width: "100%", padding: "var(--sp-3) var(--sp-4)",
+                        background: selectedDocId === doc.id ? "var(--paper-3)" : "transparent",
+                        borderBottom: i < documents.length - 1 ? "1px solid var(--hairline)" : "none",
+                        border: "none", borderRadius: 0,
+                        cursor: "pointer", textAlign: "start",
+                      }}
+                    >
+                      <div style={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, background: REVIEW_STATUS_COLOR[doc.processing_status] ?? "var(--ink-4)" }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                           {doc.user_title || doc.original_filename}
                         </div>
-                        {doc.user_note && <div style={{ fontSize: "var(--text-xs)", color: "var(--text-3)", marginTop: 2 }}>{doc.user_note}</div>}
-                        <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: 2 }}>
-                          {doc.original_filename} · {(doc.file_size / 1024).toFixed(0)} KB · {new Date(doc.created_at).toLocaleDateString()}
+                        <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: 1 }}>
+                          {(doc.file_size / 1024).toFixed(0)} KB · {new Date(doc.created_at).toLocaleDateString()}
                         </div>
-                        {doc.extracted_json && (
-                          <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: 4 }}>
-                            {tx.confidence}: {((doc.confidence_score || 0) * 100).toFixed(0)}%
-                          </div>
-                        )}
                       </div>
-                      <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "center" }}>
-                        <span style={{ fontSize: "var(--text-xs)", color: doc.processing_status === "approved" ? "var(--sage-600)" : doc.processing_status === "rejected" ? "var(--danger)" : "oklch(0.62 0.13 50)" }}>
-                          {doc.processing_status}
-                        </span>
-                        {doc.file_url && (
-                          <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)" }}>{tx.view}</a>
-                        )}
-                        <button className="btn btn-ghost btn-sm" style={{ color: "var(--sage-600)", fontSize: "var(--text-2xs)" }} onClick={() => void handleReviewDoc(doc.id, "approved")}>{tx.approve}</button>
-                        <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", fontSize: "var(--text-2xs)" }} onClick={() => void handleReviewDoc(doc.id, "rejected")}>{tx.reject}</button>
-                      </div>
+                      <ChevronRight size={12} style={{ color: "var(--ink-4)", flexShrink: 0 }} />
+                    </button>
+                  ))}
+                </div>
+
+                {/* Right: detail panel */}
+                {selectedDoc ? (
+                  <div className="card" style={{ padding: "var(--sp-5)" }}>
+                    <div style={{ marginBottom: "var(--sp-4)", paddingBottom: "var(--sp-4)", borderBottom: "1px solid var(--hairline)" }}>
+                      <h3 style={{ fontWeight: 700, fontSize: "var(--text-lg)", color: "var(--ink)", margin: "0 0 4px" }}>
+                        {selectedDoc.user_title || selectedDoc.original_filename}
+                      </h3>
+                      {selectedDoc.user_note && <p style={{ color: "var(--ink-3)", fontSize: "var(--text-sm)", margin: 0 }}>{selectedDoc.user_note}</p>}
                     </div>
-                    {doc.extracted_json && (
-                      <div style={{ marginTop: "var(--sp-3)", padding: "var(--sp-2)", background: "var(--paper-3)", borderRadius: "var(--r-sm)", fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>
-                        <strong>{tx.extracted}:</strong>{" "}
-                        {Object.entries(doc.extracted_json).filter(([k, v]) => v && k !== "issues").map(([k, v]) => `${k}: ${v}`).join(" · ")}
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-2)", marginBottom: "var(--sp-4)" }}>
+                      {([
+                        ["File", selectedDoc.original_filename],
+                        ["Size", `${(selectedDoc.file_size / 1024).toFixed(0)} KB`],
+                        ["Status", selectedDoc.processing_status],
+                        [tx.confidence, selectedDoc.confidence_score ? `${(selectedDoc.confidence_score * 100).toFixed(0)}%` : "—"],
+                      ] as [string, string][]).map(([k, v]) => (
+                        <div key={k} style={{ padding: "var(--sp-3)", background: "var(--paper-3)", borderRadius: "var(--r-sm)" }}>
+                          <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--ink-4)", marginBottom: 3 }}>{k}</div>
+                          <div style={{ fontSize: "var(--text-sm)", color: "var(--ink)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {selectedDoc.extracted_json && (
+                      <div style={{ marginBottom: "var(--sp-4)" }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--ink-4)", marginBottom: "var(--sp-2)" }}>{tx.extracted}</div>
+                        <div style={{ padding: "var(--sp-3)", background: "var(--paper-3)", borderRadius: "var(--r-sm)", fontSize: "var(--text-xs)", color: "var(--ink-2)", lineHeight: 1.7 }}>
+                          {Object.entries(selectedDoc.extracted_json).filter(([k, v]) => v && k !== "issues").map(([k, v]) => (
+                            <div key={k} style={{ display: "flex", gap: 8 }}>
+                              <span style={{ color: "var(--ink-4)", minWidth: 90, flexShrink: 0 }}>{k}</span>
+                              <span style={{ fontWeight: 500 }}>{String(v)}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
+
+                    <div style={{ display: "flex", gap: "var(--sp-2)", flexWrap: "wrap" }}>
+                      {selectedDoc.file_url && (
+                        <a href={selectedDoc.file_url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">{tx.view} ↗</a>
+                      )}
+                      <button className="btn btn-ghost btn-sm" style={{ color: "var(--sage-600)" }} onClick={() => void handleReviewDoc(selectedDoc.id, "approved")}>{tx.approve}</button>
+                      <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)" }} onClick={() => void handleReviewDoc(selectedDoc.id, "rejected")}>{tx.reject}</button>
+                    </div>
                   </div>
-                ))}
+                ) : (
+                  <div className="card" style={{ padding: "var(--sp-10)", textAlign: "center", color: "var(--ink-4)" }}>
+                    <FileText size={28} style={{ margin: "0 auto var(--sp-3)", opacity: 0.35, display: "block" }} />
+                    <div style={{ fontSize: "var(--text-sm)" }}>
+                      {lang === "nl" ? "Selecteer een document om te bekijken" : lang === "fa" ? "یک سند را برای بررسی انتخاب کنید" : "Select a document to review"}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
