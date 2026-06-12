@@ -27,6 +27,7 @@ urlpatterns = [
     path("api/calculator/", include("apps.calculator.urls")),
     path("api/payments/", include("apps.payments.urls")),
     path("api/portal/", include("apps.portal.urls")),
+    path("api/zzp/",    include("apps.zzp.urls")),
     # SPA catch-all — must be last
     re_path(r"^(?!api/|admin/).*$", spa_index),
 ]

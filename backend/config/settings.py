@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "apps.calculator",
     "apps.payments",
     "apps.portal",
+    "apps.zzp",
 ]
 
 MIDDLEWARE = [
@@ -160,6 +161,22 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Europe/Amsterdam"
 
+# Celery Beat — periodic tasks
+from celery.schedules import crontab  # noqa: E402
+
+CELERY_BEAT_SCHEDULE = {
+    # Check for engagements that need reminders — runs daily at 08:00 Amsterdam time
+    "send-pending-reminders": {
+        "task": "apps.portal.tasks.send_pending_reminders_task",
+        "schedule": crontab(hour=8, minute=0),
+    },
+    # GDPR document purge — runs daily at 02:00
+    "purge-expired-documents": {
+        "task": "apps.portal.tasks.purge_expired_documents_task",
+        "schedule": crontab(hour=2, minute=0),
+    },
+}
+
 # ── Stripe ────────────────────────────────────────────────────────────────────
 
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
@@ -204,6 +221,63 @@ STORAGES = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ── Structured Logging (Phase 6) ──────────────────────────────────────────────
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": "django.utils.log.ServerFormatter",
+            "format": '{"time":"%(asctime)s","level":"%(levelname)s","name":"%(name)s","message":"%(message)s"}',
+        },
+        "verbose": {
+            "format": "[%(asctime)s] %(levelname)-8s %(name)s: %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "apps": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
+
+# ── Sentry (Phase 6 — error tracking) ────────────────────────────────────────
+
+SENTRY_DSN = env("SENTRY_DSN", default="")
+
+if SENTRY_DSN:
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.django import DjangoIntegration
+        from sentry_sdk.integrations.celery import CeleryIntegration
+        sentry_sdk.init(
+            dsn=SENTRY_DSN,
+            integrations=[DjangoIntegration(), CeleryIntegration()],
+            traces_sample_rate=0.1,
+            send_default_pii=False,
+        )
+    except ImportError:
+        pass  # sentry-sdk not installed — no error tracking
 
 # ── AI providers ──────────────────────────────────────────────────────────────
 

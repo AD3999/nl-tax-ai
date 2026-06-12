@@ -1055,3 +1055,60 @@ class ClientMyAccountantView(APIView):
         from .models import AccountantClient
         AccountantClient.objects.filter(pk=pk, client_user=request.user).delete()
         return Response(status=204)
+
+
+class AccountDeletionView(APIView):
+    """
+    DELETE /api/users/me/
+    GDPR account deletion — anonymizes PII and marks account inactive.
+    The user must send {"confirm": true} in the request body.
+    Data is anonymized (not hard-deleted) to preserve audit trail integrity.
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request):
+        confirm = request.data.get("confirm", False)
+        if not confirm:
+            return Response(
+                {"detail": "Send {\"confirm\": true} to confirm account deletion."},
+                status=400,
+            )
+        from django.utils import timezone
+        user = request.user
+        user.deletion_requested_at = timezone.now()
+        user.save(update_fields=["deletion_requested_at"])
+        user.anonymize()
+        return Response({"detail": "Account anonymized. All personal data has been erased."}, status=200)
+
+
+class DataExportView(APIView):
+    """
+    GET /api/users/me/data-export/
+    GDPR data portability — returns a JSON summary of all data held for the user.
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        from apps.portal.models import AccountantClientProfile, ClientDocument
+        from apps.zzp.models import ZZPRevenueEntry, ZZPExpenseEntry, ZZPHoursEntry, ZZPMileageEntry
+        from apps.chat.models import Conversation
+
+        return Response({
+            "user": {
+                "email":    user.email,
+                "username": user.username,
+                "joined":   user.date_joined.date().isoformat(),
+                "role":     user.role,
+            },
+            "intake_profile": user.intake_profile,
+            "tax_memory":     user.tax_memory,
+            "zzp_revenue_count":   ZZPRevenueEntry.objects.filter(user=user).count(),
+            "zzp_expense_count":   ZZPExpenseEntry.objects.filter(user=user).count(),
+            "zzp_hours_count":     ZZPHoursEntry.objects.filter(user=user).count(),
+            "zzp_mileage_count":   ZZPMileageEntry.objects.filter(user=user).count(),
+            "portal_document_count": ClientDocument.objects.filter(uploaded_by=user).count(),
+            "conversation_count":  Conversation.objects.filter(user=user).count(),
+        })

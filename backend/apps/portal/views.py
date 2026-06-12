@@ -23,6 +23,7 @@ from .models import (
     AccountantClientProfile, TaxEngagement, DocumentRequest,
     ClientDocument, ExtractedIncome, ExtractedExpense,
     ChecklistItem, AccountantAction, PortalAuditLog,
+    ReminderLog, PortalMessage,
 )
 from .serializers import (
     AccountantClientProfileSerializer, TaxEngagementSerializer,
@@ -30,6 +31,7 @@ from .serializers import (
     ClientDocumentUploadSerializer, ExtractedIncomeSerializer,
     ExtractedExpenseSerializer, ChecklistItemSerializer,
     AccountantActionSerializer, PortalAuditLogSerializer,
+    ReminderLogSerializer, PortalMessageSerializer,
 )
 
 
@@ -67,9 +69,10 @@ def _is_portal_user(user):
 
 
 def _can_access_client(user, client_profile):
+    if user.is_staff:
+        return True
     return (
-        _is_portal_user(user)
-        or _is_accountant_of_client(user, client_profile)
+        _is_accountant_of_client(user, client_profile)
         or _is_client_of_profile(user, client_profile)
     )
 
@@ -822,7 +825,17 @@ class PortalReminderView(APIView):
             f"{CLOSING[lang].format(accountant=accountant_name)}"
         )
 
-        # TODO: wire into Resend/email sending — for now log and return preview
+        # Persist ReminderLog so the accountant inbox can show it
+        ReminderLog.objects.create(
+            engagement=eng,
+            client_profile=profile,
+            sent_by=request.user,
+            reminder_type="document_request",
+            channel="in_app",
+            subject=SUBJECT[lang],
+            body=body,
+            delivered=False,
+        )
         _audit(request, "reminder_sent", "TaxEngagement", eng.id,
                client_profile=profile, engagement=eng,
                after={"missing_count": len(missing), "lang": lang})
@@ -1052,3 +1065,142 @@ class ClientPortalTaskUpdateView(APIView):
                before={"status": old_status}, after={"status": new_status})
 
         return Response(ChecklistItemSerializer(item).data)
+
+
+# ── P2.1 Accountant Inbox ─────────────────────────────────────────────────────
+
+class AccountantInboxView(APIView):
+    """
+    GET /api/portal/inbox/
+    Aggregated view of everything requiring accountant attention:
+    - pending document uploads (needs_review)
+    - open AccountantActions
+    - sent ReminderLogs
+    - recent PortalMessages (unread)
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if not _is_portal_user(request.user) and not request.user.is_staff:
+            return Response({"detail": "Portal access required."}, status=403)
+
+        # Scope to this accountant's clients
+        profiles = AccountantClientProfile.objects.filter(accountant_user=request.user)
+        if request.user.is_staff:
+            profiles = AccountantClientProfile.objects.all()
+
+        profile_ids   = list(profiles.values_list("id", flat=True))
+        engagement_qs = TaxEngagement.objects.filter(client_profile_id__in=profile_ids)
+        eng_ids       = list(engagement_qs.values_list("id", flat=True))
+
+        # Pending uploads awaiting review
+        pending_docs = ClientDocument.objects.filter(
+            engagement_id__in=eng_ids,
+            processing_status__in=("uploaded", "needs_review"),
+        ).select_related("client_profile", "uploaded_by").order_by("-created_at")[:20]
+
+        # Open accountant actions
+        open_actions = AccountantAction.objects.filter(
+            engagement_id__in=eng_ids, status="open"
+        ).select_related("client_profile").order_by("-priority", "-created_at")[:20]
+
+        # Recent reminder logs
+        recent_reminders = ReminderLog.objects.filter(
+            engagement_id__in=eng_ids
+        ).select_related("client_profile").order_by("-created_at")[:10]
+
+        # Unread messages from clients
+        unread_messages = PortalMessage.objects.filter(
+            engagement_id__in=eng_ids,
+            is_read=False,
+        ).exclude(sender=request.user).select_related("client_profile", "sender").order_by("-created_at")[:20]
+
+        return Response({
+            "pending_docs": ClientDocumentSerializer(pending_docs, many=True, context={"request": request}).data,
+            "open_actions": AccountantActionSerializer(open_actions, many=True).data,
+            "recent_reminders": ReminderLogSerializer(recent_reminders, many=True).data,
+            "unread_messages": PortalMessageSerializer(unread_messages, many=True, context={"request": request}).data,
+            "counts": {
+                "pending_docs":    pending_docs.count(),
+                "open_actions":    open_actions.count(),
+                "unread_messages": unread_messages.count(),
+            },
+        })
+
+
+# ── P3.1 Portal Messaging ─────────────────────────────────────────────────────
+
+class EngagementMessagesView(APIView):
+    """
+    GET  /api/portal/engagements/<pk>/messages/  — accountant fetches thread
+    POST /api/portal/engagements/<pk>/messages/  — accountant sends message
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _can_access_engagement(request.user, eng):
+            return Response({"detail": "Not found."}, status=404)
+        msgs = PortalMessage.objects.filter(engagement=eng).order_by("created_at")
+        # Mark all unread messages addressed to this user as read
+        PortalMessage.objects.filter(
+            engagement=eng, is_read=False
+        ).exclude(sender=request.user).update(is_read=True, read_at=timezone.now())
+        return Response(PortalMessageSerializer(msgs, many=True, context={"request": request}).data)
+
+    def post(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _can_access_engagement(request.user, eng):
+            return Response({"detail": "Not found."}, status=404)
+        body = request.data.get("body", "").strip()
+        if not body:
+            return Response({"detail": "body is required."}, status=400)
+        msg = PortalMessage.objects.create(
+            engagement=eng,
+            client_profile=eng.client_profile,
+            sender=request.user,
+            body=body,
+        )
+        _audit(request, "message_sent", "PortalMessage", msg.id,
+               client_profile=eng.client_profile, engagement=eng)
+        return Response(
+            PortalMessageSerializer(msg, context={"request": request}).data,
+            status=201,
+        )
+
+
+class ClientMessagesView(APIView):
+    """
+    GET  /api/portal/client/messages/  — client fetches their message thread
+    POST /api/portal/client/messages/  — client sends a message to their accountant
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def _get_engagement(self, user):
+        profile = _get_or_create_self_service_profile(user)
+        return _get_or_create_engagement(profile), profile
+
+    def get(self, request):
+        eng, profile = self._get_engagement(request.user)
+        msgs = PortalMessage.objects.filter(engagement=eng).order_by("created_at")
+        # Mark unread messages from accountant as read
+        PortalMessage.objects.filter(
+            engagement=eng, is_read=False
+        ).exclude(sender=request.user).update(is_read=True, read_at=timezone.now())
+        return Response(PortalMessageSerializer(msgs, many=True, context={"request": request}).data)
+
+    def post(self, request):
+        eng, profile = self._get_engagement(request.user)
+        body = request.data.get("body", "").strip()
+        if not body:
+            return Response({"detail": "body is required."}, status=400)
+        msg = PortalMessage.objects.create(
+            engagement=eng,
+            client_profile=profile,
+            sender=request.user,
+            body=body,
+        )
+        return Response(
+            PortalMessageSerializer(msg, context={"request": request}).data,
+            status=201,
+        )

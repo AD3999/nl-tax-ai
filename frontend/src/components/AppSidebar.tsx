@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   LayoutDashboard, MessageSquare, Calendar, Search,
   Users, Calculator, ClipboardList, Shield, FileText,
-  LogOut, Briefcase,
+  LogOut, Briefcase, Inbox, Settings, User, Truck,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Wordmark from "./Wordmark";
@@ -21,6 +21,9 @@ function clientNav(t: (k: string) => string): NavItem[] {
     { to: "/dashboard",         label: t("nav.dashboard"),         icon: <LayoutDashboard size={15} />, end: true },
     { to: "/chat",              label: t("nav.chat"),              icon: <MessageSquare size={15} /> },
     { to: "/client",            label: "My Portal",                icon: <Briefcase size={15} /> },
+    { to: "/client/messages",   label: "Messages",                 icon: <MessageSquare size={15} /> },
+    { to: "/client/profile",    label: "My Profile",               icon: <User size={15} /> },
+    { to: "/zzp-workspace",     label: "ZZP Workspace",            icon: <Truck size={15} /> },
     { to: "/deduction-checker", label: t("nav.deduction_checker"), icon: <Search size={15} /> },
     { to: "/tax-calendar",      label: t("nav.tax_calendar"),      icon: <Calendar size={15} /> },
     { to: "/tax-history",       label: t("nav.tax_history"),       icon: <ClipboardList size={15} /> },
@@ -30,9 +33,11 @@ function clientNav(t: (k: string) => string): NavItem[] {
 
 function accountantNav(): NavItem[] {
   return [
-    { to: "/accountant/portal", label: "Dashboard",   icon: <LayoutDashboard size={15} />, end: true },
-    { to: "/chat",              label: "Ask AI",       icon: <MessageSquare size={15} /> },
-    { to: "/tax-calendar",      label: "Tax Calendar", icon: <Calendar size={15} /> },
+    { to: "/accountant/portal",   label: "Dashboard",   icon: <LayoutDashboard size={15} />, end: true },
+    { to: "/accountant/inbox",    label: "Inbox",        icon: <Inbox size={15} /> },
+    { to: "/accountant/settings", label: "Settings",     icon: <Settings size={15} /> },
+    { to: "/chat",                label: "Ask AI",       icon: <MessageSquare size={15} /> },
+    { to: "/tax-calendar",        label: "Tax Calendar", icon: <Calendar size={15} /> },
   ];
 }
 

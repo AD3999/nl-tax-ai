@@ -12,6 +12,8 @@ from .views import (
     ClientPortalProfileView, ClientPortalEngagementView,
     ClientPortalTasksView, ClientPortalDocumentsView,
     ClientPortalTaskUpdateView, ClientPortalDocumentDeleteView,
+    AccountantInboxView,
+    EngagementMessagesView, ClientMessagesView,
 )
 
 urlpatterns = [
@@ -46,11 +48,18 @@ urlpatterns = [
     path("expenses/<int:pk>/",              ExtractedExpenseDetailView.as_view(),       name="portal-expense-detail"),
     path("actions/<int:pk>/",              AccountantActionDetailView.as_view(),        name="portal-action-detail"),
 
-    # ── Client self-service ─────────────────────────────────────────────────
+    # ── Accountant inbox (P2.1) ─────────────────────────────────────────────────
+    path("inbox/",                         AccountantInboxView.as_view(),               name="portal-inbox"),
+
+    # ── Messaging (P3.1) ────────────────────────────────────────────────────────
+    path("engagements/<int:pk>/messages/", EngagementMessagesView.as_view(),            name="portal-eng-messages"),
+
+    # ── Client self-service ─────────────────────────────────────────────────────
     path("client/profile/",                ClientPortalProfileView.as_view(),           name="portal-client-profile"),
     path("client/engagement/",             ClientPortalEngagementView.as_view(),        name="portal-client-engagement"),
     path("client/tasks/",                  ClientPortalTasksView.as_view(),             name="portal-client-tasks"),
     path("client/tasks/<int:pk>/",         ClientPortalTaskUpdateView.as_view(),        name="portal-client-task-update"),
     path("client/documents/",              ClientPortalDocumentsView.as_view(),         name="portal-client-documents"),
     path("client/documents/<int:pk>/",     ClientPortalDocumentDeleteView.as_view(),    name="portal-client-document-delete"),
+    path("client/messages/",               ClientMessagesView.as_view(),                name="portal-client-messages"),
 ]

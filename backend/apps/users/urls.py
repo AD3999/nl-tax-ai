@@ -9,6 +9,7 @@ from .views import (
     AccountantInvitationsView, ClientInvitationsView,
     PushVapidKeyView, PushSubscribeView,
     ClientMyAccountantView,
+    AccountDeletionView, DataExportView,
 )
 from .admin_views import AdminUserListView, AdminUserDetailView
 
@@ -43,6 +44,9 @@ urlpatterns = [
     # Web Push
     path("push/vapid-key/",  PushVapidKeyView.as_view(),   name="push-vapid-key"),
     path("push/subscribe/",  PushSubscribeView.as_view(),  name="push-subscribe"),
+    # GDPR
+    path("me/",             AccountDeletionView.as_view(), name="account-deletion"),
+    path("me/data-export/", DataExportView.as_view(),      name="data-export"),
     # Admin-only user management
     path("admin/list/",              AdminUserListView.as_view(),   name="admin-user-list"),
     path("admin/<int:pk>/",          AdminUserDetailView.as_view(), name="admin-user-detail"),

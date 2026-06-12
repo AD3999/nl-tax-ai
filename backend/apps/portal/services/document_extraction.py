@@ -108,13 +108,28 @@ def extract_from_document(document) -> dict:
     mime_type = document.mime_type.lower()
     text_content = ""
 
-    # ── Step 1: Extract text from PDF ─────────────────────────────────────
-    if "pdf" in mime_type:
+    # ── Step 1: Extract text via OCR provider (or pdfminer fallback) ─────
+    import os
+    ocr_provider_name = os.environ.get("OCR_PROVIDER", "none").lower()
+
+    if ocr_provider_name != "none":
+        # Use configured OCR provider (Google Vision / Document AI / Azure)
+        try:
+            from apps.portal.ocr.factory import get_ocr_provider
+            ocr = get_ocr_provider()
+            ocr_result = ocr.extract(document.file.path)
+            text_content = ocr_result.text
+            logger.info("OCR provider '%s' confidence=%.2f", ocr_result.provider, ocr_result.confidence)
+        except Exception as e:
+            logger.warning("OCR provider failed, falling back to pdfminer: %s", e)
+
+    if not text_content and "pdf" in mime_type:
+        # pdfminer fallback (always available, no API key needed)
         try:
             from pdfminer.high_level import extract_text as pdf_extract_text
             text_content = pdf_extract_text(document.file.path) or ""
         except Exception as e:
-            logger.debug(f"PDF text extraction skipped: {e}")
+            logger.debug("PDF text extraction skipped: %s", e)
 
     # ── Step 2: Classify ──────────────────────────────────────────────────
     doc_type = classify_document_type(filename, mime_type, text_content)
