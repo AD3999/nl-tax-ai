@@ -70,9 +70,9 @@ interface RuleChange {
 // ── Style maps ────────────────────────────────────────────────────────────────
 
 const SEV: Record<string, { bg: string; border: string; dot: string; label: string }> = {
-  critical: { bg: "var(--danger-soft)", border: "oklch(0.85 0.07 25)", dot: "var(--danger)",   label: "URGENT" },
-  warning:  { bg: "var(--warn-soft)",   border: "oklch(0.85 0.07 75)", dot: "var(--warn)",     label: "ALERT"  },
-  info:     { bg: "var(--accent-soft)", border: "var(--accent-line)",  dot: "var(--sage-600)", label: "INFO"   },
+  critical: { bg: "var(--danger-subtle)", border: "var(--danger-border)", dot: "var(--danger)", label: "URGENT" },
+  warning:  { bg: "var(--warn-subtle)",   border: "var(--warn-border)",   dot: "var(--warn)",   label: "ALERT"  },
+  info:     { bg: "var(--blue-subtle)",   border: "var(--blue-border)",   dot: "var(--blue)",   label: "INFO"   },
 };
 
 const CAT_ICON: Record<string, string> = {
@@ -1200,22 +1200,22 @@ export default function DashboardPage() {
           <SummaryCard title={L("Totale belasting", "Total tax", "مجموع مالیات")} value={`€${Math.round(totalTax).toLocaleString("nl-NL")}`} subtitle="2026" accent loading={loadingCalc}
             icon={<TrendingUp size={16} />} iconBg="var(--accent-soft)" iconColor="var(--sage-600)" />
           <SummaryCard title={L("Effectief tarief", "Effective rate", "نرخ مؤثر")} value={loadingCalc ? "—" : `${(effectiveRate * 100).toFixed(1)}%`} subtitle={loadingCalc ? undefined : `~€${Math.round(effectiveRate * 100)} per €100`} loading={loadingCalc}
-            icon={<Percent size={16} />} iconBg="oklch(0.93 0.04 265)" iconColor="var(--blue)" />
+            icon={<Percent size={16} />} iconBg="var(--blue-subtle)" iconColor="var(--blue)" />
           <SummaryCard title={L("Maandelijks reserveren", "Monthly reserve", "ذخیره ماهانه")} value={`€${Math.round(monthlyRsrv).toLocaleString("nl-NL")}`} subtitle={L("Apart zetten", "Set aside", "کنار بگذارید")} loading={loadingCalc}
-            icon={<PiggyBank size={16} />} iconBg="oklch(0.93 0.04 265)" iconColor="var(--blue)" />
+            icon={<PiggyBank size={16} />} iconBg="var(--blue-subtle)" iconColor="var(--blue)" />
           {userType === "zzp" ? (
             <SummaryCard title={L("Wet DBA risico", "Wet DBA risk", "ریسک Wet DBA")}
               value={wetDba ? wetDba.charAt(0).toUpperCase() + wetDba.slice(1).toLowerCase() : "—"}
               subtitle={wetDba ? undefined : L("Nog niet berekend", "Not yet calculated", "هنوز محاسبه نشده")}
               valueColor={wetDba === "high" ? "var(--danger)" : wetDba === "medium" ? "var(--warn)" : wetDba === "low" ? "var(--ok)" : undefined}
               loading={loadingCalc}
-              icon={<ShieldAlert size={16} />} iconBg={wetDba === "high" ? "oklch(0.96 0.03 25)" : wetDba === "medium" ? "oklch(0.96 0.04 70)" : "oklch(0.93 0.04 265)"} iconColor={wetDba === "high" ? "var(--danger)" : wetDba === "medium" ? "var(--warn)" : "var(--blue)"} />
+              icon={<ShieldAlert size={16} />} iconBg={wetDba === "high" ? "var(--danger-subtle)" : wetDba === "medium" ? "var(--warn-subtle)" : "var(--blue-subtle)"} iconColor={wetDba === "high" ? "var(--danger)" : wetDba === "medium" ? "var(--warn)" : "var(--blue)"} />
           ) : (
             <SummaryCard title="Tax Health" value={loadingCalc || loadingAlerts ? "—" : String(healthScore)}
               subtitle={healthScore >= 80 ? "Good" : healthScore >= 55 ? "Fair" : "Needs attention"}
               valueColor={healthScore >= 80 ? "var(--ok)" : healthScore >= 55 ? "var(--warn)" : "var(--danger)"}
               loading={loadingCalc || loadingAlerts}
-              icon={<Activity size={16} />} iconBg="oklch(0.93 0.04 265)" iconColor="var(--blue)" />
+              icon={<Activity size={16} />} iconBg="var(--blue-subtle)" iconColor="var(--blue)" />
           )}
         </div>
       )}

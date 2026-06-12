@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useMobile } from "../hooks/useMobile";
 import type { ZZPSummary, RevenueEntry, ExpenseEntry, HoursEntry, MileageEntry, HoursResponse, MileageResponse } from "../api/zzp";
 import {
   fetchZZPSummary, fetchRevenue, fetchExpenses, fetchHours, fetchMileage,
@@ -92,10 +93,10 @@ function fmt(n: number) {
 // ── Quick action buttons ──────────────────────────────────────────────────────
 function QuickActions({ t, onAdd }: { t: T; onAdd: (tab: number) => void }) {
   const actions = [
-    { label: t.addRevenue, tab: 1, bg: "oklch(0.22 0.06 145)", accent: "oklch(0.72 0.18 145)", icon: "↑" },
-    { label: t.addExpense, tab: 2, bg: "oklch(0.22 0.06 15)",  accent: "oklch(0.72 0.18 15)",  icon: "↓" },
-    { label: t.addHours,   tab: 3, bg: "oklch(0.22 0.06 240)", accent: "oklch(0.68 0.18 240)", icon: "⏱" },
-    { label: t.addMileage, tab: 4, bg: "oklch(0.22 0.06 290)", accent: "oklch(0.68 0.16 290)", icon: "🛣" },
+    { label: t.addRevenue, tab: 1, bg: "var(--ok-subtle)",     accent: "var(--ok)",     icon: "↑" },
+    { label: t.addExpense, tab: 2, bg: "var(--danger-subtle)", accent: "var(--danger)", icon: "↓" },
+    { label: t.addHours,   tab: 3, bg: "var(--info-subtle)",   accent: "var(--info)",   icon: "⏱" },
+    { label: t.addMileage, tab: 4, bg: "var(--purple-subtle)", accent: "var(--purple)", icon: "🛣" },
   ];
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "var(--sp-3)", marginBottom: "var(--sp-6)" }}>
@@ -113,7 +114,7 @@ function QuickActions({ t, onAdd }: { t: T; onAdd: (tab: number) => void }) {
             transition: "transform 0.1s, box-shadow 0.1s",
             color: "var(--text)",
           }}
-          onMouseOver={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)"; }}
+          onMouseOver={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "var(--sh-md)"; }}
           onMouseOut={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
         >
           <span style={{
@@ -139,10 +140,10 @@ function OverviewTab({ summary, t }: { summary: ZZPSummary | null; t: T }) {
   if (!summary) return <div className="skel" style={{ height: 300 }} />;
 
   const kpis = [
-    { label: t.revenue,    value: fmt(summary.total_revenue),  accent: "oklch(0.72 0.18 145)", icon: "↑", positive: true },
-    { label: t.expenses,   value: fmt(summary.total_expenses), accent: "oklch(0.72 0.18 15)",  icon: "↓", positive: false },
-    { label: t.profit,     value: fmt(summary.gross_profit),   accent: "var(--blue)",           icon: "=", positive: summary.gross_profit >= 0 },
-    { label: t.vatPayable, value: fmt(summary.vat_payable),    accent: "oklch(0.72 0.18 55)",   icon: "%", positive: false },
+    { label: t.revenue,    value: fmt(summary.total_revenue),  accent: "var(--ok)",     icon: "↑", positive: true },
+    { label: t.expenses,   value: fmt(summary.total_expenses), accent: "var(--danger)", icon: "↓", positive: false },
+    { label: t.profit,     value: fmt(summary.gross_profit),   accent: "var(--blue)",   icon: "=", positive: summary.gross_profit >= 0 },
+    { label: t.vatPayable, value: fmt(summary.vat_payable),    accent: "var(--warn)",   icon: "%", positive: false },
   ];
 
   return (
@@ -185,7 +186,7 @@ function OverviewTab({ summary, t }: { summary: ZZPSummary | null; t: T }) {
           {summary.quarters.map(q => (
             <div key={q.quarter} style={{ textAlign: "center", padding: "var(--sp-3)", background: "var(--bg-2)", borderRadius: 8 }}>
               <div style={{ fontWeight: 700, color: "var(--text-3)", fontSize: "0.8rem" }}>{t.q}{q.quarter}</div>
-              <div style={{ fontWeight: 800, color: q.vat_payable > 0 ? "var(--red-soft, #e74c3c)" : "var(--green)", marginTop: 4 }}>
+              <div style={{ fontWeight: 800, color: q.vat_payable > 0 ? "var(--danger)" : "var(--green)", marginTop: 4 }}>
                 {fmt(q.vat_payable)}
               </div>
               <div style={{ fontSize: "0.75rem", color: "var(--text-3)" }}>{fmt(q.revenue)} rev</div>
@@ -199,6 +200,7 @@ function OverviewTab({ summary, t }: { summary: ZZPSummary | null; t: T }) {
 
 // ── Revenue tab ───────────────────────────────────────────────────────────────
 function RevenueTab({ t, entries, onRefresh }: { t: T; entries: RevenueEntry[]; onRefresh: () => void }) {
+  const isMobile = useMobile();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ date: "", description: "", client_name: "", amount_excl_vat: "", vat_rate: 21, payment_status: "unpaid" });
 
@@ -217,7 +219,7 @@ function RevenueTab({ t, entries, onRefresh }: { t: T; entries: RevenueEntry[]; 
 
       {showForm && (
         <div className="card" style={{ marginBottom: "var(--sp-4)" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: "var(--sp-3)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr 1fr", gap: "var(--sp-3)" }}>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.date}</label><input className="input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.description}</label><input className="input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.client}</label><input className="input" value={form.client_name} onChange={e => setForm({ ...form, client_name: e.target.value })} /></div>
@@ -243,7 +245,7 @@ function RevenueTab({ t, entries, onRefresh }: { t: T; entries: RevenueEntry[]; 
             <div style={{ color: "var(--text-3)", fontSize: "0.85rem" }}>{e.client_name}</div>
             <div style={{ fontWeight: 700 }}>{fmt(+e.amount_excl_vat)}</div>
             <span className="pill-blue" style={{ fontSize: "0.75rem" }}>{e.vat_rate}% BTW</span>
-            <span style={{ fontSize: "0.75rem", color: e.payment_status === "paid" ? "var(--green)" : "var(--amber, #f39c12)" }}>
+            <span style={{ fontSize: "0.75rem", color: e.payment_status === "paid" ? "var(--green)" : "var(--warn)" }}>
               {e.payment_status === "paid" ? t.paid : e.payment_status === "overdue" ? t.overdue : t.unpaid}
             </span>
             <button className="btn btn-ghost btn-sm" onClick={() => { deleteRevenue(e.id).then(onRefresh); }}>✕</button>
@@ -257,6 +259,7 @@ function RevenueTab({ t, entries, onRefresh }: { t: T; entries: RevenueEntry[]; 
 
 // ── Expenses tab ──────────────────────────────────────────────────────────────
 function ExpensesTab({ t, entries, onRefresh }: { t: T; entries: ExpenseEntry[]; onRefresh: () => void }) {
+  const isMobile = useMobile();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ date: "", description: "", category: "other", amount_gross: "", vat_rate: 21, business_use_pct: 100 });
 
@@ -275,7 +278,7 @@ function ExpensesTab({ t, entries, onRefresh }: { t: T; entries: ExpenseEntry[];
 
       {showForm && (
         <div className="card" style={{ marginBottom: "var(--sp-4)" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr 1fr", gap: "var(--sp-3)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr 1fr 1fr", gap: "var(--sp-3)" }}>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.date}</label><input className="input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.description}</label><input className="input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.category}</label>
@@ -317,6 +320,7 @@ function ExpensesTab({ t, entries, onRefresh }: { t: T; entries: ExpenseEntry[];
 
 // ── Hours tab ─────────────────────────────────────────────────────────────────
 function HoursTab({ t, data, onRefresh }: { t: T; data: HoursResponse | null; onRefresh: () => void }) {
+  const isMobile = useMobile();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ date: "", hours: "", description: "", client_name: "" });
 
@@ -349,7 +353,7 @@ function HoursTab({ t, data, onRefresh }: { t: T; data: HoursResponse | null; on
 
       {showForm && (
         <div className="card" style={{ marginBottom: "var(--sp-4)" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 2fr 1fr", gap: "var(--sp-3)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 2fr 1fr", gap: "var(--sp-3)" }}>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.date}</label><input className="input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Uren</label><input className="input" type="number" step="0.5" value={form.hours} onChange={e => setForm({ ...form, hours: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.description}</label><input className="input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
@@ -379,6 +383,7 @@ function HoursTab({ t, data, onRefresh }: { t: T; data: HoursResponse | null; on
 
 // ── Mileage tab ───────────────────────────────────────────────────────────────
 function MileageTab({ t, data, onRefresh }: { t: T; data: MileageResponse | null; onRefresh: () => void }) {
+  const isMobile = useMobile();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ date: "", from_location: "", to_location: "", km: "", purpose: "", is_business: true });
 
@@ -410,7 +415,7 @@ function MileageTab({ t, data, onRefresh }: { t: T; data: MileageResponse | null
 
       {showForm && (
         <div className="card" style={{ marginBottom: "var(--sp-4)" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr", gap: "var(--sp-3)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr 1fr 1fr", gap: "var(--sp-3)" }}>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.date}</label><input className="input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.from}</label><input className="input" value={form.from_location} onChange={e => setForm({ ...form, from_location: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.to}</label><input className="input" value={form.to_location} onChange={e => setForm({ ...form, to_location: e.target.value })} /></div>
@@ -467,7 +472,7 @@ function VATTab({ t, summary }: { t: T; summary: ZZPSummary | null }) {
                   <td style={{ padding: "var(--sp-3)", textAlign: "right" }}>{fmt(q.revenue)}</td>
                   <td style={{ padding: "var(--sp-3)", textAlign: "right" }}>{fmt(q.expenses)}</td>
                   <td style={{ padding: "var(--sp-3)", textAlign: "right", fontWeight: 700 }}>{fmt(q.profit)}</td>
-                  <td style={{ padding: "var(--sp-3)", textAlign: "right", fontWeight: 700, color: q.vat_payable > 0 ? "var(--red-soft, #e74c3c)" : "var(--green)" }}>
+                  <td style={{ padding: "var(--sp-3)", textAlign: "right", fontWeight: 700, color: q.vat_payable > 0 ? "var(--danger)" : "var(--green)" }}>
                     {fmt(q.vat_payable)}
                   </td>
                   <td style={{ padding: "var(--sp-3)", textAlign: "right", color: "var(--text-3)", fontSize: "0.85rem" }}>{deadlines[q.quarter - 1]}</td>
@@ -479,7 +484,7 @@ function VATTab({ t, summary }: { t: T; summary: ZZPSummary | null }) {
               <td style={{ padding: "var(--sp-3)", textAlign: "right" }}>{fmt(summary.total_revenue)}</td>
               <td style={{ padding: "var(--sp-3)", textAlign: "right" }}>{fmt(summary.total_expenses)}</td>
               <td style={{ padding: "var(--sp-3)", textAlign: "right" }}>{fmt(summary.gross_profit)}</td>
-              <td style={{ padding: "var(--sp-3)", textAlign: "right", color: summary.vat_payable > 0 ? "var(--red-soft, #e74c3c)" : "var(--green)" }}>{fmt(summary.vat_payable)}</td>
+              <td style={{ padding: "var(--sp-3)", textAlign: "right", color: summary.vat_payable > 0 ? "var(--danger)" : "var(--green)" }}>{fmt(summary.vat_payable)}</td>
               <td />
             </tr>
           </tbody>

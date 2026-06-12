@@ -158,7 +158,10 @@
   --warn-soft:   var(--warn-subtle);
   --danger-soft: var(--danger-subtle);
   --info:        oklch(0.60 0.18 240);
-  --info-soft:   oklch(0.16 0.05 240);
+  --info-subtle: oklch(0.16 0.05 240);
+  --info-border: oklch(0.34 0.10 240);
+  --info-text:   oklch(0.76 0.15 240);
+  --info-soft:   var(--info-subtle);
 }
 
 /* ─── Light theme ────────────────────────────────────────────── */
@@ -187,7 +190,7 @@
   --text:        oklch(0.10 0.018 265);
   --text-2:      oklch(0.30 0.022 265);
   --text-3:      oklch(0.46 0.016 265);
-  --text-4:      oklch(0.62 0.012 265);
+  --text-4:      oklch(0.54 0.012 265);
 
   --ok:           oklch(0.50 0.18 165);
   --ok-subtle:    oklch(0.93 0.040 165);
@@ -207,6 +210,12 @@
   --purple:        oklch(0.50 0.22 290);
   --purple-subtle: oklch(0.94 0.038 290);
   --purple-text:   oklch(0.42 0.22 290);
+
+  --info:        oklch(0.46 0.18 240);
+  --info-subtle: oklch(0.92 0.035 240);
+  --info-border: oklch(0.72 0.10 240);
+  --info-text:   oklch(0.36 0.18 240);
+  --info-soft:   var(--info-subtle);
 
   --sh-sm:    0 1px 3px oklch(0 0 0 / 0.10), 0 1px 2px oklch(0 0 0 / 0.06);
   --sh-md:    0 4px 14px oklch(0 0 0 / 0.08), 0 2px 6px oklch(0 0 0 / 0.04);

@@ -1,7 +1,74 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 12 Jun 2026 (session 15 — UI polish + chat platform navigation).
+> Last updated: 12 Jun 2026 (session 16 — full UI color + responsiveness audit).
+
+---
+
+## Session — 12 Jun 2026 (session 16) ✅ Complete
+
+### UI Color System + Responsiveness Audit (feat/ui-color-responsive-polish → master)
+
+Comprehensive pass across all 21+ pages and components to enforce the design system.
+
+---
+
+#### A — Semantic color tokens (hardcoded oklch → CSS variables)
+
+Replaced all 113+ hardcoded `oklch(...)` color values in page components with semantic CSS custom properties. Hardcoded OKLCH values are fixed and do not adapt to light/dark theme switching.
+
+**Consistent user-type color mapping enforced:**
+- ZZP → `var(--blue)`, Employee → `var(--info)`, Expat → `var(--warn)`, DGA → `var(--purple)`, Accountant → `var(--danger)`
+
+**Files updated:** `AccountantPortalPage.tsx`, `RegisterPage.tsx`, `ZZPWorkspacePage.tsx`, `EngagementPage.tsx`, `TaxCalendarPage.tsx`, `LoginPage.tsx`, `CalculatorPage.tsx`, `DashboardPage.tsx`, `ChatPage.tsx`, `IntakePage.tsx`, `ClientPortalPage.tsx`, `AccountantClientDetailPage.tsx`
+
+**index.css additions:** Added `--info-subtle`, `--info-border`, `--info-text` to both dark and light mode (previously missing).
+
+---
+
+#### B — Responsiveness
+
+Added `useMobile()` hook + responsive grid collapse to pages that were missing it:
+
+- **ClientProfilePage.tsx** — 3× `"1fr 1fr"` grids → `isMobile ? "1fr" : "1fr 1fr"`
+- **AccountantSettingsPage.tsx** — settings form grid → responsive
+- **ZZPWorkspacePage.tsx** — revenue/expense/hours/mileage entry forms (4 sub-components) → all 3–5 column grids collapse to single column on mobile
+
+---
+
+#### C — Contrast
+
+- `--text-4` in light mode: raised from `oklch(0.62 ...)` → `oklch(0.54 ...)` (~3.5:1 contrast against near-white backgrounds, passes WCAG for large/supplementary text)
+
+---
+
+#### D — Remaining token fixes
+
+- AccountantPortalPage tab active underline: `var(--sage-600)` → `var(--blue)` (was showing raw color in elements that targeted it differently)
+
+---
+
+#### Bug fix — File upload 500 error
+
+Two portal and two users/zzp Django migrations were unapplied, causing `IntegrityError` / 500 on every document write:
+- `portal.0004_add_reminder_log_portal_message`
+- `portal.0005_gdpr_document_retention`
+- `users.0008` through `users.0010`
+- `zzp.0001_initial_zzp_workspace`
+
+All applied via `python manage.py migrate`. Upload works again for both client and accountant.
+
+---
+
+#### Checks
+
+- [x] Zero hardcoded `oklch()` color values remain in page files (black overlay exceptions kept)
+- [x] All user-type color assignments consistent across Dashboard, Chat, Register, Calculator, Intake
+- [x] `--info` color set complete in both dark and light theme
+- [x] All grids responsive via `useMobile()` — no fixed-column layouts on mobile
+- [x] `--text-4` contrast improved in light mode
+- [x] Document upload (client + accountant) works — 500 error fixed by running migrations
+- [x] Legacy aliases (`--sage-600`, `--ink-*`, `--paper`) preserved and still resolve correctly
 
 ---
 

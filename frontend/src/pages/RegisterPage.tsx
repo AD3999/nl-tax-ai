@@ -11,11 +11,11 @@ import { useToast } from "../context/ToastContext";
 type ApiError = { response?: { data?: Record<string, string[]> } };
 
 const USER_TYPES = {
-  zzp:        { label: "ZZP",        glyph: "ZZ", color: "var(--sage-600)",      desc: "Freelance · self-employed"   },
-  employee:   { label: "Employee",   glyph: "EM", color: "oklch(0.55 0.12 230)", desc: "Salaried · payslip"          },
-  expat:      { label: "Expat",      glyph: "EX", color: "oklch(0.62 0.13 50)",  desc: "30% ruling · foreign income" },
-  dga:        { label: "DGA",        glyph: "DG", color: "oklch(0.55 0.10 290)", desc: "Director · own BV"           },
-  accountant: { label: "Accountant", glyph: "AC", color: "oklch(0.46 0.14 15)",  desc: "Tax advisor · firm"          },
+  zzp:        { label: "ZZP",        glyph: "ZZ", color: "var(--blue)",          desc: "Freelance · self-employed"   },
+  employee:   { label: "Employee",   glyph: "EM", color: "var(--info)",          desc: "Salaried · payslip"          },
+  expat:      { label: "Expat",      glyph: "EX", color: "var(--warn)",          desc: "30% ruling · foreign income" },
+  dga:        { label: "DGA",        glyph: "DG", color: "var(--purple)",        desc: "Director · own BV"           },
+  accountant: { label: "Accountant", glyph: "AC", color: "var(--danger)",        desc: "Tax advisor · firm"          },
 } as const;
 
 const USER_TYPE_TX: Record<string, {
@@ -177,9 +177,9 @@ export default function RegisterPage() {
   const acType      = USER_TYPES.accountant;
 
   return (
-    <div style={{ flex: 1, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1.1fr 1fr", minHeight: "calc(100vh - 64px)" }}>
+    <div style={{ flex: 1, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", minHeight: "calc(100vh - 64px)" }}>
       {/* Left — form */}
-      <div style={{ padding: isMobile ? "28px 20px" : "36px 56px", display: "flex", flexDirection: "column", background: "var(--paper)", overflow: "auto" }}>
+      <div style={{ padding: isMobile ? "var(--sp-8) var(--sp-5)" : "var(--sp-10) var(--sp-12)", display: "flex", flexDirection: "column", background: "var(--paper)", overflow: "auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Wordmark size={16} />
           <Link to="/" style={{ fontSize: 13, color: "var(--ink-3)" }}>
@@ -205,7 +205,7 @@ export default function RegisterPage() {
                 {lang === "nl" ? "Ik ben een" : lang === "fa" ? "وضعیت شغلی من:" : "I'm a"}
               </div>
               {/* 2×2 client grid */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 8 }}>
                 {clientTypes.map(([k, v]) => {
                   const on = userType === k;
                   return (
@@ -234,11 +234,11 @@ export default function RegisterPage() {
                   <button type="button" onClick={() => setUserType("accountant")} style={{
                     marginTop: 8, width: "100%", textAlign: "start", padding: "12px 14px",
                     borderRadius: "var(--r-sm)",
-                    border: `1px solid ${on ? "oklch(0.46 0.14 15)" : "var(--hairline-2)"}`,
-                    background: on ? "oklch(0.98 0.02 15)" : "var(--paper)",
+                    border: `1px solid ${on ? "var(--danger-border)" : "var(--hairline-2)"}`,
+                    background: on ? "var(--danger-subtle)" : "var(--paper)",
                     display: "flex", alignItems: "center", gap: 12, cursor: "pointer", transition: "all .15s",
                   }}>
-                    <span style={{ width: 32, height: 32, borderRadius: 8, background: acType.color, color: "white", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", flexShrink: 0 }}>
+                    <span style={{ width: 32, height: 32, borderRadius: 8, background: acType.color, color: "#fff", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", flexShrink: 0 }}>
                       {acType.glyph}
                     </span>
                     <div>
@@ -249,7 +249,7 @@ export default function RegisterPage() {
                         {USER_TYPE_TX.accountant.desc[lang]}
                       </div>
                     </div>
-                    <span style={{ marginInlineStart: "auto", fontSize: 11, padding: "3px 8px", borderRadius: 99, background: "oklch(0.46 0.14 15 / 0.12)", color: "oklch(0.46 0.14 15)", fontWeight: 600 }}>
+                    <span style={{ marginInlineStart: "auto", fontSize: 11, padding: "3px 8px", borderRadius: 99, background: "var(--danger-subtle)", color: "var(--danger-text)", fontWeight: 600 }}>
                       B2B
                     </span>
                   </button>
@@ -310,8 +310,8 @@ export default function RegisterPage() {
               {/* Extra fields for accountant only */}
               {isAccountant && (
                 <>
-                  <div style={{ padding: "14px 16px", background: "oklch(0.98 0.02 15)", borderRadius: "var(--r-sm)", border: "1px solid oklch(0.46 0.14 15 / 0.20)" }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "oklch(0.46 0.14 15)", marginBottom: 12 }}>
+                  <div style={{ padding: "14px 16px", background: "var(--danger-subtle)", borderRadius: "var(--r-sm)", border: "1px solid var(--danger-border)" }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--danger-text)", marginBottom: 12 }}>
                       {lang === "nl" ? "Kantoorgegevens (optioneel)" : lang === "fa" ? "اطلاعات شرکت (اختیاری)" : "Firm details (optional)"}
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>

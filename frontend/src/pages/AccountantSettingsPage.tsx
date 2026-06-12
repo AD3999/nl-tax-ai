@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { client as apiClient } from "../api/client";
+import { useMobile } from "../hooks/useMobile";
 
 interface AccountantSetup {
   firm_name: string;
@@ -21,6 +22,7 @@ interface AccountantSetup {
 
 export default function AccountantSettingsPage() {
   const { i18n } = useTranslation();
+  const isMobile = useMobile();
   const isFA = i18n.language?.startsWith("fa");
   const isNL = i18n.language?.startsWith("nl");
 
@@ -92,7 +94,7 @@ export default function AccountantSettingsPage() {
       {/* Contact info */}
       <div className="card" style={{ marginBottom: "var(--sp-5)" }}>
         <h2 style={{ fontWeight: 700, fontSize: "1rem", marginBottom: "var(--sp-4)" }}>{T.contact}</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-4)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-4)" }}>
           {field("firm_name", T.firmName)}
           {field("phone", T.phone)}
           {field("kvk_number", T.kvk)}

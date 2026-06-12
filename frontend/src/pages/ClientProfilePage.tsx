@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { client as apiClient } from "../api/client";
+import { useMobile } from "../hooks/useMobile";
 
 interface ClientProfile {
   id: number;
@@ -40,6 +41,7 @@ const SECTION_HEAD: React.CSSProperties = {
 
 export default function ClientProfilePage() {
   const { i18n } = useTranslation();
+  const isMobile = useMobile();
   const isFA = i18n.language?.startsWith("fa");
   const isNL = i18n.language?.startsWith("nl");
   const dir  = isFA ? "rtl" : "ltr";
@@ -103,7 +105,7 @@ export default function ClientProfilePage() {
         {[0, 1, 2].map(i => (
           <div key={i} className="card" style={{ marginBottom: "var(--sp-4)", padding: "var(--sp-6)" }}>
             <div className="skel" style={{ height: 10, width: 130, marginBottom: "var(--sp-5)", borderRadius: 3 }} />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-4)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-4)" }}>
               {[0, 1, 2, 3].map(j => (
                 <div key={j}>
                   <div className="skel" style={{ height: 8, width: 70, marginBottom: 8, borderRadius: 3 }} />
@@ -132,7 +134,7 @@ export default function ClientProfilePage() {
       <div className="card" style={{ marginBottom: "var(--sp-4)", padding: "var(--sp-6)" }}>
         <p style={SECTION_HEAD}>{T.personal}</p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-4)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-4)" }}>
 
           {/* Full Name */}
           <div>
@@ -213,7 +215,7 @@ export default function ClientProfilePage() {
       <div className="card" style={{ marginBottom: "var(--sp-4)", padding: "var(--sp-6)" }}>
         <p style={SECTION_HEAD}>{T.tax}</p>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-4)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-4)" }}>
 
           {/* BSN */}
           <div>

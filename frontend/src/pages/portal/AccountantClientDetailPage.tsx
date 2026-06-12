@@ -10,7 +10,7 @@ import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
 
 const STATUS_COLOR: Record<string, string> = {
   draft: "var(--ink-4)", collecting: "var(--sage-600)",
-  waiting_client: "oklch(0.62 0.13 50)", needs_review: "oklch(0.62 0.13 50)",
+  waiting_client: "var(--warn)", needs_review: "var(--warn)",
   ready_to_file: "var(--sage-600)", filed: "var(--sage-600)",
   completed: "var(--sage-600)", blocked: "var(--danger)",
 };
@@ -115,7 +115,7 @@ export default function AccountantClientDetailPage() {
         </div>
 
         {error && (
-          <div className="card" style={{ padding: "var(--sp-3)", background: "oklch(0.95 0.03 25)", color: "var(--danger)", marginBottom: "var(--sp-4)", fontSize: "var(--text-sm)" }}>
+          <div className="card" style={{ padding: "var(--sp-3)", background: "var(--danger-subtle)", color: "var(--danger-text)", marginBottom: "var(--sp-4)", fontSize: "var(--text-sm)" }}>
             {error}
           </div>
         )}
