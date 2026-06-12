@@ -3,6 +3,7 @@ from .models import (
     AccountantClientProfile, TaxEngagement, DocumentRequest,
     ClientDocument, ExtractedIncome, ExtractedExpense,
     ChecklistItem, AccountantAction, PortalAuditLog,
+    ReminderLog, PortalMessage,
 )
 
 
@@ -164,3 +165,53 @@ class PortalAuditLogSerializer(serializers.ModelSerializer):
             "entity_type", "entity_id", "before_json", "after_json", "created_at",
         ]
         read_only_fields = fields
+
+
+class ReminderLogSerializer(serializers.ModelSerializer):
+    sent_by_email = serializers.SerializerMethodField()
+    client_name   = serializers.SerializerMethodField()
+
+    def get_sent_by_email(self, obj):
+        return obj.sent_by.email if obj.sent_by else None
+
+    def get_client_name(self, obj):
+        return obj.client_profile.display_name
+
+    class Meta:
+        model = ReminderLog
+        fields = [
+            "id", "engagement", "client_profile", "client_name",
+            "sent_by", "sent_by_email", "reminder_type", "channel",
+            "subject", "body", "delivered", "created_at",
+        ]
+        read_only_fields = ["id", "sent_by", "sent_by_email", "client_name", "created_at"]
+
+
+class PortalMessageSerializer(serializers.ModelSerializer):
+    sender_email = serializers.SerializerMethodField()
+    sender_name  = serializers.SerializerMethodField()
+    is_own       = serializers.SerializerMethodField()
+
+    def get_sender_email(self, obj):
+        return obj.sender.email
+
+    def get_sender_name(self, obj):
+        name = f"{obj.sender.first_name} {obj.sender.last_name}".strip()
+        return name or obj.sender.email
+
+    def get_is_own(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.sender_id == request.user.id
+        return False
+
+    class Meta:
+        model = PortalMessage
+        fields = [
+            "id", "engagement", "client_profile", "sender", "sender_email",
+            "sender_name", "is_own", "body", "is_read", "read_at", "created_at",
+        ]
+        read_only_fields = [
+            "id", "sender", "sender_email", "sender_name", "is_own",
+            "is_read", "read_at", "created_at",
+        ]

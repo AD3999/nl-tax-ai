@@ -1,7 +1,7 @@
 """
 Tests for portal API endpoints: authentication, object-level permissions, CRUD.
 """
-import pytest
+from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from apps.portal.models import AccountantClientProfile, TaxEngagement, ChecklistItem
@@ -9,172 +9,149 @@ from apps.portal.models import AccountantClientProfile, TaxEngagement, Checklist
 User = get_user_model()
 
 
-@pytest.fixture
-def api():
-    return APIClient()
-
-
-@pytest.fixture
-def accountant(db):
-    user = User.objects.create_user(email="acc@test.com", password="pass123", is_staff=True)
-    return user
-
-
-@pytest.fixture
-def other_accountant(db):
-    return User.objects.create_user(email="other@test.com", password="pass123", is_staff=True)
-
-
-@pytest.fixture
-def regular_user(db):
-    return User.objects.create_user(email="user@test.com", password="pass123")
-
-
-@pytest.fixture
-def profile(db, accountant):
-    return AccountantClientProfile.objects.create(
-        accountant_user=accountant,
-        email="client@example.com",
-        first_name="Jan",
-        last_name="Janssen",
-        client_type="zzp",
-        tax_year=2026,
-    )
-
-
-@pytest.fixture
-def engagement(db, accountant, profile):
-    return TaxEngagement.objects.create(
-        accountant=accountant,
-        client_profile=profile,
-        tax_year=2026,
-        engagement_type="income_tax",
-    )
-
-
-def auth_header(client_obj, user):
+def auth_header(api_client, user):
     from rest_framework_simplejwt.tokens import RefreshToken
     refresh = RefreshToken.for_user(user)
-    client_obj.credentials(HTTP_AUTHORIZATION=f"Bearer {str(refresh.access_token)}")
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {str(refresh.access_token)}")
 
 
-class TestClientListEndpoint:
-    def test_requires_auth(self, api):
-        r = api.get("/api/portal/clients/")
-        assert r.status_code == 401
+class PortalAPITestBase(TestCase):
+    def setUp(self):
+        self.api = APIClient()
+        self.accountant = User.objects.create_user(username="acc", email="acc@test.com", password="pass123", role="accountant")
+        self.other_accountant = User.objects.create_user(username="other", email="other@test.com", password="pass123", role="accountant")
+        self.regular_user = User.objects.create_user(username="regularuser", email="user@test.com", password="pass123")
+        self.profile = AccountantClientProfile.objects.create(
+            accountant_user=self.accountant,
+            email="client@example.com",
+            first_name="Jan",
+            last_name="Janssen",
+            client_type="zzp",
+            tax_year=2026,
+        )
+        self.engagement = TaxEngagement.objects.create(
+            accountant=self.accountant,
+            client_profile=self.profile,
+            tax_year=2026,
+            engagement_type="income_tax",
+        )
 
-    def test_accountant_sees_own_clients(self, api, accountant, profile):
-        auth_header(api, accountant)
-        r = api.get("/api/portal/clients/")
-        assert r.status_code == 200
-        assert any(c["id"] == profile.id for c in r.data)
 
-    def test_other_accountant_cannot_see_clients(self, api, other_accountant, profile):
-        auth_header(api, other_accountant)
-        r = api.get("/api/portal/clients/")
-        assert r.status_code == 200
-        # Should be empty — other accountant's clients only
-        assert not any(c["id"] == profile.id for c in r.data)
+class TestClientListEndpoint(PortalAPITestBase):
+    def test_requires_auth(self):
+        r = self.api.get("/api/portal/clients/")
+        self.assertEqual(r.status_code, 401)
 
-    def test_create_client(self, api, accountant):
-        auth_header(api, accountant)
-        r = api.post("/api/portal/clients/", {
+    def test_accountant_sees_own_clients(self):
+        auth_header(self.api, self.accountant)
+        r = self.api.get("/api/portal/clients/")
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(any(c["id"] == self.profile.id for c in r.data))
+
+    def test_other_accountant_cannot_see_clients(self):
+        auth_header(self.api, self.other_accountant)
+        r = self.api.get("/api/portal/clients/")
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(any(c["id"] == self.profile.id for c in r.data))
+
+    def test_create_client(self):
+        auth_header(self.api, self.accountant)
+        r = self.api.post("/api/portal/clients/", {
             "email": "new@client.com",
             "first_name": "New",
             "client_type": "employee",
             "tax_year": 2026,
         }, format="json")
-        assert r.status_code == 201
-        assert r.data["email"] == "new@client.com"
+        self.assertEqual(r.status_code, 201)
+        self.assertEqual(r.data["email"], "new@client.com")
 
 
-class TestEngagementEndpoint:
-    def test_create_engagement_generates_checklist(self, api, accountant, profile):
-        auth_header(api, accountant)
-        r = api.post("/api/portal/engagements/", {
-            "client_profile": profile.id,
+class TestEngagementEndpoint(PortalAPITestBase):
+    def test_create_engagement_generates_checklist(self):
+        auth_header(self.api, self.accountant)
+        r = self.api.post("/api/portal/engagements/", {
+            "client_profile": self.profile.id,
             "tax_year": 2026,
             "engagement_type": "income_tax",
         }, format="json")
-        assert r.status_code == 201
+        self.assertEqual(r.status_code, 201)
         eng_id = r.data["id"]
-        # Checklist should have been auto-generated
         count = ChecklistItem.objects.filter(engagement_id=eng_id).count()
-        assert count > 0
+        self.assertGreater(count, 0)
 
-    def test_cannot_access_other_accountants_engagement(self, api, other_accountant, engagement):
-        auth_header(api, other_accountant)
-        r = api.get(f"/api/portal/engagements/{engagement.id}/")
-        assert r.status_code in (403, 404)
-
-
-class TestReadinessEndpoint:
-    def test_recalculate_returns_readiness(self, api, accountant, engagement):
-        auth_header(api, accountant)
-        r = api.post(f"/api/portal/engagements/{engagement.id}/recalculate-readiness/")
-        assert r.status_code == 200
-        assert "score" in r.data
-        assert "ready_to_file" in r.data
-        assert 0 <= r.data["score"] <= 100
+    def test_cannot_access_other_accountants_engagement(self):
+        auth_header(self.api, self.other_accountant)
+        r = self.api.get(f"/api/portal/engagements/{self.engagement.id}/")
+        self.assertIn(r.status_code, (403, 404))
 
 
-class TestChecklistEndpoint:
-    def test_get_checklist(self, api, accountant, engagement):
-        auth_header(api, accountant)
-        r = api.get(f"/api/portal/engagements/{engagement.id}/checklist/")
-        assert r.status_code == 200
-        assert isinstance(r.data, list)
+class TestReadinessEndpoint(PortalAPITestBase):
+    def test_recalculate_returns_readiness(self):
+        auth_header(self.api, self.accountant)
+        r = self.api.post(f"/api/portal/engagements/{self.engagement.id}/recalculate-readiness/")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("score", r.data)
+        self.assertIn("ready_to_file", r.data)
+        self.assertGreaterEqual(r.data["score"], 0)
+        self.assertLessEqual(r.data["score"], 100)
 
-    def test_update_checklist_item(self, api, accountant, engagement):
-        auth_header(api, accountant)
-        # Create a checklist item first
+
+class TestChecklistEndpoint(PortalAPITestBase):
+    def test_get_checklist(self):
+        auth_header(self.api, self.accountant)
+        r = self.api.get(f"/api/portal/engagements/{self.engagement.id}/checklist/")
+        self.assertEqual(r.status_code, 200)
+        self.assertIsInstance(r.data, list)
+
+    def test_update_checklist_item(self):
+        auth_header(self.api, self.accountant)
         item = ChecklistItem.objects.create(
-            engagement=engagement,
-            client_profile=engagement.client_profile,
+            engagement=self.engagement,
+            client_profile=self.engagement.client_profile,
             title="Test item",
             stable_key="test-item",
         )
-        r = api.patch(f"/api/portal/checklist/{item.id}/", {"status": "accepted"}, format="json")
-        assert r.status_code == 200
-        assert r.data["status"] == "accepted"
+        r = self.api.patch(f"/api/portal/checklist/{item.id}/", {"status": "accepted"}, format="json")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data["status"], "accepted")
 
 
-class TestRisksEndpoint:
-    def test_risks_returns_opportunities_and_risks(self, api, accountant, engagement):
-        auth_header(api, accountant)
-        r = api.get(f"/api/portal/engagements/{engagement.id}/risks/")
-        assert r.status_code == 200
-        assert "opportunities" in r.data
-        assert "risks" in r.data
-        assert isinstance(r.data["opportunities"], list)
-        assert isinstance(r.data["risks"], list)
+class TestRisksEndpoint(PortalAPITestBase):
+    def test_risks_returns_opportunities_and_risks(self):
+        auth_header(self.api, self.accountant)
+        r = self.api.get(f"/api/portal/engagements/{self.engagement.id}/risks/")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("opportunities", r.data)
+        self.assertIn("risks", r.data)
+        self.assertIsInstance(r.data["opportunities"], list)
+        self.assertIsInstance(r.data["risks"], list)
 
 
-class TestAuditEndpoint:
-    def test_audit_log_accessible(self, api, accountant, engagement):
-        auth_header(api, accountant)
-        r = api.get(f"/api/portal/engagements/{engagement.id}/audit/")
-        assert r.status_code == 200
-        assert isinstance(r.data, list)
+class TestAuditEndpoint(PortalAPITestBase):
+    def test_audit_log_accessible(self):
+        auth_header(self.api, self.accountant)
+        r = self.api.get(f"/api/portal/engagements/{self.engagement.id}/audit/")
+        self.assertEqual(r.status_code, 200)
+        self.assertIsInstance(r.data, list)
 
 
-class TestDocumentUploadEndpoint:
-    def test_upload_requires_auth(self, api):
-        r = api.post("/api/portal/documents/upload/")
-        assert r.status_code == 401
+class TestDocumentUploadEndpoint(PortalAPITestBase):
+    def test_upload_requires_auth(self):
+        r = self.api.post("/api/portal/documents/upload/")
+        self.assertEqual(r.status_code, 401)
 
-    def test_upload_rejects_bad_mime(self, api, accountant, engagement):
+    def test_upload_rejects_bad_mime(self):
         import io
-        auth_header(api, accountant)
+        from django.core.files.uploadedfile import InMemoryUploadedFile
+        auth_header(self.api, self.accountant)
         fake_file = io.BytesIO(b"<script>alert(1)</script>")
         fake_file.name = "evil.html"
-        from django.core.files.uploadedfile import InMemoryUploadedFile
         uploaded = InMemoryUploadedFile(
             fake_file, "file", "evil.html", "text/html", len(b"<script>"), None
         )
-        r = api.post("/api/portal/documents/upload/", {
-            "engagement": engagement.id,
-            "client_profile": engagement.client_profile.id,
+        r = self.api.post("/api/portal/documents/upload/", {
+            "engagement": self.engagement.id,
+            "client_profile": self.engagement.client_profile.id,
             "file": uploaded,
         }, format="multipart")
-        assert r.status_code == 400
+        self.assertEqual(r.status_code, 400)

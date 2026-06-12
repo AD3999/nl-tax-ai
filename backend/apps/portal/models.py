@@ -244,6 +244,8 @@ class ClientDocument(models.Model):
     extracted_json    = models.JSONField(null=True, blank=True)
     confidence_score  = models.FloatField(null=True, blank=True)
     review_notes      = models.TextField(blank=True)
+    # GDPR: documents older than this date may be purged by the retention management command
+    retention_expires_at = models.DateField(null=True, blank=True)
     created_at        = models.DateTimeField(auto_now_add=True)
     updated_at        = models.DateTimeField(auto_now=True)
 
@@ -463,3 +465,72 @@ class PortalAuditLog(models.Model):
 
     def __str__(self):
         return f"{self.action} by {self.actor_user_id} @ {self.created_at:%Y-%m-%d %H:%M}"
+
+
+class ReminderLog(models.Model):
+    """
+    Tracks every reminder sent from an accountant to a client, with delivery status.
+    Distinct from TaxReminder (tax-calendar deadlines); this is a per-engagement audit trail.
+    """
+    REMINDER_TYPE_CHOICES = [
+        ("document_request", "Document request"),
+        ("deadline",         "Deadline reminder"),
+        ("status_update",    "Status update"),
+        ("custom",           "Custom"),
+    ]
+    CHANNEL_CHOICES = [
+        ("push",   "Push notification"),
+        ("email",  "Email"),
+        ("in_app", "In-app"),
+    ]
+
+    engagement     = models.ForeignKey(
+        TaxEngagement, on_delete=models.CASCADE, related_name="reminder_logs"
+    )
+    client_profile = models.ForeignKey(
+        AccountantClientProfile, on_delete=models.CASCADE, related_name="reminder_logs"
+    )
+    sent_by        = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="sent_reminders"
+    )
+    reminder_type  = models.CharField(max_length=30, choices=REMINDER_TYPE_CHOICES, default="custom")
+    channel        = models.CharField(max_length=20, choices=CHANNEL_CHOICES, default="in_app")
+    subject        = models.CharField(max_length=200)
+    body           = models.TextField(blank=True)
+    delivered      = models.BooleanField(default=False)
+    created_at     = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table  = "portal_reminder_logs"
+        ordering  = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.reminder_type} → {self.client_profile} @ {self.created_at:%Y-%m-%d %H:%M}"
+
+
+class PortalMessage(models.Model):
+    """
+    In-app messages between accountant and client within an engagement.
+    Provides the /client/messages and accountant inbox messaging thread.
+    """
+    engagement     = models.ForeignKey(
+        TaxEngagement, on_delete=models.CASCADE, related_name="messages"
+    )
+    client_profile = models.ForeignKey(
+        AccountantClientProfile, on_delete=models.CASCADE, related_name="messages"
+    )
+    sender         = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="portal_messages_sent"
+    )
+    body           = models.TextField()
+    is_read        = models.BooleanField(default=False)
+    read_at        = models.DateTimeField(null=True, blank=True)
+    created_at     = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "portal_messages"
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"msg from {self.sender_id} @ {self.created_at:%Y-%m-%d %H:%M}"

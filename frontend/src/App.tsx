@@ -66,6 +66,11 @@ const ClientPortalPage        = lazy(() => import("./pages/portal/ClientPortalPa
 const ClientTasksPage         = lazy(() => import("./pages/portal/ClientTasksPage"));
 const ClientDocumentsPage     = lazy(() => import("./pages/portal/ClientDocumentsPage"));
 const GoogleCallbackPage      = lazy(() => import("./pages/GoogleCallbackPage"));
+const AccountantInboxPage     = lazy(() => import("./pages/AccountantInboxPage"));
+const AccountantSettingsPage  = lazy(() => import("./pages/AccountantSettingsPage"));
+const ClientMessagesPage      = lazy(() => import("./pages/ClientMessagesPage"));
+const ClientProfilePage       = lazy(() => import("./pages/ClientProfilePage"));
+const ZZPWorkspacePage        = lazy(() => import("./pages/ZZPWorkspacePage"));
 
 const AdminDashboard          = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminUsersPage          = lazy(() => import("./pages/admin/AdminUsersPage"));
@@ -135,6 +140,11 @@ function App() {
               <Route path="/client"                 element={<ClientPortalPage />} />
               <Route path="/client/tasks"           element={<ClientTasksPage />} />
               <Route path="/client/documents"       element={<ClientDocumentsPage />} />
+              <Route path="/client/messages"        element={<ClientMessagesPage />} />
+              <Route path="/client/profile"         element={<ClientProfilePage />} />
+              <Route path="/accountant/inbox"       element={<AccountantInboxPage />} />
+              <Route path="/accountant/settings"    element={<AccountantSettingsPage />} />
+              <Route path="/zzp-workspace"          element={<ZZPWorkspacePage />} />
 
               {/* Admin routes */}
               <Route path="/admin"                    element={<AdminRoute><AdminDashboard /></AdminRoute>} />
