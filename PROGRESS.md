@@ -1,7 +1,60 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 11 Jun 2026 (portal audit + document upload/delete).
+> Last updated: 12 Jun 2026 (UI redesign T1–T8 complete, merged to master).
+
+---
+
+## Session — 12 Jun 2026 (session 13) ✅ Complete
+
+### UI Redesign — T1–T8 (feat/ui-redesign-v2 → master)
+
+Full premium SaaS layout overhaul per `front-ui.md` design spec. Blue oklch theme preserved throughout.
+
+**T1 — Sidebar Layout** (`AppSidebar.tsx`, `AppLayout.tsx`, `PublicLayout.tsx`, `App.tsx`)
+- Always-dark 280px sidebar (`data-theme="dark"` scoping) with role-aware nav (client/accountant/admin)
+- `AppSidebarDesktop` (sticky) + `AppSidebarMobileDrawer` (controlled by AppLayout)
+- React Router v7 layout route groups: `PublicLayout` (TopNav+Footer) vs `AppLayout` (sidebar)
+- `FULL_BLEED = Set(["/chat"])` — chat fills content area without padding
+- User card at sidebar bottom: initials avatar, username/email, logout button
+- `LangSwitch` + `ThemeToggle` in sidebar bottom area via CSS var cascade
+
+**T2 — Accountant Portal KPI + AI Priorities** (`AccountantPortalPage.tsx`)
+- 4 KPI cards: icon box (lucide) + large number + label — replaces centered serif cards
+- "Priority Actions" card: derived from live engagement data (blocked/high-risk/needs_review/waiting_client), max 5 rows with colored dot + client name + issue label + arrow link
+
+**T3 — Client Portal simplification** (`ClientPortalPage.tsx`)
+- `CheckSquare` + `FolderOpen` lucide icons replace emoji in CTA cards
+- Score banner: colored dot replaces emoji
+- `.portal-cta-card` CSS class: `transition + borderTop + hover lift` (no more inline onMouseEnter/Leave)
+
+**T4 — Dashboard metric cards** (`DashboardPage.tsx`)
+- `SummaryCard` gains optional `icon`/`iconBg`/`iconColor` props; icon box renders when supplied
+- 4 metric cards now carry `TrendingUp`, `Percent`, `PiggyBank`, `ShieldAlert`/`Activity`
+- `PDFDownloadCard`: `BarChart3` icon replaces emoji
+- `ComplianceStatusCard`: colored dot replaces ✅/⚠️
+
+**T5 — Document review split panel** (`EngagementPage.tsx`)
+- Documents tab: GitHub PR-style 280px list panel (left) + detail/review panel (right)
+- `selectedDocId` state; `selectedDoc` derived from `documents` array (auto-reflects API updates)
+- Detail panel: 2×2 metadata grid, extracted data table, approve/reject/view buttons
+- Empty state placeholder with `FileText` icon
+
+**T6 — StatusBadge component** (`components/StatusBadge.tsx`)
+- Unified color map for 20+ statuses: engagement, document review, risk level, invitations
+- Props: `status: string`, `size?: "sm" | "md"`
+
+**T7 — DataTable component** (`components/DataTable.tsx`)
+- Generic `DataTable<T>` with `columns`, `rows`, `getKey`, `searchKeys`, `sortFn` per column
+- Debounce-free search (useMemo), toggle sort direction, row click handler, `maxHeight` scrollable
+- Animated row hover via inline handlers
+
+**T8 — ProgressRing component** (`components/ProgressRing.tsx`)
+- SVG ring with auto-color (green/amber/red by score), configurable `size`, `strokeWidth`, `color`
+- `showLabel` toggle, serif font label centered via absolute positioning
+
+**TypeScript:** 0 errors (`tsc --noEmit` clean).
+**Commits:** `da48664` (T1) → `70a9d7c` (T2–T8) → merge to master.
 
 ---
 
