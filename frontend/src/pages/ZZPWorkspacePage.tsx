@@ -534,7 +534,7 @@ export default function ZZPWorkspacePage() {
       <QuickActions t={t} onAdd={setActiveTab} />
 
       {/* Tab bar */}
-      <div style={{ display: "flex", gap: 0, borderBottom: "2px solid var(--border)", marginBottom: "var(--sp-6)" }}>
+      <div style={{ display: "flex", gap: 0, borderBottom: "2px solid var(--border)", marginBottom: "var(--sp-6)", overflowX: "auto" }}>
         {t.tabs.map((tab, i) => (
           <button
             key={i}

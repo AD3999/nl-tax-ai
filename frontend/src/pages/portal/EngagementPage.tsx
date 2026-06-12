@@ -585,7 +585,7 @@ export default function EngagementPage() {
               style={{
                 borderRadius: 0,
                 fontWeight: tab === t.key ? 600 : 400,
-                borderBottom: tab === t.key ? "2px solid var(--ok)" : "2px solid transparent",
+                borderBottom: tab === t.key ? "2px solid var(--blue)" : "2px solid transparent",
                 whiteSpace: "nowrap",
               }}
             >
