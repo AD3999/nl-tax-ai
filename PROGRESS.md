@@ -3989,3 +3989,73 @@ Four targeted UX improvements to `frontend/src/index.css` only.
 | **SEO pages** | Later | Django templates for landing + tax guide pages (server-rendered for Google indexing) |
 | **Proactive alerts** | Later | Tax reminder engine — email/push notifications near deadlines |
 | **Annual maintenance** | September | Update tax rules each September for the new tax year via admin panel |
+
+---
+
+## Session — 12 Jun 2026 (session 14) ✅ Complete
+
+### Enterprise Platform — Phases 1–6 (feat/enterprise-phases-1-6 → master)
+
+Full multi-tenant accountant platform implementation across 6 phases. 47 files changed, 3,746 insertions.
+
+**Phase 1 — Foundation Hardening**
+- Fixed multi-tenant security bug: `_can_access_client()` now scopes to owning accountant only (previously any accountant could see any client at detail level)
+- `ReminderLog` model: tracks every reminder send per engagement (type, channel, delivered status)
+- `PortalMessage` model: in-app messaging between accountant and client
+- `retention_expires_at` field on `ClientDocument` for GDPR retention tracking
+- Migrations: `0004_add_reminder_log_portal_message`, `0005_gdpr_document_retention`
+
+**Phase 2 — Accountant Portal**
+- `AccountantInboxView` (`GET /api/portal/inbox/`): aggregates pending docs, open actions, recent reminders, unread messages with counts
+- `EngagementMessagesView` (`GET/POST /api/portal/engagements/<id>/messages/`): accountant thread, auto-marks as read
+- Reminder persistence: every `PortalReminderView.post()` creates a `ReminderLog` record
+- `ReminderLogSerializer` + `PortalMessageSerializer` (with `is_own` computed field)
+- Frontend: `AccountantInboxPage` (`/accountant/inbox`) — KPI pills + 4 data sections (NL/EN/FA)
+- Frontend: `AccountantSettingsPage` (`/accountant/settings`) — firm info + branding + subscription
+
+**Phase 3 — Client Portal**
+- `ClientMessagesView` (`GET/POST /api/portal/client/messages/`): client-facing message thread
+- Frontend: `ClientMessagesPage` (`/client/messages`) — full-height chat with RTL support for Persian
+- Frontend: `ClientProfilePage` (`/client/profile`) — personal + tax info form with PATCH to API
+
+**Phase 4 — ZZP Daily Workspace**
+- New Django app: `backend/apps/zzp/` (registered as `"apps.zzp"` in INSTALLED_APPS)
+- Models: `ZZPRevenueEntry` (invoice tracking, auto-VAT), `ZZPExpenseEntry` (16 categories, deductible_amount), `ZZPHoursEntry` (urencriterium 1225h), `ZZPMileageEntry` (€0.23/km), `AccountantReviewEvent`
+- Migration: `0001_initial_zzp_workspace`
+- 12 API endpoints at `/api/zzp/`: revenue, expenses, hours, mileage CRUD + summary + review
+- `ZZPSummaryView`: full year + quarterly VAT breakdown (vat_out − vat_in = payable)
+- Frontend: `ZZPWorkspacePage` (`/zzp-workspace`) — 6 tabs: Overview, Revenue, Expenses, Hours, Mileage, VAT
+  - Quick Actions bar, urencriterium progress bar, quarterly VAT table with BTW deadlines
+  - Three-language support (NL/EN/FA) via type-safe T interface
+- TypeScript API client: `frontend/src/api/zzp.ts` (13 exported functions + 8 interfaces)
+- Background task: `quarterly_vat_summary_task`
+
+**Phase 5 — Document Intelligence (OCR)**
+- OCR provider pattern: `backend/apps/portal/ocr/`
+  - `base.py`: `OCRProvider` abstract class + `OCRResult` dataclass
+  - `factory.py`: reads `OCR_PROVIDER` env var, instantiates via importlib with graceful fallback
+  - 4 providers: `none_provider` (default), `google_vision`, `google_document_ai`, `azure_document`
+- `document_extraction.py` wired to call OCR provider when `OCR_PROVIDER != "none"`
+
+**Phase 6 — Production Hardening**
+- GDPR: `User.anonymize()` erases PII, `AccountDeletionView` (`DELETE /api/users/me/`), `DataExportView` (`GET /api/users/me/data-export/`), `purge_expired_documents_task`
+- Celery Beat schedule: reminders daily 08:00, GDPR purge daily 02:00
+- Structured JSON logging (verbose console formatter) + Sentry SDK stub (activates on `SENTRY_DSN` env var)
+- Test suite: rewritten from pytest fixtures → Django `TestCase` (47 tests pass)
+- `config/settings_test.py`: strips unavailable middleware (whitenoise) for test environment
+
+**Navigation updates**
+- Client sidebar: Messages (`/client/messages`), My Profile (`/client/profile`), ZZP Workspace (`/zzp-workspace`)
+- Accountant sidebar: Inbox (`/accountant/inbox`), Settings (`/accountant/settings`)
+
+**Security fix (multi-tenancy)**
+- `_can_access_client()` previously returned `True` for any portal user; now requires ownership or `is_staff`
+- This prevented cross-accountant data exposure at the engagement/checklist/document detail level
+
+**Test results**
+- `manage.py check` → 0 issues
+- Django test suite: 47/47 pass
+- `tsc --noEmit` → 0 errors
+- `npm run build` → success (2193 modules, 2.23s)
+
+**Commit:** d0bd5a0 on feat/enterprise-phases-1-6 → merged to master → pushed to GitHub (bac402c → 6ff8925)
