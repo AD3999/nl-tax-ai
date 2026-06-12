@@ -1,7 +1,7 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 12 Jun 2026 (UI redesign T1–T8 complete, merged to master).
+> Last updated: 12 Jun 2026 (session 15 — UI polish + chat platform navigation).
 
 ---
 
@@ -4059,3 +4059,112 @@ Full multi-tenant accountant platform implementation across 6 phases. 47 files c
 - `npm run build` → success (2193 modules, 2.23s)
 
 **Commit:** d0bd5a0 on feat/enterprise-phases-1-6 → merged to master → pushed to GitHub (bac402c → 6ff8925)
+
+---
+
+## Session — 12 Jun 2026 (session 15) ✅ Complete
+
+### UI Polish + Chat Platform Navigation — 6 issues fixed
+
+Six reported UI/UX issues fixed across frontend pages and the backend AI system prompt.
+
+---
+
+#### Fix 1 — ClientProfilePage: form layout (Windows 98 → proper grid)
+
+**Problem:** Labels misaligned, fields randomly distributed, postcode alone on its own row.
+
+**Fix (`frontend/src/pages/ClientProfilePage.tsx` — full rewrite):**
+- 2-column CSS grid throughout. Consistent `LABEL_STYLE` constant (uppercase, 0.72rem, `var(--text-3)`) and `SECTION_HEAD` constant (uppercase, 0.8rem).
+- Personal info grid: `full_name | email`, `phone | birth_date`, `street (gridColumn: "1/-1" full width)`, `city | postcode` — postcode never alone.
+- Tax info grid: `bsn | kvk`, `btw | tax_type`, `lang (full width)`.
+- Email field read-only with hint. BSN with sensitive-data hint. Save button with "Saved ✓" feedback state.
+
+---
+
+#### Fix 2 — ClientMessagesPage: full redesign
+
+**Problem:** Broken layout, no proper chat UI, `calc(100vh - 120px)` didn't account for the 280px sidebar.
+
+**Fix (`frontend/src/pages/ClientMessagesPage.tsx` — full rewrite):**
+- Added `/client/messages` to `FULL_BLEED` set in `AppLayout.tsx` so the page fills the content area without padding, matching the `/chat` pattern.
+- Full-height flex column: header (avatar + title) → scrollable message list → input area.
+- Messages grouped by date with centered day-separator dividers.
+- Chat bubbles with RTL-aware border-radius (Persian mirrors corner rounding).
+- Auto-resize textarea, Enter to send / Shift+Enter for new line.
+- Empty state with icon and descriptive subtitle.
+
+**Fix (`frontend/src/components/AppLayout.tsx`):**
+- `FULL_BLEED = new Set(["/chat"])` → `new Set(["/chat", "/client/messages"])`.
+
+---
+
+#### Fix 3 — ZZPWorkspacePage: styling polish
+
+**Problem:** Quick action buttons were plain bordered links; KPI cards were flat.
+
+**Fix (`frontend/src/pages/ZZPWorkspacePage.tsx`):**
+- `QuickActions`: replaced `borderLeft: 3px solid` buttons with dark card buttons — colored icon badge (↑ revenue, ↓ expense, ⏱ hours, 🛣 mileage), hover lift effect (`translateY(-1px)`), oklch accent colors.
+- `OverviewTab` KPI cards: added colored icon badge with `accent + "22"` background, colored top border, improved number typography.
+
+---
+
+#### Fix 4 — Deduction Checker moved to AppLayout (sidebar always visible)
+
+**Problem:** `/deduction-checker` was in `PublicLayout` (TopNav), so logged-in users saw the public navigation bar — felt like a different site.
+
+**Fix (`frontend/src/App.tsx`):**
+- Removed `/deduction-checker` from `PublicLayout` routes.
+- Added `/deduction-checker` as the first route inside `AppLayout` — authenticated users always see the sidebar.
+
+---
+
+#### Fix 5 — ClientTasksPage: Take Action routing + Ask AI language
+
+**Problem A:** "Take Action" for hours-registration tasks routed to `/chat` instead of the ZZP Workspace.
+
+**Problem B:** "Ask AI" sent the task title (English from backend) with no language instruction, so the AI responded in English regardless of the UI language.
+
+**Fix (`frontend/src/pages/portal/ClientTasksPage.tsx`):**
+- Added `resolveRoute(task: Task): string` — checks task title/description for keywords (hours, uren, urencriterium, mileage, revenue, invoice, expense) and overrides the `CATEGORY_ROUTE` map to return `/zzp-workspace` for workspace tasks.
+- `handleAskAI` prepends an explicit language instruction in the target language itself:
+  - FA: `"لطفاً به فارسی پاسخ دهید.\n\n"`
+  - NL: `"Antwoord alstublieft in het Nederlands.\n\n"`
+  - EN: no prefix needed (default)
+- `handleTakeAction` uses `resolveRoute(task)` and also prepends the language prefix when routing to `/chat`.
+
+---
+
+#### Fix 6 — Backend chat: platform navigation + KVK/BTW guidance + Rule 5 exception
+
+**Problem:** When users clicked "Ask AI" on task cards, the AI had no knowledge of the platform's pages or tabs. It also had no guidance on what to say when encountering KVK/BTW numbers it cannot access.
+
+**Fix (`backend/apps/chat/views.py` — `_result_system_prompt`):**
+
+Added **PLATFORM NAVIGATION** section (injected before STRICT RULES):
+- Full page/tab guide: hours → ZZP Workspace Hours tab (`/zzp-workspace`), expenses → Expenses tab, revenue → Revenue tab, mileage → Mileage tab, documents → `/client/documents`, deductions → `/deduction-checker`, calculator → `/calculator`, deadlines → `/tax-calendar`, profile → `/client/profile`.
+- Instructions: when user arrives from a task card, (1) explain what the task is, (2) give the exact page/tab, (3) explain why completing it matters for tax.
+
+Added **KVK / BTW / BSN guidance** section:
+- KVK number: what it is, where to find it (KVK letter, any issued invoice, own kvk.nl account), why AI cannot look it up.
+- BTW number: format `NL + BSN + B01`, found on BTW registration letter or invoices.
+- BSN: on Dutch passport/ID/residence permit.
+- Rule: never say "I don't know" — say "I can't access it, but here's where to find it."
+
+Updated **Rule 5 (EXTERNAL SITE BAN)**:
+- Added Exception B: kvk.nl is allowed ONLY to direct users to look up their own KVK registration number (not financial data entry).
+
+Added **Rule 7 — PORTAL TASK PROTOCOL**:
+- When the user's question includes a portal task title, always: (a) explain the task, (b) give the page/tab from the navigation guide, (c) explain why completing it on time helps their tax situation.
+
+---
+
+#### Checks
+
+- [x] Profile page fields align correctly — no orphaned rows
+- [x] Messages page fills full height with proper chat bubbles (RTL-aware for Persian)
+- [x] ZZP Workspace quick action buttons have colored icon badges and lift on hover
+- [x] Deduction Checker shows sidebar for all authenticated users
+- [x] "Take Action" for hours tasks routes to `/zzp-workspace`
+- [x] "Ask AI" prepends correct language instruction so AI responds in UI language
+- [x] AI explains tasks, guides to correct page/tab, explains KVK/BTW when encountered

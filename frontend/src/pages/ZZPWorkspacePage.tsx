@@ -89,23 +89,45 @@ function fmt(n: number) {
   return new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(n);
 }
 
-// ── Quick action modal ────────────────────────────────────────────────────────
+// ── Quick action buttons ──────────────────────────────────────────────────────
 function QuickActions({ t, onAdd }: { t: T; onAdd: (tab: number) => void }) {
+  const actions = [
+    { label: t.addRevenue, tab: 1, bg: "oklch(0.22 0.06 145)", accent: "oklch(0.72 0.18 145)", icon: "↑" },
+    { label: t.addExpense, tab: 2, bg: "oklch(0.22 0.06 15)",  accent: "oklch(0.72 0.18 15)",  icon: "↓" },
+    { label: t.addHours,   tab: 3, bg: "oklch(0.22 0.06 240)", accent: "oklch(0.68 0.18 240)", icon: "⏱" },
+    { label: t.addMileage, tab: 4, bg: "oklch(0.22 0.06 290)", accent: "oklch(0.68 0.16 290)", icon: "🛣" },
+  ];
   return (
-    <div style={{ display: "flex", gap: "var(--sp-3)", flexWrap: "wrap", marginBottom: "var(--sp-6)" }}>
-      {[
-        { label: t.addRevenue, tab: 1, color: "var(--green)" },
-        { label: t.addExpense, tab: 2, color: "var(--red-soft, #e74c3c)" },
-        { label: t.addHours,   tab: 3, color: "var(--blue)" },
-        { label: t.addMileage, tab: 4, color: "var(--purple-soft, #8e44ad)" },
-      ].map(({ label, tab, color }) => (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "var(--sp-3)", marginBottom: "var(--sp-6)" }}>
+      {actions.map(({ label, tab, bg, accent, icon }) => (
         <button
           key={tab}
-          className="btn"
-          style={{ borderLeft: `3px solid ${color}`, paddingLeft: "var(--sp-4)" }}
           onClick={() => onAdd(tab)}
+          style={{
+            display: "flex", alignItems: "center", gap: "var(--sp-3)",
+            padding: "var(--sp-3) var(--sp-4)",
+            background: bg,
+            border: `1px solid ${accent}22`,
+            borderRadius: 10,
+            cursor: "pointer",
+            transition: "transform 0.1s, box-shadow 0.1s",
+            color: "var(--text)",
+          }}
+          onMouseOver={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.2)"; }}
+          onMouseOut={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}
         >
-          + {label}
+          <span style={{
+            width: 28, height: 28, borderRadius: 7,
+            background: accent + "22",
+            color: accent,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "0.9rem", fontWeight: 700, flexShrink: 0,
+          }}>
+            {icon}
+          </span>
+          <span style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--text-2)", lineHeight: 1.2 }}>
+            {label}
+          </span>
         </button>
       ))}
     </div>
@@ -117,19 +139,28 @@ function OverviewTab({ summary, t }: { summary: ZZPSummary | null; t: T }) {
   if (!summary) return <div className="skel" style={{ height: 300 }} />;
 
   const kpis = [
-    { label: t.revenue,  value: fmt(summary.total_revenue),  color: "var(--green)" },
-    { label: t.expenses, value: fmt(summary.total_expenses), color: "var(--red-soft, #e74c3c)" },
-    { label: t.profit,   value: fmt(summary.gross_profit),   color: "var(--blue)" },
-    { label: t.vatPayable, value: fmt(summary.vat_payable),  color: "var(--amber, #f39c12)" },
+    { label: t.revenue,    value: fmt(summary.total_revenue),  accent: "oklch(0.72 0.18 145)", icon: "↑", positive: true },
+    { label: t.expenses,   value: fmt(summary.total_expenses), accent: "oklch(0.72 0.18 15)",  icon: "↓", positive: false },
+    { label: t.profit,     value: fmt(summary.gross_profit),   accent: "var(--blue)",           icon: "=", positive: summary.gross_profit >= 0 },
+    { label: t.vatPayable, value: fmt(summary.vat_payable),    accent: "oklch(0.72 0.18 55)",   icon: "%", positive: false },
   ];
 
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(180px,1fr))", gap: "var(--sp-4)", marginBottom: "var(--sp-6)" }}>
-        {kpis.map(({ label, value, color }) => (
-          <div key={label} className="card" style={{ borderTop: `3px solid ${color}` }}>
-            <div style={{ fontSize: "0.75rem", color: "var(--text-3)", fontWeight: 600, textTransform: "uppercase", letterSpacing: ".06em" }}>{label}</div>
-            <div style={{ fontSize: "1.5rem", fontWeight: 800, marginTop: "var(--sp-2)" }}>{value}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(170px,1fr))", gap: "var(--sp-4)", marginBottom: "var(--sp-6)" }}>
+        {kpis.map(({ label, value, accent, icon }) => (
+          <div key={label} className="card" style={{ padding: "var(--sp-4) var(--sp-5)", borderTop: `3px solid ${accent}` }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: "var(--sp-2)" }}>
+              <span style={{
+                width: 22, height: 22, borderRadius: 6,
+                background: accent + "22",
+                color: accent,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "0.75rem", fontWeight: 800, flexShrink: 0,
+              }}>{icon}</span>
+              <span style={{ fontSize: "0.7rem", color: "var(--text-3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".07em" }}>{label}</span>
+            </div>
+            <div style={{ fontSize: "1.4rem", fontWeight: 800, letterSpacing: "-0.02em" }}>{value}</div>
           </div>
         ))}
       </div>

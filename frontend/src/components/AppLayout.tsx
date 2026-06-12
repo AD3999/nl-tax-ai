@@ -5,7 +5,7 @@ import { useMobile } from "../hooks/useMobile";
 import { AppSidebarDesktop, AppSidebarMobileDrawer } from "./AppSidebar";
 
 // Pages that should fill the content area without padding (full-bleed)
-const FULL_BLEED = new Set(["/chat"]);
+const FULL_BLEED = new Set(["/chat", "/client/messages"]);
 
 export default function AppLayout() {
   const isMobile = useMobile();

@@ -123,11 +123,11 @@ function App() {
               <Route path="/auth/google/callback"    element={<GoogleCallbackPage />} />
               <Route path="/zzp-tax-netherlands"     element={<ZZPTaxPage />} />
               <Route path="/expat-tax-netherlands"   element={<ExpatTaxPage />} />
-              <Route path="/deduction-checker"       element={<DeductionCheckerPage />} />
             </Route>
 
             {/* ── App routes: Sidebar layout ── */}
             <Route element={<AppLayout />}>
+              <Route path="/deduction-checker"      element={<DeductionCheckerPage />} />
               <Route path="/dashboard"              element={<DashboardPage />} />
               <Route path="/chat"                   element={<ChatPage />} />
               <Route path="/intake"                 element={<IntakePage />} />

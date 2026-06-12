@@ -60,12 +60,45 @@ const CATEGORY_ROUTE: Record<string, string> = {
 
   // Need AI explanation — send with task question pre-filled
   vat:        "/chat",
-  compliance: "/chat",   // Wet DBA, urencriterium, M-form
+  compliance: "/chat",   // Wet DBA, urencriterium, M-form (see title-based override below)
   pension:    "/chat",
   toeslagen:  "/chat",
 
   other:      "/client/documents",
 };
+
+/**
+ * Title-based override — some compliance tasks map to ZZP Workspace instead of chat.
+ * Checks task title and description for keywords.
+ */
+function resolveRoute(task: Task): string {
+  const titleLower = (task.title + " " + (task.description ?? "")).toLowerCase();
+
+  // Hours / time tracking → ZZP Workspace (Hours tab)
+  if (titleLower.includes("hour") || titleLower.includes("uren") || titleLower.includes("time") || titleLower.includes("urencriterium")) {
+    return "/zzp-workspace";
+  }
+  // Mileage → ZZP Workspace (Mileage tab)
+  if (titleLower.includes("mileage") || titleLower.includes("kilometer") || titleLower.includes("km-log") || titleLower.includes("travel costs")) {
+    return "/zzp-workspace";
+  }
+  // Revenue / invoices → ZZP Workspace (Revenue tab)
+  if (
+    (titleLower.includes("revenue") || titleLower.includes("invoice") || titleLower.includes("omzet") || titleLower.includes("factuur")) &&
+    task.category === "income"
+  ) {
+    return "/zzp-workspace";
+  }
+  // Expense entries → ZZP Workspace (Expenses tab)
+  if (
+    (titleLower.includes("purchase invoice") || titleLower.includes("receipt") || titleLower.includes("kosten") || titleLower.includes("expense")) &&
+    task.category === "expense"
+  ) {
+    return "/zzp-workspace";
+  }
+
+  return CATEGORY_ROUTE[task.category] ?? "/client/documents";
+}
 
 const TX: Record<Lang, Record<string, string>> = {
   en: {
@@ -240,7 +273,12 @@ export default function ClientTasksPage() {
   }
 
   function handleAskAI(task: Task) {
-    const question = `${task.title}${task.description ? `. ${task.description}` : ""}`;
+    // Prepend language instruction so the AI responds in the user's selected language
+    const langPrefix =
+      lang === "fa" ? "لطفاً به فارسی پاسخ دهید.\n\n" :
+      lang === "nl" ? "Antwoord alstublieft in het Nederlands.\n\n" :
+      "";
+    const question = `${langPrefix}${task.title}${task.description ? `:\n${task.description}` : ""}`;
     navigate("/chat", { state: { question } });
   }
 
@@ -265,10 +303,13 @@ export default function ClientTasksPage() {
   }
 
   function handleTakeAction(task: Task) {
-    const route = CATEGORY_ROUTE[task.category] ?? "/client/documents";
+    const route = resolveRoute(task);
     if (route === "/chat") {
-      // Pre-fill the chatbot with the task so the AI can guide the user directly.
-      const question = `${task.title}${task.description ? `. ${task.description}` : ""}`;
+      const langPrefix =
+        lang === "fa" ? "لطفاً به فارسی پاسخ دهید.\n\n" :
+        lang === "nl" ? "Antwoord alstublieft in het Nederlands.\n\n" :
+        "";
+      const question = `${langPrefix}${task.title}${task.description ? `:\n${task.description}` : ""}`;
       navigate(route, { state: { question } });
     } else {
       navigate(route);
