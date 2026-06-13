@@ -492,7 +492,7 @@ export default function EngagementPage() {
   async function handleRejectWithReason() {
     if (!rejectTargetDocId) return;
     try {
-      const updated = await reviewDocument(rejectTargetDocId, { processing_status: "rejected", rejection_reason: rejectReason });
+      const updated = await reviewDocument(rejectTargetDocId, { processing_status: "rejected", review_notes: rejectReason });
       setDocuments(prev => prev.map(d => d.id === rejectTargetDocId ? updated : d));
       showToast(tx.doc_updated, "success");
     } catch {
@@ -870,7 +870,7 @@ export default function EngagementPage() {
                 : docFilter === "needs_review" ? documents.filter(d => d.processing_status === "needs_review")
                 : docFilter === "approved" ? documents.filter(d => d.processing_status === "approved")
                 : docFilter === "rejected" ? documents.filter(d => d.processing_status === "rejected")
-                : docFilter === "processing" ? documents.filter(d => d.processing_status === "processing" || d.processing_status === "pending")
+                : docFilter === "processing" ? documents.filter(d => d.processing_status === "uploaded" || d.processing_status === "extracted")
                 : documents.filter(d => !d.file_url); // "missing"
               return (
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "280px 1fr", gap: "var(--sp-4)", alignItems: "start" }}>

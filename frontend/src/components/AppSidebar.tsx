@@ -4,7 +4,7 @@ import {
   LayoutDashboard, MessageSquare, Calendar, Search,
   Users, Calculator, ClipboardList, Shield, FileText,
   LogOut, Briefcase, Inbox, Settings, User, Truck,
-  ListChecks, BarChart3, Building2, Activity,
+  ListChecks, Building2, Activity,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Wordmark from "./Wordmark";
