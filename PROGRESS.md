@@ -1,7 +1,38 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 12 Jun 2026 (session 16 — full UI color + responsiveness audit).
+> Last updated: 13 Jun 2026 (master-prompt implementation — Tier 1 Governance complete).
+
+---
+
+## Session — 13 Jun 2026 (master-prompt implementation) 🔄 In Progress
+
+### Branch: `feat/master-prompt-implementation`
+
+Implementing the full TaxWijs engineering specification set per the master prompt.
+Working 0→100% against the master prompt requirements.
+
+#### Tier 1 — Governance & Discovery ✅ Complete
+
+**Files created:**
+- `docs/00-governance/00-index.md` — documentation navigation hub
+- `docs/00-governance/01-source-register.md` — 20 official sources + 10 internal + 7 standards
+- `docs/00-governance/02-assumptions-gap-register.md` — 16 open gaps, 10 resolved assumptions
+- `docs/00-governance/03-domain-glossary.md` — 30+ Dutch tax terms + 18 TaxWijs product terms
+- `docs/00-governance/04-decision-log.md` — 11 ADRs with rationale and consequences
+- `docs/00-governance/05-execution-plan.md` — phased delivery plan, 10 tiers, sprint plan
+- `docs/00-governance/06-traceability-matrix.md` — PRD req → story → implementation → test
+- `docs/01-discovery/dutch-tax-rule-source-register.md` — 28 rules with full legal provenance
+- `docs/01-discovery/product-thesis.md` — why TaxWijs exists, the bet, core promise
+- `docs/01-discovery/personas.md` — 8 personas with goals, pain points, behaviors
+- `docs/01-discovery/scope-and-non-goals.md` — in scope, out of scope, product principles
+- `docs/01-discovery/market-landscape.md` — competitive analysis, positioning, GTM
+- `docs/01-discovery/jobs-to-be-done.md` — 30+ JTBD across all personas
+- `docs/01-discovery/user-journeys.md` — 5 end-to-end journeys with step-by-step flows
+
+#### Next: Tier 2 (PRD + User Stories), Tier 3 (Architecture), Tier 4 (OpenAPI)
+
+---
 
 ---
 
