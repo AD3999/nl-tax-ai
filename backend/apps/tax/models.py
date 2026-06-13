@@ -92,6 +92,22 @@ class TaxRule(models.Model):
     effective_until = models.DateField(null=True, blank=True)
     supersedes = models.CharField(max_length=50, blank=True)
 
+    # Versioning + approval workflow
+    version = models.PositiveIntegerField(default=1)
+    shadow_mode = models.BooleanField(
+        default=False,
+        help_text="Run scenarios against this rule silently before making it live."
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="rules_created"
+    )
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="rules_approved"
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.CharField(max_length=150, blank=True)
@@ -140,3 +156,59 @@ class TaxRule(models.Model):
             else:
                 updated += 1
         return created, updated
+
+
+class RuleTestCase(models.Model):
+    """
+    Automated test case for a single TaxRule.
+    Every verified rule must have at least one passing test case.
+    Test cases run in CI and after any rule change.
+    """
+    rule = models.ForeignKey(TaxRule, on_delete=models.CASCADE, related_name="test_cases")
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    input_data = models.JSONField(help_text="e.g. {'profit': 50000, 'hours': 1400}")
+    expected_output = models.JSONField(help_text="e.g. {'eligible': true, 'deduction': 1200}")
+    actual_output = models.JSONField(null=True, blank=True)
+    passed = models.BooleanField(null=True, blank=True)
+    last_run_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "tax_rule_test_cases"
+        ordering = ["rule__rule_id", "name"]
+
+    def __str__(self):
+        status = "✓" if self.passed else ("✗" if self.passed is False else "?")
+        return f"{self.rule.rule_id} / {self.name} [{status}]"
+
+
+class ChecklistTemplate(models.Model):
+    """
+    Template for generating per-engagement checklists.
+    One template per (user_type, year). Items stored as JSON.
+    Versioned — new version drafted each September for next tax year.
+    """
+    user_type = models.CharField(max_length=20)
+    year = models.PositiveIntegerField(default=2026)
+    version = models.PositiveIntegerField(default=1)
+    items = models.JSONField(
+        default=list,
+        help_text="List of {slug, category, label_nl, label_en, label_fa, priority, description_*} dicts"
+    )
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="checklist_templates_created"
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "tax_checklist_templates"
+        unique_together = [("user_type", "year", "version")]
+        ordering = ["user_type", "-year", "-version"]
+
+    def __str__(self):
+        return f"Checklist template: {self.user_type} / {self.year} v{self.version}"

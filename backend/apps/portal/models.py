@@ -18,6 +18,31 @@ from django.db import models
 from django.conf import settings
 
 
+class Firm(models.Model):
+    """
+    A tax advisory firm — groups accountants and their clients under one entity.
+    One firm can have many accountants. Each client engagement belongs to the firm.
+    """
+    name = models.CharField(max_length=200)
+    kvk_number = models.CharField(max_length=20, blank=True)
+    contact_email = models.EmailField(blank=True)
+    subscription_plan = models.CharField(
+        max_length=20,
+        choices=[("free", "Free"), ("professional", "Professional"), ("firm", "Firm")],
+        default="free"
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "portal_firms"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class AccountantClientProfile(models.Model):
     CLIENT_TYPE_CHOICES = [
         ("employee", "Employee"),
@@ -107,14 +132,21 @@ class TaxEngagement(models.Model):
         AccountantClientProfile, on_delete=models.CASCADE,
         related_name="engagements"
     )
+    firm = models.ForeignKey(
+        Firm, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="engagements"
+    )
     tax_year          = models.PositiveIntegerField(default=2026)
     engagement_type   = models.CharField(max_length=30, choices=ENGAGEMENT_TYPE_CHOICES, default="income_tax")
     status            = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
     deadline_date     = models.DateField(null=True, blank=True)
     readiness_score   = models.PositiveIntegerField(default=0)
+    ready_to_file     = models.BooleanField(default=False)
+    accountant_confirmed = models.BooleanField(default=False)
     missing_items_count = models.PositiveIntegerField(default=0)
     risk_level        = models.CharField(max_length=10, choices=RISK_CHOICES, default="low")
     summary_json      = models.JSONField(null=True, blank=True)
+    readiness_updated_at = models.DateTimeField(null=True, blank=True)
     created_at        = models.DateTimeField(auto_now_add=True)
     updated_at        = models.DateTimeField(auto_now=True)
 
@@ -534,3 +566,98 @@ class PortalMessage(models.Model):
 
     def __str__(self):
         return f"msg from {self.sender_id} @ {self.created_at:%Y-%m-%d %H:%M}"
+
+
+class ReadinessSnapshot(models.Model):
+    """
+    Immutable snapshot of a readiness score calculation.
+    Written every time the readiness engine recalculates.
+    Used for trend analysis and audit trail.
+    """
+    engagement = models.ForeignKey(TaxEngagement, on_delete=models.CASCADE, related_name="readiness_snapshots")
+    score = models.FloatField()
+    doc_score = models.FloatField()
+    checklist_score = models.FloatField()
+    verification_score = models.FloatField()
+    accountant_review_score = models.FloatField()
+    ready_to_file = models.BooleanField(default=False)
+    trigger_event = models.CharField(max_length=100, blank=True)
+    computed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "portal_readiness_snapshots"
+        ordering = ["-computed_at"]
+
+    def __str__(self):
+        return f"Engagement {self.engagement_id} — score {self.score:.0f} @ {self.computed_at:%Y-%m-%d %H:%M}"
+
+
+class ExtractedField(models.Model):
+    """
+    A single field extracted from a document by OCR + Claude.
+    Replaces the extracted_json blob for granular accountant review.
+    """
+    STATUS_CHOICES = [
+        ("candidate", "Candidate"),
+        ("accepted", "Accepted"),
+        ("corrected", "Corrected"),
+        ("rejected", "Rejected"),
+    ]
+
+    document = models.ForeignKey(ClientDocument, on_delete=models.CASCADE, related_name="extracted_fields")
+    field_name = models.CharField(max_length=100)
+    raw_value = models.TextField(blank=True, help_text="As OCR read it")
+    normalized_value = models.TextField(blank=True, help_text="Cleaned value (e.g., '48500.00')")
+    confidence = models.FloatField(default=0.0)
+    bounding_box = models.JSONField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="candidate")
+    corrected_value = models.TextField(blank=True, help_text="Accountant's correction")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "portal_extracted_fields"
+        ordering = ["document", "field_name"]
+        unique_together = [("document", "field_name")]
+
+    def __str__(self):
+        return f"{self.document_id} / {self.field_name} = {self.normalized_value} ({self.status})"
+
+
+class Invitation(models.Model):
+    """
+    Token-based invitation from accountant to client (or vice versa from marketplace).
+    Expires after 7 days. Accepting auto-creates a TaxEngagement.
+    """
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("accepted", "Accepted"),
+        ("expired", "Expired"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    sent_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="invitations_sent"
+    )
+    client_email = models.EmailField()
+    client_name = models.CharField(max_length=200, blank=True)
+    client_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
+        null=True, blank=True, related_name="invitations_received"
+    )
+    engagement = models.ForeignKey(
+        TaxEngagement, on_delete=models.SET_NULL, null=True, blank=True, related_name="invitation"
+    )
+    tax_year = models.PositiveIntegerField(default=2026)
+    token = models.CharField(max_length=64, unique=True, db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "portal_invitations"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Invitation to {self.client_email} ({self.status})"

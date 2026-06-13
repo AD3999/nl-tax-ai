@@ -1,9 +1,17 @@
 from django.contrib import admin
 from .models import (
-    AccountantClientProfile, TaxEngagement, DocumentRequest,
+    Firm, AccountantClientProfile, TaxEngagement, DocumentRequest,
     ClientDocument, ExtractedIncome, ExtractedExpense,
     ChecklistItem, AccountantAction, PortalAuditLog,
+    ReminderLog, PortalMessage, ReadinessSnapshot, ExtractedField, Invitation,
 )
+
+
+@admin.register(Firm)
+class FirmAdmin(admin.ModelAdmin):
+    list_display = ["name", "kvk_number", "contact_email", "subscription_plan", "is_active", "created_at"]
+    list_filter = ["subscription_plan", "is_active"]
+    search_fields = ["name", "kvk_number", "contact_email"]
 
 
 @admin.register(AccountantClientProfile)
@@ -75,3 +83,46 @@ class PortalAuditLogAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         return False
+
+
+@admin.register(ReminderLog)
+class ReminderLogAdmin(admin.ModelAdmin):
+    list_display = ["reminder_type", "channel", "sent_by", "client_profile", "delivered", "created_at"]
+    list_filter = ["reminder_type", "channel", "delivered"]
+    raw_id_fields = ["engagement", "client_profile", "sent_by"]
+
+
+@admin.register(PortalMessage)
+class PortalMessageAdmin(admin.ModelAdmin):
+    list_display = ["sender", "client_profile", "is_read", "created_at"]
+    list_filter = ["is_read"]
+    raw_id_fields = ["engagement", "client_profile", "sender"]
+
+
+@admin.register(ReadinessSnapshot)
+class ReadinessSnapshotAdmin(admin.ModelAdmin):
+    list_display = ["engagement", "score", "ready_to_file", "trigger_event", "computed_at"]
+    list_filter = ["ready_to_file"]
+    raw_id_fields = ["engagement"]
+    readonly_fields = ["computed_at"]
+
+    def has_change_permission(self, request, obj=None):
+        return False  # snapshots are immutable
+
+
+@admin.register(ExtractedField)
+class ExtractedFieldAdmin(admin.ModelAdmin):
+    list_display = ["document", "field_name", "confidence", "status", "created_at"]
+    list_filter = ["status"]
+    search_fields = ["field_name", "raw_value"]
+    raw_id_fields = ["document"]
+    readonly_fields = ["created_at"]
+
+
+@admin.register(Invitation)
+class InvitationAdmin(admin.ModelAdmin):
+    list_display = ["client_email", "sent_by", "status", "tax_year", "expires_at", "accepted_at"]
+    list_filter = ["status", "tax_year"]
+    search_fields = ["client_email", "client_name", "token"]
+    raw_id_fields = ["sent_by", "client_user", "engagement"]
+    readonly_fields = ["token", "created_at"]

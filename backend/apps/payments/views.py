@@ -80,27 +80,76 @@ class StripeWebhookView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         from apps.users.models import User
+        from apps.payments.models import Subscription
+        from django.utils import timezone
+        import datetime
 
         if event["type"] == "checkout.session.completed":
             session = event["data"]["object"]
             user_id = session.get("metadata", {}).get("user_id")
             customer_id = session.get("customer")
+            stripe_sub_id = session.get("subscription")
             if user_id:
                 User.objects.filter(id=user_id).update(
                     plan="premium",
                     stripe_customer_id=customer_id or "",
                 )
+                try:
+                    user = User.objects.get(id=user_id)
+                    Subscription.objects.update_or_create(
+                        stripe_subscription_id=stripe_sub_id,
+                        defaults={
+                            "user": user,
+                            "plan": "professional",
+                            "status": "active",
+                            "stripe_customer_id": customer_id or "",
+                        },
+                    )
+                except User.DoesNotExist:
+                    pass
 
         elif event["type"] in ("customer.subscription.deleted", "customer.subscription.paused"):
-            subscription = event["data"]["object"]
-            customer_id = subscription.get("customer")
+            sub_data = event["data"]["object"]
+            customer_id = sub_data.get("customer")
+            stripe_sub_id = sub_data.get("id")
             if customer_id:
                 User.objects.filter(stripe_customer_id=customer_id).update(plan="free")
+            if stripe_sub_id:
+                status_map = {"deleted": "cancelled", "paused": "past_due"}
+                new_status = status_map.get(event["type"].split(".")[2], "cancelled")
+                Subscription.objects.filter(stripe_subscription_id=stripe_sub_id).update(
+                    status=new_status
+                )
 
         elif event["type"] == "customer.subscription.resumed":
-            subscription = event["data"]["object"]
-            customer_id = subscription.get("customer")
+            sub_data = event["data"]["object"]
+            customer_id = sub_data.get("customer")
+            stripe_sub_id = sub_data.get("id")
             if customer_id:
                 User.objects.filter(stripe_customer_id=customer_id).update(plan="premium")
+            if stripe_sub_id:
+                Subscription.objects.filter(stripe_subscription_id=stripe_sub_id).update(
+                    status="active"
+                )
+
+        elif event["type"] == "invoice.paid":
+            inv_data = event["data"]["object"]
+            stripe_sub_id = inv_data.get("subscription")
+            stripe_inv_id = inv_data.get("id")
+            if stripe_inv_id:
+                from apps.payments.models import Invoice as InvoiceModel
+                sub = Subscription.objects.filter(stripe_subscription_id=stripe_sub_id).first()
+                InvoiceModel.objects.update_or_create(
+                    stripe_invoice_id=stripe_inv_id,
+                    defaults={
+                        "subscription": sub,
+                        "user": sub.user if sub else None,
+                        "amount_due": inv_data.get("amount_due", 0) / 100,
+                        "amount_paid": inv_data.get("amount_paid", 0) / 100,
+                        "currency": inv_data.get("currency", "eur").upper(),
+                        "status": "paid",
+                        "paid_at": timezone.now(),
+                    },
+                )
 
         return Response({"status": "ok"})

@@ -392,6 +392,185 @@ class TaxReminder(models.Model):
         return getattr(self, f"description_{lang}", self.description_en) or self.description_en
 
 
+class FeatureFlag(models.Model):
+    """
+    Platform-wide feature flags for controlled rollout.
+    Toggled by admins via the admin console.
+    """
+    key = models.CharField(max_length=100, unique=True)
+    is_enabled = models.BooleanField(default=False)
+    rollout_percentage = models.PositiveIntegerField(
+        default=0,
+        help_text="0=off, 100=all users. Intermediate values enable canary rollout."
+    )
+    description = models.TextField(blank=True)
+    updated_by = models.ForeignKey(
+        "users.User", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="feature_flags_updated"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "feature_flags"
+        ordering = ["key"]
+
+    def __str__(self):
+        return f"{self.key} = {'on' if self.is_enabled else 'off'} ({self.rollout_percentage}%)"
+
+
+class DataSubjectRequest(models.Model):
+    """
+    GDPR Data Subject Request (DSAR) — access, deletion, or portability.
+    Must be fulfilled within 30 days (GDPR Art. 15).
+    """
+    REQUEST_TYPE_CHOICES = [
+        ("access", "Access (Art. 15)"),
+        ("deletion", "Deletion (Art. 17)"),
+        ("portability", "Portability (Art. 20)"),
+    ]
+    STATUS_CHOICES = [
+        ("open", "Open"),
+        ("in_progress", "In Progress"),
+        ("fulfilled", "Fulfilled"),
+        ("rejected", "Rejected"),
+    ]
+
+    user = models.ForeignKey(
+        "users.User", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="dsar_requests"
+    )
+    user_email = models.EmailField(help_text="Preserved even if user is later anonymized")
+    request_type = models.CharField(max_length=20, choices=REQUEST_TYPE_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="open")
+    notes = models.TextField(blank=True)
+    export_url = models.URLField(blank=True, help_text="Presigned URL for data export")
+    fulfilled_by = models.ForeignKey(
+        "users.User", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="dsar_requests_fulfilled"
+    )
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    due_date = models.DateTimeField(null=True, blank=True, help_text="submitted_at + 30 days")
+    fulfilled_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "data_subject_requests"
+        ordering = ["-submitted_at"]
+
+    def __str__(self):
+        return f"DSAR {self.request_type} — {self.user_email} ({self.status})"
+
+
+class Notification(models.Model):
+    """
+    In-app notification record. Shown in the notification bell.
+    Push and email are separate channels; this is the in-app record.
+    """
+    NOTIFICATION_TYPE_CHOICES = [
+        ("document_uploaded", "Document uploaded"),
+        ("document_approved", "Document approved"),
+        ("document_rejected", "Document rejected"),
+        ("message_received", "New message"),
+        ("invitation_sent", "Invitation sent"),
+        ("invitation_accepted", "Invitation accepted"),
+        ("readiness_milestone", "Readiness milestone"),
+        ("engagement_ready", "Engagement ready to file"),
+        ("checklist_update", "Checklist update"),
+        ("system", "System notification"),
+    ]
+
+    user = models.ForeignKey(
+        "users.User", on_delete=models.CASCADE, related_name="notifications"
+    )
+    notification_type = models.CharField(max_length=50, choices=NOTIFICATION_TYPE_CHOICES)
+    title = models.CharField(max_length=200)
+    body = models.TextField(blank=True)
+    is_read = models.BooleanField(default=False)
+    read_at = models.DateTimeField(null=True, blank=True)
+    action_url = models.CharField(max_length=500, blank=True, help_text="Frontend route for deep link")
+    metadata = models.JSONField(null=True, blank=True, help_text="Extra context (engagement_id, doc_id, etc.)")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "notifications"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["user", "is_read", "-created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.notification_type} → {self.user_id} ({'read' if self.is_read else 'unread'})"
+
+
+class AccountantListing(models.Model):
+    """
+    Marketplace listing for an accountant.
+    Opt-in: accountants explicitly create a listing to appear in the directory.
+    """
+    accountant = models.OneToOneField(
+        "users.User", on_delete=models.CASCADE, related_name="marketplace_listing"
+    )
+    display_name = models.CharField(max_length=200)
+    bio_nl = models.TextField(blank=True)
+    bio_en = models.TextField(blank=True)
+    bio_fa = models.TextField(blank=True)
+    specializations = models.JSONField(
+        default=list,
+        help_text='e.g. ["zzp", "expat", "dga"]'
+    )
+    languages = models.JSONField(
+        default=list,
+        help_text='e.g. ["nl", "en", "fa"]'
+    )
+    hourly_rate_display = models.CharField(max_length=50, blank=True, help_text='e.g. "€75–€95"')
+    accepts_new_clients = models.BooleanField(default=True)
+    calendly_url = models.URLField(blank=True)
+    verified_accountant = models.BooleanField(
+        default=False,
+        help_text="Admin-verified credential (AA/RA/RB designation confirmed)"
+    )
+    is_active = models.BooleanField(default=True)
+    rating = models.FloatField(null=True, blank=True)
+    review_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "accountant_listings"
+        ordering = ["-rating", "-review_count"]
+
+    def __str__(self):
+        return f"{self.display_name} (marketplace)"
+
+
+class AccountantReview(models.Model):
+    """
+    Client review of an accountant, posted after engagement is Filed.
+    Moderated by admin before appearing publicly.
+    """
+    listing = models.ForeignKey(AccountantListing, on_delete=models.CASCADE, related_name="reviews")
+    reviewer = models.ForeignKey(
+        "users.User", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="accountant_reviews_written"
+    )
+    rating = models.PositiveIntegerField()
+    text = models.TextField(blank=True)
+    is_anonymous = models.BooleanField(default=False)
+    is_approved = models.BooleanField(default=False, help_text="Admin moderation required")
+    approved_by = models.ForeignKey(
+        "users.User", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="accountant_reviews_approved"
+    )
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "accountant_reviews"
+        ordering = ["-submitted_at"]
+
+    def __str__(self):
+        return f"Review {self.rating}/5 for {self.listing_id}"
+
+
 class UserItemState(models.Model):
     """
     Persists per-user dismiss / snooze / done states for alerts and actions
