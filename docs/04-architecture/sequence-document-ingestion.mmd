@@ -1,0 +1,90 @@
+```mermaid
+sequenceDiagram
+    actor Client
+    participant FE as React Frontend
+    participant API as Django API
+    participant DB as PostgreSQL
+    participant FS as File Storage
+    participant Celery as Celery Worker
+    participant OCR as OCR Provider
+    participant Claude as Claude API (optional)
+    actor Accountant
+
+    Note over Client,Accountant: Document Upload → OCR → Extraction → Accountant Review
+
+    Client->>FE: Opens /client/documents
+    FE->>API: GET /api/portal/client/documents/
+    API->>DB: SELECT documents WHERE engagement_id=X
+    DB-->>API: document list
+    API-->>FE: [{id, filename, status, confidence}, ...]
+    FE-->>Client: Document list with status badges
+
+    Client->>FE: Selects file + enters title + note
+    FE->>API: POST /api/portal/client/documents/ (multipart)
+    API->>API: Validate MIME type (PDF/JPEG/PNG/HEIC/CSV/XLSX)
+    API->>API: Validate file size (max 20MB)
+
+    alt Invalid file
+        API-->>FE: 400 Bad Request {code: INVALID_FILE_TYPE}
+        FE-->>Client: Error toast
+    else Valid file
+        API->>FS: Store file at media/portal/documents/{uuid}
+        API->>DB: INSERT ClientDocument (status=uploaded)
+        API->>DB: INSERT PortalAuditLog (action=document_uploaded)
+        API-->>FE: 201 Created {id, status: "uploaded"}
+        FE-->>Client: Upload success toast
+
+        Note over API,Celery: Async OCR pipeline starts
+        API->>Celery: enqueue extract_document_task(document_id)
+
+        Celery->>FS: Read file bytes
+        Celery->>OCR: Submit document for OCR
+        OCR-->>Celery: Raw text + layout
+        Celery->>DB: UPDATE ClientDocument (status=processing)
+
+        Note over Celery,Claude: Optional AI-assisted field extraction
+        Celery->>Claude: "Extract fields from this jaaropgaaf: {raw_text}"
+        Claude-->>Celery: {gross_salary: 72000, tax_withheld: 14000, confidence: 0.87}
+
+        Celery->>DB: INSERT ExtractedIncome (review_status=candidate, confidence=0.87)
+        Celery->>DB: INSERT ExtractedField per field (field_key, raw_value, confidence, bounding_box)
+
+        alt Overall confidence >= 0.90
+            Celery->>DB: UPDATE ClientDocument (status=classified)
+        else Confidence < 0.90
+            Celery->>DB: UPDATE ClientDocument (status=needs_review)
+            Celery->>DB: INSERT AccountantAction (type=review_required, stable_key=...)
+        end
+
+        Celery->>API: Trigger readiness recalculation
+        API->>DB: recalculate_readiness(engagement_id)
+        DB-->>API: new_score=72
+        API->>DB: UPDATE TaxEngagement (readiness_score=72)
+        API->>DB: INSERT PortalAuditLog (action=readiness_updated)
+    end
+
+    Note over Accountant,DB: Accountant reviews low-confidence extraction
+    Accountant->>FE: Opens /accountant/engagements/{id} → Documents tab
+    FE->>API: GET /api/portal/engagements/{id}/documents/
+    API-->>FE: [{id, status: "needs_review", confidence: 0.72, ...}]
+    FE-->>Accountant: Document list with "Needs Review" badge
+
+    Accountant->>FE: Clicks document → opens split panel
+    FE->>API: GET /api/portal/documents/{id}/extraction/
+    API-->>FE: {fields: [{key, raw_value, confidence, bounding_box}, ...]}
+    FE-->>Accountant: Split panel: document preview + field review table
+
+    Accountant->>FE: Corrects gross_salary from 5800 to 58800
+    Accountant->>FE: Clicks "Approve with corrections"
+    FE->>API: POST /api/portal/engagements/{id}/document-reviews/{rid}/decision
+    Note right of FE: {decision: "approve_with_corrections", fieldDecisions: [...]}
+
+    API->>DB: UPDATE ExtractedField (corrected_value=58800, review_state=corrected)
+    API->>DB: UPDATE ExtractedIncome (gross_salary=58800, review_status=approved)
+    API->>DB: UPDATE ClientDocument (status=approved)
+    API->>DB: INSERT PortalAuditLog (action=extraction_reviewed, reviewer=Sara)
+    API->>API: recalculate_readiness(engagement_id)
+    API->>DB: UPDATE TaxEngagement (readiness_score=82)
+    API-->>FE: 200 OK {decision: "approve_with_corrections", readiness: {before:72, after:82}}
+    FE-->>Accountant: Success toast + readiness ring updates to 82
+```

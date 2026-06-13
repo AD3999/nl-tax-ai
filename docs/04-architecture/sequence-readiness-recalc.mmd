@@ -1,0 +1,75 @@
+```mermaid
+sequenceDiagram
+    participant Trigger as Event Trigger
+    participant API as Django API
+    participant Readiness as readiness.py
+    participant DB as PostgreSQL
+    participant FE as React Frontend
+    actor User
+
+    Note over Trigger,User: Readiness recalculation — triggered by multiple events
+
+    Note over Trigger: Trigger events:
+    Note over Trigger: - ChecklistItem status changed
+    Note over Trigger: - ClientDocument status changed (approved/rejected)
+    Note over Trigger: - ExtractedIncome/Expense approved
+    Note over Trigger: - AccountantAction resolved
+    Note over Trigger: - Manual accountant recalculate click
+
+    Trigger->>API: Event occurs (e.g. document approved)
+    API->>Readiness: recalculate_readiness(engagement_id)
+
+    Readiness->>DB: SELECT engagement WITH checklist_items, documents, extractions, actions
+    DB-->>Readiness: engagement state snapshot
+
+    Note over Readiness: Dimension 1: Documents (weight 40%)
+    Readiness->>Readiness: mandatory_docs = [d for d in checklist if d.required]
+    Readiness->>Readiness: approved_mandatory = [d for d in mandatory_docs if d.status == 'approved']
+    Readiness->>Readiness: doc_score = (approved_mandatory / mandatory_docs) * 100
+
+    Note over Readiness: Dimension 2: Checklist (weight 30%)
+    Readiness->>Readiness: total_items = count(checklist_items)
+    Readiness->>Readiness: done_items = count(items WHERE status IN [accepted, waived])
+    Readiness->>Readiness: checklist_score = (done_items / total_items) * 100
+
+    Note over Readiness: Dimension 3: Verification (weight 20%)
+    Readiness->>Readiness: verified = count(extractions WHERE review_status = 'approved')
+    Readiness->>Readiness: total = count(extractions)
+    Readiness->>Readiness: verification_score = (verified / total) * 100 if total > 0 else 100
+
+    Note over Readiness: Dimension 4: Accountant Review (weight 10%)
+    Readiness->>Readiness: open_actions = count(AccountantActions WHERE status = 'open')
+    Readiness->>Readiness: review_score = 100 if open_actions == 0 else max(0, 100 - open_actions * 20)
+
+    Note over Readiness: Weighted score
+    Readiness->>Readiness: raw_score = (doc*0.4 + checklist*0.3 + verification*0.2 + review*0.1)
+
+    Note over Readiness: Mandatory evidence gating
+    alt Any mandatory document missing (status not in [approved, rejected+replaced])
+        Readiness->>Readiness: score = min(raw_score, 80)
+        Readiness->>Readiness: gate_reason = "Mandatory document missing"
+    else All mandatory docs present
+        Readiness->>Readiness: score = raw_score
+        Readiness->>Readiness: gate_reason = null
+    end
+
+    Note over Readiness: Ready-to-file gate
+    alt score >= 85 AND missing_items == 0 AND needs_review_docs == 0
+        Readiness->>Readiness: ready_to_file = True
+    else
+        Readiness->>Readiness: ready_to_file = False
+    end
+
+    Readiness->>Readiness: explanation = build_explanation(dimensions, gate_reason, score)
+    Readiness-->>API: {score, ready_to_file, explanation, dimensions}
+
+    API->>DB: UPDATE TaxEngagement SET readiness_score=score, ready_to_file=ready_to_file
+    API->>DB: INSERT ReadinessSnapshot (score, dimensions, explanation, timestamp)
+    API->>DB: INSERT PortalAuditLog (action=readiness_updated, score_before, score_after)
+
+    Note over API,FE: Real-time update (polling every 10-20s)
+    FE->>API: GET /api/portal/client/ (polling interval)
+    API-->>FE: {readiness_score: 82, ready_to_file: false, explanation: "..."}
+    FE-->>User: Readiness ring animates from 72 → 82
+    FE-->>User: "Your checklist is 82% complete. Missing: jaaropgaaf 2024."
+```
