@@ -1,0 +1,138 @@
+name: Security Scans
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"  # Every Monday 03:00 UTC
+  push:
+    branches: [master, main]
+    paths:
+      - "backend/requirements*.txt"
+      - "frontend/package*.json"
+  workflow_dispatch:
+
+jobs:
+
+  python-safety:
+    name: Python — Safety (CVE scan)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install safety
+        run: pip install safety
+
+      - name: Check backend requirements
+        run: safety check -r backend/requirements.txt --output json > safety-report.json || true
+
+      - name: Check phase2 requirements
+        run: safety check -r phase2/requirements.txt --output json >> safety-report.json || true
+
+      - name: Upload safety report
+        uses: actions/upload-artifact@v4
+        with:
+          name: safety-report
+          path: safety-report.json
+
+  node-audit:
+    name: Node.js — npm audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: npm audit (high severity)
+        working-directory: frontend
+        run: npm audit --audit-level=high
+
+  bandit:
+    name: Python — Bandit (static security analysis)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install bandit
+        run: pip install bandit[toml]
+
+      - name: Run bandit
+        run: |
+          bandit -r backend/ \
+            -ll \
+            -x backend/tests \
+            --format json \
+            -o bandit-report.json || true
+
+      - name: Upload bandit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: bandit-report.json
+
+  semgrep:
+    name: Semgrep — SAST
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run semgrep
+        run: |
+          semgrep \
+            --config p/django \
+            --config p/jwt \
+            --config p/owasp-top-ten \
+            --output semgrep-report.json \
+            --json \
+            backend/
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+      - name: Upload semgrep report
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-report
+          path: semgrep-report.json
+
+  secret-scan:
+    name: TruffleHog — Secret Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for secret scanning
+
+      - name: TruffleHog scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  notify-security:
+    name: Notify on security findings
+    runs-on: ubuntu-latest
+    needs: [python-safety, node-audit, bandit, semgrep, secret-scan]
+    if: failure()
+    steps:
+      - name: Alert Slack
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "⚠️ Security scan failed on ${{ github.ref_name }}. Check Actions for details."
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
