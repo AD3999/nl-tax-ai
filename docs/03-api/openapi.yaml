@@ -1,0 +1,2061 @@
+openapi: "3.1.0"
+
+info:
+  title: TaxWijs API
+  version: "1.0.0"
+  description: |
+    AI Tax Operating System for Dutch taxpayers and accountants.
+    NL/EN/FA trilingual. All tax arithmetic is performed by the deterministic
+    calculator — the AI layer never computes numbers.
+  contact:
+    email: api@taxwijs.nl
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://api.taxwijs.nl/api
+    description: Production
+  - url: http://localhost:8000/api
+    description: Local development
+
+security:
+  - BearerAuth: []
+
+# ─────────────────────────────────────────────
+# TAGS
+# ─────────────────────────────────────────────
+tags:
+  - name: auth
+  - name: users
+  - name: chat
+  - name: calculator
+  - name: checker
+  - name: rules
+  - name: engagements
+  - name: checklist
+  - name: documents
+  - name: messages
+  - name: notifications
+  - name: audit
+  - name: marketplace
+  - name: admin-users
+  - name: admin-rules
+  - name: admin-flags
+  - name: admin-dsar
+  - name: billing
+
+# ─────────────────────────────────────────────
+# PATHS
+# ─────────────────────────────────────────────
+paths:
+
+  # ── AUTH ──────────────────────────────────
+
+  /users/register/:
+    post:
+      tags: [auth]
+      operationId: auth_register
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+      responses:
+        "201": { $ref: "#/components/responses/TokenPair" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /users/login/:
+    post:
+      tags: [auth]
+      operationId: auth_login
+      summary: Obtain JWT token pair
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200": { $ref: "#/components/responses/TokenPair" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /users/token/refresh/:
+    post:
+      tags: [auth]
+      operationId: auth_refresh
+      summary: Refresh access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh]
+              properties:
+                refresh: { type: string }
+      responses:
+        "200":
+          description: New access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /users/logout/:
+    post:
+      tags: [auth]
+      operationId: auth_logout
+      summary: Blacklist refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh]
+              properties:
+                refresh: { type: string }
+      responses:
+        "204": { description: Logged out }
+
+  /auth/google/:
+    post:
+      tags: [auth]
+      operationId: auth_google
+      summary: Exchange Google auth code for JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string, description: Google OAuth authorization code }
+      responses:
+        "200": { $ref: "#/components/responses/TokenPair" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+
+  # ── USERS ────────────────────────────────
+
+  /users/me/:
+    get:
+      tags: [users]
+      operationId: users_me_get
+      summary: Get current user profile
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserProfile" }
+          description: User profile
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    patch:
+      tags: [users]
+      operationId: users_me_patch
+      summary: Update profile (name, language preference)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UserProfileUpdate" }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserProfile" }
+          description: Updated profile
+        "400": { $ref: "#/components/responses/ValidationError" }
+    delete:
+      tags: [users]
+      operationId: users_me_delete
+      summary: GDPR account deletion (anonymization)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirm]
+              properties:
+                confirm: { type: string, enum: [DELETE] }
+      responses:
+        "204": { description: Account anonymized }
+        "400": { $ref: "#/components/responses/ValidationError" }
+
+  /users/intake-profile/:
+    get:
+      tags: [users]
+      operationId: intake_get
+      summary: Get tax intake profile
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/IntakeProfile" }
+          description: Intake profile
+    put:
+      tags: [users]
+      operationId: intake_put
+      summary: Save or update intake profile (full replace)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/IntakeProfile" }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/IntakeProfile" }
+          description: Saved intake profile
+        "400": { $ref: "#/components/responses/ValidationError" }
+
+  /users/tax-memory/:
+    get:
+      tags: [users]
+      operationId: tax_memory_get
+      summary: Get AI tax memory (profile facts for AI context)
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { type: object, additionalProperties: true }
+          description: Tax memory key-value store
+    patch:
+      tags: [users]
+      operationId: tax_memory_patch
+      summary: Update specific tax memory fields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { type: object }
+          description: Updated tax memory
+
+  /users/push-subscription/:
+    post:
+      tags: [users]
+      operationId: push_subscribe
+      summary: Register VAPID push subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PushSubscription" }
+      responses:
+        "201": { description: Subscribed }
+        "400": { $ref: "#/components/responses/ValidationError" }
+    delete:
+      tags: [users]
+      operationId: push_unsubscribe
+      summary: Remove push subscription
+      responses:
+        "204": { description: Unsubscribed }
+
+  /users/notification-preferences/:
+    get:
+      tags: [users]
+      operationId: notif_prefs_get
+      summary: Get notification preferences
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NotificationPreferences" }
+          description: Preferences
+    put:
+      tags: [users]
+      operationId: notif_prefs_put
+      summary: Update notification preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/NotificationPreferences" }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NotificationPreferences" }
+          description: Updated preferences
+
+  # ── CHAT ────────────────────────────────
+
+  /chat/:
+    post:
+      tags: [chat]
+      operationId: chat_send
+      summary: Send a chat message (SSE streaming response)
+      description: |
+        Returns a Server-Sent Events stream. Each event is a JSON token delta.
+        Final event type is `done` with the complete message and source citations.
+        The AI never computes tax numbers — the calculator is called automatically
+        when numeric answers are needed.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChatRequest" }
+      responses:
+        "200":
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-Sent Events stream of ChatToken objects
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /chat/history/:
+    get:
+      tags: [chat]
+      operationId: chat_history
+      summary: Get recent conversation history
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20, maximum: 100 }
+        - name: mode
+          in: query
+          schema: { type: string, enum: [chat, ib_guide, simulation] }
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items: { $ref: "#/components/schemas/ChatMessage" }
+
+  /chat/clear/:
+    post:
+      tags: [chat]
+      operationId: chat_clear
+      summary: Clear conversation history for current session
+      responses:
+        "204": { description: History cleared }
+
+  /chat/sources/:
+    get:
+      tags: [chat]
+      operationId: chat_sources
+      summary: Get source URLs cited in last response
+      responses:
+        "200":
+          description: List of citations
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Citation" }
+
+  # ── CALCULATOR ──────────────────────────
+
+  /calculator/calculate/:
+    post:
+      tags: [calculator]
+      operationId: calculator_run
+      summary: Run deterministic tax calculation
+      description: |
+        Returns a complete tax calculation breakdown. The AI layer calls
+        this endpoint and reads the result — it never computes numbers itself.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CalculatorRequest" }
+      responses:
+        "200":
+          description: Full tax calculation result
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CalculatorResult" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+
+  /calculator/scenarios/:
+    get:
+      tags: [calculator]
+      operationId: calculator_scenarios
+      summary: List benchmark tax scenarios
+      security: []
+      responses:
+        "200":
+          description: List of benchmark scenarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TaxScenario" }
+
+  /calculator/scenarios/{scenario_id}/:
+    get:
+      tags: [calculator]
+      operationId: calculator_scenario_get
+      summary: Get one benchmark scenario with full calculation
+      security: []
+      parameters:
+        - { name: scenario_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Full scenario
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TaxScenario" }
+
+  # ── DEDUCTION CHECKER ───────────────────
+
+  /checker/rules/{year}/:
+    get:
+      tags: [checker]
+      operationId: checker_rules
+      summary: Get rule cards for the deduction checker
+      security: []
+      parameters:
+        - { name: year, in: path, required: true, schema: { type: integer, example: 2026 } }
+      responses:
+        "200":
+          description: Rule cards for checker
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RuleCard" }
+
+  /checker/submit/:
+    post:
+      tags: [checker]
+      operationId: checker_submit
+      summary: Submit checker answers, get eligibility results
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CheckerSubmission" }
+      responses:
+        "200":
+          description: Eligibility results
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CheckerResult" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+
+  /checker/explain/:
+    post:
+      tags: [checker]
+      operationId: checker_explain
+      summary: Get AI explanation for checker results (SSE)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CheckerExplainRequest" }
+      responses:
+        "200":
+          description: SSE explanation stream
+          content:
+            text/event-stream:
+              schema: { type: string }
+
+  /checker/waitlist/:
+    post:
+      tags: [checker]
+      operationId: checker_waitlist
+      summary: Join waitlist for non-ZZP users
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, user_type]
+              properties:
+                email: { type: string, format: email }
+                user_type: { type: string, enum: [employee, expat, dga] }
+      responses:
+        "201": { description: Added to waitlist }
+
+  # ── TAX RULES ───────────────────────────
+
+  /rules/:
+    get:
+      tags: [rules]
+      operationId: rules_list
+      summary: List verified tax rules
+      security: []
+      parameters:
+        - { name: year, in: query, schema: { type: integer, default: 2026 } }
+        - { name: topic, in: query, schema: { type: string } }
+        - { name: user_type, in: query, schema: { type: string, enum: [zzp, employee, expat, dga, all] } }
+        - { name: category, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: List of rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TaxRule" }
+
+  /rules/{rule_id}/:
+    get:
+      tags: [rules]
+      operationId: rules_get
+      summary: Get a single rule by rule_id
+      security: []
+      parameters:
+        - { name: rule_id, in: path, required: true, schema: { type: string, example: ZA-2026-001 } }
+      responses:
+        "200":
+          description: Rule detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TaxRule" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /rules/{rule_id}/history/:
+    get:
+      tags: [rules]
+      operationId: rules_history
+      summary: Get version history of a rule (admin only)
+      parameters:
+        - { name: rule_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Version history
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TaxRule" }
+
+  # ── ENGAGEMENTS ─────────────────────────
+
+  /portal/engagements/:
+    get:
+      tags: [engagements]
+      operationId: engagements_list
+      summary: List engagements for current user
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: tax_year, in: query, schema: { type: integer } }
+      responses:
+        "200":
+          description: List of engagements
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TaxEngagement" }
+    post:
+      tags: [engagements]
+      operationId: engagements_create
+      summary: Create a new engagement (accountant or self-service)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EngagementCreate" }
+      responses:
+        "201":
+          description: Created engagement
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TaxEngagement" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+
+  /portal/engagements/{id}/:
+    get:
+      tags: [engagements]
+      operationId: engagements_get
+      summary: Get engagement detail
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Engagement detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TaxEngagement" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [engagements]
+      operationId: engagements_patch
+      summary: Update engagement (status, assigned accountant)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EngagementUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TaxEngagement" }
+
+  /portal/engagements/{id}/readiness/:
+    get:
+      tags: [engagements]
+      operationId: readiness_get
+      summary: Get readiness score and breakdown
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Readiness result
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReadinessResult" }
+
+  /portal/engagements/{id}/readiness/recalculate/:
+    post:
+      tags: [engagements]
+      operationId: readiness_recalculate
+      summary: Force readiness recalculation
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Recalculated readiness
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ReadinessResult" }
+
+  /portal/engagements/{id}/readiness/history/:
+    get:
+      tags: [engagements]
+      operationId: readiness_history
+      summary: Get readiness score history (snapshots)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Snapshot list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ReadinessSnapshot" }
+
+  /portal/engagements/{id}/actions/:
+    get:
+      tags: [engagements]
+      operationId: actions_list
+      summary: List accountant actions for an engagement
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Actions list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AccountantAction" }
+    post:
+      tags: [engagements]
+      operationId: actions_generate
+      summary: Generate AI-powered next actions
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Generated actions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AccountantAction" }
+
+  /portal/actions/{id}/:
+    patch:
+      tags: [engagements]
+      operationId: action_update
+      summary: Update action status (done/dismissed)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [open, acknowledged, done, dismissed] }
+      responses:
+        "200":
+          description: Updated action
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountantAction" }
+
+  /portal/invitations/:
+    post:
+      tags: [engagements]
+      operationId: invitation_send
+      summary: Send client invitation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InvitationCreate" }
+      responses:
+        "201":
+          description: Invitation sent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Invitation" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+
+  /portal/invitations/{token}/accept/:
+    post:
+      tags: [engagements]
+      operationId: invitation_accept
+      summary: Accept an invitation (client)
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: Accepted, engagement created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TaxEngagement" }
+        "400": { description: Expired or invalid token }
+
+  # ── CHECKLIST ───────────────────────────
+
+  /portal/engagements/{id}/checklist/:
+    get:
+      tags: [checklist]
+      operationId: checklist_list
+      summary: List checklist items for an engagement
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: category, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Checklist items
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ChecklistItem" }
+
+  /portal/engagements/{id}/checklist/generate/:
+    post:
+      tags: [checklist]
+      operationId: checklist_generate
+      summary: Generate (or re-generate) checklist from profile (idempotent)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Checklist items (newly created + existing)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ChecklistItem" }
+
+  /portal/checklist-items/{id}/:
+    patch:
+      tags: [checklist]
+      operationId: checklist_item_update
+      summary: Update checklist item (status, notes)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [todo, waiting_client, uploaded, needs_review, accepted, rejected, waived] }
+                accountant_note: { type: string }
+                client_note: { type: string }
+                due_date: { type: string, format: date }
+      responses:
+        "200":
+          description: Updated item
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChecklistItem" }
+
+  /portal/checklist-items/{id}/request-from-client/:
+    post:
+      tags: [checklist]
+      operationId: checklist_request_client
+      summary: Send document request task to client
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: Request sent, status updated to waiting_client }
+
+  # ── DOCUMENTS ───────────────────────────
+
+  /portal/engagements/{id}/documents/:
+    get:
+      tags: [documents]
+      operationId: documents_list
+      summary: List documents for an engagement
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: doc_type, in: query, schema: { type: string } }
+      responses:
+        "200":
+          description: Documents list
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ClientDocument" }
+
+  /portal/engagements/{id}/documents/upload/:
+    post:
+      tags: [documents]
+      operationId: documents_upload
+      summary: Upload a document
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                doc_type:
+                  type: string
+                  description: Optional hint — OCR will confirm
+                checklist_item_id:
+                  type: string
+                  format: uuid
+                  description: Optional link to checklist item
+      responses:
+        "201":
+          description: Document created, OCR queued
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClientDocument" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "413":
+          description: File too large (max 20MB)
+
+  /portal/documents/{id}/:
+    get:
+      tags: [documents]
+      operationId: documents_get
+      summary: Get document detail with extracted fields
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Document with fields
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClientDocumentDetail" }
+    delete:
+      tags: [documents]
+      operationId: documents_delete
+      summary: Delete an uploaded-but-not-reviewed document (client only)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Deleted }
+        "400": { description: Cannot delete approved/reviewed document }
+
+  /portal/documents/{id}/approve/:
+    post:
+      tags: [documents]
+      operationId: documents_approve
+      summary: Approve document (accountant confirms all fields)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Document approved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClientDocument" }
+
+  /portal/documents/{id}/reject/:
+    post:
+      tags: [documents]
+      operationId: documents_reject
+      summary: Reject document (client must re-upload)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason: { type: string }
+      responses:
+        "200":
+          description: Document rejected
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClientDocument" }
+
+  /portal/extracted-fields/{id}/:
+    patch:
+      tags: [documents]
+      operationId: extracted_field_update
+      summary: Accept, correct, or reject an extracted field
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [accepted, corrected, rejected] }
+                corrected_value: { type: string }
+      responses:
+        "200":
+          description: Updated field
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExtractedField" }
+
+  # ── MESSAGES ────────────────────────────
+
+  /portal/engagements/{id}/messages/:
+    get:
+      tags: [messages]
+      operationId: messages_list
+      summary: Get message thread for engagement
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: since, in: query, schema: { type: string, format: date-time } }
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PortalMessage" }
+    post:
+      tags: [messages]
+      operationId: messages_send
+      summary: Send a message
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [body]
+              properties:
+                body: { type: string }
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PortalMessage" }
+
+  /portal/engagements/{id}/messages/mark-read/:
+    post:
+      tags: [messages]
+      operationId: messages_mark_read
+      summary: Mark all messages as read
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: Messages marked read }
+
+  # ── NOTIFICATIONS ───────────────────────
+
+  /portal/notifications/:
+    get:
+      tags: [notifications]
+      operationId: notifications_list
+      summary: List in-app notifications for current user
+      parameters:
+        - { name: unread_only, in: query, schema: { type: boolean } }
+      responses:
+        "200":
+          description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Notification" }
+
+  /portal/notifications/mark-all-read/:
+    post:
+      tags: [notifications]
+      operationId: notifications_mark_all_read
+      summary: Mark all notifications as read
+      responses:
+        "200": { description: All marked read }
+
+  /portal/notifications/{id}/read/:
+    post:
+      tags: [notifications]
+      operationId: notification_mark_read
+      summary: Mark one notification as read
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: Marked read }
+
+  # ── AUDIT LOG ───────────────────────────
+
+  /portal/engagements/{id}/audit/:
+    get:
+      tags: [audit]
+      operationId: audit_list
+      summary: Get audit log for an engagement
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: actor_id, in: query, schema: { type: string, format: uuid } }
+        - { name: action, in: query, schema: { type: string } }
+        - { name: from_date, in: query, schema: { type: string, format: date } }
+        - { name: to_date, in: query, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Audit entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AuditEntry" }
+
+  /portal/engagements/{id}/audit/export/:
+    get:
+      tags: [audit]
+      operationId: audit_export
+      summary: Export audit log as CSV
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: CSV file
+          content:
+            text/csv:
+              schema: { type: string }
+
+  # ── MARKETPLACE ─────────────────────────
+
+  /marketplace/listings/:
+    get:
+      tags: [marketplace]
+      operationId: marketplace_list
+      summary: Browse accountant listings
+      security: []
+      parameters:
+        - { name: specialization, in: query, schema: { type: string, enum: [zzp, employee, expat, dga] } }
+        - { name: language, in: query, schema: { type: string, enum: [nl, en, fa] } }
+        - { name: accepts_new_clients, in: query, schema: { type: boolean } }
+      responses:
+        "200":
+          description: Listings
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AccountantListing" }
+
+  /marketplace/listings/{id}/:
+    get:
+      tags: [marketplace]
+      operationId: marketplace_get
+      summary: Get listing detail
+      security: []
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Listing
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountantListing" }
+
+  /marketplace/my-listing/:
+    get:
+      tags: [marketplace]
+      operationId: marketplace_my_listing
+      summary: Get own listing (accountant)
+      responses:
+        "200":
+          description: Own listing
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountantListing" }
+    put:
+      tags: [marketplace]
+      operationId: marketplace_update_listing
+      summary: Create or update own listing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AccountantListingUpdate" }
+      responses:
+        "200":
+          description: Updated listing
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AccountantListing" }
+
+  /marketplace/listings/{id}/contact/:
+    post:
+      tags: [marketplace]
+      operationId: marketplace_contact
+      summary: Send invitation request to accountant from marketplace
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "201": { description: Contact request sent }
+
+  # ── ADMIN: USERS ────────────────────────
+
+  /admin/users/:
+    get:
+      tags: [admin-users]
+      operationId: admin_users_list
+      summary: List all users (admin)
+      parameters:
+        - { name: role, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+      responses:
+        "200":
+          description: Paginated user list
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaginatedUsers" }
+
+  /admin/users/{id}/:
+    get:
+      tags: [admin-users]
+      operationId: admin_user_get
+      summary: Get user detail (admin)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserProfile" }
+    patch:
+      tags: [admin-users]
+      operationId: admin_user_patch
+      summary: Update user role or status (admin)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role: { type: string, enum: [client, accountant, admin] }
+                is_active: { type: boolean }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserProfile" }
+
+  /admin/users/{id}/delete/:
+    post:
+      tags: [admin-users]
+      operationId: admin_user_delete
+      summary: Trigger GDPR anonymization for user
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "204": { description: Anonymized }
+
+  # ── ADMIN: RULES ────────────────────────
+
+  /admin/rules/:
+    get:
+      tags: [admin-rules]
+      operationId: admin_rules_list
+      summary: List all rules including drafts (admin)
+      parameters:
+        - { name: verification_status, in: query, schema: { type: string } }
+        - { name: year, in: query, schema: { type: integer } }
+      responses:
+        "200":
+          description: Rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/TaxRule" }
+    post:
+      tags: [admin-rules]
+      operationId: admin_rules_create
+      summary: Create a draft rule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TaxRuleCreate" }
+      responses:
+        "201":
+          description: Created draft rule
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TaxRule" }
+
+  /admin/rules/{id}/:
+    patch:
+      tags: [admin-rules]
+      operationId: admin_rules_patch
+      summary: Edit draft rule
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TaxRuleCreate" }
+      responses:
+        "200":
+          description: Updated rule
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TaxRule" }
+
+  /admin/rules/{id}/submit-for-review/:
+    post:
+      tags: [admin-rules]
+      operationId: admin_rules_submit
+      summary: Submit draft rule for review
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: Status set to pending_review }
+
+  /admin/rules/{id}/approve/:
+    post:
+      tags: [admin-rules]
+      operationId: admin_rules_approve
+      summary: Approve rule (super_admin — sets verification_status=verified)
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: Rule is now verified }
+
+  /admin/rules/{id}/run-tests/:
+    post:
+      tags: [admin-rules]
+      operationId: admin_rules_test
+      summary: Run test cases for a rule
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200":
+          description: Test results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  passed: { type: integer }
+                  failed: { type: integer }
+                  results: { type: array, items: { $ref: "#/components/schemas/TestCaseResult" } }
+
+  # ── ADMIN: FEATURE FLAGS ────────────────
+
+  /admin/feature-flags/:
+    get:
+      tags: [admin-flags]
+      operationId: flags_list
+      summary: List all feature flags
+      responses:
+        "200":
+          description: Flags
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/FeatureFlag" }
+
+  /admin/feature-flags/{key}/:
+    patch:
+      tags: [admin-flags]
+      operationId: flags_update
+      summary: Update a feature flag
+      parameters:
+        - { name: key, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_enabled: { type: boolean }
+                rollout_percentage: { type: integer, minimum: 0, maximum: 100 }
+      responses:
+        "200":
+          description: Updated flag
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FeatureFlag" }
+
+  # ── ADMIN: DSAR ─────────────────────────
+
+  /admin/dsar/:
+    get:
+      tags: [admin-dsar]
+      operationId: dsar_list
+      summary: List open DSAR requests
+      responses:
+        "200":
+          description: DSAR requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DataSubjectRequest" }
+
+  /admin/dsar/{id}/fulfill/:
+    post:
+      tags: [admin-dsar]
+      operationId: dsar_fulfill
+      summary: Generate export and mark request fulfilled
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        "200": { description: Export generated and email sent to user }
+
+  /users/me/dsar/:
+    post:
+      tags: [users]
+      operationId: dsar_request
+      summary: Submit data subject access request
+      responses:
+        "201": { description: Request submitted — fulfilled within 30 days }
+
+  # ── BILLING ────────────────────────────
+
+  /billing/subscription/:
+    get:
+      tags: [billing]
+      operationId: billing_subscription_get
+      summary: Get current subscription for firm
+      responses:
+        "200":
+          description: Subscription
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Subscription" }
+
+  /billing/usage/:
+    get:
+      tags: [billing]
+      operationId: billing_usage
+      summary: Get usage records for current month
+      responses:
+        "200":
+          description: Usage
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UsageRecord" }
+
+  /billing/invoices/:
+    get:
+      tags: [billing]
+      operationId: billing_invoices
+      summary: List invoices for firm
+      responses:
+        "200":
+          description: Invoices
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Invoice" }
+
+  # ── HEALTH ──────────────────────────────
+
+  /health/:
+    get:
+      tags: []
+      operationId: health_check
+      summary: Service health check
+      security: []
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [ok] }
+                  version: { type: string }
+                  db: { type: string, enum: [ok, error] }
+                  celery: { type: string, enum: [ok, error] }
+
+# ─────────────────────────────────────────────
+# COMPONENTS
+# ─────────────────────────────────────────────
+components:
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    TokenPair:
+      description: JWT access + refresh token pair
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              access: { type: string }
+              refresh: { type: string }
+              user: { $ref: "#/components/schemas/UserProfile" }
+
+    ValidationError:
+      description: Invalid input
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ValidationErrors" }
+
+    Unauthorized:
+      description: Missing or invalid JWT
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+    Forbidden:
+      description: Insufficient permissions (tenant isolation or RBAC)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+      headers:
+        Retry-After:
+          schema: { type: integer }
+
+  schemas:
+
+    Error:
+      type: object
+      properties:
+        detail: { type: string }
+
+    ValidationErrors:
+      type: object
+      additionalProperties:
+        type: array
+        items: { type: string }
+
+    UserProfile:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        first_name: { type: string }
+        last_name: { type: string }
+        role: { type: string, enum: [client, accountant, firm_manager, admin, super_admin] }
+        language: { type: string, enum: [nl, en, fa] }
+        is_active: { type: boolean }
+        date_joined: { type: string, format: date-time }
+
+    UserProfileUpdate:
+      type: object
+      properties:
+        first_name: { type: string }
+        last_name: { type: string }
+        language: { type: string, enum: [nl, en, fa] }
+
+    RegisterRequest:
+      type: object
+      required: [email, password, first_name, last_name]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+        first_name: { type: string }
+        last_name: { type: string }
+        role: { type: string, enum: [client, accountant], default: client }
+        invitation_token: { type: string, description: Pre-fill if registering via invitation }
+        language: { type: string, enum: [nl, en, fa], default: nl }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+
+    IntakeProfile:
+      type: object
+      properties:
+        user_type: { type: string, enum: [zzp, employee, expat, dga, mixed] }
+        tax_year: { type: integer }
+        has_30pct_ruling: { type: boolean }
+        ruling_start_year: { type: integer }
+        has_zzp_pension: { type: boolean }
+        box3_assets_over_threshold: { type: boolean }
+        has_rental_income: { type: boolean }
+        has_mortgage: { type: boolean }
+        kvk_number: { type: string }
+        bsn_last4: { type: string, description: Last 4 digits of BSN — for form matching }
+        partner_allowance: { type: boolean }
+        children_under_12: { type: integer }
+
+    PushSubscription:
+      type: object
+      required: [endpoint, keys]
+      properties:
+        endpoint: { type: string, format: uri }
+        keys:
+          type: object
+          properties:
+            p256dh: { type: string }
+            auth: { type: string }
+
+    NotificationPreferences:
+      type: object
+      properties:
+        document_uploaded: { type: string, enum: [email, push, both, none] }
+        message_received: { type: string, enum: [email, push, both, none] }
+        readiness_milestone: { type: string, enum: [email, push, both, none] }
+        engagement_ready_to_file: { type: string, enum: [email, push, both, none] }
+        overdue_checklist: { type: string, enum: [email, digest, none] }
+        ai_actions_summary: { type: string, enum: [email, none] }
+
+    ChatRequest:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+        mode: { type: string, enum: [chat, ib_guide, simulation], default: chat }
+        language: { type: string, enum: [nl, en, fa] }
+        include_profile: { type: boolean, default: true, description: Include user profile in context }
+
+    ChatMessage:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        role: { type: string, enum: [user, assistant] }
+        content: { type: string }
+        mode: { type: string }
+        language: { type: string }
+        sources: { type: array, items: { $ref: "#/components/schemas/Citation" } }
+        created_at: { type: string, format: date-time }
+
+    Citation:
+      type: object
+      properties:
+        rule_id: { type: string }
+        source_url: { type: string, format: uri }
+        title: { type: string }
+
+    CalculatorRequest:
+      type: object
+      required: [user_type, tax_year]
+      properties:
+        user_type: { type: string, enum: [zzp, employee, expat, dga] }
+        tax_year: { type: integer }
+        gross_profit: { type: number, description: ZZP profit before any deductions }
+        employment_income: { type: number }
+        hours_worked: { type: integer, description: For urencriterium check }
+        is_starter_year: { type: boolean }
+        has_startersaftrek: { type: boolean }
+        investments_eur: { type: number, description: For KIA check }
+        pension_contribution: { type: number }
+        has_30pct_ruling: { type: boolean }
+        ruling_year: { type: integer, description: Year in the 5-year phase-down }
+        box3_savings: { type: number }
+        box3_investments: { type: number }
+        is_aow_age: { type: boolean }
+
+    CalculatorResult:
+      type: object
+      properties:
+        tax_year: { type: integer }
+        user_type: { type: string }
+        gross_income: { type: number }
+        zelfstandigenaftrek: { type: number }
+        startersaftrek: { type: number }
+        mkb_winstvrijstelling: { type: number }
+        kia_deduction: { type: number }
+        pension_deduction: { type: number }
+        taxable_income_box1: { type: number }
+        box1_tax: { type: number }
+        zvw_contribution: { type: number }
+        general_credit: { type: number }
+        employment_credit: { type: number }
+        total_credits: { type: number }
+        net_income_tax: { type: number }
+        box2_tax: { type: number }
+        box3_tax: { type: number }
+        total_tax: { type: number }
+        effective_rate: { type: number }
+        monthly_reserve: { type: number }
+        rule_ids_used: { type: array, items: { type: string } }
+
+    TaxScenario:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        profile: { type: object }
+        result: { $ref: "#/components/schemas/CalculatorResult" }
+
+    RuleCard:
+      type: object
+      properties:
+        rule_id: { type: string }
+        topic: { type: string }
+        plain_nl: { type: string }
+        plain_en: { type: string }
+        plain_fa: { type: string }
+        result_value: { type: object }
+        ai_prompt_hint: { type: string }
+        source_url: { type: string, format: uri }
+
+    TaxRule:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        rule_id: { type: string, example: ZA-2026-001 }
+        topic: { type: string }
+        category: { type: string }
+        year: { type: integer }
+        user_types: { type: array, items: { type: string } }
+        plain_nl: { type: string }
+        plain_en: { type: string }
+        plain_fa: { type: string }
+        condition_summary: { type: string }
+        result_type: { type: string }
+        result_value: { type: object }
+        notes: { type: string }
+        ai_prompt_hint: { type: string }
+        tags: { type: array, items: { type: string } }
+        source_url: { type: string, format: uri }
+        verification_status: { type: string, enum: [verified, pending_review, draft] }
+        effective_from: { type: string, format: date }
+        effective_until: { type: string, format: date, nullable: true }
+        version: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    TaxRuleCreate:
+      type: object
+      required: [rule_id, topic, year, plain_nl, plain_en, plain_fa, source_url]
+      properties:
+        rule_id: { type: string }
+        topic: { type: string }
+        category: { type: string }
+        year: { type: integer }
+        user_types: { type: array, items: { type: string } }
+        plain_nl: { type: string }
+        plain_en: { type: string }
+        plain_fa: { type: string }
+        condition_summary: { type: string }
+        result_type: { type: string }
+        result_value: { type: object }
+        ai_prompt_hint: { type: string }
+        tags: { type: array, items: { type: string } }
+        source_url: { type: string, format: uri }
+        effective_from: { type: string, format: date }
+        effective_until: { type: string, format: date, nullable: true }
+        supersedes: { type: string, description: rule_id of previous version }
+
+    CheckerSubmission:
+      type: object
+      required: [user_type, tax_year]
+      properties:
+        user_type: { type: string, enum: [zzp, mixed] }
+        tax_year: { type: integer }
+        profit: { type: number }
+        hours: { type: integer }
+        is_first_year: { type: boolean }
+        is_starter_year: { type: boolean }
+        investments_eur: { type: number }
+        has_pension: { type: boolean }
+        pension_contribution: { type: number }
+        pays_rent: { type: boolean }
+        estimated_income: { type: number }
+
+    CheckerResult:
+      type: object
+      properties:
+        eligible:
+          type: array
+          items:
+            type: object
+            properties:
+              rule_id: { type: string }
+              label: { type: string }
+              amount: { type: number }
+              warning: { type: string, nullable: true }
+        not_eligible:
+          type: array
+          items:
+            type: object
+            properties:
+              rule_id: { type: string }
+              label: { type: string }
+              reason: { type: string }
+        hidden_taxes:
+          type: array
+          items:
+            type: object
+            properties:
+              rule_id: { type: string }
+              label: { type: string }
+              amount: { type: number }
+        toeslagen:
+          type: object
+          properties:
+            zorgtoeslag_eligible: { type: boolean }
+            huurtoeslag_eligible: { type: boolean }
+        estimated_total_tax: { type: number }
+        monthly_reserve: { type: number }
+
+    CheckerExplainRequest:
+      type: object
+      required: [result, language]
+      properties:
+        result: { $ref: "#/components/schemas/CheckerResult" }
+        language: { type: string, enum: [nl, en, fa] }
+
+    TaxEngagement:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        client_user: { $ref: "#/components/schemas/UserProfile" }
+        accountant_user: { $ref: "#/components/schemas/UserProfile" }
+        tax_year: { type: integer }
+        status: { type: string, enum: [draft, collecting, review, ready_to_file, filed, archived] }
+        readiness_score: { type: integer, minimum: 0, maximum: 100 }
+        ready_to_file: { type: boolean }
+        missing_items_count: { type: integer }
+        risk_level: { type: string, enum: [low, medium, high] }
+        accountant_confirmed: { type: boolean }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    EngagementCreate:
+      type: object
+      required: [client_email, tax_year]
+      properties:
+        client_email: { type: string, format: email }
+        tax_year: { type: integer }
+
+    EngagementUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [filed, archived] }
+        accountant_confirmed: { type: boolean }
+        assigned_accountant_id: { type: string, format: uuid }
+
+    ReadinessResult:
+      type: object
+      properties:
+        score: { type: integer, minimum: 0, maximum: 100 }
+        ready_to_file: { type: boolean }
+        dimensions:
+          type: object
+          properties:
+            documents: { type: object, properties: { score: { type: number }, weight: { type: number } } }
+            checklist: { type: object, properties: { score: { type: number }, weight: { type: number } } }
+            verification: { type: object, properties: { score: { type: number }, weight: { type: number } } }
+            accountant_review: { type: object, properties: { score: { type: number }, weight: { type: number } } }
+        blocking_items:
+          type: array
+          items:
+            type: object
+            properties:
+              type: { type: string }
+              label: { type: string }
+              checklist_item_id: { type: string, format: uuid }
+        updated_at: { type: string, format: date-time }
+
+    ReadinessSnapshot:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        score: { type: number }
+        doc_score: { type: number }
+        checklist_score: { type: number }
+        verification_score: { type: number }
+        accountant_review_score: { type: number }
+        ready_to_file: { type: boolean }
+        computed_at: { type: string, format: date-time }
+        trigger_event: { type: string }
+
+    AccountantAction:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        engagement: { type: string, format: uuid }
+        client_name: { type: string }
+        priority: { type: string, enum: [required, recommended] }
+        issue: { type: string }
+        recommended_action: { type: string }
+        status: { type: string, enum: [open, acknowledged, done, dismissed] }
+        updated_at: { type: string, format: date-time }
+
+    InvitationCreate:
+      type: object
+      required: [client_email, tax_year]
+      properties:
+        client_email: { type: string, format: email }
+        client_name: { type: string }
+        tax_year: { type: integer }
+
+    Invitation:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        client_email: { type: string, format: email }
+        token: { type: string }
+        status: { type: string, enum: [pending, accepted, expired] }
+        expires_at: { type: string, format: date-time }
+
+    ChecklistItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        stable_key: { type: string }
+        category: { type: string, enum: [income, expenses, deductions, identification, compliance] }
+        slug: { type: string }
+        label_nl: { type: string }
+        label_en: { type: string }
+        label_fa: { type: string }
+        description_en: { type: string }
+        priority: { type: string, enum: [required, recommended, optional] }
+        status: { type: string, enum: [todo, waiting_client, uploaded, needs_review, accepted, rejected, waived] }
+        linked_document: { type: string, format: uuid, nullable: true }
+        accountant_note: { type: string, nullable: true }
+        client_note: { type: string, nullable: true }
+        due_date: { type: string, format: date, nullable: true }
+        updated_at: { type: string, format: date-time }
+
+    ClientDocument:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        original_filename: { type: string }
+        doc_type: { type: string }
+        tax_year: { type: integer }
+        status: { type: string, enum: [uploaded, processing, classified, needs_review, approved, rejected, superseded] }
+        confidence_score: { type: number, nullable: true }
+        rejection_reason: { type: string, nullable: true }
+        uploaded_at: { type: string, format: date-time }
+        reviewed_at: { type: string, format: date-time, nullable: true }
+
+    ClientDocumentDetail:
+      allOf:
+        - { $ref: "#/components/schemas/ClientDocument" }
+        - type: object
+          properties:
+            extracted_fields:
+              type: array
+              items: { $ref: "#/components/schemas/ExtractedField" }
+
+    ExtractedField:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        field_name: { type: string }
+        raw_value: { type: string }
+        normalized_value: { type: string }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+        status: { type: string, enum: [candidate, accepted, corrected, rejected] }
+        corrected_value: { type: string, nullable: true }
+        bounding_box: { type: object, nullable: true }
+
+    PortalMessage:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        sender: { $ref: "#/components/schemas/UserProfile" }
+        body: { type: string }
+        is_system_message: { type: boolean }
+        read_by_recipient: { type: boolean }
+        created_at: { type: string, format: date-time }
+
+    Notification:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        notification_type: { type: string }
+        title: { type: string }
+        body: { type: string }
+        is_read: { type: boolean }
+        action_url: { type: string, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    AuditEntry:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        actor_name: { type: string }
+        actor_role: { type: string }
+        action: { type: string }
+        resource_type: { type: string }
+        resource_id: { type: string }
+        old_value: { type: object, nullable: true }
+        new_value: { type: object, nullable: true }
+        created_at: { type: string, format: date-time }
+
+    AccountantListing:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        display_name: { type: string }
+        bio_nl: { type: string }
+        bio_en: { type: string }
+        bio_fa: { type: string }
+        specializations: { type: array, items: { type: string } }
+        languages: { type: array, items: { type: string } }
+        hourly_rate_display: { type: string, nullable: true }
+        accepts_new_clients: { type: boolean }
+        verified_accountant: { type: boolean }
+        rating: { type: number, nullable: true }
+        review_count: { type: integer }
+
+    AccountantListingUpdate:
+      type: object
+      properties:
+        bio_nl: { type: string }
+        bio_en: { type: string }
+        bio_fa: { type: string }
+        specializations: { type: array, items: { type: string } }
+        languages: { type: array, items: { type: string } }
+        hourly_rate_display: { type: string }
+        accepts_new_clients: { type: boolean }
+        calendly_url: { type: string, format: uri }
+
+    FeatureFlag:
+      type: object
+      properties:
+        key: { type: string }
+        is_enabled: { type: boolean }
+        rollout_percentage: { type: integer }
+        description: { type: string }
+        updated_at: { type: string, format: date-time }
+
+    DataSubjectRequest:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        user_id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        request_type: { type: string, enum: [access, deletion, portability] }
+        status: { type: string, enum: [open, in_progress, fulfilled] }
+        submitted_at: { type: string, format: date-time }
+        fulfilled_at: { type: string, format: date-time, nullable: true }
+
+    Subscription:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        plan: { type: string, enum: [free, professional, firm] }
+        status: { type: string, enum: [active, cancelled, past_due] }
+        current_period_end: { type: string, format: date }
+
+    Invoice:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        amount_eur: { type: number }
+        status: { type: string, enum: [draft, open, paid, void] }
+        due_date: { type: string, format: date }
+        paid_at: { type: string, format: date-time, nullable: true }
+
+    UsageRecord:
+      type: object
+      properties:
+        month: { type: string, format: date }
+        client_count: { type: integer }
+        document_count: { type: integer }
+        ai_request_count: { type: integer }
+
+    PaginatedUsers:
+      type: object
+      properties:
+        count: { type: integer }
+        next: { type: string, format: uri, nullable: true }
+        previous: { type: string, format: uri, nullable: true }
+        results:
+          type: array
+          items: { $ref: "#/components/schemas/UserProfile" }
+
+    TestCaseResult:
+      type: object
+      properties:
+        name: { type: string }
+        passed: { type: boolean }
+        expected: { type: object }
+        actual: { type: object }
+        error: { type: string, nullable: true }

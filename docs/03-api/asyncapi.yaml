@@ -1,0 +1,719 @@
+asyncapi: "2.6.0"
+
+info:
+  title: TaxWijs Event Bus
+  version: "1.0.0"
+  description: |
+    Asynchronous event catalog for TaxWijs. Events flow via Celery tasks
+    (Redis broker in dev, SQS/RabbitMQ in production). All events are
+    idempotent — consumers must handle duplicate delivery.
+
+defaultContentType: application/json
+
+servers:
+  redis-dev:
+    url: redis://localhost:6379
+    protocol: redis
+    description: Local Celery broker (development)
+  production:
+    url: redis://{host}:6379
+    protocol: redis
+    description: Production Redis (or swap for SQS)
+    variables:
+      host:
+        description: Redis hostname from REDIS_URL env var
+
+channels:
+
+  # ── ENGAGEMENT EVENTS ─────────────────────────────────
+
+  engagement.created:
+    description: New TaxEngagement record created
+    publish:
+      operationId: onEngagementCreated
+      message:
+        $ref: "#/components/messages/EngagementCreated"
+
+  engagement.status_changed:
+    description: Engagement moved to a new status
+    publish:
+      operationId: onEngagementStatusChanged
+      message:
+        $ref: "#/components/messages/EngagementStatusChanged"
+
+  engagement.ready_to_file:
+    description: Engagement reached ReadyToFile gate (readiness ≥85 + no gaps)
+    publish:
+      operationId: onEngagementReadyToFile
+      message:
+        $ref: "#/components/messages/EngagementReadyToFile"
+
+  engagement.filed:
+    description: Engagement marked as Filed
+    publish:
+      operationId: onEngagementFiled
+      message:
+        $ref: "#/components/messages/EngagementFiled"
+
+  # ── DOCUMENT EVENTS ───────────────────────────────────
+
+  document.uploaded:
+    description: Client uploaded a document (file stored, OCR not yet run)
+    publish:
+      operationId: onDocumentUploaded
+      message:
+        $ref: "#/components/messages/DocumentUploaded"
+
+  document.ocr_complete:
+    description: OCR pipeline finished extracting raw text
+    publish:
+      operationId: onDocumentOcrComplete
+      message:
+        $ref: "#/components/messages/DocumentOcrComplete"
+
+  document.classified:
+    description: Document type identified and fields extracted
+    publish:
+      operationId: onDocumentClassified
+      message:
+        $ref: "#/components/messages/DocumentClassified"
+
+  document.needs_review:
+    description: Document requires accountant review (low confidence or missing fields)
+    publish:
+      operationId: onDocumentNeedsReview
+      message:
+        $ref: "#/components/messages/DocumentNeedsReview"
+
+  document.approved:
+    description: Accountant approved all extracted fields
+    publish:
+      operationId: onDocumentApproved
+      message:
+        $ref: "#/components/messages/DocumentApproved"
+
+  document.rejected:
+    description: Accountant rejected document — client must re-upload
+    publish:
+      operationId: onDocumentRejected
+      message:
+        $ref: "#/components/messages/DocumentRejected"
+
+  document.superseded:
+    description: A newer version of this document was uploaded
+    publish:
+      operationId: onDocumentSuperseded
+      message:
+        $ref: "#/components/messages/DocumentSuperseded"
+
+  # ── CHECKLIST EVENTS ──────────────────────────────────
+
+  checklist.generated:
+    description: Checklist generated or re-generated for an engagement
+    publish:
+      operationId: onChecklistGenerated
+      message:
+        $ref: "#/components/messages/ChecklistGenerated"
+
+  checklist.item_status_changed:
+    description: A checklist item status changed (e.g. todo → accepted)
+    publish:
+      operationId: onChecklistItemStatusChanged
+      message:
+        $ref: "#/components/messages/ChecklistItemStatusChanged"
+
+  # ── READINESS EVENTS ──────────────────────────────────
+
+  readiness.recalculated:
+    description: Readiness score recomputed and saved
+    publish:
+      operationId: onReadinessRecalculated
+      message:
+        $ref: "#/components/messages/ReadinessRecalculated"
+
+  readiness.milestone:
+    description: Score crossed a milestone threshold (25 / 50 / 75 / 85)
+    publish:
+      operationId: onReadinessMilestone
+      message:
+        $ref: "#/components/messages/ReadinessMilestone"
+
+  # ── INVITATION EVENTS ─────────────────────────────────
+
+  invitation.sent:
+    description: Accountant sent an invitation to a client email
+    publish:
+      operationId: onInvitationSent
+      message:
+        $ref: "#/components/messages/InvitationSent"
+
+  invitation.accepted:
+    description: Client accepted the invitation — engagement created
+    publish:
+      operationId: onInvitationAccepted
+      message:
+        $ref: "#/components/messages/InvitationAccepted"
+
+  invitation.expired:
+    description: Invitation token expired without being accepted (7-day TTL)
+    publish:
+      operationId: onInvitationExpired
+      message:
+        $ref: "#/components/messages/InvitationExpired"
+
+  # ── AI / CHAT EVENTS ──────────────────────────────────
+
+  chat.message_sent:
+    description: User sent a chat message (for analytics + PostHog)
+    publish:
+      operationId: onChatMessageSent
+      message:
+        $ref: "#/components/messages/ChatMessageSent"
+
+  chat.response_complete:
+    description: AI response fully generated and streamed
+    publish:
+      operationId: onChatResponseComplete
+      message:
+        $ref: "#/components/messages/ChatResponseComplete"
+
+  calculator.used:
+    description: Tax calculator was invoked (manual or AI-triggered)
+    publish:
+      operationId: onCalculatorUsed
+      message:
+        $ref: "#/components/messages/CalculatorUsed"
+
+  checker.completed:
+    description: Deduction checker wizard completed (Step 9 reached)
+    publish:
+      operationId: onCheckerCompleted
+      message:
+        $ref: "#/components/messages/CheckerCompleted"
+
+  # ── NOTIFICATION EVENTS ───────────────────────────────
+
+  notification.push_sent:
+    description: VAPID push notification dispatched to client
+    publish:
+      operationId: onPushSent
+      message:
+        $ref: "#/components/messages/PushSent"
+
+  notification.email_sent:
+    description: Transactional email dispatched
+    publish:
+      operationId: onEmailSent
+      message:
+        $ref: "#/components/messages/EmailSent"
+
+  notification.push_failed:
+    description: VAPID push failed (subscription expired or invalid)
+    publish:
+      operationId: onPushFailed
+      message:
+        $ref: "#/components/messages/PushFailed"
+
+  # ── RULE ENGINE EVENTS ────────────────────────────────
+
+  rule.created:
+    description: New tax rule created (draft)
+    publish:
+      operationId: onRuleCreated
+      message:
+        $ref: "#/components/messages/RuleCreated"
+
+  rule.approved:
+    description: Tax rule approved and set to verified
+    publish:
+      operationId: onRuleApproved
+      message:
+        $ref: "#/components/messages/RuleApproved"
+
+  rule.expiring:
+    description: Rule's effective_until is within 90 days — maintenance alert
+    publish:
+      operationId: onRuleExpiring
+      message:
+        $ref: "#/components/messages/RuleExpiring"
+
+  rule.rag_index_rebuild:
+    description: Rule changed — trigger Phase 2 RAG index rebuild
+    publish:
+      operationId: onRagIndexRebuild
+      message:
+        $ref: "#/components/messages/RagIndexRebuild"
+
+  # ── GDPR / SECURITY EVENTS ────────────────────────────
+
+  gdpr.deletion_requested:
+    description: User requested GDPR account deletion
+    publish:
+      operationId: onGdprDeletionRequested
+      message:
+        $ref: "#/components/messages/GdprDeletionRequested"
+
+  gdpr.deletion_complete:
+    description: Account fully anonymized
+    publish:
+      operationId: onGdprDeletionComplete
+      message:
+        $ref: "#/components/messages/GdprDeletionComplete"
+
+  gdpr.dsar_submitted:
+    description: Data subject access request submitted
+    publish:
+      operationId: onDsarSubmitted
+      message:
+        $ref: "#/components/messages/DsarSubmitted"
+
+  gdpr.dsar_fulfilled:
+    description: DSAR fulfilled — export sent to user
+    publish:
+      operationId: onDsarFulfilled
+      message:
+        $ref: "#/components/messages/DsarFulfilled"
+
+  security.login_failed:
+    description: Failed authentication attempt (for rate limiting and alerting)
+    publish:
+      operationId: onLoginFailed
+      message:
+        $ref: "#/components/messages/LoginFailed"
+
+  # ── CELERY BEAT MAINTENANCE ───────────────────────────
+
+  maintenance.conversation_purge:
+    description: Celery Beat daily purge of conversation messages older than 12 months
+    publish:
+      operationId: onConversationPurge
+      message:
+        $ref: "#/components/messages/MaintenancePurge"
+
+  maintenance.push_subscription_cleanup:
+    description: Celery Beat weekly cleanup of expired push subscriptions
+    publish:
+      operationId: onPushSubscriptionCleanup
+      message:
+        $ref: "#/components/messages/MaintenancePurge"
+
+# ─────────────────────────────────────────────
+# COMPONENTS
+# ─────────────────────────────────────────────
+components:
+
+  messages:
+
+    EngagementCreated:
+      name: engagement.created
+      payload:
+        type: object
+        required: [event_id, engagement_id, client_id, accountant_id, tax_year, created_at]
+        properties:
+          event_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          client_id: { type: string, format: uuid }
+          accountant_id: { type: string, format: uuid, nullable: true }
+          tax_year: { type: integer }
+          triggered_by: { type: string, description: "accountant_invite | client_self_service" }
+          created_at: { type: string, format: date-time }
+
+    EngagementStatusChanged:
+      name: engagement.status_changed
+      payload:
+        type: object
+        required: [event_id, engagement_id, old_status, new_status, changed_at]
+        properties:
+          event_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          old_status: { type: string }
+          new_status: { type: string }
+          actor_id: { type: string, format: uuid }
+          changed_at: { type: string, format: date-time }
+
+    EngagementReadyToFile:
+      name: engagement.ready_to_file
+      payload:
+        type: object
+        required: [event_id, engagement_id, readiness_score, occurred_at]
+        properties:
+          event_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          client_id: { type: string, format: uuid }
+          accountant_id: { type: string, format: uuid }
+          readiness_score: { type: integer }
+          occurred_at: { type: string, format: date-time }
+
+    EngagementFiled:
+      name: engagement.filed
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          filed_by: { type: string, format: uuid }
+          filed_at: { type: string, format: date-time }
+
+    DocumentUploaded:
+      name: document.uploaded
+      payload:
+        type: object
+        required: [event_id, document_id, engagement_id, uploaded_by, doc_type, uploaded_at]
+        properties:
+          event_id: { type: string, format: uuid }
+          document_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          uploaded_by: { type: string, format: uuid }
+          doc_type: { type: string }
+          file_size_bytes: { type: integer }
+          uploaded_at: { type: string, format: date-time }
+
+    DocumentOcrComplete:
+      name: document.ocr_complete
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          document_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          ocr_provider: { type: string }
+          duration_ms: { type: integer }
+          completed_at: { type: string, format: date-time }
+
+    DocumentClassified:
+      name: document.classified
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          document_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          detected_doc_type: { type: string }
+          field_count: { type: integer }
+          avg_confidence: { type: number }
+          auto_approved: { type: boolean }
+          classified_at: { type: string, format: date-time }
+
+    DocumentNeedsReview:
+      name: document.needs_review
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          document_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          accountant_id: { type: string, format: uuid }
+          low_confidence_fields: { type: array, items: { type: string } }
+          notified_at: { type: string, format: date-time }
+
+    DocumentApproved:
+      name: document.approved
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          document_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          approved_by: { type: string, format: uuid }
+          corrections_made: { type: integer }
+          approved_at: { type: string, format: date-time }
+
+    DocumentRejected:
+      name: document.rejected
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          document_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          rejected_by: { type: string, format: uuid }
+          reason: { type: string }
+          rejected_at: { type: string, format: date-time }
+
+    DocumentSuperseded:
+      name: document.superseded
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          old_document_id: { type: string, format: uuid }
+          new_document_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          superseded_at: { type: string, format: date-time }
+
+    ChecklistGenerated:
+      name: checklist.generated
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          user_type: { type: string }
+          items_created: { type: integer }
+          items_total: { type: integer }
+          generated_at: { type: string, format: date-time }
+
+    ChecklistItemStatusChanged:
+      name: checklist.item_status_changed
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          item_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          stable_key: { type: string }
+          old_status: { type: string }
+          new_status: { type: string }
+          actor_id: { type: string, format: uuid }
+          changed_at: { type: string, format: date-time }
+
+    ReadinessRecalculated:
+      name: readiness.recalculated
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          score: { type: integer }
+          ready_to_file: { type: boolean }
+          doc_score: { type: number }
+          checklist_score: { type: number }
+          verification_score: { type: number }
+          accountant_review_score: { type: number }
+          trigger_event: { type: string }
+          computed_at: { type: string, format: date-time }
+
+    ReadinessMilestone:
+      name: readiness.milestone
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          milestone: { type: integer, enum: [25, 50, 75, 85] }
+          score: { type: integer }
+          occurred_at: { type: string, format: date-time }
+
+    InvitationSent:
+      name: invitation.sent
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          invitation_id: { type: string, format: uuid }
+          accountant_id: { type: string, format: uuid }
+          client_email: { type: string, format: email }
+          tax_year: { type: integer }
+          expires_at: { type: string, format: date-time }
+          sent_at: { type: string, format: date-time }
+
+    InvitationAccepted:
+      name: invitation.accepted
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          invitation_id: { type: string, format: uuid }
+          client_id: { type: string, format: uuid }
+          engagement_id: { type: string, format: uuid }
+          accepted_at: { type: string, format: date-time }
+
+    InvitationExpired:
+      name: invitation.expired
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          invitation_id: { type: string, format: uuid }
+          client_email: { type: string, format: email }
+          expired_at: { type: string, format: date-time }
+
+    ChatMessageSent:
+      name: chat.message_sent
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          user_id: { type: string, format: uuid }
+          mode: { type: string, enum: [chat, ib_guide, simulation] }
+          language: { type: string, enum: [nl, en, fa] }
+          message_length: { type: integer, description: Character count — no PII }
+          sent_at: { type: string, format: date-time }
+
+    ChatResponseComplete:
+      name: chat.response_complete
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          user_id: { type: string, format: uuid }
+          model_id: { type: string }
+          input_tokens: { type: integer }
+          output_tokens: { type: integer }
+          latency_ms: { type: integer }
+          rag_chunks_used: { type: integer }
+          rule_ids_cited: { type: array, items: { type: string } }
+          completed_at: { type: string, format: date-time }
+
+    CalculatorUsed:
+      name: calculator.used
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          user_id: { type: string, format: uuid, nullable: true }
+          user_type: { type: string }
+          tax_year: { type: integer }
+          income_bracket: { type: string, enum: ["<28k", "28-50k", "50-78k", ">78k"] }
+          triggered_by: { type: string, enum: [user, ai] }
+          computed_at: { type: string, format: date-time }
+
+    CheckerCompleted:
+      name: checker.completed
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          user_id: { type: string, format: uuid, nullable: true }
+          user_type: { type: string }
+          eligible_count: { type: integer }
+          ineligible_count: { type: integer }
+          estimated_tax: { type: number }
+          language: { type: string }
+          completed_at: { type: string, format: date-time }
+
+    PushSent:
+      name: notification.push_sent
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          user_id: { type: string, format: uuid }
+          notification_type: { type: string }
+          endpoint_hash: { type: string, description: SHA256 of endpoint — no PII }
+          sent_at: { type: string, format: date-time }
+
+    EmailSent:
+      name: notification.email_sent
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          user_id: { type: string, format: uuid }
+          email_type: { type: string, description: "invitation | reminder | document_rejected | dsar_export | ..." }
+          sent_at: { type: string, format: date-time }
+
+    PushFailed:
+      name: notification.push_failed
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          user_id: { type: string, format: uuid }
+          error_code: { type: integer }
+          endpoint_hash: { type: string }
+          failed_at: { type: string, format: date-time }
+
+    RuleCreated:
+      name: rule.created
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          rule_uuid: { type: string, format: uuid }
+          rule_id: { type: string }
+          created_by: { type: string, format: uuid }
+          created_at: { type: string, format: date-time }
+
+    RuleApproved:
+      name: rule.approved
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          rule_uuid: { type: string, format: uuid }
+          rule_id: { type: string }
+          approved_by: { type: string, format: uuid }
+          approved_at: { type: string, format: date-time }
+
+    RuleExpiring:
+      name: rule.expiring
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          rule_id: { type: string }
+          effective_until: { type: string, format: date }
+          days_remaining: { type: integer }
+          alerted_at: { type: string, format: date-time }
+
+    RagIndexRebuild:
+      name: rule.rag_index_rebuild
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          trigger_rule_id: { type: string }
+          rebuild_started_at: { type: string, format: date-time }
+
+    GdprDeletionRequested:
+      name: gdpr.deletion_requested
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          user_id: { type: string, format: uuid }
+          requested_at: { type: string, format: date-time }
+          scheduled_for: { type: string, format: date-time, description: 30 days after request }
+
+    GdprDeletionComplete:
+      name: gdpr.deletion_complete
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          anonymized_user_id: { type: string, format: uuid }
+          records_anonymized: { type: integer }
+          files_deleted: { type: integer }
+          completed_at: { type: string, format: date-time }
+
+    DsarSubmitted:
+      name: gdpr.dsar_submitted
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          request_id: { type: string, format: uuid }
+          user_id: { type: string, format: uuid }
+          request_type: { type: string, enum: [access, deletion, portability] }
+          submitted_at: { type: string, format: date-time }
+
+    DsarFulfilled:
+      name: gdpr.dsar_fulfilled
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          request_id: { type: string, format: uuid }
+          user_id: { type: string, format: uuid }
+          fulfilled_at: { type: string, format: date-time }
+
+    LoginFailed:
+      name: security.login_failed
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          ip_hash: { type: string, description: SHA256 of IP — no PII stored }
+          attempt_count: { type: integer }
+          occurred_at: { type: string, format: date-time }
+
+    MaintenancePurge:
+      name: maintenance.purge
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          task_name: { type: string }
+          records_deleted: { type: integer }
+          run_at: { type: string, format: date-time }
