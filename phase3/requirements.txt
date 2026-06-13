@@ -1,0 +1,3 @@
+# Phase 3 — Tax Calculator Engine
+# No external dependencies beyond the Python stdlib.
+# (Reads from phase1/ JSON files which are already on disk.)
