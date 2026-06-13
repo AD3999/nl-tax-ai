@@ -1,0 +1,83 @@
+<svg width="1100" height="700" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+  <rect width="1100" height="700" fill="#F9FAFB"/>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="1100" height="56" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="24" y="24" fill="#6B7280" font-size="12">Dossiers / Ayoub Rahimi / Documenten /</text>
+  <text x="24" y="42" fill="#111827" font-size="16" font-weight="600">Document beoordelen — Jaaropgave 2025</text>
+  <rect x="950" y="12" width="130" height="32" rx="6" fill="#FFF7ED" stroke="#FED7AA" stroke-width="1"/>
+  <text x="1015" y="32" text-anchor="middle" fill="#92400E" font-size="12">Vergrendeld door jou</text>
+
+  <!-- Left: Document preview -->
+  <rect x="24" y="72" width="480" height="580" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="264" y="100" text-anchor="middle" fill="#6B7280" font-size="13">Documentvoorvertoning</text>
+  <!-- Fake document -->
+  <rect x="60" y="116" width="408" height="500" rx="4" fill="#F3F4F6"/>
+  <text x="80" y="150" fill="#374151" font-size="14" font-weight="bold">JAAROPGAVE 2025</text>
+  <text x="80" y="175" fill="#6B7280" font-size="11">Werkgever: TechBV Amsterdam B.V.</text>
+  <text x="80" y="195" fill="#6B7280" font-size="11">BSN: ***-***-***</text>
+  <!-- Highlighted field -->
+  <rect x="80" y="215" width="200" height="28" rx="4" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1"/>
+  <text x="90" y="234" fill="#1E40AF" font-size="12">Bruto loon: € 58.800,-</text>
+  <text x="80" y="265" fill="#6B7280" font-size="11">Ingehouden loonheffing: € 14.200,-</text>
+  <text x="80" y="285" fill="#6B7280" font-size="11">Vakantiegeld: € 4.704,-</text>
+  <text x="80" y="305" fill="#6B7280" font-size="11">Pensioenpremie: € 2.352,-</text>
+  <text x="80" y="325" fill="#6B7280" font-size="11">Netto loon: € 37.544,-</text>
+
+  <!-- Right: Extracted fields -->
+  <rect x="524" y="72" width="552" height="580" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="544" y="100" fill="#111827" font-size="14" font-weight="600">Geëxtraheerde velden</text>
+  <text x="800" y="100" text-anchor="end" fill="#6B7280" font-size="12">Samengestelde betrouwbaarheid: 87%</text>
+  <rect x="800" y="86" width="68" height="20" rx="10" fill="#DEF7EC"/>
+  <text x="834" y="100" text-anchor="middle" fill="#03543F" font-size="11">Spot-check</text>
+
+  <!-- Field rows -->
+  <!-- Gross salary - HIGH confidence -->
+  <rect x="540" y="112" width="520" height="60" rx="6" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1"/>
+  <text x="556" y="134" fill="#6B7280" font-size="11">Bruto loon</text>
+  <text x="556" y="155" fill="#111827" font-size="16" font-weight="600">€ 58.800,00</text>
+  <rect x="900" y="122" width="140" height="28" rx="14" fill="#DEF7EC"/>
+  <text x="970" y="140" text-anchor="middle" fill="#03543F" font-size="11" font-weight="600">✓ Hoog (0.96)</text>
+  <text x="1050" y="140" fill="#16A34A" font-size="18" font-weight="bold">✓</text>
+
+  <!-- Tax withheld - HIGH confidence -->
+  <rect x="540" y="184" width="520" height="60" rx="6" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1"/>
+  <text x="556" y="206" fill="#6B7280" font-size="11">Ingehouden loonheffing</text>
+  <text x="556" y="227" fill="#111827" font-size="16" font-weight="600">€ 14.200,00</text>
+  <rect x="900" y="194" width="140" height="28" rx="14" fill="#DEF7EC"/>
+  <text x="970" y="212" text-anchor="middle" fill="#03543F" font-size="11" font-weight="600">✓ Hoog (0.94)</text>
+  <text x="1050" y="212" fill="#16A34A" font-size="18" font-weight="bold">✓</text>
+
+  <!-- Pension - MEDIUM confidence - selected for correction -->
+  <rect x="540" y="256" width="520" height="70" rx="6" fill="#FFFBEB" stroke="#FDE68A" stroke-width="2"/>
+  <text x="556" y="278" fill="#6B7280" font-size="11">Pensioenpremie</text>
+  <text x="556" y="299" fill="#111827" font-size="16" font-weight="600">€ 2.352,00</text>
+  <rect x="900" y="266" width="140" height="28" rx="14" fill="#FEF3C7"/>
+  <text x="970" y="284" text-anchor="middle" fill="#92400E" font-size="11" font-weight="600">~ Middel (0.78)</text>
+  <!-- Correction input -->
+  <rect x="556" y="306" width="200" height="28" rx="4" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2"/>
+  <text x="566" y="325" fill="#9CA3AF" font-size="12">Corrigeer waarde...</text>
+
+  <!-- BSN - validation failed -->
+  <rect x="540" y="340" width="520" height="60" rx="6" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
+  <text x="556" y="362" fill="#6B7280" font-size="11">BSN</text>
+  <text x="556" y="383" fill="#111827" font-size="14">Versleuteld — elfproef validatie vereist</text>
+  <rect x="900" y="350" width="140" height="28" rx="14" fill="#FEE2E2"/>
+  <text x="970" y="368" text-anchor="middle" fill="#9B1C1C" font-size="11" font-weight="600">✗ Laag (0.00)</text>
+
+  <!-- Divider -->
+  <line x1="540" y1="420" x2="1060" y2="420" stroke="#E2E8F0" stroke-width="1"/>
+
+  <!-- Reason code -->
+  <text x="540" y="444" fill="#374151" font-size="13" font-weight="600">Redencode (verplicht bij correctie)</text>
+  <rect x="540" y="456" width="220" height="36" rx="6" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+  <text x="556" y="479" fill="#374151" font-size="13">OCR fout ▼</text>
+
+  <!-- Action buttons -->
+  <rect x="540" y="512" width="240" height="40" rx="6" fill="#16A34A"/>
+  <text x="660" y="537" text-anchor="middle" fill="#FFFFFF" font-size="14" font-weight="600">Beoordeling indienen ✓</text>
+  <rect x="800" y="512" width="160" height="40" rx="6" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+  <text x="880" y="537" text-anchor="middle" fill="#374151" font-size="14">Afwijzen</text>
+
+  <text x="550" y="690" fill="#9CA3AF" font-size="11">TaxWijs — Document Review View</text>
+</svg>

@@ -1,0 +1,53 @@
+graph TD
+    subgraph Internet
+        User["User Browser\n(NL/EN/FA)"]
+        ExtAPI["External APIs\n(Belastingdienst,\nBRP, KVK)"]
+    end
+
+    subgraph CDN["CDN / Edge"]
+        CF["Cloudflare\n(WAF + CDN)"]
+    end
+
+    subgraph Production["Production (Railway / AWS)"]
+        subgraph Frontend["Frontend"]
+            Vite["React+Vite\nStatic Build\n(Nginx)"]
+        end
+
+        subgraph Backend["Backend"]
+            Django["Django 6\nGunicorn + Uvicorn\n:8000"]
+            Celery["Celery Workers\n(OCR + Embedding)"]
+            CeleryBeat["Celery Beat\n(Scheduled tasks)"]
+        end
+
+        subgraph AI["AI Layer"]
+            ChromaDB["ChromaDB\n(RAG Vector Store\nDev Only)"]
+            ClaudeAPI["Anthropic API\nClaude claude-sonnet-4-6"]
+        end
+
+        subgraph Storage["Storage"]
+            Postgres["PostgreSQL 16\n(Supabase)"]
+            Redis["Redis\n(Cache + Queue)"]
+            S3["S3-compatible\n(Document Files)"]
+        end
+    end
+
+    subgraph Monitoring["Monitoring"]
+        Sentry["Sentry\n(Error Tracking)"]
+        Grafana["Grafana\n(Metrics)"]
+    end
+
+    User -->|HTTPS| CF
+    CF -->|Static Assets| Vite
+    CF -->|/api/*| Django
+    Django -->|DB queries| Postgres
+    Django -->|Cache| Redis
+    Django -->|Queue tasks| Celery
+    Django -->|File storage| S3
+    Django -->|RAG retrieve| ChromaDB
+    Django -->|AI responses| ClaudeAPI
+    Celery -->|OCR results| Postgres
+    Celery -->|Embeddings| ChromaDB
+    CeleryBeat -->|Scheduled jobs| Celery
+    Django -->|Errors| Sentry
+    Django -->|Metrics| Grafana
+    ExtAPI -.->|Scraper / verify| Django

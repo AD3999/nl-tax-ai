@@ -1,0 +1,70 @@
+<svg width="390" height="844" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+  <rect width="390" height="844" fill="#F9FAFB"/>
+
+  <!-- Status bar -->
+  <rect x="0" y="0" width="390" height="44" fill="#1E293B"/>
+  <text x="24" y="28" fill="#FFFFFF" font-size="14" font-weight="bold">TaxWijs</text>
+  <text x="330" y="28" fill="#FFFFFF" font-size="12">NL ▼</text>
+
+  <!-- Greeting -->
+  <rect x="0" y="44" width="390" height="80" fill="#1E3A5F"/>
+  <text x="24" y="80" fill="#FFFFFF" font-size="20" font-weight="bold">Goedemiddag, Ayoub</text>
+  <text x="24" y="104" fill="#93C5FD" font-size="13">Uw belastingdossier 2026</text>
+
+  <!-- Readiness score card -->
+  <rect x="16" y="140" width="358" height="140" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="32" y="168" fill="#6B7280" font-size="12">Voortgang dossier</text>
+  <circle cx="80" cy="230" r="40" fill="none" stroke="#E2E8F0" stroke-width="8"/>
+  <circle cx="80" cy="230" r="40" fill="none" stroke="#16A34A" stroke-width="8"
+    stroke-dasharray="251" stroke-dashoffset="50" transform="rotate(-90 80 230)"/>
+  <text x="80" y="226" text-anchor="middle" fill="#111827" font-size="22" font-weight="bold">80</text>
+  <text x="80" y="244" text-anchor="middle" fill="#6B7280" font-size="10">/ 100</text>
+  <text x="144" y="204" fill="#111827" font-size="14" font-weight="600">Bijna klaar!</text>
+  <text x="144" y="224" fill="#6B7280" font-size="12">2 documenten nog nodig</text>
+  <rect x="144" y="238" width="210" height="28" rx="6" fill="#DEF7EC"/>
+  <text x="249" y="257" text-anchor="middle" fill="#03543F" font-size="12" font-weight="600">Klaar voor beoordeling</text>
+
+  <!-- What's needed -->
+  <rect x="16" y="296" width="358" height="180" rx="12" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="32" y="322" fill="#111827" font-size="14" font-weight="600">Wat ontbreekt er nog?</text>
+  <!-- Item 1 -->
+  <circle cx="44" cy="350" r="10" fill="#E2E8F0"/>
+  <text x="64" y="354" fill="#374151" font-size="13">BTW-aangifte Q1 2026</text>
+  <text x="330" y="354" fill="#3B82F6" font-size="12" text-anchor="end">Uploaden ›</text>
+  <line x1="32" y1="368" x2="358" y2="368" stroke="#F3F4F6" stroke-width="1"/>
+  <!-- Item 2 -->
+  <circle cx="44" cy="390" r="10" fill="#E2E8F0"/>
+  <text x="64" y="394" fill="#374151" font-size="13">Urenstaat 2026</text>
+  <text x="330" y="394" fill="#3B82F6" font-size="12" text-anchor="end">Uploaden ›</text>
+  <line x1="32" y1="408" x2="358" y2="408" stroke="#F3F4F6" stroke-width="1"/>
+  <!-- Done items -->
+  <circle cx="44" cy="430" r="10" fill="#16A34A"/>
+  <text x="44" y="434" text-anchor="middle" fill="#FFFFFF" font-size="10">✓</text>
+  <text x="64" y="434" fill="#9CA3AF" font-size="13" text-decoration="line-through">Bankafschrift</text>
+  <circle cx="44" cy="458" r="10" fill="#16A34A"/>
+  <text x="44" y="462" text-anchor="middle" fill="#FFFFFF" font-size="10">✓</text>
+  <text x="64" y="462" fill="#9CA3AF" font-size="13" text-decoration="line-through">Verkoopfacturen</text>
+
+  <!-- Upload button -->
+  <rect x="16" y="492" width="358" height="48" rx="12" fill="#3B82F6"/>
+  <text x="195" y="522" text-anchor="middle" fill="#FFFFFF" font-size="15" font-weight="600">+ Document uploaden</text>
+
+  <!-- AI Assistant card -->
+  <rect x="16" y="556" width="358" height="120" rx="12" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
+  <text x="32" y="584" fill="#1E40AF" font-size="14" font-weight="600">💬 Belastingvraag stellen</text>
+  <text x="32" y="606" fill="#374151" font-size="12">Heeft u vragen over uw belastingaangifte?</text>
+  <text x="32" y="624" fill="#374151" font-size="12">Vraag het aan de AI-assistent in NL, EN of FA.</text>
+  <rect x="32" y="640" width="200" height="24" rx="6" fill="#3B82F6"/>
+  <text x="132" y="657" text-anchor="middle" fill="#FFFFFF" font-size="12" font-weight="600">Chat starten</text>
+
+  <!-- Bottom navigation -->
+  <rect x="0" y="760" width="390" height="84" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="48" y="800" text-anchor="middle" fill="#3B82F6" font-size="22">🏠</text>
+  <text x="48" y="818" text-anchor="middle" fill="#3B82F6" font-size="11">Dashboard</text>
+  <text x="146" y="800" text-anchor="middle" fill="#9CA3AF" font-size="22">📄</text>
+  <text x="146" y="818" text-anchor="middle" fill="#9CA3AF" font-size="11">Documenten</text>
+  <text x="244" y="800" text-anchor="middle" fill="#9CA3AF" font-size="22">💬</text>
+  <text x="244" y="818" text-anchor="middle" fill="#9CA3AF" font-size="11">AI Chat</text>
+  <text x="342" y="800" text-anchor="middle" fill="#9CA3AF" font-size="22">👤</text>
+  <text x="342" y="818" text-anchor="middle" fill="#9CA3AF" font-size="11">Profiel</text>
+</svg>

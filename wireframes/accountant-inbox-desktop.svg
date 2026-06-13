@@ -1,0 +1,70 @@
+<svg width="1000" height="650" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+  <rect width="1000" height="650" fill="#F9FAFB"/>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="1000" height="56" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="24" y="36" fill="#111827" font-size="18" font-weight="600">Inbox — Review wachtrij</text>
+  <rect x="800" y="14" width="80" height="28" rx="14" fill="#FEE2E2"/>
+  <text x="840" y="33" text-anchor="middle" fill="#9B1C1C" font-size="12" font-weight="600">3 dringend</text>
+  <!-- Filters -->
+  <rect x="24" y="64" width="1000" height="44" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <rect x="40" y="74" width="90" height="24" rx="12" fill="#DBEAFE"/>
+  <text x="85" y="91" text-anchor="middle" fill="#1E40AF" font-size="12">Alle (12)</text>
+  <rect x="146" y="74" width="100" height="24" rx="12" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+  <text x="196" y="91" text-anchor="middle" fill="#374151" font-size="12">Dringend (3)</text>
+  <rect x="262" y="74" width="100" height="24" rx="12" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+  <text x="312" y="91" text-anchor="middle" fill="#374151" font-size="12">Normaal (7)</text>
+  <rect x="378" y="74" width="80" height="24" rx="12" fill="#FFFFFF" stroke="#D1D5DB" stroke-width="1"/>
+  <text x="418" y="91" text-anchor="middle" fill="#374151" font-size="12">Laag (2)</text>
+
+  <!-- Item 1 - High priority -->
+  <rect x="24" y="120" width="952" height="88" rx="6" fill="#FFFFFF" stroke="#FECACA" stroke-width="1"/>
+  <rect x="24" y="120" width="6" height="88" rx="3" fill="#EF4444"/>
+  <text x="48" y="148" fill="#9B1C1C" font-size="11" font-weight="600">DRINGEND</text>
+  <text x="48" y="168" fill="#111827" font-size="15" font-weight="600">Jaaropgave — Ahmed El Kasmi</text>
+  <text x="48" y="188" fill="#6B7280" font-size="12">Lage betrouwbaarheid (0.52) — BSN elfproef mislukt. Manuele beoordeling vereist.</text>
+  <text x="800" y="148" fill="#9B1C1C" font-size="12">Wacht: 2 uur</text>
+  <rect x="860" y="158" width="100" height="32" rx="6" fill="#EF4444"/>
+  <text x="910" y="179" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="600">Beoordelen</text>
+
+  <!-- Item 2 - High priority -->
+  <rect x="24" y="220" width="952" height="88" rx="6" fill="#FFFFFF" stroke="#FECACA" stroke-width="1"/>
+  <rect x="24" y="220" width="6" height="88" rx="3" fill="#EF4444"/>
+  <text x="48" y="248" fill="#9B1C1C" font-size="11" font-weight="600">DRINGEND</text>
+  <text x="48" y="268" fill="#111827" font-size="15" font-weight="600">BTW-aangifte Q4 2025 — Fatima Hosseini</text>
+  <text x="48" y="288" fill="#6B7280" font-size="12">Samengestelde betrouwbaarheid: 0.61 — 2 velden vereisen verificatie.</text>
+  <text x="800" y="248" fill="#9B1C1C" font-size="12">Wacht: 4 uur</text>
+  <rect x="860" y="258" width="100" height="32" rx="6" fill="#EF4444"/>
+  <text x="910" y="279" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="600">Beoordelen</text>
+
+  <!-- Item 3 - Medium priority -->
+  <rect x="24" y="320" width="952" height="88" rx="6" fill="#FFFFFF" stroke="#FDE68A" stroke-width="1"/>
+  <rect x="24" y="320" width="6" height="88" rx="3" fill="#F59E0B"/>
+  <text x="48" y="348" fill="#92400E" font-size="11" font-weight="600">NORMAAL</text>
+  <text x="48" y="368" fill="#111827" font-size="15" font-weight="600">Bankafschrift 2025 — Sipke de Vries</text>
+  <text x="48" y="388" fill="#6B7280" font-size="12">Spot-check vereist — betrouwbaarheid 0.82. Automatisch goedgekeurd na review.</text>
+  <text x="800" y="348" fill="#6B7280" font-size="12">Wacht: 1 dag</text>
+  <rect x="860" y="358" width="100" height="32" rx="6" fill="#F59E0B"/>
+  <text x="910" y="379" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="600">Beoordelen</text>
+
+  <!-- Item 4 - Medium priority - locked -->
+  <rect x="24" y="420" width="952" height="88" rx="6" fill="#F9FAFB" stroke="#E2E8F0" stroke-width="1"/>
+  <rect x="24" y="420" width="6" height="88" rx="3" fill="#9CA3AF"/>
+  <text x="48" y="448" fill="#6B7280" font-size="11" font-weight="600">NORMAAL — VERGRENDELD</text>
+  <text x="48" y="468" fill="#9CA3AF" font-size="15">Hypotheekjaaropgave — Reza Ahmadi</text>
+  <text x="48" y="488" fill="#9CA3AF" font-size="12">In behandeling door Sara de Vries — vrij om 14:30</text>
+  <rect x="860" y="438" width="100" height="32" rx="6" fill="#E2E8F0"/>
+  <text x="910" y="459" text-anchor="middle" fill="#9CA3AF" font-size="13">Vergrendeld</text>
+
+  <!-- Item 5 - Low priority -->
+  <rect x="24" y="520" width="952" height="88" rx="6" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <rect x="24" y="520" width="6" height="88" rx="3" fill="#22C55E"/>
+  <text x="48" y="548" fill="#15803D" font-size="11" font-weight="600">LAAG — SPOT-CHECK</text>
+  <text x="48" y="568" fill="#111827" font-size="15" font-weight="600">KVK-uittreksel — Mina Sadeghi</text>
+  <text x="48" y="588" fill="#6B7280" font-size="12">Hoge betrouwbaarheid (0.91) — snelle verificatie volstaat.</text>
+  <text x="800" y="548" fill="#6B7280" font-size="12">Wacht: 2 dagen</text>
+  <rect x="860" y="558" width="100" height="32" rx="6" fill="#16A34A"/>
+  <text x="910" y="579" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="600">Beoordelen</text>
+
+  <text x="500" y="638" text-anchor="middle" fill="#9CA3AF" font-size="11">TaxWijs — Accountant Inbox (Review Queue)</text>
+</svg>

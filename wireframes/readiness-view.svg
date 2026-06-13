@@ -1,0 +1,60 @@
+<svg width="1000" height="600" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+  <rect width="1000" height="600" fill="#F9FAFB"/>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="1000" height="56" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="24" y="34" fill="#111827" font-size="18" font-weight="bold">Gereedheidsoverzicht</text>
+  <text x="850" y="26" fill="#6B7280" font-size="12">Ayoub Rahimi — ZZP 2026</text>
+
+  <!-- Main score circle (large) -->
+  <circle cx="200" cy="300" r="120" fill="none" stroke="#E2E8F0" stroke-width="20"/>
+  <circle cx="200" cy="300" r="120" fill="none" stroke="#16A34A" stroke-width="20"
+    stroke-dasharray="754" stroke-dashoffset="151" transform="rotate(-90 200 300)"/>
+  <text x="200" y="285" text-anchor="middle" fill="#111827" font-size="48" font-weight="bold">80</text>
+  <text x="200" y="315" text-anchor="middle" fill="#6B7280" font-size="16">van 100</text>
+  <text x="200" y="450" text-anchor="middle" fill="#16A34A" font-size="14" font-weight="600">✓ Klaar voor beoordeling</text>
+
+  <!-- Component cards -->
+  <!-- Doc score -->
+  <rect x="380" y="80" width="180" height="110" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="470" y="110" text-anchor="middle" fill="#6B7280" font-size="12">Documenten</text>
+  <text x="470" y="155" text-anchor="middle" fill="#3B82F6" font-size="36" font-weight="bold">80%</text>
+  <text x="470" y="178" text-anchor="middle" fill="#6B7280" font-size="11">Gewicht: 40%</text>
+
+  <!-- Checklist score -->
+  <rect x="580" y="80" width="180" height="110" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="670" y="110" text-anchor="middle" fill="#6B7280" font-size="12">Checklist</text>
+  <text x="670" y="155" text-anchor="middle" fill="#16A34A" font-size="36" font-weight="bold">90%</text>
+  <text x="670" y="178" text-anchor="middle" fill="#6B7280" font-size="11">Gewicht: 30%</text>
+
+  <!-- Verification score -->
+  <rect x="380" y="210" width="180" height="110" rx="8" fill="#FFFFFF" stroke="#FED7AA" stroke-width="2"/>
+  <text x="470" y="240" text-anchor="middle" fill="#6B7280" font-size="12">Verificatie</text>
+  <text x="470" y="285" text-anchor="middle" fill="#F97316" font-size="36" font-weight="bold">60%</text>
+  <text x="470" y="308" text-anchor="middle" fill="#F97316" font-size="11">⚠ Aandacht vereist</text>
+
+  <!-- Review score -->
+  <rect x="580" y="210" width="180" height="110" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="670" y="240" text-anchor="middle" fill="#6B7280" font-size="12">Accountant review</text>
+  <text x="670" y="285" text-anchor="middle" fill="#16A34A" font-size="36" font-weight="bold">100%</text>
+  <text x="670" y="308" text-anchor="middle" fill="#6B7280" font-size="11">Gewicht: 10%</text>
+
+  <!-- Action required -->
+  <rect x="380" y="350" width="580" height="80" rx="8" fill="#FFF7ED" stroke="#FED7AA" stroke-width="1"/>
+  <text x="400" y="378" fill="#92400E" font-size="13" font-weight="600">⚠ Wat ontbreekt er?</text>
+  <text x="400" y="400" fill="#92400E" font-size="12">Verificatiescore is laag — 2 documenten zijn geüpload maar nog niet goedgekeurd.</text>
+  <text x="400" y="418" fill="#92400E" font-size="12">Ga naar het tabblad "Review" om ze te beoordelen.</text>
+
+  <!-- Score history line -->
+  <rect x="380" y="450" width="580" height="120" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="400" y="476" fill="#111827" font-size="13" font-weight="600">Scoregeschiedenis</text>
+  <!-- Simple line chart -->
+  <polyline points="420,540 480,530 540,510 600,490 660,480 720,470 780,460 840,445 900,432"
+    fill="none" stroke="#3B82F6" stroke-width="2"/>
+  <circle cx="420" cy="540" r="4" fill="#3B82F6"/>
+  <circle cx="900" cy="432" r="4" fill="#3B82F6"/>
+  <text x="400" y="558" fill="#9CA3AF" font-size="10">14 jan</text>
+  <text x="880" y="558" fill="#9CA3AF" font-size="10">13 jun</text>
+
+  <text x="500" y="590" text-anchor="middle" fill="#9CA3AF" font-size="11">TaxWijs — Readiness Score View</text>
+</svg>

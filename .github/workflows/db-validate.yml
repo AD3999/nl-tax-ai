@@ -1,0 +1,126 @@
+name: Database Schema Validation
+
+on:
+  pull_request:
+    paths:
+      - 'backend/apps/**/migrations/**'
+      - 'schema/postgres/schema.sql'
+      - 'schema/postgres/indexes.sql'
+      - 'schema/postgres/seed-reference-data.sql'
+  push:
+    branches: [main]
+    paths:
+      - 'schema/postgres/**'
+
+jobs:
+  validate-sql:
+    name: Validate SQL Files
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: taxwijs_test
+          POSTGRES_USER: taxwijs
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply schema.sql
+        run: |
+          psql postgresql://taxwijs:test_password@localhost:5432/taxwijs_test \
+            -f schema/postgres/schema.sql
+        env:
+          PGPASSWORD: test_password
+
+      - name: Apply indexes.sql
+        run: |
+          psql postgresql://taxwijs:test_password@localhost:5432/taxwijs_test \
+            -f schema/postgres/indexes.sql
+        env:
+          PGPASSWORD: test_password
+
+      - name: Apply seed-reference-data.sql
+        run: |
+          psql postgresql://taxwijs:test_password@localhost:5432/taxwijs_test \
+            -f schema/postgres/seed-reference-data.sql
+        env:
+          PGPASSWORD: test_password
+
+      - name: Verify table count (expect 53)
+        run: |
+          TABLE_COUNT=$(psql postgresql://taxwijs:test_password@localhost:5432/taxwijs_test \
+            -t -c "SELECT count(*) FROM information_schema.tables WHERE table_schema='public'")
+          echo "Tables found: $TABLE_COUNT"
+          if [ "$TABLE_COUNT" -lt 50 ]; then
+            echo "ERROR: Expected 53+ tables, found $TABLE_COUNT"
+            exit 1
+          fi
+        env:
+          PGPASSWORD: test_password
+
+  validate-django-migrations:
+    name: Validate Django Migrations Match Schema
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: taxwijs_test
+          POSTGRES_USER: taxwijs
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt
+
+      - name: Check no missing migrations
+        run: |
+          cd backend
+          python manage.py makemigrations --check --dry-run
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings
+          DATABASE_URL: postgresql://taxwijs:test_password@localhost:5432/taxwijs_test
+          DJANGO_SECRET_KEY: ci-secret-key
+
+      - name: Run migrations
+        run: |
+          cd backend
+          python manage.py migrate --noinput
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings
+          DATABASE_URL: postgresql://taxwijs:test_password@localhost:5432/taxwijs_test
+          DJANGO_SECRET_KEY: ci-secret-key
+
+      - name: Verify migration state is clean
+        run: |
+          cd backend
+          python manage.py showmigrations --plan | grep -v "\[X\]" | grep -v "^$" | head -20
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings
+          DATABASE_URL: postgresql://taxwijs:test_password@localhost:5432/taxwijs_test
+          DJANGO_SECRET_KEY: ci-secret-key

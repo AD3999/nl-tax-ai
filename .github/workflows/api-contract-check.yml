@@ -1,0 +1,79 @@
+name: API Contract Check
+
+on:
+  pull_request:
+    paths:
+      - 'docs/03-api/openapi.yaml'
+      - 'api/openapi.yaml'
+      - 'backend/apps/**/urls.py'
+      - 'backend/apps/**/views.py'
+  push:
+    branches: [main]
+    paths:
+      - 'docs/03-api/openapi.yaml'
+      - 'api/openapi.yaml'
+
+jobs:
+  lint-openapi:
+    name: Lint OpenAPI Spec
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Spectral
+        run: npm install -g @stoplight/spectral-cli
+
+      - name: Lint OpenAPI spec (docs/03-api)
+        run: spectral lint docs/03-api/openapi.yaml --ruleset .spectral.yaml
+
+      - name: Lint root OpenAPI spec (api/)
+        run: spectral lint api/openapi.yaml --ruleset .spectral.yaml
+
+  validate-contract:
+    name: Validate API Contract vs Django URLs
+    runs-on: ubuntu-latest
+    needs: lint-openapi
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r backend/requirements.txt pyyaml
+
+      - name: Check OpenAPI endpoints exist in Django URL config
+        run: |
+          cd backend
+          python manage.py check_openapi_contract \
+            --spec ../docs/03-api/openapi.yaml \
+            --fail-on-mismatch
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings
+          DATABASE_URL: sqlite:///test.db
+          DJANGO_SECRET_KEY: ci-secret-key
+
+  check-examples:
+    name: Validate OpenAPI Examples
+    runs-on: ubuntu-latest
+    needs: lint-openapi
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install openapi-examples-validator
+        run: npm install -g openapi-examples-validator
+
+      - name: Validate examples in openapi.yaml
+        run: openapi-examples-validator docs/03-api/openapi.yaml

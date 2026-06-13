@@ -1,0 +1,34 @@
+flowchart TD
+    Login[/login] --> |authenticated| Role{User Role?}
+    Role --> |admin| AdminDash[/app/admin/]
+    Role --> |firm_manager| FirmDash[/app/dashboard\nFirm Overview]
+    Role --> |accountant| AcctDash[/app/dashboard\nMy Engagements]
+    Role --> |client| ClientDash[/app/dashboard\nMy Tax Returns]
+
+    FirmDash --> Clients[/app/clients/]
+    AcctDash --> Clients
+    Clients --> ClientDetail[/app/clients/id/\nClient Profile]
+    ClientDetail --> NewEngagement[/app/engagements/id/\nEngagement Workspace]
+
+    ClientDash --> ClientEngagement[/app/engagements/id/\nMy Engagement]
+
+    NewEngagement --> OverviewTab[Overview\nReadiness Score]
+    NewEngagement --> ChecklistTab[Checklist]
+    NewEngagement --> DocumentsTab[Documents]
+    NewEngagement --> ReviewTab[Review Queue]
+    NewEngagement --> AIChatTab[AI Chat]
+    NewEngagement --> CalculatorTab[Calculator]
+    NewEngagement --> IBGuideTab[IB Guide]
+    NewEngagement --> MessagesTab[Messages]
+
+    ReviewTab --> |low confidence| DocumentReview[Review Fields\n+ Confidence Badges]
+    DocumentReview --> |accepted| ChecklistTab
+    DocumentReview --> |rejected| DocumentsTab
+
+    AIChatTab --> |question asked| RAG[RAG Retrieval]
+    RAG --> Calculator[Tax Calculator]
+    Calculator --> ClaudeResponse[Claude Response\nwith Citations]
+
+    AdminDash --> RulesMgmt[/app/admin/rules/\nRule Management]
+    AdminDash --> AuditLog[/app/admin/audit-log/]
+    AdminDash --> Privacy[/app/admin/privacy/\nDSAR Management]

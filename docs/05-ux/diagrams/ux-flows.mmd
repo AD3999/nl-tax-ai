@@ -1,0 +1,47 @@
+flowchart TD
+    subgraph AccountantFlow["Accountant: New Client Onboarding Flow"]
+        A1[Create Client] --> A2[Set Persona\nZZP/Employee/Expat/DGA]
+        A2 --> A3[Create Engagement\nfor Tax Year 2026]
+        A3 --> A4[Checklist\nAuto-generated]
+        A4 --> A5[Send Intake Link\nto Client]
+    end
+
+    subgraph ClientFlow["Client: Document Upload Flow"]
+        B1[Receive Email\nInvitation] --> B2[Create Account\nor Login]
+        B2 --> B3[View My Checklist\nWhat do I need to upload?]
+        B3 --> B4[Upload Documents\nDrag and Drop]
+        B4 --> B5{Virus Scan}
+        B5 --> |clean| B6[OCR + Classification]
+        B5 --> |infected| B7[Error Message]
+        B6 --> B8{Confidence?}
+        B8 --> |≥0.90| B9[Auto-extracted\nStraight-through]
+        B8 --> |0.75-0.89| B10[Spot-check Queue]
+        B8 --> |<0.75| B11[Human Review Queue]
+    end
+
+    subgraph ReviewFlow["Accountant: Document Review Flow"]
+        C1[Open Review Queue] --> C2[Lock Document\n30-min lock]
+        C2 --> C3[View Extracted Fields\nwith Confidence Badges]
+        C3 --> C4{Each Field}
+        C4 --> |accept| C5[Mark Accepted]
+        C4 --> |correct| C6[Enter Correct Value]
+        C4 --> |reject| C7[Mark Rejected]
+        C5 --> C8[Submit Review]
+        C6 --> C8
+        C7 --> C8
+        C8 --> C9[Readiness Score Updates]
+        C9 --> C10{Score ≥ 80?}
+        C10 --> |yes| C11[Engagement: Ready for Review]
+        C10 --> |no| C12[Notify Client:\nMore Documents Needed]
+    end
+
+    subgraph AIFlow["User: AI Tax Q&A Flow"]
+        D1[Open AI Chat] --> D2[Type Question\nin NL / EN / FA]
+        D2 --> D3[RAG Retrieval\nTop-5 chunks + cascade]
+        D3 --> D4[Calculator Called\nif numbers needed]
+        D4 --> D5[Claude Response\nwith Source URLs]
+        D5 --> D6{expected_ai_behavior}
+        D6 --> |answer_directly| D7[Direct Answer]
+        D6 --> |answer_with_caveat| D8[Answer + Disclaimer]
+        D6 --> |refer_to_advisor| D9[Recommend Belastingadviseur]
+    end

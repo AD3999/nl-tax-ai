@@ -1,0 +1,503 @@
+asyncapi: '2.6.0'
+
+info:
+  title: TaxWijs Domain Events
+  version: '2026-01'
+  description: |
+    Domain events published by the TaxWijs platform.
+    Consumed internally by Celery workers and externally via webhooks.
+  contact:
+    name: TaxWijs Engineering
+    url: https://taxwijs.nl
+
+defaultContentType: application/json
+
+channels:
+
+  # ============================================================
+  # Engagement Events
+  # ============================================================
+
+  engagement/created:
+    description: A new tax engagement has been created
+    subscribe:
+      operationId: onEngagementCreated
+      message:
+        $ref: '#/components/messages/EngagementCreated'
+
+  engagement/status_changed:
+    description: Engagement status transitioned
+    subscribe:
+      operationId: onEngagementStatusChanged
+      message:
+        $ref: '#/components/messages/EngagementStatusChanged'
+
+  engagement/readiness_score_changed:
+    description: Readiness score has been recalculated
+    subscribe:
+      operationId: onReadinessScoreChanged
+      message:
+        $ref: '#/components/messages/ReadinessScoreChanged'
+
+  engagement/completed:
+    description: Engagement has been marked as filed
+    subscribe:
+      operationId: onEngagementCompleted
+      message:
+        $ref: '#/components/messages/EngagementCompleted'
+
+  # ============================================================
+  # Document Events
+  # ============================================================
+
+  document/upload_requested:
+    description: A document has been uploaded and is awaiting processing
+    subscribe:
+      operationId: onDocumentUploadRequested
+      message:
+        $ref: '#/components/messages/DocumentUploadRequested'
+
+  document/virus_scan_complete:
+    description: Virus scan pipeline stage completed
+    subscribe:
+      operationId: onVirusScanComplete
+      message:
+        $ref: '#/components/messages/VirusScanComplete'
+
+  document/classification_complete:
+    description: Document type classification completed
+    subscribe:
+      operationId: onClassificationComplete
+      message:
+        $ref: '#/components/messages/ClassificationComplete'
+
+  document/extraction_complete:
+    description: Field extraction completed with routing decision
+    subscribe:
+      operationId: onExtractionComplete
+      message:
+        $ref: '#/components/messages/ExtractionComplete'
+
+  document/needs_review:
+    description: Document routed to human review queue
+    subscribe:
+      operationId: onDocumentNeedsReview
+      message:
+        $ref: '#/components/messages/DocumentNeedsReview'
+
+  document/review_complete:
+    description: Accountant completed review of a document
+    subscribe:
+      operationId: onReviewComplete
+      message:
+        $ref: '#/components/messages/ReviewComplete'
+
+  document/superseded:
+    description: A document was replaced by a newer version
+    subscribe:
+      operationId: onDocumentSuperseded
+      message:
+        $ref: '#/components/messages/DocumentSuperseded'
+
+  # ============================================================
+  # AI Events
+  # ============================================================
+
+  ai/chat_message_sent:
+    description: A Claude AI response was generated
+    subscribe:
+      operationId: onAIChatMessageSent
+      message:
+        $ref: '#/components/messages/AIChatMessageSent'
+
+  ai/deduction_opportunity_found:
+    description: The deduction scanner identified an opportunity
+    subscribe:
+      operationId: onDeductionOpportunityFound
+      message:
+        $ref: '#/components/messages/DeductionOpportunityFound'
+
+  # ============================================================
+  # Identity Events
+  # ============================================================
+
+  user/registered:
+    description: A new user account was created
+    subscribe:
+      operationId: onUserRegistered
+      message:
+        $ref: '#/components/messages/UserRegistered'
+
+  user/email_verified:
+    description: User verified their email address
+    subscribe:
+      operationId: onEmailVerified
+      message:
+        $ref: '#/components/messages/EmailVerified'
+
+  # ============================================================
+  # Privacy Events
+  # ============================================================
+
+  privacy/dsar_request_received:
+    description: A GDPR data subject access request was submitted
+    subscribe:
+      operationId: onDSARRequestReceived
+      message:
+        $ref: '#/components/messages/DSARRequestReceived'
+
+  privacy/dsar_fulfilled:
+    description: A GDPR data subject request was fulfilled
+    subscribe:
+      operationId: onDSARFulfilled
+      message:
+        $ref: '#/components/messages/DSARFulfilled'
+
+  # ============================================================
+  # Billing Events
+  # ============================================================
+
+  subscription/usage_limit_approaching:
+    description: A firm is approaching their plan usage limit
+    subscribe:
+      operationId: onUsageLimitApproaching
+      message:
+        $ref: '#/components/messages/UsageLimitApproaching'
+
+components:
+  messages:
+
+    EngagementCreated:
+      name: engagement.created
+      contentType: application/json
+      payload:
+        type: object
+        required: [event_id, event_type, occurred_at, payload]
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [engagement.created]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            required: [engagement_id, client_id, firm_id, tax_year, persona]
+            properties:
+              engagement_id: {type: string, format: uuid}
+              client_id: {type: string, format: uuid}
+              firm_id: {type: string, format: uuid}
+              tax_year: {type: integer, example: 2026}
+              persona: {type: string, enum: [zzp, employee, expat, dga]}
+
+    EngagementStatusChanged:
+      name: engagement.status_changed
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [engagement.status_changed]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            required: [engagement_id, from_status, to_status, changed_by]
+            properties:
+              engagement_id: {type: string, format: uuid}
+              from_status: {type: string}
+              to_status: {type: string}
+              changed_by: {type: string, format: uuid}
+              reason: {type: string, nullable: true}
+
+    ReadinessScoreChanged:
+      name: engagement.readiness_score_changed
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [engagement.readiness_score_changed]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            required: [engagement_id, previous_score, new_score, trigger]
+            properties:
+              engagement_id: {type: string, format: uuid}
+              previous_score: {type: number, minimum: 0, maximum: 100}
+              new_score: {type: number, minimum: 0, maximum: 100}
+              snapshot_id: {type: string, format: uuid}
+              trigger: {type: string, enum: [document_accepted, checklist_updated, manual_override]}
+
+    EngagementCompleted:
+      name: engagement.completed
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [engagement.completed]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            required: [engagement_id, client_id, firm_id, tax_year, final_readiness_score]
+            properties:
+              engagement_id: {type: string, format: uuid}
+              client_id: {type: string, format: uuid}
+              firm_id: {type: string, format: uuid}
+              tax_year: {type: integer}
+              final_readiness_score: {type: number}
+              completed_by: {type: string, format: uuid}
+
+    DocumentUploadRequested:
+      name: document.upload_requested
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [document.upload_requested]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            required: [document_id, engagement_id, filename, mime_type, file_size_bytes, s3_key]
+            properties:
+              document_id: {type: string, format: uuid}
+              engagement_id: {type: string, format: uuid}
+              filename: {type: string, example: jaaropgave_2025.pdf}
+              mime_type: {type: string, example: application/pdf}
+              file_size_bytes: {type: integer}
+              uploaded_by: {type: string, format: uuid}
+              s3_key: {type: string}
+
+    VirusScanComplete:
+      name: document.virus_scan_complete
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [document.virus_scan_complete]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            required: [document_id, result, scanner]
+            properties:
+              document_id: {type: string, format: uuid}
+              result: {type: string, enum: [clean, infected]}
+              scanner: {type: string, example: clamav}
+              threat_name: {type: string, nullable: true}
+
+    ClassificationComplete:
+      name: document.classification_complete
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [document.classification_complete]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            properties:
+              document_id: {type: string, format: uuid}
+              document_type: {type: string, example: JAAROPGAVE}
+              confidence: {type: number, minimum: 0, maximum: 1}
+              is_primary: {type: boolean}
+              classifier_version: {type: string, example: taxonomy_v3}
+
+    ExtractionComplete:
+      name: document.extraction_complete
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [document.extraction_complete]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            properties:
+              document_id: {type: string, format: uuid}
+              extraction_id: {type: string, format: uuid}
+              document_type: {type: string}
+              composite_confidence: {type: number}
+              fields_extracted: {type: integer}
+              routing_decision:
+                type: string
+                enum: [straight_through, spot_check, human_review, manual_only]
+
+    DocumentNeedsReview:
+      name: document.needs_review
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [document.needs_review]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            properties:
+              document_id: {type: string, format: uuid}
+              engagement_id: {type: string, format: uuid}
+              reason: {type: string, enum: [low_confidence, mandatory_review, contradictory_evidence]}
+              priority: {type: string, enum: [low, medium, high]}
+              assigned_to: {type: string, format: uuid, nullable: true}
+
+    ReviewComplete:
+      name: document.review_complete
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [document.review_complete]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            properties:
+              document_id: {type: string, format: uuid}
+              review_id: {type: string, format: uuid}
+              decision: {type: string, enum: [approved, rejected, needs_client_correction]}
+              reviewed_by: {type: string, format: uuid}
+              corrections_made: {type: integer}
+
+    DocumentSuperseded:
+      name: document.superseded
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [document.superseded]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            properties:
+              old_document_id: {type: string, format: uuid}
+              new_document_id: {type: string, format: uuid}
+              engagement_id: {type: string, format: uuid}
+              reason: {type: string, enum: [client_reupload, accountant_replacement]}
+
+    AIChatMessageSent:
+      name: ai.chat_message_sent
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [ai.chat_message_sent]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            properties:
+              thread_id: {type: string, format: uuid}
+              message_id: {type: string, format: uuid}
+              engagement_id: {type: string, format: uuid}
+              user_type: {type: string, enum: [zzp, employee, expat, dga]}
+              language: {type: string, enum: [nl, en, fa]}
+              input_tokens: {type: integer}
+              output_tokens: {type: integer}
+              model: {type: string, example: claude-sonnet-4-6}
+              prompt_version: {type: integer}
+              rag_chunks_retrieved: {type: integer}
+              mock_mode: {type: boolean}
+
+    DeductionOpportunityFound:
+      name: ai.deduction_opportunity_found
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [ai.deduction_opportunity_found]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            properties:
+              engagement_id: {type: string, format: uuid}
+              rule_id: {type: string, example: ZA-2026-001}
+              opportunity_type: {type: string}
+              estimated_saving: {type: number}
+              confidence: {type: number}
+              evidence_required: {type: array, items: {type: string}}
+
+    UserRegistered:
+      name: user.registered
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [user.registered]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            properties:
+              user_id: {type: string, format: uuid}
+              email: {type: string, format: email}
+              role: {type: string}
+              firm_id: {type: string, format: uuid, nullable: true}
+
+    EmailVerified:
+      name: user.email_verified
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [user.email_verified]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            properties:
+              user_id: {type: string, format: uuid}
+              email: {type: string, format: email}
+
+    DSARRequestReceived:
+      name: privacy.dsar_request_received
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [privacy.dsar_request_received]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            properties:
+              request_id: {type: string, format: uuid}
+              request_type: {type: string, enum: [access, erasure, portability, rectification]}
+              subject_email: {type: string, format: email}
+              deadline: {type: string, format: date}
+
+    DSARFulfilled:
+      name: privacy.dsar_fulfilled
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [privacy.dsar_fulfilled]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            properties:
+              request_id: {type: string, format: uuid}
+              fulfilled_at: {type: string, format: date-time}
+              fulfilled_by: {type: string, format: uuid}
+
+    UsageLimitApproaching:
+      name: subscription.usage_limit_approaching
+      contentType: application/json
+      payload:
+        type: object
+        properties:
+          event_id: {type: string}
+          event_type: {type: string, enum: [subscription.usage_limit_approaching]}
+          occurred_at: {type: string, format: date-time}
+          payload:
+            type: object
+            properties:
+              firm_id: {type: string, format: uuid}
+              metric: {type: string, enum: [engagements, ai_calls, documents]}
+              used: {type: integer}
+              limit: {type: integer}
+              pct_used: {type: number}

@@ -1,0 +1,71 @@
+id,epic,title,role,story,status,points,priority,phase,notes
+E01-US001,E01: Auth,User Registration,New accountant,Register with email + password,done,3,P0,Phase 8,Complete
+E01-US002,E01: Auth,Email Verification,New user,Receive email verification link,done,2,P0,Phase 8,Complete
+E01-US003,E01: Auth,JWT Login,Accountant,Log in with email + password,done,2,P0,Phase 8,Complete
+E01-US004,E01: Auth,MFA Setup,Accountant,Enable TOTP-based MFA,done,3,P1,Phase 8,Complete
+E01-US005,E01: Auth,Invitation Acceptance,Invited user,Accept firm invitation via email link,done,3,P0,Phase 8,Complete
+E01-US006,E01: Auth,Logout,Accountant,Log out and revoke session,done,1,P0,Phase 8,Complete
+E01-US007,E01: Auth,Password Reset,Accountant,Reset password via email,done,2,P0,Phase 8,Complete
+E01-US008,E01: Auth,Session Timeout,User,See session timeout warning,backlog,2,P2,Phase 8,
+E01-US009,E01: Auth,Token Refresh,User,Refresh access token,done,1,P0,Phase 8,Complete
+E01-US010,E01: Auth,Session Management,Admin,View and revoke user sessions,backlog,3,P1,Phase 8,
+E01-US011,E01: Auth,Bulk Invite,Firm manager,Invite multiple users via CSV,backlog,3,P2,Phase 8,
+E01-US012,E01: Auth,Language Preference,Accountant,Set preferred language during setup,done,1,P0,Phase 8,Complete
+E01-US013,E01: Auth,Disable User,Admin,Disable a user account,done,2,P0,Phase 8,Complete
+E01-US014,E01: Auth,Permission View,User,See role permissions,backlog,1,P2,Phase 8,
+E01-US015,E01: Auth,Failed Login Log,Admin,View failed login attempts,backlog,2,P1,Phase 8,
+E02-US001,E02: Firm,Create Firm,Firm manager,Create a firm profile,done,2,P0,Phase 8,Complete
+E02-US002,E02: Firm,Firm Logo,Firm manager,Upload a firm logo,done,2,P1,Phase 8,Complete
+E02-US003,E02: Firm,Brand Color,Firm manager,Set primary brand color,backlog,2,P2,Phase 8,
+E02-US004,E02: Firm,Invite Accountant,Firm manager,Invite accountants by email,done,2,P0,Phase 8,Complete
+E02-US005,E02: Firm,Remove Member,Firm manager,Remove a team member,done,2,P0,Phase 8,Complete
+E02-US006,E02: Firm,Change Role,Firm manager,Change a team member's role,done,1,P1,Phase 8,Complete
+E02-US007,E02: Firm,Team Overview,Firm manager,View all team members,done,1,P0,Phase 8,Complete
+E02-US008,E02: Firm,Subscription Status,Firm manager,View subscription status,done,2,P0,Phase 8,Complete
+E02-US009,E02: Firm,Upgrade Plan,Firm manager,Upgrade subscription,backlog,3,P1,Phase 8,
+E02-US010,E02: Firm,Invoice History,Firm manager,View invoice history,backlog,2,P1,Phase 8,
+E02-US011,E02: Firm,Default Language,Firm manager,Set default language for new clients,done,1,P1,Phase 8,Complete
+E02-US012,E02: Firm,All Firms View,Admin,View all firms and their plans,done,2,P0,Phase 8,Complete
+E02-US013,E02: Firm,Feature Flags,Admin,Enable feature flag per firm,done,2,P0,Phase 8,Complete
+E02-US014,E02: Firm,Email Preferences,Firm manager,Configure email notification preferences,backlog,2,P2,Phase 8,
+E02-US015,E02: Firm,Client Export,Firm manager,Export client list to CSV,backlog,2,P2,Phase 8,
+E03-US001,E03: Client,Create Client,Accountant,Create a new client,done,2,P0,Phase 8,Complete
+E03-US002,E03: Client,Set Persona,Accountant,Set client persona,done,1,P0,Phase 8,Complete
+E03-US003,E03: Client,Preferred Language,Accountant,Set client's preferred language,done,1,P0,Phase 8,Complete
+E03-US004,E03: Client,KVK Number,Accountant,Enter KVK number,done,1,P1,Phase 8,Complete
+E03-US005,E03: Client,Client List,Accountant,View all clients with filters,done,2,P0,Phase 8,Complete
+E03-US006,E03: Client,Archive Client,Accountant,Archive inactive client,done,1,P1,Phase 8,Complete
+E03-US007,E03: Client,Self-Service Profile,Client,View and update own profile,done,2,P0,Phase 8,Complete
+E03-US008,E03: Client,Portal Link,Accountant,Link client to portal account,done,3,P0,Phase 8,Complete
+E03-US009,E03: Client,Tax History,Accountant,View client tax history,done,2,P1,Phase 8,Complete
+E03-US010,E03: Client,Client Notes,Accountant,Add notes to client profile,done,1,P2,Phase 8,Complete
+E03-US011,E03: Client,Wet DBA Risk,Accountant,Mark client as Wet DBA risk,done,2,P0,Phase 8,Complete
+E03-US012,E03: Client,Wet DBA Filter,Accountant,Filter clients by Wet DBA risk,done,1,P1,Phase 8,Complete
+E03-US013,E03: Client,Bulk Create,Accountant,Bulk-create clients via CSV,backlog,5,P2,Phase 8,
+E03-US014,E03: Client,Admin Search,Admin,Search clients across all firms,done,2,P0,Phase 8,Complete
+E03-US015,E03: Client,BSN View,Accountant,See client's BSN on file,done,3,P0,Phase 8,MFA-protected reveal
+E04-US001,E04: Engagement,Create Engagement,Accountant,Create engagement for client + year,done,2,P0,Phase 5,Complete
+E04-US002,E04: Engagement,Engagement Status,Accountant,See engagement status,done,1,P0,Phase 5,Complete
+E04-US003,E04: Engagement,Transition to Ready,Accountant,Mark engagement as ready,done,2,P0,Phase 5,Requires score >= 80
+E04-US004,E04: Engagement,Mark Filed,Accountant,Mark engagement as filed,done,1,P0,Phase 5,Complete
+E04-US005,E04: Engagement,Assign Engagement,Accountant,Assign engagement to colleague,done,2,P1,Phase 5,Complete
+E04-US006,E04: Engagement,Engagement Notes,Accountant,Leave note on engagement,done,1,P1,Phase 5,Complete
+E04-US007,E04: Engagement,Task List,Accountant,See all open tasks,done,2,P0,Phase 5,Complete
+E04-US008,E04: Engagement,Create Task,Accountant,Create a task for engagement,done,2,P0,Phase 5,Complete
+E04-US009,E04: Engagement,Complete Task,Accountant,Mark task as done,done,1,P0,Phase 5,Complete
+E04-US010,E04: Engagement,Client Status View,Client,View own engagement status,done,2,P0,Phase 5,Complete
+E04-US011,E04: Engagement,Client Document Needs,Client,See which documents still needed,done,2,P0,Phase 5,Complete
+E04-US012,E04: Engagement,Filter by Status,Accountant,Filter engagements by status,done,1,P0,Phase 5,Complete
+E04-US013,E04: Engagement,Sort by Score,Accountant,Sort engagements by readiness,done,1,P1,Phase 5,Complete
+E04-US014,E04: Engagement,Search by Name,Accountant,Search engagements by client name,done,2,P0,Phase 5,Complete
+E04-US015,E04: Engagement,Firm-wide View,Firm manager,View all engagements across team,done,2,P0,Phase 5,Complete
+E08-US001,E08: Readiness,Show Score,Accountant,See readiness score on engagement,done,3,P0,Phase 7,Complete - fix applied
+E08-US002,E08: Readiness,Formula Breakdown,Accountant,See score formula breakdown,done,2,P0,Phase 7,Complete
+E08-US003,E08: Readiness,Auto-recalculate,System,Recalculate score on every change,done,3,P0,Phase 7,Complete
+E08-US008,E08: Readiness,Waiver Credit,System,Treat waived DocRequest as accepted,done,3,P0,Phase 7,readiness.py fix: _effective_status()
+E10-US001,E10: AI Chat,Dutch Q&A,ZZP client,Ask tax question in Dutch,done,3,P0,Phase 4,Complete
+E10-US002,E10: AI Chat,English Q&A,Expat client,Ask tax question in English,done,2,P0,Phase 4,Complete
+E10-US003,E10: AI Chat,Persian Q&A,Iranian client,Ask tax question in Persian,done,3,P0,Phase 4,Complete - RTL supported
+E10-US005,E10: AI Chat,Streaming,Client,Get streaming AI response,done,3,P0,Phase 4,SSE implemented
+E11-US001,E11: Calculator,ZZP Estimate,ZZP user,Calculate total tax from profit,done,5,P0,Phase 3,Complete - all 6 scenarios pass
+E11-US008,E11: Calculator,Scenario Tests,System,Run 6 seed scenarios with 0.0% error,done,3,P0,Phase 3,test_scenarios.py passes

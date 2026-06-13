@@ -1,0 +1,97 @@
+<svg width="1100" height="700" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+  <rect width="1100" height="700" fill="#F9FAFB"/>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="1100" height="56" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="24" y="36" fill="#111827" font-size="18" font-weight="600">Belastingregels beheer — 2026</text>
+  <rect x="950" y="12" width="130" height="32" rx="6" fill="#3B82F6"/>
+  <text x="1015" y="32" text-anchor="middle" fill="#FFFFFF" font-size="13" font-weight="600">+ Nieuwe regel</text>
+
+  <!-- Filters bar -->
+  <rect x="24" y="68" width="1052" height="48" rx="6" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <rect x="40" y="80" width="160" height="24" rx="4" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="1"/>
+  <text x="120" y="97" text-anchor="middle" fill="#374151" font-size="12">Categorie: Alle ▼</text>
+  <rect x="216" y="80" width="160" height="24" rx="4" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="1"/>
+  <text x="296" y="97" text-anchor="middle" fill="#374151" font-size="12">Gebruiker: Alle ▼</text>
+  <rect x="392" y="80" width="160" height="24" rx="4" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="1"/>
+  <text x="472" y="97" text-anchor="middle" fill="#374151" font-size="12">Status: Geverifieerd ▼</text>
+  <rect x="700" y="80" width="220" height="24" rx="4" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="1"/>
+  <text x="740" y="97" fill="#9CA3AF" font-size="12">Zoek regel ID of omschrijving...</text>
+
+  <!-- Table header -->
+  <rect x="24" y="128" width="1052" height="36" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="44" y="152" fill="#6B7280" font-size="12" font-weight="600">REGEL ID</text>
+  <text x="180" y="152" fill="#6B7280" font-size="12" font-weight="600">OMSCHRIJVING</text>
+  <text x="500" y="152" fill="#6B7280" font-size="12" font-weight="600">WAARDE</text>
+  <text x="640" y="152" fill="#6B7280" font-size="12" font-weight="600">GELDIG TOT</text>
+  <text x="760" y="152" fill="#6B7280" font-size="12" font-weight="600">STATUS</text>
+  <text x="900" y="152" fill="#6B7280" font-size="12" font-weight="600">ACTIES</text>
+
+  <!-- Row 1 - ZA -->
+  <rect x="24" y="164" width="1052" height="52" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="44" y="196" fill="#1E40AF" font-size="13" font-weight="600">ZA-2026-001</text>
+  <text x="180" y="188" fill="#111827" font-size="13">Zelfstandigenaftrek 2026</text>
+  <text x="180" y="206" fill="#6B7280" font-size="11">Min. 1.225 uur per jaar</text>
+  <text x="500" y="196" fill="#111827" font-size="13" font-weight="600">€ 1.200</text>
+  <text x="640" y="196" fill="#6B7280" font-size="13">—</text>
+  <rect x="760" y="178" width="76" height="24" rx="12" fill="#DEF7EC"/>
+  <text x="798" y="195" text-anchor="middle" fill="#03543F" font-size="11" font-weight="600">Geverifieerd</text>
+  <text x="900" y="192" fill="#3B82F6" font-size="12">Bewerken</text>
+  <text x="970" y="192" fill="#3B82F6" font-size="12">Tests</text>
+  <text x="1024" y="192" fill="#3B82F6" font-size="12">Versies</text>
+
+  <!-- Row 2 - SA (expiring) -->
+  <rect x="24" y="216" width="1052" height="52" fill="#FFFBEB" stroke="#FDE68A" stroke-width="1"/>
+  <text x="44" y="248" fill="#1E40AF" font-size="13" font-weight="600">SA-2026-001</text>
+  <text x="180" y="240" fill="#111827" font-size="13">Startersaftrek 2026</text>
+  <text x="180" y="258" fill="#F97316" font-size="11" font-weight="600">⚠ Vervalt 31 dec 2026 — laatste jaar!</text>
+  <text x="500" y="248" fill="#111827" font-size="13" font-weight="600">€ 2.123</text>
+  <text x="640" y="248" fill="#F97316" font-size="13" font-weight="600">31-12-2026</text>
+  <rect x="760" y="230" width="76" height="24" rx="12" fill="#DEF7EC"/>
+  <text x="798" y="247" text-anchor="middle" fill="#03543F" font-size="11" font-weight="600">Geverifieerd</text>
+  <text x="900" y="244" fill="#3B82F6" font-size="12">Bewerken</text>
+  <text x="970" y="244" fill="#3B82F6" font-size="12">Tests</text>
+  <text x="1024" y="244" fill="#3B82F6" font-size="12">Versies</text>
+
+  <!-- Row 3 - MKB -->
+  <rect x="24" y="268" width="1052" height="52" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="44" y="300" fill="#1E40AF" font-size="13" font-weight="600">MKB-2026-001</text>
+  <text x="180" y="292" fill="#111827" font-size="13">MKB-winstvrijstelling</text>
+  <text x="180" y="310" fill="#6B7280" font-size="11">Geen ureneis</text>
+  <text x="500" y="300" fill="#111827" font-size="13" font-weight="600">12,7%</text>
+  <text x="640" y="300" fill="#6B7280" font-size="13">—</text>
+  <rect x="760" y="282" width="76" height="24" rx="12" fill="#DEF7EC"/>
+  <text x="798" y="299" text-anchor="middle" fill="#03543F" font-size="11" font-weight="600">Geverifieerd</text>
+  <text x="900" y="296" fill="#3B82F6" font-size="12">Bewerken</text>
+  <text x="970" y="296" fill="#3B82F6" font-size="12">Tests</text>
+
+  <!-- Row 4 - Draft rule -->
+  <rect x="24" y="320" width="1052" height="52" fill="#F9FAFB" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="44" y="352" fill="#9CA3AF" font-size="13" font-weight="600">SA-2027-001</text>
+  <text x="180" y="344" fill="#9CA3AF" font-size="13">Startersaftrek 2027</text>
+  <text x="180" y="362" fill="#9CA3AF" font-size="11">Afgeschaft — geen aftrek meer</text>
+  <text x="500" y="352" fill="#9CA3AF" font-size="13">€ 0</text>
+  <text x="640" y="352" fill="#9CA3AF" font-size="13">—</text>
+  <rect x="760" y="334" width="64" height="24" rx="12" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="1"/>
+  <text x="792" y="351" text-anchor="middle" fill="#6B7280" font-size="11">Concept</text>
+  <text x="900" y="348" fill="#3B82F6" font-size="12">Bewerken</text>
+  <text x="970" y="348" fill="#6B7280" font-size="12">Goedkeuren</text>
+
+  <!-- Rule detail panel -->
+  <rect x="24" y="392" width="1052" height="280" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="44" y="420" fill="#111827" font-size="14" font-weight="600">ZA-2026-001 — Detail</text>
+  <!-- NL/EN/FA tabs -->
+  <text x="44" y="448" fill="#3B82F6" font-size="13" font-weight="600">NL</text>
+  <line x1="44" y1="454" x2="64" y2="454" stroke="#3B82F6" stroke-width="2"/>
+  <text x="80" y="448" fill="#6B7280" font-size="13">EN</text>
+  <text x="116" y="448" fill="#6B7280" font-size="13">FA</text>
+  <text x="44" y="476" fill="#374151" font-size="13">De zelfstandigenaftrek is €1.200 in 2026. Minimaal 1.225 uur per jaar vereist.</text>
+  <!-- AI hint -->
+  <rect x="44" y="494" width="1012" height="40" rx="4" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
+  <text x="60" y="519" fill="#1E40AF" font-size="12">AI INSTRUCTIE: Controleer altijd het urencriterium (1.225 uur) voordat deze aftrek wordt toegepast</text>
+  <!-- Source URL -->
+  <text x="44" y="556" fill="#6B7280" font-size="12">Bron:</text>
+  <text x="88" y="556" fill="#3B82F6" font-size="12">https://www.belastingdienst.nl/wps/wcm/connect/nl/ondernemers/zelfstandigenaftrek</text>
+
+  <text x="550" y="690" text-anchor="middle" fill="#9CA3AF" font-size="11">TaxWijs — Rule Management (Admin)</text>
+</svg>

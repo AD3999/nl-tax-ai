@@ -1,0 +1,89 @@
+<svg width="1100" height="650" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+  <rect width="1100" height="650" fill="#F9FAFB"/>
+  <rect x="0" y="0" width="1100" height="56" fill="#111827"/>
+  <text x="24" y="36" fill="#FFFFFF" font-size="18" font-weight="bold">TaxWijs Admin Console</text>
+  <text x="900" y="36" fill="#9CA3AF" font-size="13">Ingelogd als: admin@taxwijs.nl</text>
+
+  <!-- Side nav -->
+  <rect x="0" y="56" width="200" height="594" fill="#1F2937"/>
+  <rect x="0" y="96" width="200" height="36" fill="#374151"/>
+  <text x="20" y="120" fill="#FFFFFF" font-size="13" font-weight="600">Overzicht</text>
+  <text x="20" y="156" fill="#9CA3AF" font-size="13">Bedrijven</text>
+  <text x="20" y="188" fill="#9CA3AF" font-size="13">Gebruikers</text>
+  <text x="20" y="220" fill="#9CA3AF" font-size="13">Belastingregels</text>
+  <text x="20" y="252" fill="#9CA3AF" font-size="13">Audit log</text>
+  <text x="20" y="284" fill="#9CA3AF" font-size="13">Incidenten</text>
+  <text x="20" y="316" fill="#9CA3AF" font-size="13">Feature flags</text>
+  <text x="20" y="348" fill="#9CA3AF" font-size="13">Privacy (DSAR)</text>
+  <text x="20" y="380" fill="#9CA3AF" font-size="13">Gebruik & Billing</text>
+
+  <!-- KPI cards -->
+  <rect x="216" y="72" width="200" height="100" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="236" y="100" fill="#6B7280" font-size="12">Actieve bedrijven</text>
+  <text x="236" y="138" fill="#111827" font-size="32" font-weight="bold">47</text>
+
+  <rect x="432" y="72" width="200" height="100" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="452" y="100" fill="#6B7280" font-size="12">Actieve dossiers</text>
+  <text x="452" y="138" fill="#111827" font-size="32" font-weight="bold">1.203</text>
+
+  <rect x="648" y="72" width="200" height="100" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="668" y="100" fill="#6B7280" font-size="12">AI-gesprekken vandaag</text>
+  <text x="668" y="138" fill="#3B82F6" font-size="32" font-weight="bold">342</text>
+
+  <rect x="864" y="72" width="220" height="100" rx="8" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
+  <text x="884" y="100" fill="#9B1C1C" font-size="12">Openstaande DSARs</text>
+  <text x="884" y="138" fill="#EF4444" font-size="32" font-weight="bold">3</text>
+
+  <!-- Firms table -->
+  <rect x="216" y="188" width="660" height="300" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="236" y="214" fill="#111827" font-size="14" font-weight="600">Bedrijven</text>
+  <rect x="216" y="224" width="660" height="32" fill="#F8FAFC"/>
+  <text x="236" y="246" fill="#6B7280" font-size="11" font-weight="600">NAAM</text>
+  <text x="420" y="246" fill="#6B7280" font-size="11" font-weight="600">PLAN</text>
+  <text x="540" y="246" fill="#6B7280" font-size="11" font-weight="600">KLANTEN</text>
+  <text x="640" y="246" fill="#6B7280" font-size="11" font-weight="600">STATUS</text>
+  <text x="736" y="246" fill="#6B7280" font-size="11" font-weight="600">ACTIES</text>
+
+  <text x="236" y="278" fill="#111827" font-size="13">Fiscaal Advies BV</text>
+  <text x="420" y="278" fill="#111827" font-size="13">Professional</text>
+  <text x="540" y="278" fill="#111827" font-size="13">142</text>
+  <rect x="640" y="264" width="60" height="20" rx="10" fill="#DEF7EC"/>
+  <text x="670" y="278" text-anchor="middle" fill="#03543F" font-size="11">Actief</text>
+  <text x="736" y="278" fill="#3B82F6" font-size="12">Beheren</text>
+
+  <text x="236" y="314" fill="#111827" font-size="13">Bakker &amp; Partners</text>
+  <text x="420" y="314" fill="#111827" font-size="13">Enterprise</text>
+  <text x="540" y="314" fill="#111827" font-size="13">89</text>
+  <rect x="640" y="300" width="60" height="20" rx="10" fill="#DEF7EC"/>
+  <text x="670" y="314" text-anchor="middle" fill="#03543F" font-size="11">Actief</text>
+  <text x="736" y="314" fill="#3B82F6" font-size="12">Beheren</text>
+
+  <text x="236" y="350" fill="#111827" font-size="13">Iran Tax Consulting</text>
+  <text x="420" y="350" fill="#111827" font-size="13">Starter</text>
+  <text x="540" y="350" fill="#111827" font-size="13">23</text>
+  <rect x="640" y="336" width="60" height="20" rx="10" fill="#DEF7EC"/>
+  <text x="670" y="350" text-anchor="middle" fill="#03543F" font-size="11">Actief</text>
+  <text x="736" y="350" fill="#3B82F6" font-size="12">Beheren</text>
+
+  <!-- Incidents panel -->
+  <rect x="892" y="188" width="192" height="300" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="908" y="214" fill="#111827" font-size="13" font-weight="600">Incidenten</text>
+  <rect x="908" y="224" width="160" height="56" rx="6" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
+  <text x="918" y="244" fill="#9B1C1C" font-size="11" font-weight="600">P1 — Open</text>
+  <text x="918" y="260" fill="#374151" font-size="11">RAG precision</text>
+  <text x="918" y="274" fill="#374151" font-size="11">gezakt naar 88%</text>
+  <rect x="908" y="292" width="160" height="56" rx="6" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1"/>
+  <text x="918" y="312" fill="#15803D" font-size="11" font-weight="600">P2 — Opgelost</text>
+  <text x="918" y="328" fill="#374151" font-size="11">OCR timeout spiek</text>
+  <text x="918" y="342" fill="#374151" font-size="11">3 jun 2026</text>
+
+  <!-- Audit log -->
+  <rect x="216" y="504" width="868" height="120" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="236" y="530" fill="#111827" font-size="13" font-weight="600">Recente audit logs</text>
+  <text x="236" y="556" fill="#6B7280" font-size="12">13-06-2026 10:14 | DOCUMENT_FIELD_CORRECTED | Jaaropgave bruto_loon | Sara de Vries | Fiscaal Advies BV</text>
+  <text x="236" y="576" fill="#6B7280" font-size="12">13-06-2026 09:58 | ENGAGEMENT_STATUS_CHANGED | intake → in_review | Reza Ahmadi | Bakker</text>
+  <text x="236" y="596" fill="#6B7280" font-size="12">13-06-2026 09:45 | RULE_PUBLISHED | SA-2026-001 | admin@taxwijs.nl | Systeem</text>
+  <text x="1000" y="556" fill="#3B82F6" font-size="12">Volledig log ›</text>
+
+  <text x="550" y="638" text-anchor="middle" fill="#9CA3AF" font-size="11">TaxWijs — Admin Console</text>
+</svg>
