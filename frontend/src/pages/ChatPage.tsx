@@ -12,6 +12,32 @@ import { useToast } from "../context/ToastContext";
 import { Skeleton } from "../components/Skeleton";
 import { printIBReport, type IBAnswers } from "../utils/ibReport";
 
+const SOURCE_CHIP_COLORS: Record<string, string> = {
+  Profile:             "var(--blue)",
+  Documents:           "var(--purple, #7c3aed)",
+  Rules:               "var(--ok)",
+  Engagement:          "var(--warn)",
+  "Accountant Review": "var(--danger)",
+};
+
+function ContextSourceChips({ sources }: { sources: string[] }) {
+  if (sources.length === 0) return null;
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--hairline)" }}>
+      {sources.map(src => (
+        <span key={src} style={{
+          fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999,
+          background: "var(--paper-3)",
+          color: SOURCE_CHIP_COLORS[src] ?? "var(--ink-3)",
+          border: `1px solid ${SOURCE_CHIP_COLORS[src] ?? "var(--hairline-2)"}`,
+        }}>
+          {src}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 interface ChatMsg {
   id: string;
   role: "user" | "assistant";
@@ -775,11 +801,12 @@ export default function ChatPage() {
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
                   )}
-                  {msg.content.includes("Source") && (
-                    <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8, paddingTop: 12, borderTop: "1px solid var(--hairline)" }}>
-                      <span className="eyebrow">Sources</span>
-                      <Icon.external style={{ color: "var(--ink-4)" }} />
-                    </div>
+                  {!msg.streaming && !msg.isIntake && (
+                    <ContextSourceChips sources={[
+                      "Rules",
+                      ...(profile ? ["Profile"] : []),
+                      ...(ibMode && !msg.isIntake ? ["Engagement"] : []),
+                    ]} />
                   )}
                   {msg.isIBResult && ibAnswers && (
                     <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--hairline)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>

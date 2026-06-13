@@ -1,6 +1,11 @@
 import { useEffect, useState, useCallback, useRef, useMemo, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { TrendingUp, Percent, PiggyBank, ShieldAlert, Activity, BarChart3 } from "lucide-react";
+import {
+  TrendingUp, Percent, PiggyBank, ShieldAlert, Activity, BarChart3,
+  CalendarDays, AlertTriangle, Lightbulb, ClipboardList, Banknote,
+  ScanSearch, FileText, Package, Eye, CheckCircle2, AlertCircle,
+  Clock, Bell,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { useMobile } from "../hooks/useMobile";
@@ -75,13 +80,22 @@ const SEV: Record<string, { bg: string; border: string; dot: string; label: stri
   info:     { bg: "var(--blue-subtle)",   border: "var(--blue-border)",   dot: "var(--blue)",   label: "INFO"   },
 };
 
-const CAT_ICON: Record<string, string> = {
-  deadline: "📅", risk: "⚠️", opportunity: "💡", missing_data: "📋",
-  cashflow: "💰", compliance: "🔍", rule_change: "📋",
+const CAT_ICON: Record<string, React.ReactNode> = {
+  deadline:     <CalendarDays size={16} />,
+  risk:         <AlertTriangle size={16} />,
+  opportunity:  <Lightbulb size={16} />,
+  missing_data: <ClipboardList size={16} />,
+  cashflow:     <Banknote size={16} />,
+  compliance:   <ScanSearch size={16} />,
+  rule_change:  <FileText size={16} />,
 };
 
-const ACTION_CAT_ICON: Record<string, string> = {
-  filing: "📄", preparation: "📦", review: "🔎", optimization: "💡", compliance: "✅",
+const ACTION_CAT_ICON: Record<string, React.ReactNode> = {
+  filing:       <FileText size={14} />,
+  preparation:  <Package size={14} />,
+  review:       <Eye size={14} />,
+  optimization: <Lightbulb size={14} />,
+  compliance:   <CheckCircle2 size={14} />,
 };
 
 const ACTION_PRIORITY_COLOR: Record<string, string> = {
@@ -662,8 +676,8 @@ function AlertCard({
       display: "flex", gap: 12, alignItems: "flex-start", position: "relative",
       opacity: isDone ? 0.55 : 1, transition: "opacity 0.2s",
     }}>
-      <span style={{ fontSize: 17, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>
-        {CAT_ICON[alert.category] ?? "ℹ️"}
+      <span style={{ display: "flex", flexShrink: 0, marginTop: 2, color: s.dot }}>
+        {CAT_ICON[alert.category] ?? <AlertCircle size={16} />}
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3, flexWrap: "wrap" }}>
@@ -748,7 +762,7 @@ function ActionCard({
       </button>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12 }}>{ACTION_CAT_ICON[action.category] ?? "📌"}</span>
+          <span style={{ display: "flex", color: "var(--ink-3)" }}>{ACTION_CAT_ICON[action.category] ?? <ClipboardList size={14} />}</span>
           <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink)", textDecoration: isDone ? "line-through" : "none" }}>
             {action.title}
           </span>
@@ -816,10 +830,10 @@ function SectionHead({ label, count, badge }: { label: string; count?: number; b
   );
 }
 
-function EmptySection({ icon, text }: { icon: string; text: string }) {
+function EmptySection({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div className="card" style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 10 }}>
-      <span style={{ fontSize: 16 }}>{icon}</span>
+      <span style={{ display: "flex", color: "var(--ok)", flexShrink: 0 }}>{icon}</span>
       <span style={{ fontSize: 13, color: "var(--ink-3)" }}>{text}</span>
     </div>
   );
@@ -1124,16 +1138,18 @@ export default function DashboardPage() {
           {user?.email && <span style={{ color: "var(--ink-3)", fontWeight: 400, fontSize: "0.62em" }}>, {user.email.split("@")[0]}</span>}
         </h1>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-          {user?.plan === "premium" && <span className="pill pill-accent">⚡ Premium</span>}
+          {user?.plan === "premium" && <span className="pill pill-accent" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Activity size={9} /> Premium</span>}
           {criticalCount > 0 && (
-            <span className="pill pill-danger" style={{ cursor: "pointer" }}
+            <span className="pill pill-danger" style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}
               onClick={() => document.getElementById("risks-section")?.scrollIntoView({ behavior: "smooth" })}>
-              ⚠ {criticalCount} {L(`kritische melding${criticalCount !== 1 ? "en" : ""}`, `critical alert${criticalCount !== 1 ? "s" : ""}`, "هشدار بحرانی")}
+              <AlertTriangle size={10} />
+              {criticalCount} {L(`kritische melding${criticalCount !== 1 ? "en" : ""}`, `critical alert${criticalCount !== 1 ? "s" : ""}`, "هشدار بحرانی")}
             </span>
           )}
           {openActions.length > 0 && (
-            <span className="pill" style={{ background: "var(--sage-600)", color: "white", cursor: "pointer" }}
+            <span className="pill" style={{ background: "var(--sage-600)", color: "white", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 4 }}
               onClick={() => document.getElementById("actions-section")?.scrollIntoView({ behavior: "smooth" })}>
+              <Clock size={10} />
               {openActions.length} {L("openstaande actie(s)", "open action(s)", "کار باز")}
             </span>
           )}
@@ -1147,10 +1163,13 @@ export default function DashboardPage() {
       {pushSupported && user && pushPermission !== "denied" && (
         <div className="card" style={{ padding: "14px 18px", marginBottom: 20, background: pushSubscribed ? "var(--paper-3)" : "var(--accent-soft)", border: `1px solid ${pushSubscribed ? "var(--hairline)" : "var(--accent-line)"}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
           <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-2)" }}>
-            {pushSubscribed
-              ? `🔔 ${L("Meldingen actief — u ontvangt belastingdeadlines en accountant-updates", "Notifications active — you'll receive tax deadlines and accountant updates", "اعلان‌ها فعال است — مهلت‌های مالیاتی و به‌روزرسانی‌های حسابدار")}`
-              : `🔔 ${L("Ontvang meldingen voor belastingdeadlines en accountant-updates", "Get notified about tax deadlines and accountant updates", "اعلان‌های مهلت مالیاتی و به‌روزرسانی‌های حسابدار را دریافت کنید")}`
-            }
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <Bell size={13} />
+              {pushSubscribed
+                ? L("Meldingen actief — u ontvangt belastingdeadlines en accountant-updates", "Notifications active — you'll receive tax deadlines and accountant updates", "اعلان‌ها فعال است — مهلت‌های مالیاتی و به‌روزرسانی‌های حسابدار")
+                : L("Ontvang meldingen voor belastingdeadlines en accountant-updates", "Get notified about tax deadlines and accountant updates", "اعلان‌های مهلت مالیاتی و به‌روزرسانی‌های حسابدار را دریافت کنید")
+              }
+            </span>
           </div>
           {pushSubscribed ? (
             <button
@@ -1239,7 +1258,7 @@ export default function DashboardPage() {
                   {[1,2,3].map(i => <Skeleton key={i} height={64} radius="var(--r-lg)" />)}
                 </div>
               ) : visibleActions.length === 0 ? (
-                <EmptySection icon="✓" text={L("Geen openstaande acties", "No open actions", "هیچ کاری باز نیست")} />
+                <EmptySection icon={<CheckCircle2 size={16} />} text={L("Geen openstaande acties", "No open actions", "هیچ کاری باز نیست")} />
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {openActions.map(action => (
@@ -1276,7 +1295,7 @@ export default function DashboardPage() {
               {loadingAlerts
                 ? <Skeleton height={72} radius="var(--r-lg)" />
                 : riskAlerts.length === 0
-                ? <EmptySection icon="✓" text={L("Geen actieve risico's", "No active risks", "هیچ ریسکی ندارید")} />
+                ? <EmptySection icon={<CheckCircle2 size={16} />} text={L("Geen actieve risico's", "No active risks", "هیچ ریسکی ندارید")} />
                 : <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {riskAlerts.map(a => <AlertCard key={a.id} alert={a} onDismiss={dismissAlert} onExplain={explainAlert} onSnooze={handleSnoozeAlert} onMarkDone={markAlertDone} isDone={doneAlerts.has(a.id)} lang={lang} />)}
                   </div>
@@ -1305,7 +1324,7 @@ export default function DashboardPage() {
               {loadingAlerts
                 ? <Skeleton height={72} radius="var(--r-lg)" />
                 : oppAlerts.length === 0
-                ? <EmptySection icon="💡" text={L("Geen onbenutte kansen gevonden", "No untapped opportunities found", "هیچ فرصت باز یافت نشد")} />
+                ? <EmptySection icon={<Lightbulb size={16} />} text={L("Geen onbenutte kansen gevonden", "No untapped opportunities found", "هیچ فرصت باز یافت نشد")} />
                 : <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {oppAlerts.map(a => <AlertCard key={a.id} alert={a} onDismiss={dismissAlert} onExplain={explainAlert} onSnooze={handleSnoozeAlert} onMarkDone={markAlertDone} isDone={doneAlerts.has(a.id)} lang={lang} />)}
                   </div>
@@ -1418,7 +1437,9 @@ export default function DashboardPage() {
                     <div style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>{deadlineLabel(d)}</div>
                     <div className="font-mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 2 }}>{d.date}</div>
                   </div>
-                  <span className={`pill pill-${d.urgency}`} style={{ fontSize: 10, flexShrink: 0 }}>{d.urgency === "warn" ? "!" : "✓"}</span>
+                  <span className={`pill pill-${d.urgency}`} style={{ fontSize: 10, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 3 }}>
+                {d.urgency === "warn" ? <AlertTriangle size={9} /> : <CheckCircle2 size={9} />}
+              </span>
                 </div>
               ))}
             </div>
@@ -1430,7 +1451,7 @@ export default function DashboardPage() {
             <div style={{ fontSize: 13, color: "var(--ink-2)" }}>{user?.email}</div>
             <div style={{ marginTop: 6 }}>
               {user?.plan === "premium"
-                ? <span className="pill pill-accent">⚡ Premium</span>
+                ? <span className="pill pill-accent" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Activity size={9} /> Premium</span>
                 : <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
                     <span className="pill" style={{ fontSize: 10.5 }}>Free</span>
                     <button onClick={() => navigate("/pricing")}

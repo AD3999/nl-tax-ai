@@ -1,10 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, FileText } from "lucide-react";
+import { ChevronRight, FileText, RefreshCw, X, AlertTriangle, Bot } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { useMobile } from "../../hooks/useMobile";
+import Modal from "../../components/ui/Modal";
+import ReadinessCard from "../../components/ui/ReadinessCard";
+import CopilotCard from "../../components/ui/CopilotCard";
 import {
   fetchEngagement, fetchChecklist, fetchDocuments,
   fetchIncome, fetchExpenses, fetchActions, generateActions, fetchRisks,
@@ -81,6 +84,16 @@ const TX: Record<Lang, Record<string, string>> = {
     col_vat: "VAT",
     source: "Source ↗",
     updated: "updated",
+    doc_filter_all: "All",
+    doc_filter_missing: "Missing",
+    doc_filter_processing: "Processing",
+    doc_filter_needs_review: "Needs Review",
+    doc_filter_approved: "Approved",
+    doc_filter_rejected: "Rejected",
+    reject_reason_label: "Reason for rejection",
+    reject_reason_placeholder: "Explain why this document was rejected...",
+    reject_reason_submit: "Reject document",
+    copilot_title: "AI Copilot",
     checklist_updated: "Checklist item updated",
     checklist_error: "Failed to update checklist item",
     action_updated: "Action updated",
@@ -152,6 +165,16 @@ const TX: Record<Lang, Record<string, string>> = {
     col_vat: "BTW",
     source: "Bron ↗",
     updated: "bijgewerkt",
+    doc_filter_all: "Alle",
+    doc_filter_missing: "Ontbreekt",
+    doc_filter_processing: "Verwerking",
+    doc_filter_needs_review: "Te beoordelen",
+    doc_filter_approved: "Goedgekeurd",
+    doc_filter_rejected: "Afgewezen",
+    reject_reason_label: "Reden voor afwijzing",
+    reject_reason_placeholder: "Leg uit waarom dit document is afgewezen...",
+    reject_reason_submit: "Document afwijzen",
+    copilot_title: "AI Copilot",
     checklist_updated: "Checklistitem bijgewerkt",
     checklist_error: "Bijwerken mislukt",
     action_updated: "Actie bijgewerkt",
@@ -223,6 +246,16 @@ const TX: Record<Lang, Record<string, string>> = {
     col_vat: "مالیات بر ارزش افزوده",
     source: "منبع ↗",
     updated: "به‌روز شد",
+    doc_filter_all: "همه",
+    doc_filter_missing: "ناقص",
+    doc_filter_processing: "در حال پردازش",
+    doc_filter_needs_review: "نیاز به بررسی",
+    doc_filter_approved: "تأیید شده",
+    doc_filter_rejected: "رد شده",
+    reject_reason_label: "دلیل رد",
+    reject_reason_placeholder: "توضیح دهید چرا این سند رد شد...",
+    reject_reason_submit: "رد سند",
+    copilot_title: "دستیار هوش مصنوعی",
     checklist_updated: "آیتم چک‌لیست به‌روز شد",
     checklist_error: "به‌روزرسانی ناموفق بود",
     action_updated: "اقدام به‌روز شد",
@@ -261,20 +294,6 @@ const RISK_COLOR: Record<string, string> = {
   low: "var(--ok)", medium: "var(--warn)", high: "var(--danger)",
 };
 
-function ReadinessRing({ score }: { score: number }) {
-  const r = 36;
-  const circumference = 2 * Math.PI * r;
-  const offset = circumference * (1 - score / 100);
-  const color = score >= 85 ? "var(--ok)" : score >= 50 ? "var(--warn)" : "var(--danger)";
-  return (
-    <svg width={90} height={90} viewBox="0 0 90 90" style={{ transform: "rotate(-90deg)" }}>
-      <circle cx={45} cy={45} r={r} fill="none" stroke="var(--hairline)" strokeWidth={7} />
-      <circle cx={45} cy={45} r={r} fill="none" stroke={color} strokeWidth={7}
-        strokeDasharray={circumference} strokeDashoffset={offset}
-        strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.5s ease" }} />
-    </svg>
-  );
-}
 
 export default function EngagementPage() {
   const { id } = useParams<{ id: string }>();
@@ -313,6 +332,12 @@ export default function EngagementPage() {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadNote, setUploadNote] = useState("");
+
+  type DocFilter = "all" | "missing" | "processing" | "needs_review" | "approved" | "rejected";
+  const [docFilter, setDocFilter] = useState<DocFilter>("all");
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectTargetDocId, setRejectTargetDocId] = useState<number | null>(null);
 
   const engId = Number(id);
 
@@ -464,6 +489,20 @@ export default function EngagementPage() {
     }
   }
 
+  async function handleRejectWithReason() {
+    if (!rejectTargetDocId) return;
+    try {
+      const updated = await reviewDocument(rejectTargetDocId, { processing_status: "rejected", rejection_reason: rejectReason });
+      setDocuments(prev => prev.map(d => d.id === rejectTargetDocId ? updated : d));
+      showToast(tx.doc_updated, "success");
+    } catch {
+      showToast(tx.doc_error, "error");
+    }
+    setShowRejectDialog(false);
+    setRejectReason("");
+    setRejectTargetDocId(null);
+  }
+
   function handleFileChosen(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -550,7 +589,7 @@ export default function EngagementPage() {
             {lastUpdated && (
               <span style={{ fontSize: 10, color: "var(--ink-4)" }}>{tx.updated} {lastUpdated.toLocaleTimeString()}</span>
             )}
-            <button title="Refresh" onClick={() => void loadAll(true)} style={{ background: "none", border: "1px solid var(--hairline-2)", borderRadius: 6, cursor: "pointer", color: "var(--ink-4)", fontSize: 13, padding: "2px 7px", lineHeight: 1 }}>↻</button>
+            <button title="Refresh" onClick={() => void loadAll(true)} style={{ background: "none", border: "1px solid var(--hairline-2)", borderRadius: 6, cursor: "pointer", color: "var(--ink-4)", padding: "4px 7px", display: "flex", alignItems: "center" }}><RefreshCw size={12} /></button>
             <button className="btn btn-ghost btn-sm" onClick={handleRecalculate}>{tx.recalculate}</button>
             <button className="btn btn-ghost btn-sm" onClick={handleSendReminder}>{tx.send_reminder}</button>
             <button className="btn btn-accent btn-sm" onClick={handleGenerateActions} disabled={generatingActions}>
@@ -564,7 +603,7 @@ export default function EngagementPage() {
           <div className="card" style={{ padding: "var(--sp-4)", marginBottom: "var(--sp-4)", background: "var(--accent-soft)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--sp-2)" }}>
               <strong style={{ fontSize: "var(--text-sm)" }}>{tx.reminder_preview} ({reminderPreview.missing_count} {tx.reminder_missing})</strong>
-              <button className="btn btn-ghost btn-sm" onClick={() => setReminderPreview(null)}>×</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => setReminderPreview(null)} style={{ padding: "0 6px" }}><X size={12} /></button>
             </div>
             <div style={{ fontWeight: 600, marginBottom: 4, fontSize: "var(--text-xs)" }}>{reminderPreview.subject}</div>
             <pre style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", whiteSpace: "pre-wrap", margin: 0 }}>{reminderPreview.body}</pre>
@@ -596,62 +635,84 @@ export default function EngagementPage() {
 
         {/* ── OVERVIEW ─────────────────────────────────────── */}
         {tab === "overview" && (
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: "var(--sp-6)", alignItems: "start" }}>
-            {/* Readiness ring */}
-            <div className="card" style={{ padding: "var(--sp-5)", textAlign: "center" }}>
-              <div style={{ position: "relative", display: "inline-block", marginBottom: "var(--sp-3)" }}>
-                <ReadinessRing score={engagement.readiness_score} />
-                <div style={{
-                  position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-                  fontSize: "var(--text-sm)", fontWeight: 700,
-                  color: engagement.readiness_score >= 85 ? "var(--ok)" : engagement.readiness_score >= 50 ? "var(--warn)" : "var(--danger)",
-                }}>
-                  {engagement.readiness_score}%
-                </div>
-              </div>
-              <div style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--ink)", marginBottom: "var(--sp-2)" }}>{tx.readiness}</div>
-              <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>{tx.status}: {engagement.status}</div>
-              {readiness && (
-                <div style={{ marginTop: "var(--sp-3)", textAlign: "start", fontSize: "var(--text-xs)" }}>
-                  <div style={{ color: "var(--ink-3)", marginBottom: "var(--sp-2)" }}>
-                    <strong>{tx.blocking}:</strong>
-                    {readiness.blocking_reasons.length === 0 ? ` ${tx.none}` : (
-                      <ul style={{ margin: "4px 0 0 16px", padding: 0 }}>
-                        {readiness.blocking_reasons.map((r, i) => <li key={i} style={{ color: "var(--danger)" }}>{r}</li>)}
-                      </ul>
-                    )}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 300px", gap: "var(--sp-6)", alignItems: "start" }}>
+            {/* Main content */}
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: "var(--sp-6)", alignItems: "start" }}>
+              {/* ReadinessCard */}
+              <div>
+                <ReadinessCard score={engagement.readiness_score} />
+                {readiness && readiness.blocking_reasons.length > 0 && (
+                  <div className="card" style={{ padding: "var(--sp-3)", marginTop: "var(--sp-3)", fontSize: "var(--text-xs)" }}>
+                    <strong style={{ color: "var(--danger)", display: "block", marginBottom: "var(--sp-2)" }}>{tx.blocking}:</strong>
+                    <ul style={{ margin: 0, paddingInlineStart: "var(--sp-4)" }}>
+                      {readiness.blocking_reasons.map((r, i) => <li key={i} style={{ color: "var(--danger)", marginBottom: 2 }}>{r}</li>)}
+                    </ul>
                   </div>
+                )}
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: "var(--sp-2)" }}>{tx.status}: {engagement.status}</div>
+              </div>
+
+              {/* Actions */}
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--sp-3)" }}>
+                  <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, margin: 0 }}>{tx.next_actions}</h3>
+                  <span className="pill pill-accent" style={{ fontSize: "var(--text-2xs)" }}>{actions.filter(a => a.status === "open").length} {tx.open}</span>
                 </div>
-              )}
+                {actions.length === 0 ? (
+                  <div className="card" style={{ padding: "var(--sp-4)", textAlign: "center", color: "var(--ink-3)", fontSize: "var(--text-sm)" }}>
+                    {tx.no_actions}
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
+                    {actions.filter(a => a.status === "open").slice(0, 8).map(action => (
+                      <div key={action.id} className="card" style={{ padding: "var(--sp-3)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--sp-3)", borderInlineStart: `3px solid ${action.priority === "high" ? "var(--danger)" : action.priority === "medium" ? "var(--warn)" : "var(--ok)"}` }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ink)", marginBottom: 4 }}>{action.title}</div>
+                          <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>{action.body}</div>
+                        </div>
+                        <div style={{ display: "flex", gap: "var(--sp-1)", flexShrink: 0 }}>
+                          <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)", padding: "2px 8px" }} onClick={() => void handleActionStatus(action.id, "done")}>{tx.done}</button>
+                          <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)", padding: "2px 8px", color: "var(--ink-4)" }} onClick={() => void handleActionStatus(action.id, "dismissed")}>{tx.dismiss}</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Actions */}
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--sp-3)" }}>
-                <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, margin: 0 }}>{tx.next_actions}</h3>
-                <span className="pill pill-accent" style={{ fontSize: "var(--text-2xs)" }}>{actions.filter(a => a.status === "open").length} {tx.open}</span>
-              </div>
-              {actions.length === 0 ? (
-                <div className="card" style={{ padding: "var(--sp-4)", textAlign: "center", color: "var(--ink-3)", fontSize: "var(--text-sm)" }}>
-                  {tx.no_actions}
+            {/* ── RIGHT: AI Copilot panel (desktop only) ── */}
+            {!isMobile && (
+              <aside style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)", marginBottom: "var(--sp-1)" }}>
+                  <Bot size={14} style={{ color: "var(--blue)" }} />
+                  <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--ink-3)" }}>{tx.copilot_title}</span>
                 </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
-                  {actions.filter(a => a.status === "open").slice(0, 8).map(action => (
-                    <div key={action.id} className="card" style={{ padding: "var(--sp-3)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--sp-3)", borderInlineStart: `3px solid ${action.priority === "high" ? "var(--danger)" : action.priority === "medium" ? "var(--warn)" : "var(--ok)"}` }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ink)", marginBottom: 4 }}>{action.title}</div>
-                        <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>{action.body}</div>
-                      </div>
-                      <div style={{ display: "flex", gap: "var(--sp-1)", flexShrink: 0 }}>
-                        <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)", padding: "2px 8px" }} onClick={() => void handleActionStatus(action.id, "done")}>{tx.done}</button>
-                        <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)", padding: "2px 8px", color: "var(--ink-4)" }} onClick={() => void handleActionStatus(action.id, "dismissed")}>{tx.dismiss}</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                <CopilotCard
+                  type="client_summary"
+                  title={engagement.client_profile_display}
+                  body={`${engagement.tax_year} · ${engagement.engagement_type} · ${engagement.missing_items_count} ${tx.missing_items}`}
+                  sources={["Profile", "Engagement"]}
+                  confidence="high"
+                />
+                {engagement.risk_level !== "low" && (
+                  <CopilotCard
+                    type="risk_summary"
+                    title={tx.risk_warnings}
+                    body={`Risk level: ${engagement.risk_level}. Review flagged items before filing.`}
+                    sources={["Documents", "Rules"]}
+                    confidence={engagement.risk_level === "high" ? "low" : "medium"}
+                  />
+                )}
+                <CopilotCard
+                  type="next_action"
+                  title={tx.next_actions}
+                  body={`${actions.filter(a => a.status === "open").length} open actions require attention.`}
+                  items={actions.filter(a => a.status === "open").slice(0, 3).map(a => a.title)}
+                  sources={["Engagement"]}
+                />
+              </aside>
+            )}
           </div>
         )}
 
@@ -697,86 +758,128 @@ export default function EngagementPage() {
           </div>
         )}
 
-        {/* ── DOCUMENTS ─────────────────────────────────────── */}
-        {showUploadModal && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "oklch(0 0 0 / 0.60)", display: "flex", alignItems: "center", justifyContent: "center", padding: "var(--sp-4)" }}
-            onClick={e => { if (e.target === e.currentTarget && !uploading) setShowUploadModal(false); }}>
-            <div style={{ background: "var(--bg-2)", borderRadius: "var(--r-lg)", border: "1px solid var(--border-2)", padding: "var(--sp-6)", width: "100%", maxWidth: 440, boxShadow: "var(--sh-lg)" }}>
-              <h2 style={{ fontSize: "var(--text-xl)", fontWeight: 800, color: "var(--text)", marginBottom: "var(--sp-5)" }}>{tx.upload_doc}</h2>
-
-              {/* Form fields — frozen during upload */}
-              <div style={{ opacity: uploading ? 0.55 : 1, pointerEvents: uploading ? "none" : "auto", transition: "opacity 0.2s" }}>
-                <div style={{ marginBottom: "var(--sp-3)" }}>
-                  <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>File</label>
-                  <div style={{ padding: "var(--sp-3)", background: "var(--bg-3)", borderRadius: "var(--r-sm)", border: "1px solid var(--border)", fontSize: "var(--text-sm)", color: "var(--text-2)", fontWeight: 600 }}>{pendingFile?.name ?? "—"}</div>
-                </div>
-                <div style={{ marginBottom: "var(--sp-3)" }}>
-                  <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>Title (optional)</label>
-                  <input type="text" value={uploadTitle} onChange={e => setUploadTitle(e.target.value)} style={{ width: "100%", padding: "var(--sp-3)", background: "var(--bg-3)", border: "1px solid var(--border-2)", borderRadius: "var(--r-sm)", color: "var(--text)", fontSize: "var(--text-sm)", fontFamily: "inherit", fontWeight: 600 }} />
-                </div>
-                <div style={{ marginBottom: "var(--sp-5)" }}>
-                  <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>Note (optional)</label>
-                  <textarea rows={3} value={uploadNote} onChange={e => setUploadNote(e.target.value)} style={{ width: "100%", padding: "var(--sp-3)", background: "var(--bg-3)", border: "1px solid var(--border-2)", borderRadius: "var(--r-sm)", color: "var(--text)", fontSize: "var(--text-sm)", fontFamily: "inherit", resize: "vertical" }} />
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              {uploading && uploadProgress !== null && (
-                <div style={{ marginBottom: "var(--sp-4)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                    <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)" }}>
-                      {uploadProgress < 100 ? "Uploading…" : "Saving…"}
-                    </span>
-                    <span style={{ fontSize: "var(--text-sm)", fontWeight: 800, color: "var(--blue)", fontVariantNumeric: "tabular-nums" }}>
-                      {uploadProgress}%
-                    </span>
-                  </div>
-                  <div style={{ height: 8, borderRadius: 999, background: "var(--bg-3)", overflow: "hidden" }}>
-                    <div style={{ height: "100%", borderRadius: 999, background: "linear-gradient(90deg, var(--blue) 0%, var(--blue-text) 100%)", width: `${uploadProgress}%`, transition: "width 0.25s ease" }} />
-                  </div>
-                </div>
-              )}
-
-              {/* Error banner */}
-              {uploadError && (
-                <div style={{ marginBottom: "var(--sp-4)", padding: "var(--sp-3) var(--sp-4)", background: "var(--danger-subtle)", borderRadius: "var(--r-sm)", border: "1px solid var(--danger)", display: "flex", gap: "var(--sp-3)", alignItems: "flex-start" }}>
-                  <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>⚠️</span>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, color: "var(--danger-text)", fontSize: "var(--text-sm)", marginBottom: 2 }}>Upload failed</div>
-                    <div style={{ color: "var(--danger-text)", fontSize: "var(--text-xs)", fontWeight: 500, opacity: 0.85 }}>{uploadError}</div>
-                  </div>
-                  <button onClick={() => setUploadError("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger-text)", fontSize: 16, padding: 0, flexShrink: 0, opacity: 0.7 }}>✕</button>
-                </div>
-              )}
-
-              {/* Buttons — hidden while uploading */}
-              {!uploading && (
-                <div style={{ display: "flex", gap: "var(--sp-3)", justifyContent: "flex-end" }}>
-                  <button className="btn btn-ghost btn-sm" onClick={() => { setShowUploadModal(false); setPendingFile(null); setUploadError(""); }}>Cancel</button>
-                  <button className="btn btn-accent btn-sm" onClick={() => void handleConfirmUpload()}>Upload</button>
-                </div>
-              )}
+        {/* ── UPLOAD MODAL ─────────────────────────────────── */}
+        <Modal
+          open={showUploadModal}
+          onClose={() => { if (!uploading) { setShowUploadModal(false); setPendingFile(null); setUploadError(""); } }}
+          title={tx.upload_doc}
+          maxWidth={440}
+          noBackdropClose={uploading}
+        >
+          <div style={{ opacity: uploading ? 0.55 : 1, pointerEvents: uploading ? "none" : "auto", transition: "opacity 0.2s" }}>
+            <div style={{ marginBottom: "var(--sp-3)" }}>
+              <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>File</label>
+              <div style={{ padding: "var(--sp-3)", background: "var(--bg-3)", borderRadius: "var(--r-sm)", border: "1px solid var(--border)", fontSize: "var(--text-sm)", color: "var(--text-2)", fontWeight: 600 }}>{pendingFile?.name ?? "—"}</div>
+            </div>
+            <div style={{ marginBottom: "var(--sp-3)" }}>
+              <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>Title (optional)</label>
+              <input type="text" value={uploadTitle} onChange={e => setUploadTitle(e.target.value)} style={{ width: "100%", padding: "var(--sp-3)", background: "var(--bg-3)", border: "1px solid var(--border-2)", borderRadius: "var(--r-sm)", color: "var(--text)", fontSize: "var(--text-sm)", fontFamily: "inherit", fontWeight: 600, boxSizing: "border-box" }} />
+            </div>
+            <div style={{ marginBottom: "var(--sp-5)" }}>
+              <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>Note (optional)</label>
+              <textarea rows={3} value={uploadNote} onChange={e => setUploadNote(e.target.value)} style={{ width: "100%", padding: "var(--sp-3)", background: "var(--bg-3)", border: "1px solid var(--border-2)", borderRadius: "var(--r-sm)", color: "var(--text)", fontSize: "var(--text-sm)", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }} />
             </div>
           </div>
-        )}
+
+          {uploading && uploadProgress !== null && (
+            <div style={{ marginBottom: "var(--sp-4)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)" }}>{uploadProgress < 100 ? "Uploading…" : "Saving…"}</span>
+                <span style={{ fontSize: "var(--text-sm)", fontWeight: 800, color: "var(--blue)", fontVariantNumeric: "tabular-nums" }}>{uploadProgress}%</span>
+              </div>
+              <div style={{ height: 8, borderRadius: 999, background: "var(--bg-3)", overflow: "hidden" }}>
+                <div style={{ height: "100%", borderRadius: 999, background: "linear-gradient(90deg, var(--blue) 0%, var(--blue-text) 100%)", width: `${uploadProgress}%`, transition: "width 0.25s ease" }} />
+              </div>
+            </div>
+          )}
+
+          {uploadError && (
+            <div style={{ marginBottom: "var(--sp-4)", padding: "var(--sp-3) var(--sp-4)", background: "var(--danger-subtle)", borderRadius: "var(--r-sm)", border: "1px solid var(--danger)", display: "flex", gap: "var(--sp-3)", alignItems: "flex-start" }}>
+              <AlertTriangle size={18} style={{ color: "var(--danger-text)", flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, color: "var(--danger-text)", fontSize: "var(--text-sm)", marginBottom: 2 }}>Upload failed</div>
+                <div style={{ color: "var(--danger-text)", fontSize: "var(--text-xs)", fontWeight: 500, opacity: 0.85 }}>{uploadError}</div>
+              </div>
+              <button onClick={() => setUploadError("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger-text)", padding: 0, flexShrink: 0, opacity: 0.7, display: "flex" }}><X size={14} /></button>
+            </div>
+          )}
+
+          {!uploading && (
+            <div style={{ display: "flex", gap: "var(--sp-3)", justifyContent: "flex-end" }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => { setShowUploadModal(false); setPendingFile(null); setUploadError(""); }}>Cancel</button>
+              <button className="btn btn-accent btn-sm" onClick={() => void handleConfirmUpload()}>Upload</button>
+            </div>
+          )}
+        </Modal>
+
+        {/* ── REJECT REASON MODAL ──────────────────────────── */}
+        <Modal
+          open={showRejectDialog}
+          onClose={() => { setShowRejectDialog(false); setRejectReason(""); setRejectTargetDocId(null); }}
+          title={tx.reject}
+          maxWidth={420}
+        >
+          <div style={{ marginBottom: "var(--sp-4)" }}>
+            <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 5, textTransform: "uppercase" }}>{tx.reject_reason_label}</label>
+            <textarea
+              rows={4}
+              value={rejectReason}
+              onChange={e => setRejectReason(e.target.value)}
+              placeholder={tx.reject_reason_placeholder}
+              style={{ width: "100%", padding: "var(--sp-3)", background: "var(--bg-3)", border: "1px solid var(--border-2)", borderRadius: "var(--r-sm)", color: "var(--text)", fontSize: "var(--text-sm)", fontFamily: "inherit", resize: "vertical", boxSizing: "border-box" }}
+            />
+          </div>
+          <div style={{ display: "flex", gap: "var(--sp-3)", justifyContent: "flex-end" }}>
+            <button className="btn btn-ghost btn-sm" onClick={() => { setShowRejectDialog(false); setRejectReason(""); setRejectTargetDocId(null); }}>Cancel</button>
+            <button className="btn btn-sm" style={{ background: "var(--danger)", color: "#fff", border: "none", borderRadius: "var(--r-sm)", padding: "0 var(--sp-4)", cursor: "pointer", fontWeight: 700, fontSize: "var(--text-sm)" }} onClick={() => void handleRejectWithReason()}>
+              {tx.reject_reason_submit}
+            </button>
+          </div>
+        </Modal>
 
         {tab === "documents" && (
           <div>
-            <div style={{ marginBottom: "var(--sp-4)", display: "flex", gap: "var(--sp-3)", alignItems: "center" }}>
+            {/* Upload button + doc filter tabs */}
+            <div style={{ marginBottom: "var(--sp-4)", display: "flex", gap: "var(--sp-3)", alignItems: "center", flexWrap: "wrap" }}>
               <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.heic,.csv,.xlsx" style={{ display: "none" }} onChange={handleFileChosen} />
               <button className="btn btn-accent btn-sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                 {tx.upload_doc}
               </button>
+              <div style={{ display: "flex", gap: 2, marginInlineStart: "auto" }}>
+                {(["all", "missing", "processing", "needs_review", "approved", "rejected"] as DocFilter[]).map(f => (
+                  <button
+                    key={f}
+                    onClick={() => setDocFilter(f)}
+                    style={{
+                      fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999, cursor: "pointer",
+                      background: docFilter === f ? "var(--blue)" : "transparent",
+                      color: docFilter === f ? "#fff" : "var(--ink-3)",
+                      border: `1px solid ${docFilter === f ? "var(--blue)" : "var(--hairline-2)"}`,
+                    }}
+                  >
+                    {tx[`doc_filter_${f}`]}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {documents.length === 0 ? (
               <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-3)" }}>{tx.no_documents}</div>
-            ) : (
+            ) : (() => {
+              const filtered = docFilter === "all" ? documents
+                : docFilter === "needs_review" ? documents.filter(d => d.processing_status === "needs_review")
+                : docFilter === "approved" ? documents.filter(d => d.processing_status === "approved")
+                : docFilter === "rejected" ? documents.filter(d => d.processing_status === "rejected")
+                : docFilter === "processing" ? documents.filter(d => d.processing_status === "processing" || d.processing_status === "pending")
+                : documents.filter(d => !d.file_url); // "missing"
+              return (
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "280px 1fr", gap: "var(--sp-4)", alignItems: "start" }}>
 
-                {/* Left: file list */}
+                {/* Left: file list (filtered) */}
                 <div style={{ border: "1px solid var(--hairline)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--paper-2)" }}>
-                  {documents.map((doc, i) => (
+                  {filtered.length === 0 ? (
+                    <div style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-4)", fontSize: "var(--text-sm)" }}>{tx.no_documents}</div>
+                  ) : filtered.map((doc, i) => (
                     <button
                       key={doc.id}
                       onClick={() => setSelectedDocId(doc.id)}
@@ -784,7 +887,7 @@ export default function EngagementPage() {
                         display: "flex", alignItems: "center", gap: "var(--sp-3)",
                         width: "100%", padding: "var(--sp-3) var(--sp-4)",
                         background: selectedDocId === doc.id ? "var(--paper-3)" : "transparent",
-                        borderBottom: i < documents.length - 1 ? "1px solid var(--hairline)" : "none",
+                        borderBottom: i < filtered.length - 1 ? "1px solid var(--hairline)" : "none",
                         border: "none", borderRadius: 0,
                         cursor: "pointer", textAlign: "start",
                       }}
@@ -846,7 +949,7 @@ export default function EngagementPage() {
                         <a href={selectedDoc.file_url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">{tx.view} ↗</a>
                       )}
                       <button className="btn btn-ghost btn-sm" style={{ color: "var(--ok)" }} onClick={() => void handleReviewDoc(selectedDoc.id, "approved")}>{tx.approve}</button>
-                      <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)" }} onClick={() => void handleReviewDoc(selectedDoc.id, "rejected")}>{tx.reject}</button>
+                      <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)" }} onClick={() => { setRejectTargetDocId(selectedDoc.id); setRejectReason(""); setShowRejectDialog(true); }}>{tx.reject}</button>
                     </div>
                   </div>
                 ) : (
@@ -858,7 +961,8 @@ export default function EngagementPage() {
                   </div>
                 )}
               </div>
-            )}
+              );
+            })()}
           </div>
         )}
 
