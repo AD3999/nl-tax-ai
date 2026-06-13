@@ -1,0 +1,38 @@
+```mermaid
+C4Context
+    title TaxWijs — System Context (C4 Level 1)
+
+    Person(zzp, "ZZP Worker", "Dutch freelancer. Wants to know their tax obligation and find deductions.")
+    Person(employee, "Employee / Expat", "Dutch employee or expat. Needs IB return guidance and 30% ruling check.")
+    Person(dga, "DGA Director", "Company director (≥5% BV owner). Needs DGA salary and Box 2 optimization.")
+    Person(accountant, "Accountant", "AA/RB/RA professional. Manages 20-100 client engagements annually.")
+    Person(firm_manager, "Firm Manager", "Managing partner. Oversees all engagements across accountant team.")
+    Person(admin, "Platform Admin", "TaxWijs staff. Manages rules, users, system health.")
+
+    System(taxwijs, "TaxWijs", "AI Tax Operating System. Provides tax Q&A, calculation, deduction discovery, document management, and accountant-client collaboration. NL/EN/FA.")
+
+    System_Ext(belastingdienst, "Belastingdienst", "Dutch Tax Authority. Source of all tax rules, rates, and deadlines. Users file returns here.")
+    System_Ext(anthropic, "Anthropic API", "Claude claude-sonnet-4-6. Powers AI tax explanations and conversational guidance.")
+    System_Ext(openai, "OpenAI API", "text-embedding-3-small. Powers RAG vector search over tax knowledge base.")
+    System_Ext(google_oauth, "Google OAuth", "Authentication provider for Google Sign-In.")
+    System_Ext(sentry, "Sentry", "Error monitoring and performance tracing.")
+    System_Ext(posthog, "PostHog", "Product analytics and funnel tracking.")
+    System_Ext(smtp, "SMTP Server", "Transactional email delivery (invitations, reminders).")
+    System_Ext(webpush, "Web Push (VAPID)", "Browser push notifications for clients and accountants.")
+
+    Rel(zzp, taxwijs, "Uses — tax Q&A, calculator, deduction checker, IB guide, portal", "HTTPS")
+    Rel(employee, taxwijs, "Uses — tax Q&A, IB guide, expat tools", "HTTPS")
+    Rel(dga, taxwijs, "Uses — DGA calculator, Box 2 tools", "HTTPS")
+    Rel(accountant, taxwijs, "Uses — accountant portal, engagement workspace, client management", "HTTPS")
+    Rel(firm_manager, taxwijs, "Uses — firm dashboard, engagement oversight", "HTTPS")
+    Rel(admin, taxwijs, "Uses — admin console, rule management, system monitoring", "HTTPS")
+
+    Rel(taxwijs, anthropic, "Sends chat messages, receives streamed responses", "HTTPS / SSE")
+    Rel(taxwijs, openai, "Sends text chunks, receives embeddings for RAG", "HTTPS")
+    Rel(taxwijs, google_oauth, "Redirects for Google Sign-In, receives access token", "HTTPS OAuth2")
+    Rel(taxwijs, sentry, "Sends error events and performance traces", "HTTPS")
+    Rel(taxwijs, posthog, "Sends product analytics events", "HTTPS")
+    Rel(taxwijs, smtp, "Sends invitation and reminder emails", "SMTP")
+    Rel(taxwijs, webpush, "Sends push notifications via VAPID", "HTTPS")
+    Rel_Back(taxwijs, belastingdienst, "Cites source_url for every tax rule — users file returns directly on Belastingdienst", "Reference only")
+```

@@ -1,0 +1,43 @@
+```mermaid
+C4Component
+    title TaxWijs — Core API Components (C4 Level 3)
+
+    Container_Boundary(api, "Django REST API") {
+
+        Component(auth_comp, "Auth & Identity", "apps/users", "User registration, JWT login, Google OAuth, role management, invitation flow, push subscriptions")
+
+        Component(chat_comp, "Chat & AI", "apps/chat", "ChatMessageView (SSE streaming), intake mode, IB return mode, simulation mode, RAG context injection, AI tax memory")
+
+        Component(calc_comp, "Tax Calculator", "apps/calculator", "engine.py — deterministic Box 1/2/3 calculation, all deductions, credits, ZVW. Never uses AI for arithmetic.")
+
+        Component(tax_comp, "Tax Knowledge", "apps/tax", "TaxRuleListView, Phase2RetrieveView. Serves verified rules from seed data. Gateway to RAG pipeline.")
+
+        Component(portal_comp, "Engagement Portal", "apps/portal", "AccountantPortalView, EngagementView, ChecklistView, DocumentView, ExtractionView, ReadinessView, AuditView")
+
+        Component(zzp_comp, "ZZP Workspace", "apps/zzp", "ZZPSummaryView — quarterly VAT, revenue/expense tracking, full year P&L for ZZP users")
+
+        Component(readiness_svc, "Readiness Service", "apps/portal/services/readiness.py", "calculate_readiness(engagement) → 0-100 score. Gating: cannot exceed 80 if mandatory doc missing.")
+
+        Component(checklist_svc, "Checklist Service", "apps/portal/services/accountant_checklists.py", "create_checklist_for_engagement(profile) → idempotent via stable_key")
+
+        Component(missing_svc, "Missing Info Service", "apps/portal/services/missing_info.py", "detect_missing(engagement) → AccountantActions via stable_key")
+
+        Component(extract_svc, "Document Extraction", "apps/portal/services/document_extraction.py", "extract_from_document(doc) → candidate ExtractedIncome/Expense. Always candidate until approved.")
+
+        Component(actions_svc, "Accountant Actions", "apps/portal/services/accountant_actions.py", "generate_actions(engagement) → trilingual next-action messages")
+
+        Component(rag_pipeline, "RAG Pipeline", "phase2/retriever.py + assembler.py", "retrieve(question, user_type, year) → RetrievedContext list → assembled context string (≤1500 tokens)")
+    }
+
+    Rel(chat_comp, calc_comp, "Calls calculate() for any numerical result", "Python function call")
+    Rel(chat_comp, rag_pipeline, "retrieve(question) before every chat response", "Python function call")
+    Rel(chat_comp, auth_comp, "Reads user profile for AI context", "Django ORM")
+
+    Rel(portal_comp, readiness_svc, "recalculate_readiness() on every engagement update", "Python function call")
+    Rel(portal_comp, checklist_svc, "create_checklist_for_engagement() on new engagement", "Python function call")
+    Rel(portal_comp, missing_svc, "detect_missing() on document approval/checklist change", "Python function call")
+    Rel(portal_comp, extract_svc, "extract_from_document() on new document upload", "Celery task")
+    Rel(portal_comp, actions_svc, "generate_actions() on readiness change", "Python function call")
+
+    Rel(tax_comp, rag_pipeline, "Phase2RetrieveView calls retrieve()", "Python import")
+```

@@ -1,0 +1,59 @@
+```mermaid
+C4Container
+    title TaxWijs — Container Diagram (C4 Level 2)
+
+    Person(user, "All Users", "Clients, accountants, admins")
+
+    Container_Boundary(frontend, "Frontend (React SPA)") {
+        Container(client_web, "Client Web App", "React 19 + Vite + TypeScript", "Client-facing portal, chat, calculator, deduction checker, IB guide. Route: /client, /chat, /calculator, /dashboard")
+        Container(accountant_web, "Accountant Web App", "React 19 + Vite + TypeScript", "Accountant portal, engagement workspace, client management. Route: /accountant/portal, /accountant/engagements/:id")
+        Container(admin_web, "Admin Web App", "React 19 + Vite + TypeScript", "Super admin console, rule management, system monitoring. Route: /admin-panel (to be built)")
+    }
+
+    Container_Boundary(backend, "Backend (Django API)") {
+        Container(api, "Django REST API", "Django 6 + DRF + Python 3.12", "All REST endpoints. Serves static frontend assets via WhiteNoise. JWT auth via simplejwt.")
+        Container(chat_worker, "Chat/AI Worker", "Celery + Django", "Async AI response processing, SSE streaming to browser")
+        Container(doc_worker, "Document Worker", "Celery + Django", "OCR pipeline, document classification, field extraction")
+        Container(reminder_worker, "Reminder/GDPR Worker", "Celery Beat + Django", "Scheduled reminders, GDPR purge, ZZP summary generation")
+    }
+
+    Container_Boundary(data, "Data Layer") {
+        ContainerDb(postgres, "PostgreSQL", "PostgreSQL 16 + pgvector", "Primary datastore. All user, engagement, document, rule, billing data. pgvector extension for production RAG.")
+        ContainerDb(chromadb, "ChromaDB", "ChromaDB 0.4+", "Local development vector store. 113 tax knowledge chunks.")
+        ContainerDb(redis, "Redis", "Redis 7", "Celery broker and result backend. Session cache.")
+        ContainerDb(filestore, "File Storage", "Local FS (dev) / S3-compatible (prod)", "Uploaded document files. Max 20MB per file.")
+    }
+
+    Container_Boundary(rag, "RAG Pipeline") {
+        Container(phase1, "Phase 1 Knowledge Base", "Python + JSON", "28 tax rules, 12 Q&A pairs, 6 scenarios, 9 IB fields. Source of truth for tax knowledge.")
+        Container(phase2, "Phase 2 RAG Pipeline", "Python + ChromaDB", "Chunkers, embedder, retriever, assembler. retrieve(question, user_type, year) → context string")
+    }
+
+    Rel(user, client_web, "Uses", "HTTPS")
+    Rel(user, accountant_web, "Uses", "HTTPS")
+    Rel(user, admin_web, "Uses", "HTTPS")
+
+    Rel(client_web, api, "API calls", "HTTPS REST + SSE")
+    Rel(accountant_web, api, "API calls", "HTTPS REST")
+    Rel(admin_web, api, "API calls", "HTTPS REST")
+
+    Rel(api, postgres, "Reads/writes", "SQL via Django ORM")
+    Rel(api, chromadb, "Vector search (dev)", "Python client")
+    Rel(api, redis, "Task queue", "Celery protocol")
+    Rel(api, filestore, "Read/write files", "Local FS / S3 SDK")
+    Rel(api, phase2, "retrieve(question)", "Python import")
+
+    Rel(chat_worker, api, "Streams AI response", "SSE")
+    Rel(doc_worker, filestore, "Reads uploaded files", "FS")
+    Rel(doc_worker, postgres, "Writes extraction results", "SQL")
+    Rel(reminder_worker, postgres, "Reads schedules, writes logs", "SQL")
+
+    Rel(phase2, chromadb, "Reads vectors", "Python client")
+    Rel(phase2, phase1, "Reads seed data", "JSON files")
+
+    System_Ext(anthropic, "Anthropic API", "Claude")
+    System_Ext(openai_api, "OpenAI API", "Embeddings")
+
+    Rel(api, anthropic, "Chat completions", "HTTPS")
+    Rel(phase2, openai_api, "Embed query", "HTTPS")
+```
