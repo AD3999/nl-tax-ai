@@ -77,6 +77,37 @@ Verified end-to-end: `backend/apps/chat/views.py` (685 lines).
 
 ---
 
+## Session — 13 Jun 2026 · Phase 5 (User Intake Wizard) ✅ Complete
+
+### Phase 5 — User Intake Wizard ✅
+
+**Two parallel intake flows:**
+
+**1. Conversational intake (ChatPage.tsx + intake_mode backend)**
+- Alex persona collects tax profile in 6–8 questions via natural conversation
+- Detects `[INTAKE_COMPLETE: {...}]` JSON in Claude response and parses it
+- Saves profile to `user.intake_profile` (JSONField on User model) via PATCH `/api/users/me/`
+- Profile immediately available to all downstream features (alerts, calculator, IB guide)
+- Stored in `localStorage` for anonymous/unauthenticated users
+
+**2. Step wizard (IntakePage.tsx)**
+- 3-step guided form: user type → income details → household
+- Step 1: user type card picker (zzp / employee / expat / dga) with tag labels
+- Step 2: income fields adapted per user_type (revenue+expenses+hours for ZZP; salary for others)
+- Step 3: partner, children under 12, Box 3 assets
+- On submit: calls `POST /api/calculator/calculate/` and saves result; navigates to `/dashboard`
+- Fully trilingual (NL/EN/FA) via i18n strings, RTL-aware layout for FA
+
+**Backend:**
+- `User.intake_profile` — JSONField (migration 0003), indexed
+- `PATCH /api/users/profile/` — saves intake profile
+- `POST /api/chat/message/?intake_mode=true` — conversational intake mode
+- `GET /api/users/alerts/` — generates proactive alerts from intake profile immediately after save
+
+**Test coverage:** intake parsing unit tests in `apps.chat.tests` (extracts JSON from Claude text, handles malformed JSON gracefully)
+
+---
+
 ## Session — 13 Jun 2026 (master-prompt implementation) ✅ Complete
 
 ### Branch: `feat/master-prompt-implementation` → merged to `master`
