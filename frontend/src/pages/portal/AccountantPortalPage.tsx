@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Users, Clock, AlertCircle, MailOpen, ArrowRight, Zap } from "lucide-react";
+import { Users, Clock, AlertCircle, MailOpen, ArrowRight, Zap, X, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useMobile } from "../../hooks/useMobile";
@@ -306,9 +306,9 @@ export default function AccountantPortalPage() {
             <button
               onClick={() => void loadData(true)}
               title="Refresh"
-              style={{ background: "none", border: "1px solid var(--hairline-2)", borderRadius: 6, cursor: "pointer", color: "var(--ink-4)", fontSize: 14, padding: "3px 8px", lineHeight: 1 }}
+              style={{ background: "none", border: "1px solid var(--hairline-2)", borderRadius: 6, cursor: "pointer", color: "var(--ink-4)", padding: "4px 8px", display: "flex", alignItems: "center" }}
             >
-              ↻
+              <RefreshCw size={13} />
             </button>
           </div>
         </div>
@@ -428,13 +428,13 @@ export default function AccountantPortalPage() {
                           <Link to={`/accountant/clients/${c.id}`} className="btn btn-ghost btn-sm">{tx.view_client} →</Link>
                           <button
                             className="btn btn-ghost btn-sm"
-                            style={{ color: "var(--danger)" }}
+                            style={{ color: "var(--danger)", display: "inline-flex", alignItems: "center" }}
                             onClick={async () => {
                               if (!window.confirm(`Remove ${c.display_name}?`)) return;
                               await archiveClient(c.id);
                               setClients(prev => prev.filter(x => x.id !== c.id));
                             }}
-                          >✕</button>
+                          ><X size={13} /></button>
                         </div>
                       </td>
                     </tr>

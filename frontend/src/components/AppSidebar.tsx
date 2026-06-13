@@ -4,6 +4,7 @@ import {
   LayoutDashboard, MessageSquare, Calendar, Search,
   Users, Calculator, ClipboardList, Shield, FileText,
   LogOut, Briefcase, Inbox, Settings, User, Truck,
+  ListChecks, BarChart3, Building2, Activity,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import Wordmark from "./Wordmark";
@@ -33,22 +34,27 @@ function clientNav(t: (k: string) => string): NavItem[] {
 
 function accountantNav(): NavItem[] {
   return [
-    { to: "/accountant/portal",   label: "Dashboard",   icon: <LayoutDashboard size={15} />, end: true },
-    { to: "/accountant/inbox",    label: "Inbox",        icon: <Inbox size={15} /> },
-    { to: "/accountant/settings", label: "Settings",     icon: <Settings size={15} /> },
-    { to: "/chat",                label: "Ask AI",       icon: <MessageSquare size={15} /> },
-    { to: "/tax-calendar",        label: "Tax Calendar", icon: <Calendar size={15} /> },
+    { to: "/accountant/portal",       label: "Dashboard",     icon: <LayoutDashboard size={15} />, end: true },
+    { to: "/accountant/review-queue", label: "Review Queue",  icon: <ListChecks size={15} /> },
+    { to: "/accountant/inbox",        label: "Inbox",          icon: <Inbox size={15} /> },
+    { to: "/chat",                    label: "Ask AI",         icon: <MessageSquare size={15} /> },
+    { to: "/tax-calendar",            label: "Tax Calendar",   icon: <Calendar size={15} /> },
+    { to: "/accountant/settings",     label: "Settings",       icon: <Settings size={15} /> },
   ];
 }
 
 function adminNav(): NavItem[] {
   return [
-    { to: "/admin",                    label: "Overview",   icon: <Shield size={15} />,       end: true },
-    { to: "/admin/users",              label: "Users",      icon: <Users size={15} /> },
-    { to: "/admin/chat-logs",          label: "Chat Logs",  icon: <MessageSquare size={15} /> },
-    { to: "/admin/rules",              label: "Tax Rules",  icon: <FileText size={15} /> },
-    { to: "/admin/calculator-preview", label: "Calculator", icon: <Calculator size={15} /> },
-    { to: "/admin/settings",           label: "Settings",   icon: <Search size={15} /> },
+    { to: "/admin",                    label: "Overview",     icon: <Shield size={15} />,        end: true },
+    { to: "/admin/users",              label: "Users",        icon: <Users size={15} /> },
+    { to: "/admin/firms",              label: "Firms",        icon: <Building2 size={15} /> },
+    { to: "/admin/rules",              label: "Tax Rules",    icon: <FileText size={15} /> },
+    { to: "/admin/audit-logs",         label: "Audit Logs",   icon: <ClipboardList size={15} /> },
+    { to: "/admin/ai-monitoring",      label: "AI Monitor",   icon: <Activity size={15} /> },
+    { to: "/admin/chat-logs",          label: "Chat Logs",    icon: <MessageSquare size={15} /> },
+    { to: "/admin/calculator-preview", label: "Calculator",   icon: <Calculator size={15} /> },
+    { to: "/admin/rag-preview",        label: "RAG Preview",  icon: <Search size={15} /> },
+    { to: "/admin/settings",           label: "Settings",     icon: <Settings size={15} /> },
   ];
 }
 

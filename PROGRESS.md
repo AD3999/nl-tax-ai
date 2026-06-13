@@ -1,7 +1,66 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 13 Jun 2026 — Master spec compliance: ~100% file coverage. All phases done.
+> Last updated: 14 Jun 2026 — UI/UX Bible compliance: all 20 chapters implemented.
+
+---
+
+## Session — 14 Jun 2026 · Enterprise UI/UX Bible — All 20 Chapters ✅ Complete
+
+Branch: `feat/ui-bible-compliance`
+
+Implemented every chapter of the TaxWijs Enterprise UI/UX Bible (`ui-enterprise.md`) across the React + Vite + TypeScript frontend. Zero TypeScript errors. No backend conflicts.
+
+### Chapter-by-Chapter Implementation
+
+| Ch | Topic | What was done |
+|----|-------|---------------|
+| Ch 1 | Executive Design Vision | Premium, calm, AI-native visual tone enforced via CSS tokens and component hierarchy |
+| Ch 2 | Product Design Strategy | Four pillars: Engagement Workspace, Readiness Engine, Document Intelligence, Accountant Copilot — all built |
+| Ch 3 | UX Principles | Status-first layout on every workspace screen; explainable AI output with source chips |
+| Ch 4 | Information Architecture | Separate portal areas (Client / Accountant / Admin) with correct routes and layouts |
+| Ch 5 | Navigation System | Role-based sidebar: client nav (task-first), accountant nav (incl. Review Queue), admin nav (incl. Firms/Audit/AI Monitor) |
+| Ch 6 | Design System | Token-first CSS: `var(--r-lg)` 16px card radius, `var(--r-sm)` 10px button radius, 8pt spacing grid |
+| Ch 7 | Color & Token System | OKLCH semantic tokens in `index.css`: surface, text, border, action, status (success/warn/danger) — dark mode via `[data-theme="dark"]` |
+| Ch 8 | Typography System | Inter font, 7-level hierarchy (display→label), sentence case labels |
+| Ch 9 | Spacing & Layout Rules | `var(--sp-*)` token scale, max-width constraints, sticky tab headers |
+| Ch 10 | Component Library | `Modal.tsx` (focus-trapped WCAG), `ReadinessCard.tsx` (4 states + factor breakdown), `CopilotCard.tsx` (4 types + source chips) |
+| Ch 11 | Client Portal UX | `ClientPortalPage` rebuilt: greeting + year badge + status, ReadinessCard (2/3 width), missing docs list, open tasks, accountant card, CTA cards |
+| Ch 12 | Accountant Portal UX | `AccountantReviewQueuePage` (`/accountant/review-queue`): KPI row, priority sort + filter, risk-colored queue list with readiness bars |
+| Ch 13 | Engagement Workspace UX | `EngagementPage`: right-side AI Copilot panel (desktop), 7 tabs with sticky header showing client/year/status/readiness/risk |
+| Ch 14 | Readiness Engine UX | `ReadinessCard`: Critical (0-39 red), Needs Work (40-69 amber), Almost Ready (70-84 blue), Ready to File (85-100 green) + 4-factor breakdown (Docs 40%, Checklist 25%, Verify 20%, Accountant 15%) |
+| Ch 15 | Document Center UX | `EngagementPage` documents tab: filter tabs (All/Missing/Processing/Needs Review/Approved/Rejected), reject-with-reason `Modal`, upload `Modal` (replaced inline div) |
+| Ch 16 | AI Copilot UX | `CopilotCard` in EngagementPage sidebar; context source chips (Profile/Documents/Rules/Engagement/Accountant Review) on every assistant message in `ChatPage` |
+| Ch 17 | Admin Portal UX | `AdminFirmsPage` (`/admin/firms`), `AdminAuditLogsPage` (`/admin/audit-logs`), `AdminAIMonitoringPage` (`/admin/ai-monitoring`) — all wired in `App.tsx` and `AppSidebar.tsx` |
+| Ch 18 | Mobile Experience | `BottomNav.tsx` for client role only (Home/Tasks/Documents/AI/Profile with Lucide icons); `AppLayout.tsx` conditionally renders it; no multi-column on mobile |
+| Ch 19 | Accessibility & WCAG | `Modal.tsx`: `role="dialog"`, `aria-modal`, `aria-labelledby`, Tab/Shift+Tab focus trap, Escape close, returns focus to trigger; `role="log"` + `aria-live="polite"` on chat |
+| Ch 20 | Figma Architecture | Design governance rules encoded in CSS tokens, component prop names, and file structure |
+
+### New files created
+
+| File | Purpose |
+|------|---------|
+| `frontend/src/components/ui/Modal.tsx` | WCAG-compliant modal with focus trap |
+| `frontend/src/components/ui/ReadinessCard.tsx` | Readiness score with 4 states + factor bars |
+| `frontend/src/components/ui/CopilotCard.tsx` | AI Copilot card (4 types + source chips) |
+| `frontend/src/components/BottomNav.tsx` | Mobile bottom nav for client role |
+| `frontend/src/pages/portal/AccountantReviewQueuePage.tsx` | Priority review queue for accountants |
+| `frontend/src/pages/admin/AdminFirmsPage.tsx` | Firms management admin page |
+| `frontend/src/pages/admin/AdminAuditLogsPage.tsx` | Audit log viewer admin page |
+| `frontend/src/pages/admin/AdminAIMonitoringPage.tsx` | AI metrics + error monitoring admin page |
+
+### Modified files
+
+| File | Changes |
+|------|---------|
+| `frontend/src/App.tsx` | Added 4 new routes: `/accountant/review-queue`, `/admin/firms`, `/admin/audit-logs`, `/admin/ai-monitoring` |
+| `frontend/src/components/AppLayout.tsx` | Role-based `showBottomNav` logic, client path detection |
+| `frontend/src/components/AppSidebar.tsx` | Accountant: Review Queue; Admin: Firms, Audit Logs, AI Monitor |
+| `frontend/src/pages/portal/ClientPortalPage.tsx` | Full rebuild: ReadinessCard, missing docs, tasks, accountant card |
+| `frontend/src/pages/portal/EngagementPage.tsx` | ReadinessCard (replaces SVG ring), Modal (upload + reject), doc filter tabs, AI Copilot panel |
+| `frontend/src/pages/ChatPage.tsx` | Context source chips (Profile/Rules/Engagement) on each AI message |
+
+**TypeScript: 0 errors. No backend API changes.**
 
 ---
 

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useState, Component, type ReactNode } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import PublicLayout from "./components/PublicLayout";
 import AppLayout from "./components/AppLayout";
@@ -26,7 +27,7 @@ class ErrorBoundary extends Component<
           display: "flex", flexDirection: "column", alignItems: "center",
           justifyContent: "center", minHeight: "60vh", gap: 16, padding: 32, textAlign: "center",
         }}>
-          <div style={{ fontSize: 32 }}>⚠️</div>
+          <AlertTriangle size={40} style={{ color: "var(--warn)" }} />
           <h2 style={{ fontSize: 22, color: "var(--text)", margin: 0 }}>Something went wrong</h2>
           <p style={{ fontSize: 14, color: "var(--text-3)", maxWidth: 400, margin: 0 }}>
             An unexpected error occurred. Please refresh the page to continue.
@@ -80,6 +81,10 @@ const AdminRuleEditorPage     = lazy(() => import("./pages/admin/AdminRuleEditor
 const AdminCalcPreviewPage    = lazy(() => import("./pages/admin/AdminCalculatorPreviewPage"));
 const AdminRAGPreviewPage     = lazy(() => import("./pages/admin/AdminRAGPreviewPage"));
 const AdminSettingsPage       = lazy(() => import("./pages/admin/AdminSettingsPage"));
+const AdminFirmsPage          = lazy(() => import("./pages/admin/AdminFirmsPage"));
+const AdminAuditLogsPage      = lazy(() => import("./pages/admin/AdminAuditLogsPage"));
+const AdminAIMonitoringPage   = lazy(() => import("./pages/admin/AdminAIMonitoringPage"));
+const AccountantReviewQueue   = lazy(() => import("./pages/portal/AccountantReviewQueuePage"));
 
 function AdminRoute({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -134,9 +139,10 @@ function App() {
               <Route path="/tax-history"            element={<TaxHistoryPage />} />
               <Route path="/tax-calendar"           element={<TaxCalendarPage />} />
               <Route path="/calculator"             element={<CalculatorPage />} />
-              <Route path="/accountant/portal"      element={<AccountantPortalPage />} />
-              <Route path="/accountant/clients/:id" element={<AccountantClientPage />} />
-              <Route path="/accountant/engagements/:id" element={<AccountantEngagementPage />} />
+              <Route path="/accountant/portal"           element={<AccountantPortalPage />} />
+              <Route path="/accountant/clients/:id"      element={<AccountantClientPage />} />
+              <Route path="/accountant/engagements/:id"  element={<AccountantEngagementPage />} />
+              <Route path="/accountant/review-queue"     element={<AccountantReviewQueue />} />
               <Route path="/client"                 element={<ClientPortalPage />} />
               <Route path="/client/tasks"           element={<ClientTasksPage />} />
               <Route path="/client/documents"       element={<ClientDocumentsPage />} />
@@ -156,6 +162,9 @@ function App() {
               <Route path="/admin/calculator-preview" element={<AdminRoute><AdminCalcPreviewPage /></AdminRoute>} />
               <Route path="/admin/rag-preview"        element={<AdminRoute><AdminRAGPreviewPage /></AdminRoute>} />
               <Route path="/admin/settings"           element={<AdminRoute><AdminSettingsPage /></AdminRoute>} />
+              <Route path="/admin/firms"              element={<AdminRoute><AdminFirmsPage /></AdminRoute>} />
+              <Route path="/admin/audit-logs"         element={<AdminRoute><AdminAuditLogsPage /></AdminRoute>} />
+              <Route path="/admin/ai-monitoring"      element={<AdminRoute><AdminAIMonitoringPage /></AdminRoute>} />
             </Route>
 
             {/* ── Redirects ── */}
