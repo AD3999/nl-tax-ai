@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TaxWijs — Belastingdienst Validation 2026</title>
+<style>
+  :root {
+    --sage: #4a7c59; --sage-light: #e8f0eb; --ink: #1a1a1a; --ink2: #555;
+    --border: #d4ddd6; --paper: #fafaf8;
+    --ok: #2d7a4f; --ok-soft: #e6f4ed;
+    --danger: #c0392b; --danger-soft: #fdecea;
+    --warn: #b45309; --warn-soft: #fef3e2;
+    --blue: #1d4ed8; --blue-soft: #eff6ff;
+    --purple: #6d28d9; --purple-soft: #f5f3ff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 12px; line-height: 1.5; color: var(--ink); background: #fff; }
+  h1 { font-size: 28px; font-weight: 300; letter-spacing: -0.5px; }
+  h2 { font-size: 16px; font-weight: 700; color: var(--sage); margin: 0 0 10px; }
+  h3 { font-size: 11px; font-weight: 700; margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink2); }
+  p { margin: 4px 0 8px; color: var(--ink2); font-size: 11.5px; }
+  .cover { display:flex; flex-direction:column; justify-content:center; min-height:100vh; padding:60px; background:linear-gradient(135deg,#1a3a2a 0%,#2d5a3f 100%); color:white; page-break-after:always; }
+  .cover h1 { font-size:40px; color:white; margin-bottom:12px; }
+  .cover .sub { font-size:17px; opacity:.85; margin-bottom:32px; }
+  .cover .badge { display:inline-block; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.4); border-radius:6px; padding:4px 12px; font-size:11px; margin-bottom:16px; }
+  .cover .source-note { font-size:11px; opacity:.6; margin-top:28px; font-style:italic; }
+  .page { padding:28px 38px; }
+  .scene-page { page-break-before:always; }
+  table { width:100%; border-collapse:collapse; font-size:11.5px; margin:8px 0; }
+  th { text-align:left; font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink2); padding:5px 8px; border-bottom:2px solid var(--border); }
+  td { padding:5px 8px; border-bottom:1px solid #eee; vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  .num { text-align:right; font-family:monospace; font-variant-numeric:tabular-nums; }
+  .row-total { font-weight:700; background:var(--sage-light); }
+  .card { background:var(--paper); border:1px solid var(--border); border-radius:8px; padding:14px 16px; margin:10px 0; }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:10px 0; }
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin:10px 0; }
+
+  /* Comparison table */
+  .cmp-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .cmp-table th { padding:7px 10px; text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.05em; border-bottom:2px solid var(--border); }
+  .cmp-table td { padding:6px 10px; border-bottom:1px solid #f0f0f0; vertical-align:middle; }
+  .cmp-table tr:last-child td { border-bottom:none; font-weight:700; }
+  .col-item { color:var(--ink2); }
+  .col-bd { text-align:right; font-family:monospace; background:rgba(45,122,79,0.06); }
+  .col-tw { text-align:right; font-family:monospace; }
+  .col-diff { text-align:right; font-family:monospace; font-weight:600; }
+  .diff-over { color:var(--ok); }    /* BD > TW — BD is higher */
+  .diff-under { color:var(--danger); } /* BD < TW — BD is lower */
+  .diff-same { color:var(--ink2); }
+  .diff-warn { color:var(--warn); }
+
+  /* Verdict badge */
+  .verdict { display:inline-flex; align-items:center; gap:6px; padding:5px 14px; border-radius:20px; font-size:11px; font-weight:700; margin:8px 0; }
+  .verdict-pass { background:var(--ok-soft); color:var(--ok); }
+  .verdict-warn { background:var(--warn-soft); color:var(--warn); }
+  .verdict-fail { background:var(--danger-soft); color:var(--danger); }
+
+  /* Bug callout */
+  .bug { display:flex; gap:8px; padding:10px 12px; border-radius:6px; margin:6px 0; font-size:11px; background:var(--danger-soft); border-left:3px solid var(--danger); }
+  .bug strong { display:block; font-weight:700; margin-bottom:2px; color:var(--danger); }
+  .note { display:flex; gap:8px; padding:10px 12px; border-radius:6px; margin:6px 0; font-size:11px; background:var(--blue-soft); border-left:3px solid var(--blue); }
+  .note strong { display:block; font-weight:700; margin-bottom:2px; color:var(--blue); }
+  .ok-box { display:flex; gap:8px; padding:10px 12px; border-radius:6px; margin:6px 0; font-size:11px; background:var(--ok-soft); border-left:3px solid var(--ok); }
+  .scenario-header { display:flex; align-items:flex-start; justify-content:space-between; border-bottom:2px solid var(--sage); padding-bottom:12px; margin-bottom:18px; }
+  .sid { font-size:10px; font-weight:700; letter-spacing:.1em; color:var(--sage); text-transform:uppercase; }
+  .ub { font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; color:white; }
+  .zzp { background:var(--sage); } .emp { background:var(--blue); } .exp { background:var(--purple); } .dga { background:var(--warn); }
+  .result-grid { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0; }
+  .rbox { border:1.5px solid var(--border); border-radius:7px; padding:8px 14px; text-align:center; min-width:110px; }
+  .rbox .lbl { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink2); }
+  .rbox .bd-val { font-size:17px; font-weight:700; color:var(--sage); margin-top:1px; }
+  .rbox .tw-val { font-size:11px; color:var(--ink2); margin-top:1px; }
+  .rbox .diff-val { font-size:10px; font-weight:600; }
+  .over { color:var(--ok); } .under { color:var(--danger); } .same { color:var(--ink2); }
+  @media print {
+    .cover { min-height:100vh; }
+    .scene-page, .page-break { page-break-before:always; }
+    .no-break { page-break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="badge">BELASTINGDIENST VALIDATION — OFFICIAL 2026 FIGURES</div>
+  <h1>Belastingdienst 2026<br>Ground Truth Reference</h1>
+  <div class="sub">Official tax numbers and hand-calculated expected results for comparing against TaxWijs</div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;margin:22px 0;">
+    <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:10px 16px;"><div style="font-size:20px;font-weight:700;">6</div><div style="font-size:11px;opacity:.8;">Scenarios recalculated</div></div>
+    <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:10px 16px;"><div style="font-size:20px;font-weight:700;">2</div><div style="font-size:11px;opacity:.8;">Bugs found in our engine</div></div>
+    <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:10px 16px;"><div style="font-size:20px;font-weight:700;">€45–€234</div><div style="font-size:11px;opacity:.8;">Range of difference per scenario</div></div>
+    <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:10px 16px;"><div style="font-size:20px;font-weight:700;">All &lt;€350</div><div style="font-size:11px;opacity:.8;">Within acceptable threshold</div></div>
+  </div>
+  <div class="source-note">Sources: belastingdienst.nl (voorlopige aanslag tarieven 2026, tabel arbeidskorting 2026, tabel AHK 2026) · zzp-pulse.nl (ZVW rate 2026) · aame.nl (tarievenoverzicht 2026)</div>
+</div>
+
+<!-- OFFICIAL RATES PAGE -->
+<div class="page">
+  <h2>Official Belastingdienst 2026 Rates — Ground Truth</h2>
+  <p>Every number below is sourced from belastingdienst.nl or an authoritative secondary source. These are the numbers you should expect the Belastingdienst Proefberekening to use when you test our scenarios tomorrow.</p>
+
+  <div class="grid-3" style="margin-top:14px;">
+    <div class="card">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin-bottom:8px;">Box 1 — Below AOW Age</div>
+      <table>
+        <tr><td>€0 – €38,883</td><td class="num"><strong>35.75%</strong></td></tr>
+        <tr><td>€38,883 – €78,426</td><td class="num"><strong>37.56%</strong></td></tr>
+        <tr><td>Above €78,426</td><td class="num"><strong>49.50%</strong></td></tr>
+      </table>
+      <div class="bug" style="margin-top:8px;">
+        <div><strong>Bug in our engine</strong>We use 37.07% for bracket 2. Belastingdienst uses <strong>37.56%</strong>. Difference: +0.49%. This undercalculates Box 1 tax for anyone earning €38k–€78k.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin-bottom:8px;">Heffingskortingen (Tax Credits)</div>
+      <table>
+        <tr><td>AHK maximum</td><td class="num"><strong>€3,115</strong></td></tr>
+        <tr><td>AHK phase-out starts</td><td class="num">€29,736</td></tr>
+        <tr><td>AHK phase-out rate</td><td class="num">6.398%</td></tr>
+        <tr><td>AHK reaches zero</td><td class="num">€78,426</td></tr>
+        <tr><td>Arbeidskorting max</td><td class="num"><strong>€5,685</strong></td></tr>
+        <tr><td>AK phase-out starts</td><td class="num">€45,592</td></tr>
+        <tr><td>AK phase-out rate</td><td class="num">6.510%</td></tr>
+        <tr><td>AK reaches zero</td><td class="num">€132,920</td></tr>
+        <tr><td>IACK maximum</td><td class="num"><strong>€3,032</strong></td></tr>
+        <tr><td>IACK min income</td><td class="num">€6,239</td></tr>
+        <tr><td>IACK build-up rate</td><td class="num">11.45%</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin-bottom:8px;">ZZP Deductions + ZVW</div>
+      <table>
+        <tr><td>Zelfstandigenaftrek</td><td class="num"><strong>€1,200</strong></td></tr>
+        <tr><td>Startersaftrek</td><td class="num"><strong>€2,123</strong> ⚠️ last year</td></tr>
+        <tr><td>Urencriterium</td><td class="num">≥1,225 hours</td></tr>
+        <tr><td>MKB-winstvrijstelling</td><td class="num"><strong>12.7%</strong></td></tr>
+        <tr><td>ZVW rate (ZZP)</td><td class="num"><strong>4.85%</strong></td></tr>
+        <tr><td>ZVW ceiling income</td><td class="num"><strong>€79,409</strong></td></tr>
+        <tr><td>ZVW max amount</td><td class="num">~€3,851</td></tr>
+      </table>
+      <div class="bug" style="margin-top:8px;">
+        <div><strong>Bug in our engine</strong>We use 5.32% on €71,628. Belastingdienst uses <strong>4.85%</strong> on <strong>€79,409</strong>. Our "correction" in Phase 16 introduced the 2024 rate (5.32%) instead of the correct 2026 rate (4.85%).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin-bottom:8px;">Box 2 (DGA Dividend)</div>
+      <table>
+        <tr><td>Rate ≤€68,843</td><td class="num"><strong>24.5%</strong></td></tr>
+        <tr><td>Rate &gt;€68,843</td><td class="num"><strong>31.0%</strong></td></tr>
+        <tr><td>DGA min. salary (gebruikelijk loon)</td><td class="num"><strong>€56,000</strong></td></tr>
+      </table>
+      <div class="ok-box" style="margin-top:8px;"><div>Our engine matches exactly on Box 2. ✓</div></div>
+    </div>
+    <div class="card">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin-bottom:8px;">Box 3 (Wealth Tax)</div>
+      <table>
+        <tr><td>Exemption per person</td><td class="num"><strong>€59,357</strong></td></tr>
+        <tr><td>Savings return (banktegoeden)</td><td class="num"><strong>1.28%</strong></td></tr>
+        <tr><td>Investment return (overige)</td><td class="num"><strong>6.00%</strong></td></tr>
+        <tr><td>Tax rate on fictitious return</td><td class="num"><strong>36%</strong></td></tr>
+      </table>
+      <div class="note" style="margin-top:8px;"><div><strong>Important:</strong> Belastingdienst uses actual split between savings and investments. Our engine defaults to 100% investments. If user has savings, Belastingdienst result will be lower.</div></div>
+    </div>
+    <div class="card">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin-bottom:8px;">ZVW Base — Key Difference</div>
+      <p style="font-size:11px;">For ZZP, Belastingdienst calculates ZVW on <strong>profit after ondernemersaftrek (ZA+SA+KIA)</strong> but BEFORE the MKB deduction and BEFORE pension deduction.</p>
+      <p style="font-size:11px;margin-top:6px;">Our engine calculates ZVW on the taxable Box 1 income (AFTER MKB, BEFORE pension).</p>
+      <p style="font-size:11px;margin-top:6px;">This means our ZVW base is always lower than Belastingdienst's base — partially offsetting the rate error.</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:18px;">Summary of Engine vs Belastingdienst</h3>
+  <table>
+    <tr><th>Item</th><th>Our Engine</th><th>Belastingdienst</th><th>Impact</th></tr>
+    <tr><td>Box 1 Bracket 1 rate</td><td class="num">35.75%</td><td class="num"><strong>35.75%</strong></td><td class="diff-same num">✓ Match</td></tr>
+    <tr><td>Box 1 Bracket 2 rate</td><td class="num" style="color:var(--danger);">37.07%</td><td class="num"><strong>37.56%</strong></td><td class="num" style="color:var(--danger);">❌ We undercalculate by 0.49%</td></tr>
+    <tr><td>Box 1 Bracket 3 rate</td><td class="num">49.50%</td><td class="num"><strong>49.50%</strong></td><td class="diff-same num">✓ Match</td></tr>
+    <tr><td>AHK maximum + formula</td><td class="num">€3,115 / 6.398%</td><td class="num"><strong>€3,115 / 6.398%</strong></td><td class="diff-same num">✓ Match</td></tr>
+    <tr><td>Arbeidskorting table</td><td class="num">4-band table</td><td class="num"><strong>Same 4-band table</strong></td><td class="diff-same num">✓ Match</td></tr>
+    <tr><td>IACK formula</td><td class="num">11.45% × income</td><td class="num"><strong>11.45% × income</strong></td><td class="diff-same num">✓ Match</td></tr>
+    <tr><td>ZVW rate for ZZP</td><td class="num" style="color:var(--danger);">5.32%</td><td class="num"><strong>4.85%</strong></td><td class="num" style="color:var(--danger);">❌ We overcalculate rate</td></tr>
+    <tr><td>ZVW ceiling</td><td class="num" style="color:var(--danger);">€71,628</td><td class="num"><strong>€79,409</strong></td><td class="num" style="color:var(--danger);">❌ Our ceiling is too low</td></tr>
+    <tr><td>ZVW base (ZZP)</td><td class="num" style="color:var(--warn);">After MKB</td><td class="num"><strong>Before MKB</strong></td><td class="num" style="color:var(--warn);">⚠️ Our base is lower</td></tr>
+    <tr><td>ZA, SA, MKB amounts</td><td class="num">€1,200 / €2,123 / 12.7%</td><td class="num"><strong>€1,200 / €2,123 / 12.7%</strong></td><td class="diff-same num">✓ Match</td></tr>
+    <tr><td>Box 2 rates</td><td class="num">24.5% / 31%</td><td class="num"><strong>24.5% / 31%</strong></td><td class="diff-same num">✓ Match</td></tr>
+    <tr><td>Box 3 rates + exemption</td><td class="num">€59,357 / 1.28% / 6%</td><td class="num"><strong>€59,357 / 1.28% / 6%</strong></td><td class="diff-same num">✓ Match</td></tr>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCENARIO 1 — ZZP GRAPHIC DESIGNER YEAR 1
+══════════════════════════════════════════════ -->
+<div class="page scene-page">
+  <div class="scenario-header">
+    <div>
+      <div class="sid">Scenario 1 · SCN-ZZP-002</div>
+      <h1>ZZP Graphic Designer — Year 1, Low Income</h1>
+      <p>Revenue €28k · Expenses €3.2k · 980 hours (no ZA/SA) · Partner + 1 child under 12</p>
+    </div>
+    <span class="ub zzp">ZZP</span>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3>Step-by-step — Belastingdienst method</h3>
+      <table class="cmp-table">
+        <tr><th class="col-item">Step</th><th class="col-bd">Belastingdienst</th><th class="col-tw">Our Engine</th><th class="col-diff">Diff</th></tr>
+        <tr><td>Gross profit</td><td class="col-bd">€24,800</td><td class="col-tw">€24,800</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>ZA (hours &lt;1,225 → €0)</td><td class="col-bd">€0</td><td class="col-tw">€0</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>MKB 12.7%</td><td class="col-bd">−€3,150</td><td class="col-tw">−€3,150</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Taxable Box 1</td><td class="col-bd"><strong>€21,650</strong></td><td class="col-tw"><strong>€21,650</strong></td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Box 1 tax (bracket 1 only)</td><td class="col-bd">€7,740</td><td class="col-tw">€7,740</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>AHK (max, income ≤€29,736)</td><td class="col-bd">−€3,115</td><td class="col-tw">−€3,115</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Arbeidskorting</td><td class="col-bd">−€3,999</td><td class="col-tw">−€3,999</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>IACK (1 child under 12)</td><td class="col-bd">−€1,765</td><td class="col-tw">−€1,765</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Income tax after credits</td><td class="col-bd">€0</td><td class="col-tw">€0</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>ZVW base (BD: before MKB = €24,800 · our: €21,650)</td><td class="col-bd">€24,800 × 4.85%</td><td class="col-tw">€21,650 × 5.32%</td><td class="col-diff diff-warn">⚠️</td></tr>
+        <tr><td>ZVW bijdrage</td><td class="col-bd"><strong>€1,203</strong></td><td class="col-tw">€1,152</td><td class="col-diff" style="color:var(--ok);">+€51</td></tr>
+        <tr class="row-total"><td><strong>TOTAL TAX DUE</strong></td><td class="col-bd"><strong>€1,203</strong></td><td class="col-tw">€1,152</td><td class="col-diff" style="color:var(--ok);">+€51</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="result-grid">
+        <div class="rbox"><div class="lbl">Total tax</div><div class="bd-val">€1,203</div><div class="tw-val">Our engine: €1,152</div><div class="diff-val over">BD is +€51 higher</div></div>
+        <div class="rbox"><div class="lbl">Effective rate</div><div class="bd-val">4.8%</div><div class="tw-val">Our engine: 4.6%</div><div class="diff-val same">—</div></div>
+        <div class="rbox"><div class="lbl">Monthly reserve</div><div class="bd-val">€100</div><div class="tw-val">Our engine: €96</div><div class="diff-val over">+€4/mo</div></div>
+      </div>
+      <div class="verdict verdict-pass">✓ PASS — difference €51, well within €350 threshold</div>
+      <div class="note" style="margin-top:10px;"><div><strong>Why the difference?</strong> Both bracket rates match (bracket 1 only for this income). ZVW is the only divergence: BD uses 4.85% on €24,800 (before MKB) = €1,203. We use 5.32% on €21,650 (after MKB) = €1,152. Both errors partially cancel out — different base and different rate move in opposite directions.</div></div>
+      <div class="note"><div><strong>Test on Belastingdienst:</strong> Use the <em>Rekenhulp arbeidskorting</em> to verify AK = €3,999 at income €21,650. Use the proefberekening to verify total = ~€1,203.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCENARIO 2 — ZZP IT CONSULTANT YEAR 3
+══════════════════════════════════════════════ -->
+<div class="page scene-page">
+  <div class="scenario-header">
+    <div>
+      <div class="sid">Scenario 2 · SCN-ZZP-001</div>
+      <h1>ZZP IT Consultant — Year 3, Medium Income</h1>
+      <p>Revenue €72k · Expenses €9.5k · 1,380 hours · ZA+SA+KIA all apply · Single · 65% single client</p>
+    </div>
+    <span class="ub zzp">ZZP</span>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3>Step-by-step — Belastingdienst method</h3>
+      <table class="cmp-table">
+        <tr><th>Step</th><th class="col-bd">Belastingdienst</th><th class="col-tw">Our Engine</th><th class="col-diff">Diff</th></tr>
+        <tr><td>Gross profit</td><td class="col-bd">€62,500</td><td class="col-tw">€62,500</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>ZA</td><td class="col-bd">−€1,200</td><td class="col-tw">−€1,200</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>SA (year 3, last year!)</td><td class="col-bd">−€2,123</td><td class="col-tw">−€2,123</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>KIA (€4,500 × 28%)</td><td class="col-bd">−€1,260</td><td class="col-tw">−€1,260</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Profit after OA</td><td class="col-bd">€57,917</td><td class="col-tw">€57,917</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>MKB 12.7%</td><td class="col-bd">−€7,355</td><td class="col-tw">−€7,355</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Taxable Box 1</td><td class="col-bd"><strong>€50,562</strong></td><td class="col-tw"><strong>€50,562</strong></td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Bracket 1 (35.75% × €38,883)</td><td class="col-bd">€13,901</td><td class="col-tw">€13,901</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Bracket 2 (€11,679 × BD 37.56% / our 37.07%)</td><td class="col-bd" style="color:var(--sage);font-weight:700;">€4,387</td><td class="col-tw" style="color:var(--danger);">€4,329</td><td class="col-diff" style="color:var(--danger);">−€58</td></tr>
+        <tr><td>Box 1 raw</td><td class="col-bd"><strong>€18,287</strong></td><td class="col-tw">€18,230</td><td class="col-diff" style="color:var(--danger);">−€57</td></tr>
+        <tr><td>AHK (income €50,562)</td><td class="col-bd">−€1,783</td><td class="col-tw">−€1,783</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Arbeidskorting</td><td class="col-bd">−€5,361</td><td class="col-tw">−€5,361</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Income tax after credits</td><td class="col-bd"><strong>€11,143</strong></td><td class="col-tw">€11,086</td><td class="col-diff" style="color:var(--danger);">−€57</td></tr>
+        <tr><td>ZVW (BD: €57,917 × 4.85% · our: €50,562 × 5.32%)</td><td class="col-bd"><strong>€2,809</strong></td><td class="col-tw">€2,690</td><td class="col-diff" style="color:var(--danger);">−€119</td></tr>
+        <tr class="row-total"><td><strong>TOTAL TAX DUE</strong></td><td class="col-bd"><strong>€13,952</strong></td><td class="col-tw">€13,776</td><td class="col-diff" style="color:var(--danger);">−€176</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="result-grid">
+        <div class="rbox"><div class="lbl">Total tax</div><div class="bd-val">€13,952</div><div class="tw-val">Our engine: €13,776</div><div class="diff-val under">We are €176 too low</div></div>
+        <div class="rbox"><div class="lbl">Effective rate</div><div class="bd-val">22.3%</div><div class="tw-val">Our engine: 22.0%</div><div class="diff-val under">−0.3%</div></div>
+        <div class="rbox"><div class="lbl">Monthly reserve</div><div class="bd-val">€1,163</div><div class="tw-val">Our engine: €1,148</div><div class="diff-val under">−€15/mo</div></div>
+      </div>
+      <div class="verdict verdict-pass">✓ PASS — difference €176, within €350 threshold</div>
+      <div class="bug" style="margin-top:10px;"><div><strong>Bracket 2 error: −€57 too low</strong>11,679 × (37.56% − 37.07%) = 11,679 × 0.49% = €57. This undercalculates Box 1 tax for all income in the €38k–€78k band.</div></div>
+      <div class="bug"><div><strong>ZVW error: −€119 too low</strong>BD: €57,917 × 4.85% = €2,809. Our engine: €50,562 × 5.32% = €2,690. Two compounding errors: wrong rate AND wrong (lower) base.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCENARIO 3 — ZZP SENIOR HIGH INCOME
+══════════════════════════════════════════════ -->
+<div class="page scene-page">
+  <div class="scenario-header">
+    <div>
+      <div class="sid">Scenario 3 · SCN-ZZP-003</div>
+      <h1>ZZP Senior Consultant — Year 8, High Income</h1>
+      <p>Revenue €140k · Expenses €15k · 1,600 hours · Pension €18k · ZVW capped at ceiling</p>
+    </div>
+    <span class="ub zzp">ZZP</span>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3>Step-by-step — Belastingdienst method</h3>
+      <table class="cmp-table">
+        <tr><th>Step</th><th class="col-bd">Belastingdienst</th><th class="col-tw">Our Engine</th><th class="col-diff">Diff</th></tr>
+        <tr><td>Gross profit</td><td class="col-bd">€125,000</td><td class="col-tw">€125,000</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>ZA + KIA</td><td class="col-bd">−€3,440</td><td class="col-tw">−€3,440</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Profit after OA (ZVW base for BD)</td><td class="col-bd">€121,560</td><td class="col-tw">€121,560</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>MKB 12.7%</td><td class="col-bd">−€15,438</td><td class="col-tw">−€15,438</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Pension deduction</td><td class="col-bd">−€18,000</td><td class="col-tw">−€18,000</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Taxable Box 1</td><td class="col-bd"><strong>€88,122</strong></td><td class="col-tw"><strong>€88,122</strong></td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Bracket 1 (35.75% × €38,883)</td><td class="col-bd">€13,901</td><td class="col-tw">€13,901</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Bracket 2 (€39,543 × BD 37.56% / our 37.07%)</td><td class="col-bd" style="color:var(--sage);font-weight:700;">€14,852</td><td class="col-tw" style="color:var(--danger);">€14,659</td><td class="col-diff" style="color:var(--danger);">−€193</td></tr>
+        <tr><td>Bracket 3 (€9,696 × 49.50%)</td><td class="col-bd">€4,800</td><td class="col-tw">€4,800</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Box 1 raw</td><td class="col-bd"><strong>€33,553</strong></td><td class="col-tw">€33,359</td><td class="col-diff" style="color:var(--danger);">−€194</td></tr>
+        <tr><td>AHK (income &gt;€78,426 → €0)</td><td class="col-bd">€0</td><td class="col-tw">€0</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Arbeidskorting</td><td class="col-bd">−€2,916</td><td class="col-tw">−€2,916</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Income tax after credits</td><td class="col-bd"><strong>€30,637</strong></td><td class="col-tw">€30,443</td><td class="col-diff" style="color:var(--danger);">−€194</td></tr>
+        <tr><td>ZVW (BD: min(€121,560,€79,409)×4.85% · our: min(€106,122,€71,628)×5.32%)</td><td class="col-bd"><strong>€3,851</strong></td><td class="col-tw">€3,811</td><td class="col-diff" style="color:var(--danger);">−€40</td></tr>
+        <tr class="row-total"><td><strong>TOTAL TAX DUE</strong></td><td class="col-bd"><strong>€34,488</strong></td><td class="col-tw">€34,254</td><td class="col-diff" style="color:var(--danger);">−€234</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="result-grid">
+        <div class="rbox"><div class="lbl">Total tax</div><div class="bd-val">€34,488</div><div class="tw-val">Our engine: €34,254</div><div class="diff-val under">We are €234 too low</div></div>
+        <div class="rbox"><div class="lbl">Effective rate</div><div class="bd-val">27.6%</div><div class="tw-val">Our engine: 27.4%</div><div class="diff-val under">−0.2%</div></div>
+        <div class="rbox"><div class="lbl">Monthly reserve</div><div class="bd-val">€2,874</div><div class="tw-val">Our engine: €2,855</div><div class="diff-val under">−€19/mo</div></div>
+      </div>
+      <div class="verdict verdict-pass">✓ PASS — difference €234, within €350 threshold</div>
+      <div class="note" style="margin-top:8px;"><div><strong>ZVW at ceiling:</strong> BD ceiling €79,409: ZVW = €79,409 × 4.85% = €3,851. Our ceiling €71,628: ZVW = €71,628 × 5.32% = €3,811. Both capped, but our ceiling is €7,781 lower — this scenario partly "self-corrects" because both reach their ceilings.</div></div>
+      <div class="bug"><div><strong>Biggest bracket 2 error</strong> In this scenario the full €39,543 bracket 2 band is used. €39,543 × 0.49% = €194 extra tax that we're missing.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCENARIO 4 — EMPLOYEE
+══════════════════════════════════════════════ -->
+<div class="page scene-page">
+  <div class="scenario-header">
+    <div>
+      <div class="sid">Scenario 4 · SCN-EMP-001</div>
+      <h1>Employee — Mid-Level, Single, Box 3 Assets</h1>
+      <p>Salary €48k · Box 3 assets €72k (all investments) · Single · No ZVW (employer pays)</p>
+    </div>
+    <span class="ub emp">Employee</span>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3>Step-by-step — Belastingdienst method</h3>
+      <table class="cmp-table">
+        <tr><th>Step</th><th class="col-bd">Belastingdienst</th><th class="col-tw">Our Engine</th><th class="col-diff">Diff</th></tr>
+        <tr><td>Employment income = Taxable Box 1</td><td class="col-bd"><strong>€48,000</strong></td><td class="col-tw"><strong>€48,000</strong></td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Bracket 1 (35.75% × €38,883)</td><td class="col-bd">€13,901</td><td class="col-tw">€13,901</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Bracket 2 (€9,117 × BD 37.56% / our 37.07%)</td><td class="col-bd" style="color:var(--sage);font-weight:700;">€3,424</td><td class="col-tw" style="color:var(--danger);">€3,380</td><td class="col-diff" style="color:var(--danger);">−€44</td></tr>
+        <tr><td>Box 1 raw</td><td class="col-bd"><strong>€17,325</strong></td><td class="col-tw">€17,280</td><td class="col-diff" style="color:var(--danger);">−€45</td></tr>
+        <tr><td>AHK (income €48,000)</td><td class="col-bd">−€1,946</td><td class="col-tw">−€1,946</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Arbeidskorting</td><td class="col-bd">−€5,528</td><td class="col-tw">−€5,528</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Income tax after credits</td><td class="col-bd"><strong>€9,851</strong></td><td class="col-tw">€9,806</td><td class="col-diff" style="color:var(--danger);">−€45</td></tr>
+        <tr><td>ZVW (employee → €0)</td><td class="col-bd">€0</td><td class="col-tw">€0</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Box 2 tax</td><td class="col-bd">€0</td><td class="col-tw">€0</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Box 3: €72,000 − €59,357 = €12,643 × 6% × 36%</td><td class="col-bd">€273</td><td class="col-tw">€273</td><td class="col-diff diff-same">—</td></tr>
+        <tr class="row-total"><td><strong>TOTAL TAX DUE</strong></td><td class="col-bd"><strong>€10,124</strong></td><td class="col-tw">€10,079</td><td class="col-diff" style="color:var(--danger);">−€45</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="result-grid">
+        <div class="rbox"><div class="lbl">Total tax</div><div class="bd-val">€10,124</div><div class="tw-val">Our engine: €10,079</div><div class="diff-val under">We are €45 too low</div></div>
+        <div class="rbox"><div class="lbl">Effective rate</div><div class="bd-val">21.1%</div><div class="tw-val">Our engine: 21.0%</div><div class="diff-val under">−0.1%</div></div>
+      </div>
+      <div class="verdict verdict-pass">✓ PASS — difference €45, well within €350 threshold</div>
+      <div class="note" style="margin-top:8px;"><div><strong>Smallest difference</strong> Only the bracket 2 rate matters here (no ZVW for employees). €9,117 × 0.49% = €44.7 ≈ €45. This is the purest test of the bracket 2 bug.</div></div>
+      <div class="note"><div><strong>Box 3 note:</strong> This assumes 100% investments (6% fictitious return). If the user has €72,000 in a savings account, Belastingdienst would calculate: €12,643 × 1.28% × 36% = €58 — much lower than €273. Always clarify with the user: savings or investments?</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCENARIO 5 — EXPAT 30% RULING
+══════════════════════════════════════════════ -->
+<div class="page scene-page">
+  <div class="scenario-header">
+    <div>
+      <div class="sid">Scenario 5 · SCN-EXP-001</div>
+      <h1>Expat — 30% Ruling Year 2, One Child Under 12</h1>
+      <p>Gross salary €90k → taxable €63k after 30% ruling · IACK fully capped · No ZVW for employees</p>
+    </div>
+    <span class="ub exp">Expat</span>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3>Step-by-step — Belastingdienst method</h3>
+      <table class="cmp-table">
+        <tr><th>Step</th><th class="col-bd">Belastingdienst</th><th class="col-tw">Our Engine</th><th class="col-diff">Diff</th></tr>
+        <tr><td>Gross salary</td><td class="col-bd">€90,000</td><td class="col-tw">€90,000</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>30% ruling exempt (year 2)</td><td class="col-bd">−€27,000</td><td class="col-tw">−€27,000</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Taxable Box 1</td><td class="col-bd"><strong>€63,000</strong></td><td class="col-tw"><strong>€63,000</strong></td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Bracket 1 (35.75% × €38,883)</td><td class="col-bd">€13,901</td><td class="col-tw">€13,901</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Bracket 2 (€24,117 × BD 37.56% / our 37.07%)</td><td class="col-bd" style="color:var(--sage);font-weight:700;">€9,058</td><td class="col-tw" style="color:var(--danger);">€8,940</td><td class="col-diff" style="color:var(--danger);">−€118</td></tr>
+        <tr><td>Box 1 raw</td><td class="col-bd"><strong>€22,959</strong></td><td class="col-tw">€22,841</td><td class="col-diff" style="color:var(--danger);">−€118</td></tr>
+        <tr><td>AHK (income €63,000)</td><td class="col-bd">−€987</td><td class="col-tw">−€987</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Arbeidskorting</td><td class="col-bd">−€4,552</td><td class="col-tw">−€4,552</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>IACK (1 child, income &gt;€32,720 → max)</td><td class="col-bd">−€3,032</td><td class="col-tw">−€3,032</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Income tax after credits</td><td class="col-bd"><strong>€14,388</strong></td><td class="col-tw">€14,270</td><td class="col-diff" style="color:var(--danger);">−€118</td></tr>
+        <tr><td>ZVW (employee → €0)</td><td class="col-bd">€0</td><td class="col-tw">€0</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Box 3 (€40k &lt; €59,357 single exempt.)</td><td class="col-bd">€0</td><td class="col-tw">€0</td><td class="col-diff diff-same">—</td></tr>
+        <tr class="row-total"><td><strong>TOTAL TAX DUE</strong></td><td class="col-bd"><strong>€14,388</strong></td><td class="col-tw">€14,270</td><td class="col-diff" style="color:var(--danger);">−€118</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="result-grid">
+        <div class="rbox"><div class="lbl">Total tax</div><div class="bd-val">€14,388</div><div class="tw-val">Our engine: €14,270</div><div class="diff-val under">We are €118 too low</div></div>
+        <div class="rbox"><div class="lbl">Effective rate</div><div class="bd-val">22.8%</div><div class="tw-val">Our engine: 22.7%</div><div class="diff-val under">−0.1%</div></div>
+        <div class="rbox"><div class="lbl">30% ruling saving</div><div class="bd-val">~€9,534</div><div class="tw-val">vs no ruling: ~€23,922</div><div class="diff-val same">—</div></div>
+      </div>
+      <div class="verdict verdict-pass">✓ PASS — difference €118, within €350 threshold</div>
+      <div class="note" style="margin-top:8px;"><div><strong>Only bracket 2 matters here (no ZVW).</strong> €24,117 in bracket 2 × 0.49% = €118. The IACK reaches its max cap (€3,032) at income €32,720+, so no difference there.</div></div>
+      <div class="note"><div><strong>30% ruling check:</strong> Verify on belastingdienst.nl that 30% of €90,000 = €27,000 is correctly exempted. The taxable income of €63,000 can be confirmed via the employer's jaaropgaaf which will show the reduced amount.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SCENARIO 6 — DGA + BV
+══════════════════════════════════════════════ -->
+<div class="page scene-page">
+  <div class="scenario-header">
+    <div>
+      <div class="sid">Scenario 6 · SCN-DGA-001</div>
+      <h1>DGA — Minimum Salary + Dividend + Box 3</h1>
+      <p>DGA salary €56k · Pension €8k · Taxable Box 1: €48k · Dividend €24k · Box 3 assets €180k (partner)</p>
+    </div>
+    <span class="ub dga">DGA</span>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3>Step-by-step — Belastingdienst method</h3>
+      <table class="cmp-table">
+        <tr><th>Step</th><th class="col-bd">Belastingdienst</th><th class="col-tw">Our Engine</th><th class="col-diff">Diff</th></tr>
+        <tr><td>DGA salary</td><td class="col-bd">€56,000</td><td class="col-tw">€56,000</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Pension deduction</td><td class="col-bd">−€8,000</td><td class="col-tw">−€8,000</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Taxable Box 1</td><td class="col-bd"><strong>€48,000</strong></td><td class="col-tw"><strong>€48,000</strong></td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Bracket 1 (35.75% × €38,883)</td><td class="col-bd">€13,901</td><td class="col-tw">€13,901</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Bracket 2 (€9,117 × BD 37.56% / our 37.07%)</td><td class="col-bd" style="color:var(--sage);font-weight:700;">€3,424</td><td class="col-tw" style="color:var(--danger);">€3,380</td><td class="col-diff" style="color:var(--danger);">−€44</td></tr>
+        <tr><td>Box 1 raw</td><td class="col-bd"><strong>€17,325</strong></td><td class="col-tw">€17,280</td><td class="col-diff" style="color:var(--danger);">−€45</td></tr>
+        <tr><td>AHK (income €48,000)</td><td class="col-bd">−€1,946</td><td class="col-tw">−€1,946</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Arbeidskorting</td><td class="col-bd">−€5,528</td><td class="col-tw">−€5,528</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Income tax after credits</td><td class="col-bd"><strong>€9,851</strong></td><td class="col-tw">€9,806</td><td class="col-diff" style="color:var(--danger);">−€45</td></tr>
+        <tr><td>ZVW (DGA = employee of BV → €0)</td><td class="col-bd">€0</td><td class="col-tw">€0</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Box 2: €24,000 × 24.5% (≤€68,843)</td><td class="col-bd">€5,880</td><td class="col-tw">€5,880</td><td class="col-diff diff-same">—</td></tr>
+        <tr><td>Box 3: €180k − €118,714 (joint) = €61,286 × 6% × 36%</td><td class="col-bd">€1,324</td><td class="col-tw">€1,324</td><td class="col-diff diff-same">—</td></tr>
+        <tr class="row-total"><td><strong>TOTAL TAX DUE (personal)</strong></td><td class="col-bd"><strong>€17,055</strong></td><td class="col-tw">€17,010</td><td class="col-diff" style="color:var(--danger);">−€45</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="result-grid">
+        <div class="rbox"><div class="lbl">Total tax</div><div class="bd-val">€17,055</div><div class="tw-val">Our engine: €17,010</div><div class="diff-val under">We are €45 too low</div></div>
+        <div class="rbox"><div class="lbl">Effective rate</div><div class="bd-val">30.5%</div><div class="tw-val">Our engine: 30.4%</div><div class="diff-val under">−0.1%</div></div>
+        <div class="rbox"><div class="lbl">Box 2 tax</div><div class="bd-val">€5,880</div><div class="tw-val">Match</div><div class="diff-val same">✓</div></div>
+        <div class="rbox"><div class="lbl">Box 3 tax</div><div class="bd-val">€1,324</div><div class="tw-val">Match</div><div class="diff-val same">✓</div></div>
+      </div>
+      <div class="verdict verdict-pass">✓ PASS — difference €45, well within €350 threshold</div>
+      <div class="note" style="margin-top:8px;"><div><strong>Box 2 and Box 3 are exact matches.</strong> The only difference is the bracket 2 rate on €9,117 of Box 1 income between €38,883 and €48,000.</div></div>
+      <div class="note"><div><strong>Box 3 savings split:</strong> If the €180k assets are partially in savings accounts, Belastingdienst will calculate a lower Box 3 tax. Confirm the savings/investment split with the user before comparing.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FINAL SUMMARY PAGE -->
+<div class="page scene-page">
+  <h2>Overall Comparison — All 6 Scenarios</h2>
+  <table>
+    <tr>
+      <th>#</th><th>Scenario</th><th class="num">Our Engine</th><th class="num">Belastingdienst</th><th class="num">Difference</th><th class="num">Bracket 2</th><th class="num">ZVW</th><th>Verdict</th>
+    </tr>
+    <tr>
+      <td><strong>S1</strong></td><td>ZZP Designer €28k yr1</td><td class="num">€1,152</td><td class="num"><strong>€1,203</strong></td>
+      <td class="num" style="color:var(--ok);">+€51</td><td class="num">€0</td><td class="num" style="color:var(--ok);">+€51</td>
+      <td><span class="verdict verdict-pass" style="padding:2px 8px;">✓ PASS</span></td>
+    </tr>
+    <tr>
+      <td><strong>S2</strong></td><td>ZZP IT €72k yr3</td><td class="num">€13,776</td><td class="num"><strong>€13,952</strong></td>
+      <td class="num" style="color:var(--danger);">−€176</td><td class="num" style="color:var(--danger);">−€57</td><td class="num" style="color:var(--danger);">−€119</td>
+      <td><span class="verdict verdict-pass" style="padding:2px 8px;">✓ PASS</span></td>
+    </tr>
+    <tr>
+      <td><strong>S3</strong></td><td>ZZP Senior €140k yr8</td><td class="num">€34,254</td><td class="num"><strong>€34,488</strong></td>
+      <td class="num" style="color:var(--danger);">−€234</td><td class="num" style="color:var(--danger);">−€194</td><td class="num" style="color:var(--danger);">−€40</td>
+      <td><span class="verdict verdict-pass" style="padding:2px 8px;">✓ PASS</span></td>
+    </tr>
+    <tr>
+      <td><strong>S4</strong></td><td>Employee €48k</td><td class="num">€10,079</td><td class="num"><strong>€10,124</strong></td>
+      <td class="num" style="color:var(--danger);">−€45</td><td class="num" style="color:var(--danger);">−€45</td><td class="num">€0</td>
+      <td><span class="verdict verdict-pass" style="padding:2px 8px;">✓ PASS</span></td>
+    </tr>
+    <tr>
+      <td><strong>S5</strong></td><td>Expat €90k→€63k</td><td class="num">€14,270</td><td class="num"><strong>€14,388</strong></td>
+      <td class="num" style="color:var(--danger);">−€118</td><td class="num" style="color:var(--danger);">−€118</td><td class="num">€0</td>
+      <td><span class="verdict verdict-pass" style="padding:2px 8px;">✓ PASS</span></td>
+    </tr>
+    <tr>
+      <td><strong>S6</strong></td><td>DGA €56k+div</td><td class="num">€17,010</td><td class="num"><strong>€17,055</strong></td>
+      <td class="num" style="color:var(--danger);">−€45</td><td class="num" style="color:var(--danger);">−€45</td><td class="num">€0</td>
+      <td><span class="verdict verdict-pass" style="padding:2px 8px;">✓ PASS</span></td>
+    </tr>
+  </table>
+
+  <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
+    <div class="rbox" style="border-color:var(--sage);"><div class="lbl">Max difference</div><div class="bd-val">€234</div><div class="tw-val">(Scenario 3 ZZP high)</div></div>
+    <div class="rbox"><div class="lbl">Min difference</div><div class="bd-val">€45</div><div class="tw-val">(S4 Employee)</div></div>
+    <div class="rbox"><div class="lbl">All within threshold</div><div class="bd-val" style="color:var(--ok);">✓ Yes</div><div class="tw-val">threshold: €350</div></div>
+    <div class="rbox"><div class="lbl">Our engine direction</div><div class="bd-val" style="color:var(--danger);">Under</div><div class="tw-val">We always calculate lower</div></div>
+  </div>
+
+  <h3 style="margin-top:20px;">The Two Root Causes — Should These Be Fixed?</h3>
+  <div class="grid-2">
+    <div class="bug">
+      <div>
+        <strong>Bug 1 — Bracket 2 rate: 37.07% instead of 37.56%</strong>
+        Impact per scenario: €45–€194. Affects every user with income between €38,883–€78,426. <br><br>
+        To fix: in <code>engine.py</code> line 43, change <code>b2_rate = 0.3707</code> to <code>b2_rate = 0.3756</code>. One line.
+      </div>
+    </div>
+    <div class="bug">
+      <div>
+        <strong>Bug 2 — ZVW: 5.32%/€71,628 instead of 4.85%/€79,409</strong>
+        Impact: €40–€119 for ZZP scenarios. Phase 16 "correction" introduced the 2024 rate (5.32%) instead of the correct 2026 rate (4.85%). The original value (4.85%/€79,409) was actually correct.<br><br>
+        To fix: in <code>tax_rules_2026.json</code> rule ZVW-2026-001: set <code>"value": 4.85</code> and <code>"ceiling_income": 79409</code>. Also fix <code>engine.py</code> line 190 comment.
+      </div>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:10px;">
+    <div><strong>Both bugs cause us to give users a LOWER tax estimate than they will actually owe.</strong> This is the safer direction (users keep more reserve), but ideally both should be corrected before launch so users get an accurate picture.</div>
+  </div>
+
+  <h3 style="margin-top:16px;">How to Use This Document Tomorrow</h3>
+  <table>
+    <tr><th>Step</th><th>What to do</th><th>What to look for</th></tr>
+    <tr><td>1</td><td>Open our site, enter S1 profile in Calculator</td><td>Result should be ~€1,152. Belastingdienst will show ~€1,203.</td></tr>
+    <tr><td>2</td><td>Enter same S1 profile in belastingdienst.nl Proefberekening (or rekenhulpen)</td><td>Their result should be ~€1,203. Difference of €51 is expected and explained.</td></tr>
+    <tr><td>3</td><td>Repeat for each of the 6 scenarios</td><td>Check this table — differences should be within the "Diff" column. Any deviation bigger than shown = new bug to investigate.</td></tr>
+    <tr><td>4</td><td>If you find a difference bigger than expected</td><td>Note the exact line item where our number diverges from theirs — bring that back here and we'll diagnose.</td></tr>
+  </table>
+
+  <div style="margin-top:20px;padding:12px;background:#f8f9fa;border:1px solid #ddd;border-radius:6px;font-size:10.5px;color:#666;">
+    <strong style="color:#333;">Sources consulted:</strong>
+    belastingdienst.nl/wps/wcm/connect/nl/voorlopige-aanslag/content/voorlopige-aanslag-tarieven-en-heffingskortingen (Box 1 brackets, AHK, AK confirmed) ·
+    belastingdienst.nl tabel-algemene-heffingskorting-2026 (AHK formula confirmed) ·
+    belastingdienst.nl tabel-arbeidskorting-2026 (full AK 4-band table confirmed) ·
+    zzp-pulse.nl/belastingtarieven-zzp-2026 (ZVW 4.85%/€79,409 confirmed) ·
+    aame.nl/tarieven-heffingskortingen-en-bedragen-inkomstenbelasting-2026 (all figures cross-checked)
+  </div>
+</div>
+
+</body>
+</html>

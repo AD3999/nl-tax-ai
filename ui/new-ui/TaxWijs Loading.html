@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>TaxWijs — Loading Design System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%;font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#1a1a2e;-webkit-font-smoothing:antialiased}
+
+    /* ── Token aliases used throughout ── */
+    :root{
+      --bg:       #0a0a14;
+      --bg-2:     #0e0e1a;
+      --bg-3:     #131320;
+      --bg-4:     #181828;
+      --border:   #1e1e32;
+      --border-2: #28284a;
+      --blue:     #3b82f6;
+      --blue-s:   #1a2a4a;
+      --blue-t:   #93c5fd;
+      --text:     #f0f0fa;
+      --text-2:   #9090b8;
+      --text-3:   #5a5a80;
+      --text-4:   #30304a;
+      --ok:       #22c55e;
+      --ok-s:     #0d2a18;
+      --warn:     #f59e0b;
+      --mono:'JetBrains Mono',monospace;
+    }
+    [data-light]{
+      --bg:#f5f5fb;--bg-2:#ededf7;--bg-3:#ffffff;--bg-4:#fafaff;
+      --border:#e2e2f0;--border-2:#d0d0e8;--blue:#2563eb;--blue-s:#e8f0fe;--blue-t:#1d4ed8;
+      --text:#0f0f1e;--text-2:#404060;--text-3:#8080a8;--text-4:#b8b8d0;
+      --ok:#16a34a;--ok-s:#dcfce7;--warn:#d97706;
+    }
+
+    /* ── Keyframes ── */
+    @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes spin-rev{to{transform:rotate(-360deg)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+    @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+    @keyframes progressFill{from{width:0}to{width:var(--pw,72%)}}
+    @keyframes logoPop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+    @keyframes orbit{0%{transform:rotate(0deg) translateX(28px) rotate(0deg)}100%{transform:rotate(360deg) translateX(28px) rotate(-360deg)}}
+    @keyframes ringFill{from{stroke-dashoffset:283}to{stroke-dashoffset:var(--ringOffset,71)}}
+    @keyframes gradientShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+    @keyframes textCycle{0%,18%{opacity:1;transform:translateY(0)}22%,100%{opacity:0;transform:translateY(-8px)}}
+    @keyframes barFlow{0%{background-position:0 0}100%{background-position:60px 0}}
+    @keyframes dotPulse{0%,100%{transform:scale(.6);opacity:.3}50%{transform:scale(1);opacity:1}}
+    @keyframes waveBar{0%,100%{height:6px}50%{height:20px}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    @keyframes scanLine{0%{top:0}100%{top:100%}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+    /* ── Skeleton shimmer ── */
+    .sk{
+      background:linear-gradient(90deg,var(--bg-3) 25%,var(--bg-4) 50%,var(--bg-3) 75%);
+      background-size:600px 100%;
+      animation:shimmer 1.8s ease-in-out infinite;
+      border-radius:6px;
+    }
+
+    /* ── Grid backdrop ── */
+    .dot-grid{
+      background-image:radial-gradient(circle,var(--border) 1px,transparent 1px);
+      background-size:28px 28px;
+    }
+  </style>
+</head>
+<body>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<div id="root"></div>
+
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+
+/* ── TaxWijs Logo mark ───────────────────────────────────────────────── */
+function LogoMark({size=40,glow}){
+  return(
+    <div style={{width:size,height:size,borderRadius:size*.28,background:'var(--blue)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,
+      boxShadow:glow?`0 0 ${size*.8}px var(--blue)40,0 0 ${size*.4}px var(--blue)60`:'none',transition:'box-shadow .4s ease'}}>
+      <svg width={size*.58} height={size*.58} viewBox="0 0 20 20" fill="none">
+        <path d="M4 16L10 4l6 12H4z" fill="white" fillOpacity=".9"/>
+        <path d="M7 16L10 10.5l3 5.5" fill="white" fillOpacity=".45"/>
+      </svg>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   1. APP BOOT LOADER — dark
+   ──────────────────────────────────────────────────────────────────────── */
+function AppBootDark(){
+  const [prog,setProg]=useState(0);
+  const [msgIdx,setMsgIdx]=useState(0);
+  const msgs=['Verifying tax rules for 2026…','Loading your deduction profile…','Connecting to AI engine…','Almost ready…'];
+  useEffect(()=>{
+    let p=0;
+    const t=setInterval(()=>{p+=1;if(p>=100){clearInterval(t);}setProg(p);},35);
+    const m=setInterval(()=>setMsgIdx(i=>(i+1)%msgs.length),2000);
+    return()=>{clearInterval(t);clearInterval(m);};
+  },[]);
+  const dashArray=2*Math.PI*38;
+  const dashOffset=dashArray-(dashArray*(prog/100));
+  return(
+    <div style={{width:'100%',height:'100%',background:'var(--bg)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden'}}>
+      <div className="dot-grid" style={{position:'absolute',inset:0,opacity:.35,maskImage:'radial-gradient(ellipse 70% 70% at 50% 50%, #000 20%, transparent 75%)'}}/>
+      {/* Ambient glow */}
+      <div style={{position:'absolute',width:300,height:300,borderRadius:'50%',background:'var(--blue)',filter:'blur(120px)',opacity:.08,top:'50%',left:'50%',transform:'translate(-50%,-50%)'}}/>
+      {/* Logo + ring */}
+      <div style={{position:'relative',marginBottom:36,animation:'scaleIn .5s cubic-bezier(.34,1.56,.64,1) both'}}>
+        {/* Outer orbit ring */}
+        <svg width={104} height={104} style={{position:'absolute',top:-4,left:-4}}>
+          <circle cx={52} cy={52} r={49} fill="none" stroke="var(--border-2)" strokeWidth={1}/>
+          <circle cx={52} cy={52} r={49} fill="none" stroke="var(--blue)" strokeWidth={1.5}
+            strokeDasharray={`${2*Math.PI*49}`} strokeDashoffset={`${2*Math.PI*49*(1-prog/100)}`}
+            strokeLinecap="round" style={{transform:'rotate(-90deg)',transformOrigin:'52px 52px',transition:'stroke-dashoffset .06s linear'}}/>
+        </svg>
+        {/* Orbiting dot */}
+        <div style={{position:'absolute',top:0,left:0,width:96,height:96,animation:`spin ${3-(prog/50)}s linear infinite`}}>
+          <div style={{position:'absolute',top:2,left:'50%',transform:'translateX(-50%)',width:7,height:7,borderRadius:'50%',background:'var(--blue)',boxShadow:'0 0 8px var(--blue)'}}/>
+        </div>
+        <div style={{width:96,height:96,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <LogoMark size={56} glow={prog>30}/>
+        </div>
+      </div>
+      {/* Brand name */}
+      <div style={{fontSize:22,fontWeight:800,letterSpacing:'-0.03em',color:'var(--text)',marginBottom:8,animation:'fadeUp .4s .3s ease both'}}>
+        Tax<span style={{color:'var(--blue)'}}>Wijs</span>
+      </div>
+      {/* Status message */}
+      <div style={{height:20,overflow:'hidden',marginBottom:28,animation:'fadeUp .4s .4s ease both'}}>
+        <div key={msgIdx} style={{fontSize:13,color:'var(--text-3)',animation:'fadeUp .3s ease both',textAlign:'center'}}>{msgs[msgIdx]}</div>
+      </div>
+      {/* Progress bar */}
+      <div style={{width:200,animation:'fadeUp .4s .5s ease both'}}>
+        <div style={{height:3,background:'var(--border-2)',borderRadius:99,overflow:'hidden'}}>
+          <div style={{height:'100%',width:`${prog}%`,borderRadius:99,transition:'width .06s linear',
+            background:'linear-gradient(90deg,var(--blue),oklch(.72 .22 265))',
+            backgroundSize:'60px 100%',animation:'barFlow 1s linear infinite'}}/>
+        </div>
+        <div style={{display:'flex',justifyContent:'space-between',marginTop:8,fontSize:11,color:'var(--text-4)',fontFamily:'var(--mono)'}}>
+          <span>Initialising</span><span>{prog}%</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   2. APP BOOT LOADER — light
+   ──────────────────────────────────────────────────────────────────────── */
+function AppBootLight(){
+  const [prog,setProg]=useState(0);
+  const [msgIdx,setMsgIdx]=useState(0);
+  const msgs=['Verifying tax rules for 2026…','Loading your deduction profile…','Connecting to AI engine…','Almost ready…'];
+  useEffect(()=>{
+    let p=0;const t=setInterval(()=>{p+=1;if(p>=100)clearInterval(t);setProg(p);},35);
+    const m=setInterval(()=>setMsgIdx(i=>(i+1)%msgs.length),2000);
+    return()=>{clearInterval(t);clearInterval(m);};
+  },[]);
+  return(
+    <div data-light style={{width:'100%',height:'100%',background:'var(--bg)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',position:'relative',overflow:'hidden'}}>
+      <div className="dot-grid" style={{position:'absolute',inset:0,opacity:.5,maskImage:'radial-gradient(ellipse 70% 70% at 50% 50%, #000 20%, transparent 75%)'}}/>
+      <div style={{position:'absolute',width:300,height:300,borderRadius:'50%',background:'var(--blue)',filter:'blur(120px)',opacity:.06,top:'50%',left:'50%',transform:'translate(-50%,-50%)'}}/>
+      <div style={{position:'relative',marginBottom:36,animation:'scaleIn .5s cubic-bezier(.34,1.56,.64,1) both'}}>
+        <svg width={104} height={104} style={{position:'absolute',top:-4,left:-4}}>
+          <circle cx={52} cy={52} r={49} fill="none" stroke="var(--border-2)" strokeWidth={1}/>
+          <circle cx={52} cy={52} r={49} fill="none" stroke="var(--blue)" strokeWidth={1.5}
+            strokeDasharray={`${2*Math.PI*49}`} strokeDashoffset={`${2*Math.PI*49*(1-prog/100)}`}
+            strokeLinecap="round" style={{transform:'rotate(-90deg)',transformOrigin:'52px 52px',transition:'stroke-dashoffset .06s linear'}}/>
+        </svg>
+        <div style={{position:'absolute',top:0,left:0,width:96,height:96,animation:`spin ${3-(prog/50)}s linear infinite`}}>
+          <div style={{position:'absolute',top:2,left:'50%',transform:'translateX(-50%)',width:7,height:7,borderRadius:'50%',background:'var(--blue)',boxShadow:'0 0 8px var(--blue)'}}/>
+        </div>
+        <div style={{width:96,height:96,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <LogoMark size={56} glow={false}/>
+        </div>
+      </div>
+      <div style={{fontSize:22,fontWeight:800,letterSpacing:'-0.03em',color:'var(--text)',marginBottom:8,animation:'fadeUp .4s .3s ease both'}}>
+        Tax<span style={{color:'var(--blue)'}}>Wijs</span>
+      </div>
+      <div style={{height:20,overflow:'hidden',marginBottom:28}}>
+        <div key={msgIdx} style={{fontSize:13,color:'var(--text-3)',animation:'fadeUp .3s ease both',textAlign:'center'}}>{msgs[msgIdx]}</div>
+      </div>
+      <div style={{width:200}}>
+        <div style={{height:3,background:'var(--border)',borderRadius:99,overflow:'hidden'}}>
+          <div style={{height:'100%',width:`${prog}%`,borderRadius:99,transition:'width .06s linear',background:'var(--blue)',animation:'barFlow 1s linear infinite',backgroundSize:'60px 100%'}}/>
+        </div>
+        <div style={{display:'flex',justifyContent:'space-between',marginTop:8,fontSize:11,color:'var(--text-4)',fontFamily:'var(--mono)'}}>
+          <span>Initialising</span><span>{prog}%</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   3. MINIMAL WORDMARK SPLASH
+   ──────────────────────────────────────────────────────────────────────── */
+function MinimalSplash(){
+  const [phase,setPhase]=useState(0);
+  useEffect(()=>{
+    const ts=[
+      setTimeout(()=>setPhase(1),300),
+      setTimeout(()=>setPhase(2),900),
+      setTimeout(()=>setPhase(3),1600),
+    ];
+    return()=>ts.forEach(clearTimeout);
+  },[]);
+  return(
+    <div style={{width:'100%',height:'100%',background:'var(--bg)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:24,overflow:'hidden',position:'relative'}}>
+      {/* Static diagonal gradient accent */}
+      <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,transparent 40%,oklch(.18 .07 265 / .6) 100%)',pointerEvents:'none'}}/>
+      <div style={{display:'flex',alignItems:'center',gap:12,opacity:phase>=1?1:0,transform:phase>=1?'none':'scale(.8)',transition:'all .5s cubic-bezier(.34,1.56,.64,1)'}}>
+        <LogoMark size={48}/>
+        <div>
+          <div style={{fontSize:28,fontWeight:800,letterSpacing:'-0.04em',color:'var(--text)',lineHeight:1}}>Tax<span style={{color:'var(--blue)'}}>Wijs</span></div>
+          <div style={{fontSize:11,letterSpacing:'.1em',textTransform:'uppercase',color:'var(--text-3)',marginTop:3}}>AI Tax Assistant · NL</div>
+        </div>
+      </div>
+      <div style={{width:48,height:1.5,background:'var(--blue)',borderRadius:99,opacity:phase>=2?1:0,transform:phase>=2?'scaleX(1)':'scaleX(0)',transition:'all .4s ease .1s',transformOrigin:'left'}}>
+        <div style={{position:'relative'}}>
+          <div style={{position:'absolute',right:-3,top:-3,width:7,height:7,borderRadius:'50%',background:'var(--blue)'}}/>
+        </div>
+      </div>
+      <div style={{display:'flex',gap:5,opacity:phase>=3?1:0,transition:'opacity .4s ease'}}>
+        {[0,1,2].map(i=><span key={i} style={{width:7,height:7,borderRadius:'50%',background:'var(--text-3)',animation:`dotPulse 1.4s ${i*.2}s ease-in-out infinite`}}/>)}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   4. DASHBOARD SKELETON
+   ──────────────────────────────────────────────────────────────────────── */
+function DashboardSkeleton(){
+  return(
+    <div style={{width:'100%',height:'100%',background:'var(--bg)',display:'flex',overflow:'hidden'}}>
+      {/* Sidebar */}
+      <div style={{width:52,background:'var(--bg-2)',borderRight:'1px solid var(--border)',display:'flex',flexDirection:'column',padding:'14px 10px',gap:8,flexShrink:0}}>
+        <div className="sk" style={{width:32,height:32,borderRadius:8,marginBottom:12}}/>
+        {[1,1,1,1].map((_,i)=><div key={i} className="sk" style={{width:32,height:32,borderRadius:8}}/>)}
+        <div style={{flex:1}}/>
+        <div className="sk" style={{width:32,height:32,borderRadius:8}}/>
+      </div>
+      {/* Main */}
+      <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
+        {/* Topbar */}
+        <div style={{height:52,background:'var(--bg-2)',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',padding:'0 18px',gap:10}}>
+          <div className="sk" style={{flex:1,maxWidth:160,height:14}}/>
+          <div style={{flex:1}}/>
+          {[28,28,28].map((s,i)=><div key={i} className="sk" style={{width:s,height:s,borderRadius:'50%'}}/>)}
+        </div>
+        {/* Content */}
+        <div style={{padding:'16px',overflowY:'auto',flex:1}}>
+          <div className="sk" style={{width:200,height:18,marginBottom:6}}/>
+          <div className="sk" style={{width:280,height:12,marginBottom:20}}/>
+          {/* KPI row */}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10,marginBottom:14}}>
+            {[1,2,3,4].map(i=>(
+              <div key={i} style={{background:'var(--bg-3)',border:'1px solid var(--border)',borderRadius:10,padding:'14px 16px'}}>
+                <div className="sk" style={{width:70,height:10,marginBottom:12}}/>
+                <div className="sk" style={{width:'65%',height:26,marginBottom:8}}/>
+                <div className="sk" style={{width:80,height:10}}/>
+              </div>
+            ))}
+          </div>
+          {/* Two column */}
+          <div style={{display:'grid',gridTemplateColumns:'1.6fr 1fr',gap:10}}>
+            <div style={{background:'var(--bg-3)',border:'1px solid var(--border)',borderRadius:10,padding:16}}>
+              <div className="sk" style={{width:150,height:14,marginBottom:14}}/>
+              {[1,2,3,4,5].map(i=><div key={i} className="sk" style={{height:11,marginBottom:10,width:i%2===0?'60%':'85%'}}/>)}
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:10}}>
+              <div style={{background:'var(--bg-3)',border:'1px solid var(--border)',borderRadius:10,padding:16}}>
+                <div className="sk" style={{width:120,height:14,marginBottom:12}}/>
+                <div className="sk" style={{height:60,marginBottom:8}}/>
+                <div className="sk" style={{width:'70%',height:10}}/>
+              </div>
+              <div style={{background:'var(--bg-3)',border:'1px solid var(--border)',borderRadius:10,padding:16}}>
+                <div className="sk" style={{width:100,height:14,marginBottom:12}}/>
+                {[1,2,3].map(i=><div key={i} className="sk" style={{height:11,marginBottom:8,width:i===2?'50%':'90%'}}/>)}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   5. CHAT SKELETON
+   ──────────────────────────────────────────────────────────────────────── */
+function ChatSkeleton(){
+  return(
+    <div style={{width:'100%',height:'100%',background:'var(--bg)',display:'flex',flexDirection:'column',padding:'16px',gap:12}}>
+      {/* Header */}
+      <div style={{display:'flex',alignItems:'center',gap:10,paddingBottom:14,borderBottom:'1px solid var(--border)'}}>
+        <div className="sk" style={{width:34,height:34,borderRadius:8,flexShrink:0}}/>
+        <div style={{flex:1}}><div className="sk" style={{width:120,height:13,marginBottom:6}}/><div className="sk" style={{width:200,height:10}}/></div>
+        <div className="sk" style={{width:80,height:28,borderRadius:8}}/>
+      </div>
+      {/* AI message */}
+      <div style={{display:'flex',gap:10}}>
+        <div className="sk" style={{width:28,height:28,borderRadius:7,flexShrink:0,marginTop:2}}/>
+        <div style={{flex:1,maxWidth:460}}>
+          <div className="sk" style={{width:'90%',height:11,marginBottom:7}}/>
+          <div className="sk" style={{width:'75%',height:11,marginBottom:7}}/>
+          <div className="sk" style={{width:'55%',height:11}}/>
+        </div>
+      </div>
+      {/* User message */}
+      <div style={{display:'flex',justifyContent:'flex-end'}}>
+        <div className="sk" style={{width:200,height:38,borderRadius:'14px 14px 4px 14px'}}/>
+      </div>
+      {/* AI streaming */}
+      <div style={{display:'flex',gap:10}}>
+        <div className="sk" style={{width:28,height:28,borderRadius:7,flexShrink:0,marginTop:2}}/>
+        <div style={{flex:1,maxWidth:400}}>
+          <div className="sk" style={{width:'80%',height:11,marginBottom:7}}/>
+          <div className="sk" style={{width:'60%',height:11,marginBottom:7}}/>
+          {/* Typing dots live */}
+          <div style={{display:'flex',gap:5,paddingTop:6}}>
+            {[0,.18,.36].map((d,i)=><span key={i} style={{width:8,height:8,borderRadius:'50%',background:'var(--text-3)',animation:`bounce 1.2s ${d}s infinite`}}/>)}
+          </div>
+        </div>
+      </div>
+      {/* Suggestion chips */}
+      <div style={{display:'flex',gap:8,marginTop:8,flexWrap:'wrap'}}>
+        {[130,100,150,90].map((w,i)=><div key={i} className="sk" style={{width:w,height:32,borderRadius:99}}/>)}
+      </div>
+      {/* Spacer */}
+      <div style={{flex:1}}/>
+      {/* Composer */}
+      <div style={{background:'var(--bg-3)',border:'1px solid var(--border-2)',borderRadius:11,padding:8,display:'flex',alignItems:'center',gap:8}}>
+        <div className="sk" style={{flex:1,height:36,borderRadius:8}}/>
+        <div className="sk" style={{width:36,height:36,borderRadius:8}}/>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   6. CALCULATOR SKELETON
+   ──────────────────────────────────────────────────────────────────────── */
+function CalculatorSkeleton(){
+  return(
+    <div style={{width:'100%',height:'100%',background:'var(--bg)',padding:'16px',display:'flex',flexDirection:'column',gap:14}}>
+      <div className="sk" style={{width:180,height:18,marginBottom:2}}/>
+      <div className="sk" style={{width:280,height:11}}/>
+      {/* Stepper */}
+      <div style={{display:'flex',gap:6,background:'var(--bg-3)',border:'1px solid var(--border)',borderRadius:10,padding:4}}>
+        {[1,2,3,4].map(i=><div key={i} className="sk" style={{flex:1,height:34,borderRadius:7}}/>)}
+      </div>
+      {/* Card */}
+      <div style={{background:'var(--bg-3)',border:'1px solid var(--border)',borderRadius:10,padding:20,flex:1}}>
+        <div className="sk" style={{width:200,height:16,marginBottom:6}}/>
+        <div className="sk" style={{width:260,height:11,marginBottom:24}}/>
+        {/* Radio cards */}
+        {[1,2,3,4].map(i=>(
+          <div key={i} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',border:'1px solid var(--border)',borderRadius:8,marginBottom:8}}>
+            <div className="sk" style={{width:18,height:18,borderRadius:'50%',flexShrink:0}}/>
+            <div style={{flex:1}}><div className="sk" style={{width:100,height:11,marginBottom:5}}/><div className="sk" style={{width:160,height:9}}/></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   7. COMPONENT LOADERS GRID
+   ──────────────────────────────────────────────────────────────────────── */
+function ComponentLoaders(){
+  return(
+    <div style={{width:'100%',height:'100%',background:'var(--bg)',padding:16,display:'flex',flexDirection:'column',gap:14}}>
+
+      {/* Row 1: Spinners */}
+      <div style={{background:'var(--bg-3)',border:'1px solid var(--border)',borderRadius:10,padding:16}}>
+        <div style={{fontSize:11,fontWeight:700,color:'var(--text-3)',letterSpacing:'.07em',textTransform:'uppercase',marginBottom:14}}>Spinners</div>
+        <div style={{display:'flex',gap:20,alignItems:'center',flexWrap:'wrap'}}>
+          {/* Classic */}
+          <svg width={20} height={20} style={{animation:'spin .8s linear infinite'}}>
+            <circle cx={10} cy={10} r={8} fill="none" stroke="var(--border-2)" strokeWidth={2}/>
+            <circle cx={10} cy={10} r={8} fill="none" stroke="var(--blue)" strokeWidth={2} strokeDasharray="14 36" strokeLinecap="round"/>
+          </svg>
+          {/* Two-ring */}
+          <div style={{position:'relative',width:24,height:24}}>
+            <svg width={24} height={24} style={{position:'absolute',animation:'spin 1s linear infinite'}}>
+              <circle cx={12} cy={12} r={9} fill="none" stroke="var(--blue)" strokeWidth={2} strokeDasharray="14 42" strokeLinecap="round"/>
+            </svg>
+            <svg width={24} height={24} style={{position:'absolute',animation:'spin-rev 1.6s linear infinite'}}>
+              <circle cx={12} cy={12} r={5} fill="none" stroke="var(--blue-t)" strokeWidth={1.5} strokeDasharray="10 22" strokeLinecap="round"/>
+            </svg>
+          </div>
+          {/* Dot ring */}
+          <div style={{position:'relative',width:28,height:28,animation:'spin 1.4s linear infinite'}}>
+            {[0,45,90,135,180,225,270,315].map((deg,i)=>(
+              <div key={i} style={{position:'absolute',top:'50%',left:'50%',width:5,height:5,borderRadius:'50%',
+                background:'var(--blue)',opacity:(i+1)/8,
+                transform:`rotate(${deg}deg) translate(-50%,-13px)`}}/>
+            ))}
+          </div>
+          {/* Blue bars */}
+          <div style={{display:'flex',gap:3,alignItems:'center',height:24}}>
+            {[0,.1,.2,.3,.4].map((d,i)=><div key={i} style={{width:3,borderRadius:99,background:'var(--blue)',animation:`waveBar .8s ${d}s ease-in-out infinite`}}/>)}
+          </div>
+          {/* Pulsing dot */}
+          <div style={{width:12,height:12,borderRadius:'50%',background:'var(--blue)',animation:'pulse .9s ease-in-out infinite',boxShadow:'0 0 0 6px var(--blue-s)'}}/>
+        </div>
+      </div>
+
+      {/* Row 2: Dots */}
+      <div style={{background:'var(--bg-3)',border:'1px solid var(--border)',borderRadius:10,padding:16}}>
+        <div style={{fontSize:11,fontWeight:700,color:'var(--text-3)',letterSpacing:'.07em',textTransform:'uppercase',marginBottom:14}}>Typing / AI thinking</div>
+        <div style={{display:'flex',gap:24,alignItems:'center',flexWrap:'wrap'}}>
+          <div style={{display:'flex',gap:5}}>{[0,.15,.3].map((d,i)=><span key={i} style={{width:8,height:8,borderRadius:'50%',background:'var(--text-2)',animation:`bounce 1.2s ${d}s infinite`}}/>)}</div>
+          <div style={{display:'flex',gap:4}}>{[0,.12,.24,.36].map((d,i)=><span key={i} style={{width:6,height:6,borderRadius:'50%',background:'var(--blue)',animation:`dotPulse 1.4s ${d}s ease-in-out infinite`}}/>)}</div>
+          <div style={{display:'flex',gap:3,alignItems:'center'}}>
+            <div style={{width:28,height:28,borderRadius:7,background:'var(--blue-s)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <svg width={13} height={13} viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5l1.5 4H12l-3.5 2.5 1.3 4L6.5 9 3.2 12l1.3-4L1 5.5h4L6.5 1.5z" fill="var(--blue)"/></svg>
+            </div>
+            <div style={{display:'flex',gap:4,padding:'8px 12px',background:'var(--bg-4)',borderRadius:'4px 10px 10px 10px',border:'1px solid var(--border)'}}>
+              {[0,.15,.3].map((d,i)=><span key={i} style={{width:6,height:6,borderRadius:'50%',background:'var(--text-3)',animation:`bounce 1.2s ${d}s infinite`}}/>)}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Row 3: Progress */}
+      <div style={{background:'var(--bg-3)',border:'1px solid var(--border)',borderRadius:10,padding:16}}>
+        <div style={{fontSize:11,fontWeight:700,color:'var(--text-3)',letterSpacing:'.07em',textTransform:'uppercase',marginBottom:14}}>Progress</div>
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          {[['Tax return progress','72','var(--blue)'],['Deductions found','48','var(--ok)'],['Deadline proximity','88','var(--warn)']].map(([l,v,c])=>(
+            <div key={l}>
+              <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:11,color:'var(--text-2)'}}>
+                <span>{l}</span><span style={{fontFamily:'var(--mono)',fontWeight:600,color:c}}>{v}%</span>
+              </div>
+              <div style={{height:5,background:'var(--border-2)',borderRadius:99,overflow:'hidden'}}>
+                <div style={{height:'100%',width:`${v}%`,background:c,borderRadius:99,animation:'progressFill .8s ease both'}}/>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Row 4: Skeleton card */}
+      <div style={{background:'var(--bg-3)',border:'1px solid var(--border)',borderRadius:10,padding:16}}>
+        <div style={{fontSize:11,fontWeight:700,color:'var(--text-3)',letterSpacing:'.07em',textTransform:'uppercase',marginBottom:14}}>KPI card skeleton</div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+          {[1,2,3].map(i=>(
+            <div key={i} style={{background:'var(--bg-4)',border:'1px solid var(--border)',borderRadius:8,padding:'12px 14px'}}>
+              <div className="sk" style={{width:70,height:9,marginBottom:10}}/>
+              <div className="sk" style={{width:'60%',height:22,marginBottom:6}}/>
+              <div className="sk" style={{width:60,height:8}}/>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   8. PAGE TRANSITION — fade-slide
+   ──────────────────────────────────────────────────────────────────────── */
+function PageTransition(){
+  const [state,setState]=useState('from');
+  useEffect(()=>{
+    const ts=[
+      setTimeout(()=>setState('anim'),100),
+      setTimeout(()=>setState('to'),700),
+      setTimeout(()=>setState('from'),2000),
+    ];
+    return()=>ts.forEach(clearTimeout);
+  },[]);
+  const isDash=state==='from';
+  return(
+    <div style={{width:'100%',height:'100%',background:'var(--bg)',overflow:'hidden',position:'relative',display:'flex',flexDirection:'column'}}>
+      {/* Topbar */}
+      <div style={{height:48,background:'var(--bg-2)',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',padding:'0 14px',gap:10,flexShrink:0}}>
+        <div style={{width:24,height:24,borderRadius:6,background:'var(--blue)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <svg width={13} height={13} viewBox="0 0 20 20" fill="none"><path d="M4 16L10 4l6 12H4z" fill="white"/></svg>
+        </div>
+        <span style={{fontSize:13,fontWeight:700,color:'var(--text)'}}>Tax<span style={{color:'var(--blue)'}}>Wijs</span></span>
+        <div style={{flex:1}}/>
+        <div style={{display:'flex',gap:6}}>
+          {['#3b82f680','#3b82f6c0','#3b82f6'].map((c,i)=><div key={i} style={{width:6,height:6,borderRadius:'50%',background:c,animation:`pulse 1.5s ${i*.2}s infinite`}}/>)}
+        </div>
+      </div>
+      {/* Transition area */}
+      <div style={{flex:1,position:'relative',overflow:'hidden'}}>
+        {/* FROM page */}
+        <div style={{position:'absolute',inset:0,padding:14,display:'flex',flexDirection:'column',gap:10,
+          opacity:state==='from'?1:0,transform:state==='from'?'translateX(0)':'translateX(-30px)',
+          transition:'opacity .35s ease,transform .35s ease'}}>
+          <div className="sk" style={{height:16,width:160}}/>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
+            {[1,2,3].map(i=><div key={i} style={{background:'var(--bg-3)',border:'1px solid var(--border)',borderRadius:8,padding:'12px'}}><div className="sk" style={{height:9,width:60,marginBottom:8}}/><div className="sk" style={{height:18,width:'70%'}}/></div>)}
+          </div>
+          <div style={{background:'var(--bg-3)',border:'1px solid var(--border)',borderRadius:8,padding:12,flex:1}}>
+            {[1,2,3,4].map(i=><div key={i} className="sk" style={{height:10,marginBottom:8,width:i%2===0?'60%':'90%'}}/>)}
+          </div>
+        </div>
+        {/* TO page */}
+        <div style={{position:'absolute',inset:0,padding:14,display:'flex',flexDirection:'column',gap:10,
+          opacity:state==='to'?1:0,transform:state==='to'?'translateX(0)':'translateX(30px)',
+          transition:'opacity .35s ease,transform .35s ease'}}>
+          <div className="sk" style={{height:16,width:180}}/>
+          <div style={{display:'flex',gap:10}}>
+            <div className="sk" style={{width:28,height:28,borderRadius:7,flexShrink:0}}/>
+            <div style={{flex:1}}><div className="sk" style={{width:'85%',height:10,marginBottom:7}}/><div className="sk" style={{width:'65%',height:10}}/></div>
+          </div>
+          <div style={{display:'flex',justifyContent:'flex-end'}}>
+            <div className="sk" style={{width:160,height:34,borderRadius:'12px 12px 4px 12px'}}/>
+          </div>
+          <div style={{display:'flex',gap:10}}>
+            <div className="sk" style={{width:28,height:28,borderRadius:7,flexShrink:0}}/>
+            <div style={{flex:1}}>{[.9,.7,.5].map((w,i)=><div key={i} className="sk" style={{width:`${w*100}%`,height:10,marginBottom:7}}/>)}</div>
+          </div>
+        </div>
+        {/* Transition bar */}
+        {state==='anim'&&<div style={{position:'absolute',top:0,left:0,right:0,height:2,background:'linear-gradient(90deg,transparent,var(--blue),transparent)',animation:'barFlow .6s linear infinite'}}/>}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   9. AI RESPONSE STREAMING
+   ──────────────────────────────────────────────────────────────────────── */
+function AIStreaming(){
+  const fullText='Based on the 2026 Dutch tax rules, here\'s what applies to your situation. The standard income tax brackets for Box 1 are 36.97% up to €75,518 and 49.5% above that.';
+  const [shown,setShown]=useState('');
+  const [phase,setPhase]=useState('thinking');
+  useEffect(()=>{
+    const t1=setTimeout(()=>{
+      setPhase('typing');
+      let i=0;
+      const ti=setInterval(()=>{i+=2;setShown(fullText.slice(0,i));if(i>=fullText.length){clearInterval(ti);setPhase('done');}},28);
+      return()=>clearInterval(ti);
+    },1400);
+    return()=>clearTimeout(t1);
+  },[]);
+  return(
+    <div style={{width:'100%',height:'100%',background:'var(--bg)',padding:'14px',display:'flex',flexDirection:'column',gap:12}}>
+      <div style={{display:'flex',gap:10}}>
+        <div style={{width:28,height:28,borderRadius:7,background:'var(--blue-s)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+          <svg width={13} height={13} viewBox="0 0 13 13" fill="none"><path d="M6.5 1.5l1.5 4H12l-3.5 2.5 1.3 4L6.5 9 3.2 12l1.3-4L1 5.5h4L6.5 1.5z" fill="var(--blue)"/></svg>
+        </div>
+        <div style={{flex:1,fontSize:12,lineHeight:1.6,color:'var(--text)'}}>
+          {phase==='thinking'?(
+            <div style={{display:'flex',gap:5,padding:'8px 0'}}>{[0,.15,.3].map((d,i)=><span key={i} style={{width:7,height:7,borderRadius:'50%',background:'var(--text-3)',animation:`bounce 1.2s ${d}s infinite`}}/>)}</div>
+          ):(
+            <span>
+              {shown}
+              {phase==='typing'&&<span style={{display:'inline-block',width:2,height:13,background:'var(--blue)',marginLeft:1,verticalAlign:'middle',animation:'pulse .9s infinite'}}/>}
+            </span>
+          )}
+        </div>
+      </div>
+      {phase==='done'&&(
+        <div style={{animation:'fadeUp .3s ease both',marginLeft:38}}>
+          <div style={{display:'flex',flexWrap:'wrap',gap:7,marginBottom:10}}>
+            {[['Box 1 rate','36.97%'],['MKB exempt.','12.7%'],['Threshold','€75,518']].map(([k,v])=>(
+              <div key={k} style={{background:'var(--bg-3)',border:'1px solid var(--border)',borderRadius:7,padding:'7px 10px'}}>
+                <div style={{fontSize:9,color:'var(--text-3)',marginBottom:2}}>{k}</div>
+                <div style={{fontFamily:'var(--mono)',fontSize:12,fontWeight:700,color:'var(--text)'}}>{v}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{display:'inline-flex',alignItems:'center',gap:5,padding:'4px 10px',borderRadius:99,background:'var(--bg-3)',border:'1px solid var(--border)',fontSize:10,color:'var(--text-3)'}}>
+            <svg width={10} height={10} viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/><path d="M8 7.5v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><circle cx="8" cy="5.5" r=".7" fill="currentColor"/></svg>
+            belastingdienst.nl · inkomstenbelasting 2026
+          </div>
+        </div>
+      )}
+      <div style={{flex:1}}/>
+      {/* Status chip */}
+      <div style={{display:'flex',justifyContent:'center'}}>
+        <div style={{display:'inline-flex',alignItems:'center',gap:7,padding:'6px 14px',borderRadius:99,background:'var(--bg-3)',border:'1px solid var(--border)',fontSize:11,color:'var(--text-3)'}}>
+          <span style={{width:6,height:6,borderRadius:'50%',background:phase==='thinking'?'var(--warn)':phase==='typing'?'var(--blue)':'var(--ok)',animation:phase!=='done'?'pulse 1.2s infinite':'none'}}/>
+          {phase==='thinking'?'AI thinking…':phase==='typing'?'Generating answer…':'Answer complete'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   10. INLINE SKELETON — Table / Accountant list
+   ──────────────────────────────────────────────────────────────────────── */
+function TableSkeleton(){
+  return(
+    <div style={{width:'100%',height:'100%',background:'var(--bg)',padding:'14px',display:'flex',flexDirection:'column',gap:12}}>
+      <div style={{display:'flex',gap:10,marginBottom:4}}>
+        <div className="sk" style={{flex:1,maxWidth:180,height:30,borderRadius:7}}/>
+        <div style={{flex:1}}/>
+        <div className="sk" style={{width:90,height:30,borderRadius:7}}/>
+        <div className="sk" style={{width:100,height:30,borderRadius:7}}/>
+      </div>
+      <div style={{background:'var(--bg-3)',border:'1px solid var(--border)',borderRadius:10,overflow:'hidden'}}>
+        {/* Thead */}
+        <div style={{display:'grid',gridTemplateColumns:'2fr 1fr 1fr 1fr 1fr',gap:10,padding:'10px 14px',background:'var(--bg-2)',borderBottom:'1px solid var(--border)'}}>
+          {[100,60,70,60,80].map((w,i)=><div key={i} className="sk" style={{height:9,width:w}}/>)}
+        </div>
+        {/* Rows */}
+        {[1,2,3,4,5].map(i=>(
+          <div key={i} style={{display:'grid',gridTemplateColumns:'2fr 1fr 1fr 1fr 1fr',gap:10,padding:'12px 14px',borderBottom:'1px solid var(--border)',alignItems:'center'}}>
+            <div style={{display:'flex',gap:8,alignItems:'center'}}>
+              <div className="sk" style={{width:30,height:30,borderRadius:'50%',flexShrink:0}}/>
+              <div><div className="sk" style={{width:90,height:10,marginBottom:5}}/><div className="sk" style={{width:60,height:8}}/></div>
+            </div>
+            <div className="sk" style={{height:20,width:50,borderRadius:99}}/>
+            <div className="sk" style={{height:10,width:55}}/>
+            <div style={{display:'flex',justifyContent:'center'}}><div className="sk" style={{width:10,height:10,borderRadius:'50%'}}/></div>
+            <div className="sk" style={{height:20,width:70,borderRadius:99}}/>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   CANVAS
+   ──────────────────────────────────────────────────────────────────────── */
+function App(){
+  return(
+    <DesignCanvas>
+      <DCSection id="boot" title="App Boot Loader" subtitle="Full-screen splash shown on initial load">
+        <DCArtboard id="boot-dark" label="Boot · Dark mode" width={390} height={700}>
+          <AppBootDark/>
+        </DCArtboard>
+        <DCArtboard id="boot-light" label="Boot · Light mode" width={390} height={700}>
+          <AppBootLight/>
+        </DCArtboard>
+        <DCArtboard id="boot-minimal" label="Boot · Minimal wordmark" width={390} height={700}>
+          <MinimalSplash/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="skeletons" title="Page Skeleton Loaders" subtitle="Shown while page data is fetching — shimmer on every element">
+        <DCArtboard id="skel-dash" label="Dashboard skeleton" width={800} height={520}>
+          <DashboardSkeleton/>
+        </DCArtboard>
+        <DCArtboard id="skel-chat" label="Chat skeleton" width={580} height={540}>
+          <ChatSkeleton/>
+        </DCArtboard>
+        <DCArtboard id="skel-calc" label="Calculator skeleton" width={480} height={520}>
+          <CalculatorSkeleton/>
+        </DCArtboard>
+        <DCArtboard id="skel-table" label="Accountant table skeleton" width={680} height={400}>
+          <TableSkeleton/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="components" title="Component Loaders" subtitle="Inline loaders, spinners and progress indicators">
+        <DCArtboard id="comp-loaders" label="Spinner variants + progress" width={480} height={380}>
+          <ComponentLoaders/>
+        </DCArtboard>
+        <DCArtboard id="ai-stream" label="AI streaming response" width={400} height={340}>
+          <AIStreaming/>
+        </DCArtboard>
+        <DCArtboard id="page-trans" label="Page transition" width={400} height={340}>
+          <PageTransition/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

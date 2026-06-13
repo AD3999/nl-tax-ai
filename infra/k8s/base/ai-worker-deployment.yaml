@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-worker
+  namespace: taxwijs
+  labels:
+    app: ai-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-worker
+  template:
+    metadata:
+      labels:
+        app: ai-worker
+    spec:
+      containers:
+        - name: ai-worker
+          image: ghcr.io/ad3999/nl-tax-ai/ai-worker:latest
+          env:
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: taxwijs-secrets
+                  key: openai-api-key
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: taxwijs-secrets
+                  key: anthropic-api-key
+            - name: EMBEDDING_PROVIDER
+              value: "openai"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"

@@ -1,0 +1,25 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/v1/engagements/{engagementId}/chat",
+    "headers": {
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9...",
+      "Content-Type": "application/json",
+      "Accept": "text/event-stream"
+    },
+    "body": {
+      "message": "Hoeveel belasting betaal ik dit jaar als ZZP'er met €72.000 omzet?",
+      "language": "nl"
+    }
+  },
+  "response_200_sse_events": [
+    "data: {\"type\":\"chunk\",\"content\":\"Op basis van uw profiel als ZZP'er met €72.000 omzet in 2026 volgt hieronder een schatting. \"}",
+    "data: {\"type\":\"chunk\",\"content\":\"Let op: dit is een indicatie. De exacte berekening hangt af van uw specifieke situatie.\"}",
+    "data: {\"type\":\"source\",\"ruleId\":\"ZA-2026-001\",\"sourceUrl\":\"https://www.belastingdienst.nl/wps/wcm/connect/nl/ondernemers/zelfstandigenaftrek\",\"label\":\"Zelfstandigenaftrek 2026\"}",
+    "data: {\"type\":\"source\",\"ruleId\":\"ZVW-2026-001\",\"sourceUrl\":\"https://www.belastingdienst.nl/wps/wcm/connect/nl/ondernemers/bijdrage_zorgverzekeringswet\",\"label\":\"ZVW-bijdrage 2026\"}",
+    "data: {\"type\":\"calculator_result\",\"totalTax\":14736,\"monthlyReserve\":1228,\"effectiveRate\":0.205}",
+    "data: {\"type\":\"done\",\"messageId\":\"msg_01XYZ123\",\"tokensUsed\":342}",
+    "data: [DONE]"
+  ],
+  "note": "AI chat uses SSE (Server-Sent Events). The calculator result is fetched from the Phase 3 calculator, not computed by the AI. The AI explains the result and cites sources."
+}

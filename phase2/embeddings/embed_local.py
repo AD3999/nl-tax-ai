@@ -37,6 +37,17 @@ _model = None
 def _get_model():
     global _model
     if _model is None:
+        # Guard: on Railway/production the 846MB model is not cached.
+        # Production must use embed_openai.py (provider=openai in embedding_manifest.json).
+        # Fail fast with a clear message rather than attempting a silent 846MB download.
+        if not _os.path.isdir(_CACHE_DIR):
+            on_railway = _os.environ.get("RAILWAY_ENVIRONMENT") or _os.environ.get("RAILWAY_PROJECT_ID")
+            if on_railway:
+                raise RuntimeError(
+                    "Local sentence-transformer model not cached on Railway. "
+                    "Production must use OpenAI embeddings. "
+                    "Rebuild with: python phase2/build_index.py --provider openai --reset"
+                )
         from sentence_transformers import SentenceTransformer  # type: ignore
         _model = SentenceTransformer(_MODEL_SOURCE)
     return _model

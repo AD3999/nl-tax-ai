@@ -1,0 +1,126 @@
+/* TaxWijs — Design Tokens */
+:root {
+  --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px;
+  --sp-6:24px; --sp-8:32px; --sp-10:40px; --sp-12:48px; --sp-16:64px;
+  --sp-20:80px; --sp-24:96px;
+
+  --text-xs:11px; --text-sm:13px; --text-base:15px; --text-md:17px;
+  --text-lg:20px; --text-xl:24px; --text-2xl:30px; --text-3xl:38px;
+  --text-4xl:48px; --text-5xl:62px;
+
+  --r-xs:4px; --r-sm:6px; --r-md:10px; --r-lg:14px;
+  --r-xl:20px; --r-2xl:28px; --r-full:9999px;
+
+  --t-fast:150ms ease; --t-base:200ms ease; --t-slow:300ms ease;
+  --t-spring:300ms cubic-bezier(0.34,1.56,0.64,1);
+
+  --sidebar-w:232px;
+  --topbar-h:56px;
+
+  --z-drop:100; --z-sidebar:200; --z-modal:300; --z-toast:400;
+}
+
+/* ── DARK (default) ───────────────────────────────────────────────────────── */
+:root,[data-theme="dark"] {
+  color-scheme: dark;
+  --bg:          oklch(0.09 0.016 265);
+  --bg-2:        oklch(0.11 0.018 265);
+  --bg-3:        oklch(0.13 0.020 265);
+  --bg-4:        oklch(0.16 0.022 265);
+  --bg-hover:    oklch(0.19 0.022 265);
+  --surface:     oklch(0.12 0.018 265);
+
+  --border:      oklch(0.20 0.020 265);
+  --border-2:    oklch(0.26 0.024 265);
+  --border-3:    oklch(0.34 0.026 265);
+
+  --blue:        oklch(0.60 0.22 265);
+  --blue-hover:  oklch(0.56 0.22 265);
+  --blue-subtle: oklch(0.18 0.07 265);
+  --blue-border: oklch(0.32 0.10 265);
+  --blue-text:   oklch(0.74 0.18 265);
+
+  --text:        oklch(0.94 0.010 265);
+  --text-2:      oklch(0.68 0.020 265);
+  --text-3:      oklch(0.46 0.015 265);
+  --text-4:      oklch(0.30 0.010 265);
+
+  --ok:          oklch(0.67 0.18 165);
+  --ok-subtle:   oklch(0.16 0.050 165);
+  --ok-border:   oklch(0.30 0.08 165);
+  --ok-text:     oklch(0.76 0.15 165);
+
+  --warn:        oklch(0.74 0.17 82);
+  --warn-subtle: oklch(0.16 0.046 82);
+  --warn-border: oklch(0.30 0.08 82);
+  --warn-text:   oklch(0.82 0.14 82);
+
+  --danger:      oklch(0.60 0.22 25);
+  --danger-subtle: oklch(0.16 0.060 25);
+  --danger-border: oklch(0.30 0.10 25);
+  --danger-text:   oklch(0.74 0.18 25);
+
+  --purple:      oklch(0.60 0.22 290);
+  --purple-subtle: oklch(0.16 0.058 290);
+  --purple-text: oklch(0.74 0.18 290);
+
+  --sh-sm: 0 1px 3px oklch(0 0 0/.40), 0 1px 2px oklch(0 0 0/.28);
+  --sh-md: 0 4px 14px oklch(0 0 0/.50), 0 2px 6px oklch(0 0 0/.32);
+  --sh-lg: 0 10px 36px oklch(0 0 0/.60), 0 4px 16px oklch(0 0 0/.38);
+  --sh-focus: 0 0 0 3px oklch(0.60 0.22 265/.36);
+  --sh-blue:  0 0 0 1px var(--blue-border), 0 4px 20px oklch(0.60 0.22 265/.18);
+}
+
+/* ── LIGHT ────────────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  color-scheme: light;
+  --bg:          oklch(0.97 0.006 265);
+  --bg-2:        oklch(0.95 0.008 265);
+  --bg-3:        oklch(1.00 0.000  0);
+  --bg-4:        oklch(0.99 0.004 265);
+  --bg-hover:    oklch(0.92 0.010 265);
+  --surface:     oklch(1.00 0.000  0);
+
+  --border:      oklch(0.90 0.010 265);
+  --border-2:    oklch(0.84 0.012 265);
+  --border-3:    oklch(0.76 0.015 265);
+
+  --blue:        oklch(0.48 0.22 265);
+  --blue-hover:  oklch(0.44 0.22 265);
+  --blue-subtle: oklch(0.93 0.040 265);
+  --blue-border: oklch(0.76 0.10 265);
+  --blue-text:   oklch(0.42 0.22 265);
+
+  --text:        oklch(0.13 0.020 265);
+  --text-2:      oklch(0.36 0.028 265);
+  --text-3:      oklch(0.54 0.020 265);
+  --text-4:      oklch(0.68 0.015 265);
+
+  --ok:          oklch(0.50 0.18 165);
+  --ok-subtle:   oklch(0.93 0.040 165);
+  --ok-border:   oklch(0.76 0.10 165);
+  --ok-text:     oklch(0.40 0.18 165);
+
+  --warn:        oklch(0.55 0.17 82);
+  --warn-subtle: oklch(0.95 0.038 82);
+  --warn-border: oklch(0.78 0.10 82);
+  --warn-text:   oklch(0.46 0.17 82);
+
+  --danger:      oklch(0.50 0.22 25);
+  --danger-subtle: oklch(0.95 0.038 25);
+  --danger-border: oklch(0.78 0.10 25);
+  --danger-text:   oklch(0.42 0.22 25);
+
+  --purple:      oklch(0.50 0.22 290);
+  --purple-subtle: oklch(0.94 0.038 290);
+  --purple-text: oklch(0.42 0.22 290);
+
+  --sh-sm: 0 1px 3px oklch(0 0 0/.10), 0 1px 2px oklch(0 0 0/.06);
+  --sh-md: 0 4px 14px oklch(0 0 0/.08), 0 2px 6px oklch(0 0 0/.04);
+  --sh-lg: 0 10px 36px oklch(0 0 0/.10), 0 4px 16px oklch(0 0 0/.06);
+  --sh-focus: 0 0 0 3px oklch(0.48 0.22 265/.28);
+  --sh-blue:  0 0 0 1px var(--blue-border), 0 4px 20px oklch(0.48 0.22 265/.12);
+}

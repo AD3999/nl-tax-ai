@@ -1,0 +1,74 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/v1/engagements/{engagementId}/document-reviews/{reviewId}/decision",
+    "headers": {
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9...",
+      "Idempotency-Key": "01HWXYZ123456789ABCDEF",
+      "If-Match": "\"5\"",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "decision": "approve_with_corrections",
+      "comment": "Salary field corrected from OCR misread.",
+      "fieldDecisions": [
+        {
+          "fieldId": "f_jaaropgaaf_gross_salary",
+          "action": "correct",
+          "originalValue": "5800.00",
+          "correctedValue": "58800.00",
+          "reasonCode": "ocr_digit_drop"
+        },
+        {
+          "fieldId": "f_jaaropgaaf_tax_withheld",
+          "action": "accept"
+        }
+      ]
+    }
+  },
+  "response_200": {
+    "reviewId": "0c32f21d-713e-47c7-b6d8-b6b00ee6ab58",
+    "engagementId": "f9ab2ad1-4d89-4d78-bb72-3e2c7bdf67d5",
+    "status": "completed",
+    "decision": "approve_with_corrections",
+    "documentStatus": "approved",
+    "reviewedBy": {
+      "userId": "8a0a4f63-ec95-4d6f-b9ce-1af6ebf52722",
+      "displayName": "Sara de Vries"
+    },
+    "appliedFields": [
+      {
+        "fieldId": "f_jaaropgaaf_gross_salary",
+        "finalValue": "58800.00",
+        "source": "human_review"
+      },
+      {
+        "fieldId": "f_jaaropgaaf_tax_withheld",
+        "finalValue": "12140.00",
+        "source": "ai_accepted"
+      }
+    ],
+    "eventsEmitted": [
+      "DOCUMENT_REVIEW_COMPLETED",
+      "ENGAGEMENT_READINESS_RECALCULATED"
+    ],
+    "readiness": {
+      "before": 71,
+      "after": 82,
+      "reason": "mandatory employment income evidence verified"
+    },
+    "auditLogId": "a9a46f09-0f6f-461c-bd0d-76f65b3a6fbb",
+    "completedAt": "2026-06-13T10:15:42Z"
+  },
+  "response_409": {
+    "error": {
+      "code": "REVIEW_VERSION_CONFLICT",
+      "message": "The document review was updated by another reviewer.",
+      "details": {
+        "currentVersion": 6,
+        "submittedVersion": 5
+      },
+      "requestId": "req_2WQWzvYJr1"
+    }
+  }
+}

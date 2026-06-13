@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <title>TaxWijs — AI Tax Assistant for the Netherlands</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="tw-tokens.css"/>
+  <link rel="stylesheet" href="tw-base.css"/>
+  <style>
+    @keyframes dotBounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+    @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes spin-rev{to{transform:rotate(-360deg)}}
+    @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+    @keyframes bootScaleIn{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+    @keyframes barFlow{0%{background-position:0 0}100%{background-position:60px 0}}
+    @keyframes bootFadeOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.04)}}
+    @keyframes twDotBounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+    .page-enter{animation:fadeIn .22s ease both}
+    html{scroll-behavior:smooth}
+
+    /* ── Boot Loader ────────────────────────── */
+    #tw-boot{
+      position:fixed;inset:0;z-index:9999;
+      background:oklch(0.09 0.016 265);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      transition:opacity .5s ease, transform .5s ease;
+    }
+    #tw-boot.hide{opacity:0;transform:scale(1.04);pointer-events:none}
+    [data-theme="light"] #tw-boot{background:oklch(0.97 0.006 265)}
+
+    .boot-dotgrid{
+      position:absolute;inset:0;
+      background-image:radial-gradient(circle, oklch(0.20 0.020 265) 1px, transparent 1px);
+      background-size:28px 28px;
+      -webkit-mask-image:radial-gradient(ellipse 70% 70% at 50% 50%, #000 20%, transparent 75%);
+      mask-image:radial-gradient(ellipse 70% 70% at 50% 50%, #000 20%, transparent 75%);
+      opacity:.5;
+    }
+    [data-theme="light"] .boot-dotgrid{background-image:radial-gradient(circle, oklch(0.90 0.010 265) 1px, transparent 1px)}
+
+    .boot-glow{
+      position:absolute;width:320px;height:320px;border-radius:50%;
+      background:oklch(0.60 0.22 265);filter:blur(130px);opacity:.09;
+      top:50%;left:50%;transform:translate(-50%,-50%);
+    }
+    [data-theme="light"] .boot-glow{opacity:.06}
+
+    .boot-ring-wrap{
+      position:relative;width:96px;height:96px;
+      margin-bottom:32px;
+      animation:bootScaleIn .55s cubic-bezier(.34,1.56,.64,1) both;
+    }
+    .boot-orbit{
+      position:absolute;top:0;left:0;width:96px;height:96px;
+    }
+    .boot-orbit-dot{
+      position:absolute;top:4px;left:50%;transform:translateX(-50%);
+      width:7px;height:7px;border-radius:50%;
+      background:oklch(0.60 0.22 265);
+      box-shadow:0 0 9px oklch(0.60 0.22 265);
+    }
+    .boot-mark{
+      position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    }
+    .boot-mark-inner{
+      width:56px;height:56px;border-radius:16px;
+      background:oklch(0.60 0.22 265);
+      display:flex;align-items:center;justify-content:center;
+    }
+    .boot-wordmark{
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+      font-size:22px;font-weight:800;letter-spacing:-0.035em;
+      color:oklch(0.94 0.010 265);
+      margin-bottom:8px;
+      animation:fadeUp .4s .28s ease both;
+    }
+    [data-theme="light"] .boot-wordmark{color:oklch(0.13 0.020 265)}
+    .boot-wordmark span{color:oklch(0.60 0.22 265)}
+    .boot-wordmark-sub{
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+      font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+      color:oklch(0.46 0.015 265);
+      text-align:center;margin-bottom:28px;
+      animation:fadeUp .4s .36s ease both;
+    }
+    .boot-msg-wrap{
+      height:20px;overflow:hidden;margin-bottom:26px;
+      animation:fadeUp .4s .44s ease both;
+    }
+    .boot-msg{
+      font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+      font-size:13px;color:oklch(0.46 0.015 265);
+      text-align:center;animation:fadeUp .3s ease both;
+    }
+    .boot-bar-wrap{
+      width:200px;
+      animation:fadeUp .4s .52s ease both;
+    }
+    .boot-bar-track{
+      height:3px;background:oklch(0.20 0.020 265);border-radius:99px;overflow:hidden;
+    }
+    [data-theme="light"] .boot-bar-track{background:oklch(0.90 0.010 265)}
+    .boot-bar-fill{
+      height:100%;border-radius:99px;
+      background:linear-gradient(90deg, oklch(0.60 0.22 265), oklch(0.72 0.22 265));
+      background-size:60px 100%;
+      animation:barFlow 1s linear infinite;
+      transition:width .06s linear;
+    }
+    .boot-bar-meta{
+      display:flex;justify-content:space-between;margin-top:8px;
+      font-family:'JetBrains Mono',monospace;font-size:11px;
+      color:oklch(0.30 0.010 265);
+    }
+    @media(prefers-reduced-motion:reduce){
+      .boot-ring-wrap,.boot-orbit,.boot-wordmark,.boot-wordmark-sub,.boot-msg-wrap,.boot-bar-wrap{
+        animation:none!important;opacity:1!important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ── Boot loader (pure HTML/JS — shows before React compiles) ── -->
+  <div id="tw-boot" aria-label="Loading TaxWijs" role="status">
+    <div class="boot-dotgrid"></div>
+    <div class="boot-glow"></div>
+    <div class="boot-ring-wrap">
+      <!-- Orbit ring SVG -->
+      <svg id="boot-svg" width="104" height="104" style="position:absolute;top:-4px;left:-4px">
+        <circle cx="52" cy="52" r="49" fill="none" stroke="oklch(0.20 0.020 265)" stroke-width="1"/>
+        <circle id="boot-arc" cx="52" cy="52" r="49" fill="none"
+          stroke="oklch(0.60 0.22 265)" stroke-width="1.5"
+          stroke-dasharray="307.9" stroke-dashoffset="307.9"
+          stroke-linecap="round"
+          style="transform:rotate(-90deg);transform-origin:52px 52px;transition:stroke-dashoffset .06s linear"/>
+      </svg>
+      <!-- Orbiting dot -->
+      <div id="boot-orbit" class="boot-orbit" style="animation:spin 3s linear infinite">
+        <div class="boot-orbit-dot"></div>
+      </div>
+      <!-- Logo mark -->
+      <div class="boot-mark">
+        <div class="boot-mark-inner">
+          <svg width="33" height="33" viewBox="0 0 20 20" fill="none">
+            <path d="M4 16L10 4l6 12H4z" fill="white" fill-opacity=".9"/>
+            <path d="M7 16L10 10.5l3 5.5" fill="white" fill-opacity=".45"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="boot-wordmark">Tax<span>Wijs</span></div>
+    <div class="boot-wordmark-sub">AI Tax Assistant · Netherlands</div>
+    <div class="boot-msg-wrap"><div id="boot-msg" class="boot-msg">Loading tax rules for 2026…</div></div>
+    <div class="boot-bar-wrap">
+      <div class="boot-bar-track">
+        <div id="boot-fill" class="boot-bar-fill" style="width:0%"></div>
+      </div>
+      <div class="boot-bar-meta">
+        <span>Initialising</span>
+        <span id="boot-pct" style="font-family:'JetBrains Mono',monospace">0%</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      var msgs=['Loading tax rules for 2026…','Verifying deduction engine…','Connecting to AI…','Almost ready…'];
+      var mi=0,prog=0;
+      var fill=document.getElementById('boot-fill');
+      var pct=document.getElementById('boot-pct');
+      var arc=document.getElementById('boot-arc');
+      var msg=document.getElementById('boot-msg');
+      var orbit=document.getElementById('boot-orbit');
+      var circ=2*Math.PI*49;
+
+      var msgTimer=setInterval(function(){
+        mi=(mi+1)%msgs.length;
+        msg.style.animation='none';
+        msg.textContent=msgs[mi];
+        void msg.offsetWidth;
+        msg.style.animation='fadeUp .3s ease both';
+      },900);
+
+      var progTimer=setInterval(function(){
+        prog=Math.min(prog+(Math.random()*2.8+0.8),100);
+        fill.style.width=prog+'%';
+        pct.textContent=Math.round(prog)+'%';
+        arc.style.strokeDashoffset=circ*(1-prog/100);
+        var speed=Math.max(0.7,3-(prog/60));
+        orbit.style.animationDuration=speed+'s';
+        if(prog>=100){
+          clearInterval(progTimer);
+          clearInterval(msgTimer);
+          setTimeout(function(){
+            document.getElementById('tw-boot').classList.add('hide');
+            setTimeout(function(){
+              var b=document.getElementById('tw-boot');
+              if(b)b.remove();
+            },520);
+          },320);
+        }
+      },36);
+    })();
+  </script>
+
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Foundation & shared components -->
+  <script type="text/babel" src="tw-shared.jsx"></script>
+
+  <!-- Tweaks panel -->
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+
+  <!-- Landing data + translations -->
+  <script type="text/babel" src="tw-landing-data.jsx"></script>
+
+  <!-- Landing page sections -->
+  <script type="text/babel" src="tw-landing.jsx"></script>
+  <script type="text/babel" src="tw-landing2.jsx"></script>
+
+  <!-- App pages -->
+  <script type="text/babel" src="tw-pricing.jsx"></script>
+  <script type="text/babel" src="tw-dashboard.jsx"></script>
+  <script type="text/babel" src="tw-chat.jsx"></script>
+  <script type="text/babel" src="tw-calculator.jsx"></script>
+  <script type="text/babel" src="tw-tools.jsx"></script>
+  <script type="text/babel" src="tw-portals.jsx"></script>
+
+  <!-- Root app -->
+  <script type="text/babel">
+    const {useState,useEffect}=React;
+
+    function App(){
+      const savedTheme=()=>localStorage.getItem('tw-theme')||'dark';
+      const savedLang=()=>localStorage.getItem('tw-lang')||'en';
+      const savedPage=()=>localStorage.getItem('tw-page')||'landing';
+
+      const [theme,setThemeRaw]=useState(savedTheme);
+      const [lang,setLangRaw]=useState(savedLang);
+      const [page,setPageRaw]=useState(savedPage);
+
+      const setTheme=v=>{const val=typeof v==='function'?v(theme):v;setThemeRaw(val);localStorage.setItem('tw-theme',val);};
+      const setLang=v=>{setLangRaw(v);localStorage.setItem('tw-lang',v);};
+      const setPage=v=>{setPageRaw(v);localStorage.setItem('tw-page',v);window.scrollTo(0,0);};
+
+      // Apply theme to document
+      useEffect(()=>{document.documentElement.setAttribute('data-theme',theme);},[theme]);
+      // Apply RTL
+      useEffect(()=>{document.documentElement.dir=lang==='fa'?'rtl':'ltr';},[lang]);
+
+      const isLanding=page==='landing';
+      const isRtl=lang==='fa';
+
+      const sharedProps={theme,setTheme,lang,setLang,setPage};
+
+      // Tweaks
+      const {setTweak,useTweaks}=window;
+      const tweaks=useTweaks?useTweaks({
+        accentColor:'blue',
+        density:'comfortable',
+        roundness:'default',
+      }):null;
+
+      // Apply tweaks
+      useEffect(()=>{
+        if(!tweaks)return;
+        const root=document.documentElement;
+        const radii={sharp:'2px 4px 6px 8px 12px 16px',default:'4px 6px 10px 14px 20px 28px',rounded:'8px 12px 16px 20px 28px 40px'};
+        const [xs,sm,md,lg,xl,xl2]=(radii[tweaks.roundness]||radii.default).split(' ');
+        root.style.setProperty('--r-xs',xs);root.style.setProperty('--r-sm',sm);root.style.setProperty('--r-md',md);
+        root.style.setProperty('--r-lg',lg);root.style.setProperty('--r-xl',xl);root.style.setProperty('--r-2xl',xl2);
+      },[tweaks?.roundness]);
+
+      const pageContent=()=>{
+        if(isLanding)return <LandingPage {...sharedProps}/>;
+        return(
+          <AppLayout page={page} setPage={setPage} theme={theme} setTheme={setTheme} lang={lang} setLang={setLang}>
+            <div className="page-enter" key={page}>
+              {page==='dashboard'&&<DashboardPage setPage={setPage} lang={lang}/>}
+              {page==='chat'&&<ChatPage setPage={setPage} lang={lang}/>}
+              {page==='calculator'&&<CalculatorPage setPage={setPage} lang={lang}/>}
+              {page==='deduction'&&<DeductionPage setPage={setPage} lang={lang}/>}
+              {page==='expat'&&<ExpatPage setPage={setPage} lang={lang}/>}
+              {page==='accountant'&&<AccountantPage setPage={setPage} lang={lang}/>}
+              {page==='client'&&<ClientPortalPage setPage={setPage} lang={lang}/>}
+              {page==='pricing'&&<PricingPage setPage={setPage} lang={lang}/>}
+              {page==='settings'&&<SettingsPage {...sharedProps}/>}
+            </div>
+          </AppLayout>
+        );
+      };
+
+      return(
+        <React.Fragment>
+          {pageContent()}
+          {window.TweaksPanel&&<window.TweaksPanel>
+            <window.TweakSection label="Appearance">
+              <window.TweakRadio id="accentColor" label="Accent color" options={['blue','green','purple']}/>
+              <window.TweakRadio id="density" label="Density" options={['compact','comfortable']}/>
+              <window.TweakRadio id="roundness" label="Corner radius" options={['sharp','default','rounded']}/>
+            </window.TweakSection>
+            <window.TweakSection label="Content">
+              <window.TweakToggle id="showHints" label="Show contextual hints" defaultValue={true}/>
+            </window.TweakSection>
+          </window.TweaksPanel>}
+        </React.Fragment>
+      );
+    }
+
+    function SettingsPage({theme,setTheme,lang,setLang}){
+      return(
+        <div style={{maxWidth:600,margin:'0 auto'}}>
+          <div style={{marginBottom:24}}>
+            <div className="eyebrow eyebrow-blue" style={{marginBottom:8}}>SETTINGS</div>
+            <h1 style={{fontSize:'var(--text-2xl)',fontWeight:800,letterSpacing:'-0.03em',margin:0}}>Preferences</h1>
+          </div>
+          <div className="card" style={{padding:24,display:'flex',flexDirection:'column',gap:0}}>
+            <div style={{paddingBottom:18,borderBottom:'1px solid var(--border)',marginBottom:18}}>
+              <div style={{fontWeight:700,marginBottom:14}}>Appearance</div>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                <div><div style={{fontSize:'var(--text-sm)',fontWeight:500}}>Theme</div><div style={{fontSize:'var(--text-xs)',color:'var(--text-3)',marginTop:2}}>Choose light or dark mode</div></div>
+                <div style={{display:'flex',gap:4,background:'var(--bg-2)',borderRadius:'var(--r-md)',border:'1px solid var(--border)',padding:3}}>
+                  {['light','dark'].map(t=><button key={t} onClick={()=>setTheme(t)} style={{padding:'6px 14px',borderRadius:'var(--r-sm)',border:'none',cursor:'pointer',fontFamily:'var(--font)',fontSize:'var(--text-sm)',fontWeight:theme===t?600:400,background:theme===t?'var(--bg)':'transparent',color:theme===t?'var(--text)':'var(--text-3)',transition:'all var(--t-fast)',display:'flex',alignItems:'center',gap:6}}>
+                    {t==='dark'?<IC.moon style={{width:13,height:13}}/>:<IC.sun style={{width:13,height:13}}/>}{t.charAt(0).toUpperCase()+t.slice(1)}
+                  </button>)}
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style={{fontWeight:700,marginBottom:14}}>Language</div>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {[['en','English','English'],['nl','Nederlands','Dutch'],['fa','فارسی','Persian / Farsi']].map(([k,native,eng])=>(
+                  <button key={k} onClick={()=>setLang(k)} style={{display:'flex',alignItems:'center',gap:12,padding:'12px 14px',borderRadius:'var(--r-md)',border:`1.5px solid ${lang===k?'var(--blue)':'var(--border)'}`,background:lang===k?'var(--blue-subtle)':'transparent',cursor:'pointer',fontFamily:'var(--font)',textAlign:'start',transition:'all var(--t-fast)'}}>
+                    <span style={{width:20,height:20,borderRadius:'50%',border:`2px solid ${lang===k?'var(--blue)':'var(--border-2)'}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{lang===k&&<span style={{width:8,height:8,borderRadius:'50%',background:'var(--blue)'}}/>}</span>
+                    <div><div style={{fontSize:'var(--text-sm)',fontWeight:600,color:lang===k?'var(--blue-text)':'var(--text)'}}>{native}</div><div style={{fontSize:'var(--text-xs)',color:'var(--text-3)'}}>{eng}</div></div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="card" style={{padding:24,marginTop:14}}>
+            <div style={{fontWeight:700,marginBottom:14}}>Account</div>
+            <div style={{display:'flex',alignItems:'center',gap:14,marginBottom:16}}>
+              <Avatar name="Alex de Vries" size={44}/>
+              <div><div style={{fontWeight:700}}>Alex de Vries</div><div style={{fontSize:'var(--text-sm)',color:'var(--text-3)'}}>alex@example.nl · Pro plan</div></div>
+            </div>
+            <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+              <Btn variant="secondary" size="sm">Edit profile</Btn>
+              <Btn variant="secondary" size="sm">Change plan</Btn>
+              <Btn variant="danger" size="sm">Log out</Btn>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+  </script>
+
+  <template id="__bundler_thumbnail">
+    <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+      <rect width="120" height="80" fill="#0A0A14"/>
+      <rect x="10" y="10" width="22" height="60" rx="4" fill="#1a1a2e"/>
+      <rect x="10" y="10" width="22" height="60" rx="4" fill="#1a1a2e" stroke="#2563eb" stroke-width="0.5"/>
+      <rect x="38" y="10" width="72" height="28" rx="4" fill="#1e2a4a"/>
+      <rect x="38" y="10" width="72" height="28" rx="4" fill="none" stroke="#2563eb" stroke-width="0.5"/>
+      <text x="74" y="27" font-size="9" fill="#2563eb" font-family="sans-serif" text-anchor="middle" font-weight="bold">TaxWijs AI</text>
+      <rect x="38" y="42" width="34" height="14" rx="3" fill="#1a2540"/>
+      <rect x="76" y="42" width="34" height="14" rx="3" fill="#1a2540"/>
+      <rect x="38" y="60" width="72" height="10" rx="3" fill="#1a2540"/>
+    </svg>
+  </template>
+</body>
+</html>

@@ -1,0 +1,38 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/v1/engagements",
+    "headers": {
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9...",
+      "Idempotency-Key": "01HWXYZ987654321ABCDEF",
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "clientId": "c1a2b3c4-d5e6-7890-abcd-ef1234567890",
+      "taxYear": 2026,
+      "assignedAccountantUserId": "8a0a4f63-ec95-4d6f-b9ce-1af6ebf52722"
+    }
+  },
+  "response_201": {
+    "id": "f9ab2ad1-4d89-4d78-bb72-3e2c7bdf67d5",
+    "clientId": "c1a2b3c4-d5e6-7890-abcd-ef1234567890",
+    "firmId": "aabbccdd-1234-5678-9012-ffeeddccbbaa",
+    "taxYear": 2026,
+    "status": "draft",
+    "readinessScore": 0,
+    "riskScore": 0,
+    "assignedAccountantUserId": "8a0a4f63-ec95-4d6f-b9ce-1af6ebf52722",
+    "createdAt": "2026-06-13T09:00:00Z",
+    "updatedAt": "2026-06-13T09:00:00Z"
+  },
+  "response_409": {
+    "error": {
+      "code": "ENGAGEMENT_ALREADY_EXISTS",
+      "message": "An engagement already exists for this client and tax year.",
+      "details": {
+        "existingEngagementId": "aa11bb22-cc33-dd44-ee55-ff6677889900"
+      },
+      "requestId": "req_XkjWm9pTqR"
+    }
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "request": {
+    "method": "GET",
+    "path": "/v1/engagements/{engagementId}/readiness",
+    "headers": {
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiJ9..."
+    }
+  },
+  "response_200": {
+    "engagementId": "f9ab2ad1-4d89-4d78-bb72-3e2c7bdf67d5",
+    "score": 80,
+    "components": {
+      "documents": {
+        "score": 92,
+        "weight": 0.40,
+        "contribution": 36.8
+      },
+      "checklist": {
+        "score": 76,
+        "weight": 0.30,
+        "contribution": 22.8
+      },
+      "verification": {
+        "score": 65,
+        "weight": 0.20,
+        "contribution": 13.0
+      },
+      "accountantReview": {
+        "score": 100,
+        "weight": 0.10,
+        "contribution": 10.0
+      }
+    },
+    "weightedScore": 82.6,
+    "displayScore": 80,
+    "cap": {
+      "active": true,
+      "reason": "Mandatory document missing: BTW-aangifte Q1 2026",
+      "capValue": 80
+    },
+    "missingItems": [
+      {
+        "type": "document",
+        "label": "BTW-aangifte Q1 2026",
+        "mandatory": true,
+        "impact": "Readiness capped at 80 until provided"
+      },
+      {
+        "type": "checklist",
+        "label": "Urenstaat 2026 bevestigd",
+        "mandatory": false,
+        "impact": "Checklist score will increase by ~8 points"
+      }
+    ],
+    "explanation": {
+      "nl": "U bent bijna klaar. 1 verplicht document ontbreekt nog: de BTW-aangifte Q1 2026. Na upload kan uw score stijgen naar 90+.",
+      "en": "You are almost ready. 1 mandatory document is still missing: the BTW return Q1 2026. After upload your score can rise to 90+.",
+      "fa": "شما تقریباً آماده هستید. ۱ سند اجباری هنوز مفقود است: اظهارنامه مالیات بر ارزش افزوده Q1 2026."
+    },
+    "calculatedAt": "2026-06-13T14:30:00Z"
+  }
+}

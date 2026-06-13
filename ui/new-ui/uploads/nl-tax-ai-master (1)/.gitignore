@@ -1,0 +1,73 @@
+# Claude Code local memory (not project code)
+.claude/
+
+# Internal docs — not for public repo
+CLAUDE.md
+PROGRESS.md
+DESIGN_BRIEF.md
+design.md
+Design.md
+
+# Environment
+.env
+*.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Phase 1 — raw scraped data (large, regenerable)
+phase1/data/raw/
+
+# Phase 2 — ChromaDB local index (regenerable via build_index.py)
+phase2/.chromadb/
+
+# Django
+*.log
+*.pot
+*.pyc
+db.sqlite3
+media/
+staticfiles/
+
+# Node / React
+node_modules/
+dist/
+build/
+.next/
+*.local
+
+# Docker (kept local, not deployed via Railway)
+.docker/
+Dockerfile*
+docker-compose*.yml
+docker-entrypoint.sh
+.dockerignore
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Secrets
+*.pem
+*.key
+secrets/
