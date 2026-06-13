@@ -1,26 +1,23 @@
 """
 Local fallback embedding using sentence-transformers.
 
-Model: all-MiniLM-L6-v2
-  - Only ~45MB download — fast on any connection
-  - Runs fully offline, no API key needed
-  - English-optimised but handles Dutch well (good enough for dev/testing)
-  - Produces 384-dimensional vectors
+Model: paraphrase-multilingual-mpnet-base-v2
+  - ~420MB download, runs fully offline, no API key needed
+  - Multilingual: maps NL, EN, and FA queries to the same vector space
+  - Produces 768-dimensional vectors
+  - Required by CLAUDE.md spec for full three-language parity (NL/EN/FA)
 
-Swap MODEL_NAME to "paraphrase-multilingual-mpnet-base-v2" (768-dim, ~420MB)
-for full NL/EN/FA multilingual support in production, but rebuild the index
-from scratch (do NOT mix dimensions in the same ChromaDB collection).
-
-The embedding_manifest.json records which model was used so the retriever
-always embeds queries with the same model that built the index.
+Do NOT mix this with the OpenAI 1536-dim index in the same ChromaDB collection.
+embedding_manifest.json records which model was used so the retriever always
+embeds queries with the same model that built the index.
 """
 
 from __future__ import annotations
 
 from phase2.store.schema import Chunk
 
-MODEL_NAME = "all-MiniLM-L6-v2"
-DIMENSIONS = 384
+MODEL_NAME = "paraphrase-multilingual-mpnet-base-v2"
+DIMENSIONS = 768
 
 # Lazy-load to avoid paying import cost when this module is not used
 _model = None

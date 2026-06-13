@@ -45,8 +45,8 @@ PROVIDERS = {
     },
     "local": {
         "module": "phase2.embeddings.embed_local",
-        "model": "all-MiniLM-L6-v2",
-        "dimensions": 384,
+        "model": "paraphrase-multilingual-mpnet-base-v2",
+        "dimensions": 768,
     },
 }
 
