@@ -19,6 +19,17 @@ from phase2.store.schema import Chunk
 MODEL_NAME = "paraphrase-multilingual-mpnet-base-v2"
 DIMENSIONS = 768
 
+# Sentence-transformers stores the cached model here (written by the initial download).
+# Loading by absolute path avoids a network check and works offline.
+import os as _os
+_CACHE_DIR = _os.path.join(
+    _os.path.expanduser("~"),
+    ".cache", "torch", "sentence_transformers",
+    f"sentence-transformers_{MODEL_NAME}",
+)
+# If the local cache doesn't exist, fall back to the hub model name (will download).
+_MODEL_SOURCE = _CACHE_DIR if _os.path.isdir(_CACHE_DIR) else MODEL_NAME
+
 # Lazy-load to avoid paying import cost when this module is not used
 _model = None
 
@@ -27,7 +38,7 @@ def _get_model():
     global _model
     if _model is None:
         from sentence_transformers import SentenceTransformer  # type: ignore
-        _model = SentenceTransformer(MODEL_NAME)
+        _model = SentenceTransformer(_MODEL_SOURCE)
     return _model
 
 

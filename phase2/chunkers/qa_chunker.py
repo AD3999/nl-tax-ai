@@ -120,7 +120,7 @@ def chunk_qa_pairs(path: Path | None = None) -> list[Chunk]:
             priority=1.0,
         ))
 
-        # Variant chunks
+        # Dutch/English variant chunks (for recall on alternate phrasings)
         for i, variant in enumerate(qa.get("question_variants", []), start=1):
             chunks.append(Chunk(
                 chunk_id=f"qa-{qa_id}-variant-{i}",
@@ -137,7 +137,37 @@ def chunk_qa_pairs(path: Path | None = None) -> list[Chunk]:
                 ai_prompt_hint=None,
                 expected_ai_behavior=expected_behavior,
                 language="nl",
-                qa_id=qa_id,
+                qa_id=f"qa-{qa_id}",
+                priority=1.0,
+            ))
+
+        # Persian (FA) variant chunk — dedicated single-language chunk so FA queries
+        # map to a focused FA-only embedding rather than the averaged multilingual one.
+        q_fa = qa.get("question_fa", "")
+        short_fa = qa.get("answer", {}).get("short_fa", "")
+        if q_fa:
+            fa_variant_text = (
+                f"[Q&A FA: {qa_id}]\n"
+                f"سوال: {q_fa}\n"
+                f"پاسخ کوتاه: {short_fa}\n"
+                f"(برای پاسخ کامل به {qa_id} مراجعه کنید)"
+            )
+            chunks.append(Chunk(
+                chunk_id=f"qa-{qa_id}-fa",
+                text=fa_variant_text,
+                doc_type="qa",
+                source_id=qa_id,
+                year=year,
+                topic=topic,
+                user_types=user_types,
+                verification_status=verification_status,
+                effective_from=f"{year}-01-01",
+                effective_until=None,
+                source_url=source_url,
+                ai_prompt_hint=None,
+                expected_ai_behavior=expected_behavior,
+                language="fa",
+                qa_id=f"qa-{qa_id}",
                 priority=1.0,
             ))
 

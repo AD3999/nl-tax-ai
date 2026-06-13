@@ -94,58 +94,74 @@ def retrieve(
     # Step 1: Embed the query
     query_vector = embed_query(question)
 
-    # Step 2: Filtered vector search
+    # Step 2: Filtered vector search — fetch a wider candidate pool before cascade
+    # so canonical Q&A chunks (which are long, multi-language) still get a chance
+    # to appear even if focused rule chunks outscore them at positions 1-5.
+    candidate_k = max(top_k * 4, 20)
     results = store.query(
         query_embedding=query_vector,
-        top_k=top_k,
+        top_k=candidate_k,
         user_type=user_type,
         as_of_date=as_of_date,
     )
 
-    # Step 3: Cascade retrieval — for any matched Q&A, also fetch its linked rules
+    # Step 3: Cascade retrieval — for any matched Q&A (canonical or variant),
+    # also fetch its linked rules via direct lookup.
     cascade_chunks: list[RetrievedContext] = []
     seen_rule_ids: set[str] = set()
 
     for ctx in results:
-        if ctx.doc_type == "qa" and not ctx.chunk_id.endswith(tuple(f"-variant-{i}" for i in range(1, 20))):
-            # This is a canonical Q&A chunk — extract related rule IDs from its text
+        if ctx.doc_type != "qa":
+            continue
+
+        # Canonical chunk_id is always "qa-{source_id}"; variants have a suffix.
+        canonical_id = f"qa-{ctx.source_id}"
+        is_variant = (ctx.chunk_id != canonical_id)
+
+        if is_variant:
+            # Variant chunk: resolve the canonical chunk to get its rule IDs
+            canonical_list = store.get_by_ids([canonical_id])
+            rule_ids = _extract_qa_rule_ids(canonical_list[0].text) if canonical_list else []
+        else:
+            # Canonical chunk — extract related rule IDs directly from its text
             rule_ids = _extract_qa_rule_ids(ctx.text)
-            new_rule_ids = [rid for rid in rule_ids if rid not in seen_rule_ids]
-            seen_rule_ids.update(new_rule_ids)
 
-            if new_rule_ids:
-                rule_chunk_ids = store.get_rule_chunk_ids(new_rule_ids)
-                rule_chunks = store.get_by_ids(rule_chunk_ids)
+        new_rule_ids = [rid for rid in rule_ids if rid not in seen_rule_ids]
+        seen_rule_ids.update(new_rule_ids)
 
-                # Filter out expired chunks — direct lookup bypasses DB date filter
-                effective_as_of = as_of_date or date.today()
-                as_of_int = int(effective_as_of.strftime("%Y%m%d"))
-                rule_chunks = [
-                    rc for rc in rule_chunks
-                    if Chunk._date_to_int(rc.effective_until) >= as_of_int
-                ]
+        if new_rule_ids:
+            rule_chunk_ids = store.get_rule_chunk_ids(new_rule_ids)
+            rule_chunks = store.get_by_ids(rule_chunk_ids)
 
-                for rc in rule_chunks:
-                    # Only add rules not already in semantic results
-                    already_retrieved = any(
-                        existing.source_id == rc.source_id for existing in results
+            # Filter out expired chunks — direct lookup bypasses DB date filter
+            effective_as_of = as_of_date or date.today()
+            as_of_int = int(effective_as_of.strftime("%Y%m%d"))
+            rule_chunks = [
+                rc for rc in rule_chunks
+                if Chunk._date_to_int(rc.effective_until) >= as_of_int
+            ]
+
+            for rc in rule_chunks:
+                # Only add rules not already in semantic results
+                already_retrieved = any(
+                    existing.source_id == rc.source_id for existing in results
+                )
+                if not already_retrieved:
+                    cascade_ctx = RetrievedContext(
+                        chunk_id=rc.chunk_id,
+                        text=rc.text,
+                        source_url=rc.source_url,
+                        source_id=rc.source_id,
+                        doc_type=rc.doc_type,
+                        score=0.0,  # cascade items have no similarity score
+                        ai_prompt_hint=rc.ai_prompt_hint,
+                        expected_ai_behavior=rc.expected_ai_behavior,
+                        year=rc.year,
+                        topic=rc.topic,
+                        user_types=rc.user_types,
+                        is_cascade=True,
                     )
-                    if not already_retrieved:
-                        cascade_ctx = RetrievedContext(
-                            chunk_id=rc.chunk_id,
-                            text=rc.text,
-                            source_url=rc.source_url,
-                            source_id=rc.source_id,
-                            doc_type=rc.doc_type,
-                            score=0.0,  # cascade items have no similarity score
-                            ai_prompt_hint=rc.ai_prompt_hint,
-                            expected_ai_behavior=rc.expected_ai_behavior,
-                            year=rc.year,
-                            topic=rc.topic,
-                            user_types=rc.user_types,
-                            is_cascade=True,
-                        )
-                        cascade_chunks.append(cascade_ctx)
+                    cascade_chunks.append(cascade_ctx)
 
     # Step 4: Deduplicate — if same source_id appears in both semantic and cascade, keep semantic
     combined = results + cascade_chunks

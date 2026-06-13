@@ -1,7 +1,7 @@
 {
   "provider": "local",
-  "model": "all-MiniLM-L6-v2",
-  "dimensions": 384,
-  "chunk_count": 91,
-  "built_at": "2026-05-16T14:32:05.819095+00:00"
+  "model": "paraphrase-multilingual-mpnet-base-v2",
+  "dimensions": 768,
+  "chunk_count": 103,
+  "built_at": "2026-06-13T14:18:51.734048+00:00"
 }
