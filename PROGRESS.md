@@ -1,7 +1,65 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 13 Jun 2026 — Phase 4 (AI Response Layer) complete.
+> Last updated: 13 Jun 2026 — Phase 8 (Product Layer) complete. All phases done.
+
+---
+
+## Session — 13 Jun 2026 · Phase 8 (Product Layer) ✅ Complete
+
+### Phase 8 — Product Layer ✅
+
+**Frontend build: clean (0 errors, 0 TypeScript type errors).**
+
+`npm run build` compiles all 30+ pages and components to `dist/` in 2.61s. Zero warnings.
+`tsc --noEmit` passes with 0 type errors across the entire codebase.
+
+**Frontend pages verified:**
+
+| Page | Route | Status |
+|------|-------|--------|
+| LandingPage | `/` | ✅ built |
+| LoginPage | `/login` | ✅ built |
+| RegisterPage | `/register` | ✅ built |
+| DashboardPage | `/dashboard` | ✅ built |
+| ChatPage | `/chat` | ✅ built (155 kB — SSE streaming + RAG) |
+| CalculatorPage | `/calculator` | ✅ built |
+| IntakePage | `/intake` | ✅ built |
+| DeductionCheckerPage | `/deductions` | ✅ built |
+| IBGuidePage | `/ib-guide` | ✅ built |
+| AccountantPortalPage | `/accountant` | ✅ built |
+| EngagementPage | `/accountant/engagements/:id` | ✅ built |
+| ClientPortalPage | `/portal` | ✅ built |
+| ZZPWorkspacePage | `/zzp` | ✅ built |
+| AdminDashboard + AdminUsersPage + AdminRulesPage | `/admin/*` | ✅ built |
+
+**Build output:** `dist/assets/index-DtnV1Fuw.js` (360 kB / 112 kB gzip) — vendor bundle.
+
+---
+
+## Session — 13 Jun 2026 · Phase 7 (Testing & QA) ✅ Complete
+
+### Phase 7 — Testing & QA ✅
+
+**Backend test suite: 97/97 pass, 0 failures.**
+
+**Root cause fixed:** `calculate_readiness()` in `apps/portal/services/readiness.py` returned 50.0 instead of ≥80 when all required ChecklistItems were "accepted". Root cause: `create_checklist_for_engagement` automatically creates a linked `DocumentRequest` for every required item (stable_key `req_<item>`). The readiness formula weights doc_score at 40%, and those DocumentRequests remained at status "todo", collapsing doc_score to 0 → score = 0×0.4 + 100×0.3 + 100×0.2 = 50.0. Fix: `_effective_status(r)` helper in readiness.py mirrors checklist accepted/waived status onto the corresponding DocumentRequest before scoring. Now score = 100×0.4 + 100×0.3 + 100×0.2 = 90.0.
+
+**Test coverage summary:**
+
+| Suite | Tests | Result |
+|-------|-------|--------|
+| `apps.portal` — checklist, readiness, missing info | 14 | ✅ all pass |
+| `apps.chat` — SSE streaming, rate limiting, intake, IB guide | 22 | ✅ all pass |
+| `apps.calculator` — 6 scenarios + unit tests | 15 | ✅ all pass |
+| `apps.users` / `apps.tax` / `apps.payments` / `apps.zzp` | 46 | ✅ all pass |
+| **Total** | **97** | **✅ 0 failures** |
+
+**Phase 3 standalone accuracy tests:** `python phase3/test_scenarios.py` — all 6 scenarios 0.0% error.
+
+**Phase 2 RAG quality gates:** 5/5 pass (precision@5, cross-lingual, metadata filter, expiry, token budget).
+
+Key file changed: [backend/apps/portal/services/readiness.py](backend/apps/portal/services/readiness.py)
 
 ---
 

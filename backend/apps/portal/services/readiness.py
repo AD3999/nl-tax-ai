@@ -27,6 +27,18 @@ def calculate_readiness(engagement, trigger_event: str = "manual") -> dict:
     doc_requests = list(DocumentRequest.objects.filter(engagement=engagement))
     open_actions = list(AccountantAction.objects.filter(engagement=engagement, status="open"))
 
+    # When a ChecklistItem is accepted/waived, its linked DocumentRequest
+    # (stable_key = "req_" + checklist stable_key) should score as accepted.
+    accepted_checklist_keys = {
+        i.stable_key for i in checklist if i.status in ("accepted", "waived")
+    }
+
+    def _effective_status(r) -> str:
+        if r.stable_key and r.stable_key.startswith("req_"):
+            if r.stable_key[4:] in accepted_checklist_keys:
+                return "accepted"
+        return r.status
+
     # ── COMPONENT 1: Document score (40%) ─────────────────────────────────────
     # Full credit: accepted, waived. Partial credit (50%): uploaded, processing.
     # No credit: todo, rejected, needs_review (covered by verification score).
@@ -34,8 +46,8 @@ def calculate_readiness(engagement, trigger_event: str = "manual") -> dict:
     if req_total == 0:
         doc_score = 100.0
     else:
-        full_credit = sum(1 for r in doc_requests if r.status in ("accepted", "waived"))
-        half_credit = sum(1 for r in doc_requests if r.status in ("uploaded", "processing"))
+        full_credit = sum(1 for r in doc_requests if _effective_status(r) in ("accepted", "waived"))
+        half_credit = sum(1 for r in doc_requests if _effective_status(r) in ("uploaded", "processing"))
         doc_score = min(100.0, (full_credit + half_credit * 0.5) / req_total * 100)
 
     # ── COMPONENT 2: Checklist score (30%) ────────────────────────────────────
