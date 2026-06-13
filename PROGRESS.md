@@ -108,6 +108,38 @@ Verified end-to-end: `backend/apps/chat/views.py` (685 lines).
 
 ---
 
+## Session — 13 Jun 2026 · Phase 6 (IB Return Guide) ✅ Complete
+
+### Phase 6 — IB Return Guide ✅
+
+**What it does:** Guides the user through their annual income tax return (aangifte inkomstenbelasting) field by field in natural conversation. Works for all 4 user types and all 3 languages.
+
+**Backend — IB return mode (`_IB_RETURN_PROMPT_BODY`):**
+- 9 IB form fields walked through in order: salary (1a), other work income (1b), business profit (1c), startersaftrek (1d), zelfstandigenaftrek (1e), Box 2 dividends (2a), savings (3a), investments (3b), mortgage interest (8a)
+- Irrelevant fields auto-skipped based on user type (e.g. Box 2 skipped for employees)
+- Each field: plain-language explanation first → then ask for value → react to answer → flag common mistakes
+- Emits `[IB_COMPLETE: {...}]` JSON with field values + 3–6 personalized actionable recommendations
+- Recommendations are tailored to the user's specific answers (not generic tips)
+- Activated via `POST /api/chat/message/` with `ib_return_mode=true`
+
+**Frontend — IBGuidePage.tsx (445 lines):**
+- Fetches IB fields from `GET /api/tax/ib-fields/` (9 fields with multilingual questions + help text)
+- Visual card per field with box colour coding (Box 1 / Box 2 / Box 3)
+- Each card shows: trilingual plain question, help text, common mistakes toggle, "Ask TaxWijs" button
+- In-page field value entry with auto-save to localStorage
+- Progress bar: X of 9 fields answered
+- Completed fields show green checkmark
+- "Open in chat" button opens the IB guide conversational mode with the field pre-filled as context
+- Fully RTL-aware for Persian (FA)
+
+**IB fields API (`GET /api/tax/ib-fields/`):**
+- Returns 9 fields from `phase1/data/seed/ib_form_mapping.json`
+- Each field: code, plain question (NL/EN/FA), help text (NL/EN/FA), common mistakes, AI follow-up questions
+
+**Test coverage:** IB return mode test in `apps.chat.tests` — verifies SSE stream for IB mode, checks correct content-type and `done` event present
+
+---
+
 ## Session — 13 Jun 2026 (master-prompt implementation) ✅ Complete
 
 ### Branch: `feat/master-prompt-implementation` → merged to `master`
