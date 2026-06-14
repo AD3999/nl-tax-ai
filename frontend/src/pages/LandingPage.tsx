@@ -1,363 +1,558 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Icon } from "../components/Icon";
+import {
+  Bot, FileText, Calculator, Shield, Users, CheckCircle,
+  Building2, Globe, Zap, ChevronDown, ArrowRight,
+  Upload, Search, ClipboardList, Star, Lock, BookOpen,
+  BarChart3, AlertCircle, FileCheck, MessageSquare,
+} from "lucide-react";
 import { useMobile } from "../hooks/useMobile";
 
 type Lang = "nl" | "en" | "fa";
 
-// ── Palettes — CSS-var based so they adapt to dark/light theme ───────────────
-const SLIDE_PAL = [
-  { accent: "var(--blue)",   soft: "var(--blue-subtle)",   border: "var(--blue-border)",   symbol: "✓" },
-  { accent: "var(--ok)",     soft: "var(--ok-subtle)",     border: "var(--ok-border)",     symbol: "◎" },
-  { accent: "var(--warn)",   soft: "var(--warn-subtle)",   border: "var(--warn-border)",   symbol: "∑" },
-  { accent: "var(--purple)", soft: "var(--purple-subtle)", border: "var(--purple-subtle)", symbol: "▦" },
-];
-
-const USER_PAL = [
-  "var(--blue)",   // ZZP
-  "var(--ok)",     // Employee
-  "var(--warn)",   // Expat
-  "var(--purple)", // DGA
-];
-
-// ── Copy — three languages ────────────────────────────────────────────────
+/* ─── Copy ──────────────────────────────────────────────────────── */
 const TX = {
   hero: {
-    badge: {
-      nl: "Belastingassistent · ZZP · 2026",
-      en: "Tax assistant · ZZP · 2026",
-      fa: "دستیار مالیاتی · ZZP · ۲۰۲۶",
+    badge: { nl: "Belastingplatform · 2026", en: "Tax platform · 2026", fa: "پلتفرم مالیاتی · ۲۰۲۶" },
+    h1a:   { nl: "Bereid uw Nederlandse", en: "Prepare Dutch taxes", fa: "مالیات هلند را" },
+    h1b:   { nl: "belasting slimmer voor.", en: "smarter — with AI", fa: "هوشمندتر آماده کنید." },
+    h1c:   { nl: "Met AI en uw accountant.", en: "and your accountant.", fa: "با هوش مصنوعی و حسابدار." },
+    sub:   {
+      nl: "AI-begeleiding, geverifieerde belastingregels, documentupload, gereedheidsscores en accountantsamenwerking — op één beveiligd platform.",
+      en: "AI guidance, verified tax rules, document upload, readiness scoring, and accountant collaboration in one secure platform.",
+      fa: "راهنمایی هوش مصنوعی، قوانین مالیاتی تأییدشده، آپلود اسناد، امتیاز آمادگی و همکاری با حسابدار — در یک پلتفرم امن.",
     },
-    h1a: { nl: "Belasting in Nederland,", en: "Dutch taxes,",        fa: "مالیات هلند،" },
-    h1b: { nl: "helder uitgelegd.",       en: "made simple.",         fa: "ساده توضیح داده شده." },
-    sub: {
-      nl: "Geverifieerde regels voor ZZP, werknemers, expats en DGA — berekend, niet geschat.",
-      en: "Verified rules for ZZP, employees, expats and DGAs — calculated, not estimated.",
-      fa: "قوانین تأیید‌شده برای ZZP، کارمندان، مهاجران و DGA — محاسبه‌شده، نه تخمینی.",
-    },
-    cta1:  { nl: "Aftrekken controleren",  en: "Check my deductions", fa: "بررسی کسورات" },
-    cta2:  { nl: "Belasting berekenen",    en: "Calculate my tax",    fa: "محاسبه مالیات" },
-    trust: {
-      nl: ["28 regels geverifieerd", "Bronnen bij elk antwoord", "Geen account nodig"],
-      en: ["28 rules verified",      "Sources on every answer",  "No account needed"],
-      fa: ["۲۸ قانون تأیید‌شده",    "استناد برای هر پاسخ",     "بدون نیاز به حساب"],
-    },
+    cta1:  { nl: "Gratis starten", en: "Start Free", fa: "شروع رایگان" },
+    cta2:  { nl: "Accountant demo boeken", en: "Book Accountant Demo", fa: "رزرو دمو برای حسابداران" },
+    trust: { nl: "AI legt uit. Regels berekenen. Accountants keuren goed.", en: "AI explains. Rules calculate. Accountants approve.", fa: "هوش مصنوعی توضیح می‌دهد. قوانین محاسبه می‌کنند. حسابداران تأیید می‌کنند." },
     card: {
-      badge:   { nl: "Live antwoord · ZZP · €72.000", en: "Live answer · ZZP · €72,000", fa: "پاسخ زنده · ZZP · €۷۲,۰۰۰" },
-      q:       { nl: "Ben ik een Wet DBA-risico?",     en: "Am I a Wet DBA risk?",         fa: "آیا ریسک Wet DBA دارم؟" },
-      ans:     { nl: "Ja — één klant betekent ",        en: "Yes — one client means ",       fa: "بله — یک مشتری یعنی سطح " },
-      risk:    { nl: "HOOG risico",                      en: "HIGH risk",                     fa: "ریسک بالا" },
-      suffix:  { nl: " onder Wet DBA.",                  en: " under Wet DBA.",               fa: " زیر Wet DBA." },
-      revenue: { nl: "Omzet",        en: "Revenue",     fa: "درآمد" },
-      share:   { nl: "Klantaandeel", en: "Client share",fa: "سهم مشتری" },
-      risk2:   { nl: "Risico",       en: "Risk",        fa: "ریسک" },
-      source:  { nl: "Bron",         en: "Source",      fa: "منبع" },
-      annualTax: { nl: "jaarlijkse belasting", en: "annual tax", fa: "مالیات سالانه" },
+      readiness: { nl: "Gereedheid", en: "Readiness", fa: "آمادگی" },
+      ready:     { nl: "Bijna klaar", en: "Almost Ready", fa: "تقریباً آماده" },
+      docs:      { nl: "Documenten", en: "Documents", fa: "اسناد" },
+      missing:   { nl: "2 ontbreekt", en: "2 missing", fa: "۲ مورد ناقص" },
+      aiLabel:   { nl: "AI Assistent", en: "AI Assistant", fa: "دستیار هوش مصنوعی" },
+      aiQ:       { nl: "Wat is mijn maximale zelfstandigenaftrek?", en: "What is my max self-employed deduction?", fa: "حداکثر کسر کارآفرینی چقدر است؟" },
+      aiA:       { nl: "€1.200 in 2026, mits u ≥1.225 uur werkt.", en: "€1,200 in 2026, provided you work ≥1,225 hrs.", fa: "€۱٬۲۰۰ در ۲۰۲۶، مشروط به کار ≥۱٬۲۲۵ ساعت." },
+      source:    { nl: "Bron: belastingdienst.nl", en: "Source: belastingdienst.nl", fa: "منبع: belastingdienst.nl" },
+      score:     { nl: "Gereedheidspercentage", en: "Readiness score", fa: "امتیاز آمادگی" },
+      client:    { nl: "Klantdossier", en: "Client file", fa: "پرونده مشتری" },
+    },
+  },
+
+  trust: {
+    items: {
+      nl: ["Gebouwd voor Nederlandse belastingwetgeving", "AVG/GDPR-klare architectuur", "28 geverifieerde belastingregels 2026", "Veilige documentopslag", "Drietalig: NL / EN / FA", "Deterministische berekeningen"],
+      en: ["Built for Dutch tax workflows", "GDPR-ready architecture", "28 verified tax rules 2026", "Secure document handling", "Multilingual: NL / EN / FA", "Deterministic calculations"],
+      fa: ["ساخته شده برای سیستم مالیاتی هلند", "معماری GDPR-ready", "۲۸ قانون مالیاتی تأییدشده ۲۰۲۶", "ذخیره‌سازی امن اسناد", "سه‌زبانه: NL / EN / FA", "محاسبات قطعی"],
+    },
+  },
+
+  positioning: {
+    eyebrow: { nl: "Wat is TaxWijs?", en: "What is TaxWijs?", fa: "TaxWijs چیست؟" },
+    h2:      { nl: "Niet zomaar een chatbot.", en: "Not just a chatbot.", fa: "فقط یک چت‌بات نیست." },
+    sub:     { nl: "TaxWijs combineert AI-begeleiding, een rekenmotor en accountantssamenwerking.", en: "TaxWijs combines AI guidance, a calculation engine, and accountant collaboration.", fa: "TaxWijs هوش مصنوعی، موتور محاسبه و همکاری با حسابدار را ترکیب می‌کند." },
+    cards:   {
+      nl: [
+        { icon: "bot",      notLabel: "Geen chatbot",      title: "AI Tax Assistent",       body: "Legt uit, analyseert en begeleidt. Geeft nooit eindcijfers — dat doet de rekenmotor." },
+        { icon: "calc",     notLabel: "Geen rekenmachine", title: "Slimme Rekenmotor",       body: "Deterministische berekeningen op basis van geverifieerde belastingregels. Geen schattingen." },
+        { icon: "building", notLabel: "Vervangt niet",     title: "Accountantssamenwerking", body: "Versnelt het verzamelen van documenten, verbetert de gereedheid en vermindert handmatige follow-up." },
+      ],
+      en: [
+        { icon: "bot",      notLabel: "Not a chatbot",     title: "AI Tax Assistant",        body: "Explains, analyzes, and guides. Never gives final numbers — the rule engine does that." },
+        { icon: "calc",     notLabel: "Not a calculator",  title: "Smart Rule Engine",        body: "Deterministic calculations based on verified tax rules. No estimates. No guessing." },
+        { icon: "building", notLabel: "Not a replacement", title: "Accountant Collaboration", body: "Accelerates document collection, improves readiness scores, and reduces manual follow-up." },
+      ],
+      fa: [
+        { icon: "bot",      notLabel: "نه یک چت‌بات",     title: "دستیار مالیاتی هوش مصنوعی", body: "توضیح می‌دهد، تحلیل می‌کند و راهنمایی می‌کند. هرگز اعداد نهایی نمی‌دهد." },
+        { icon: "calc",     notLabel: "نه یک ماشین‌حساب", title: "موتور قانون هوشمند",          body: "محاسبات قطعی بر اساس قوانین مالیاتی تأییدشده. بدون تخمین." },
+        { icon: "building", notLabel: "جایگزین نمی‌شود",  title: "همکاری با حسابدار",          body: "جمع‌آوری اسناد را تسریع می‌کند، آمادگی را بهبود می‌دهد." },
+      ],
     },
   },
 
   features: {
-    eyebrow: { nl: "Tools",                         en: "Tools",              fa: "ابزارها" },
-    h2:      { nl: "Alles wat u nodig heeft",        en: "Everything you need", fa: "همه آنچه نیاز دارید" },
-    open:    { nl: "Openen",                         en: "Open",               fa: "باز کردن" },
-    items: {
+    eyebrow: { nl: "Platform", en: "Platform", fa: "پلتفرم" },
+    h2:      { nl: "Alles in één platform", en: "Everything in one platform", fa: "همه چیز در یک پلتفرم" },
+    sub:     { nl: "Van eerste vraag tot goedgekeurde aangifte.", en: "From first question to approved tax filing.", fa: "از اولین سؤال تا اظهارنامه مالیاتی تأییدشده." },
+    items:   {
       nl: [
-        { title: "Aftrekposten-keurder",   body: "Ontdek in 60 seconden welke aftrekken u kunt claimen.",     to: "/deduction-checker" },
-        { title: "Chat-assistent",         body: "Belastingvragen beantwoord in gewone taal, in uw taal.",    to: "/chat" },
-        { title: "Rekenmachine",           body: "Box 1, 2 en 3 nauwkeurig berekend met uw eigen cijfers.",  to: "/intake" },
-        { title: "IB Aangifte-gids",       body: "Stap-voor-stap begeleiding bij de officiële aangifte.",    to: "/ib-guide" },
+        { icon: "bot",       title: "AI Belastingassistent",      body: "Beantwoordt vragen in gewone taal, in uw taal, geciteerd naar belastingdienst.nl.",    color: "blue"   },
+        { icon: "search",    title: "Aftrekposten Ontdekker",     body: "Ontdek in 60 seconden welke aftrekken u kunt claimen voor uw situatie.",               color: "ok"     },
+        { icon: "upload",    title: "Documentupload & OCR",        body: "Upload belastingdocumenten. AI extraheert gegevens automatisch en controleert.",       color: "purple" },
+        { icon: "users",     title: "Klantportaal",               body: "Clients volgen hun gereedheid, laden documenten op en communiceren met hun accountant.", color: "warn"   },
+        { icon: "building",  title: "Accountantsportaal",         body: "Beheer alle klantdossiers, volg gereedheid, bekijk documenten en keur toe.",            color: "blue"   },
+        { icon: "bar",       title: "Gereedheidscore",            body: "Realtime score op basis van documenten, checklist, verificatie en accountantsfeedback.", color: "ok"     },
+        { icon: "alert",     title: "Ontbrekende Documenten",     body: "Automatische detectie van welke documenten ontbreken voor een volledige aangifte.",      color: "warn"   },
+        { icon: "calc",      title: "Deterministische Rekenmotor", body: "Box 1, 2 en 3 exact berekend — nooit geschat. Gebaseerd op geverifieerde regels.",     color: "blue"   },
       ],
       en: [
-        { title: "Deduction Checker", body: "Discover in 60 seconds which deductions you qualify for.",            to: "/deduction-checker" },
-        { title: "Chat Assistant",    body: "Tax questions answered in plain language, in your language.",          to: "/chat" },
-        { title: "Calculator",        body: "Box 1, 2 and 3 accurately calculated with your own numbers.",         to: "/intake" },
-        { title: "IB Return Guide",   body: "Step-by-step guidance through the official tax return.",              to: "/ib-guide" },
+        { icon: "bot",       title: "AI Tax Assistant",           body: "Answers questions in plain language, in your language, cited to belastingdienst.nl.",    color: "blue"   },
+        { icon: "search",    title: "Deduction Discovery",        body: "Find in 60 seconds which deductions you qualify for in your exact situation.",           color: "ok"     },
+        { icon: "upload",    title: "Document Upload & OCR",      body: "Upload tax documents. AI automatically extracts and cross-checks data.",                 color: "purple" },
+        { icon: "users",     title: "Client Portal",              body: "Clients track their readiness, upload documents, and message their accountant.",         color: "warn"   },
+        { icon: "building",  title: "Accountant Portal",          body: "Manage all client files, track readiness, review documents, and approve.",              color: "blue"   },
+        { icon: "bar",       title: "Readiness Score",            body: "Real-time score based on documents, checklist, verification, and accountant feedback.",  color: "ok"     },
+        { icon: "alert",     title: "Missing Document Detection", body: "Automatic detection of which documents are missing for a complete filing.",              color: "warn"   },
+        { icon: "calc",      title: "Deterministic Calculator",   body: "Box 1, 2 and 3 calculated exactly — never estimated. Based on verified rules.",         color: "blue"   },
       ],
       fa: [
-        { title: "بررسی کسورات",     body: "در ۶۰ ثانیه بدانید به چه کسوراتی واجد شرایط هستید.",  to: "/deduction-checker" },
-        { title: "دستیار گفتگو",     body: "پاسخ سوالات مالیاتی به زبان ساده، به زبان شما.",       to: "/chat" },
-        { title: "محاسبه‌گر",        body: "باکس ۱، ۲ و ۳ با ارقام واقعی شما محاسبه می‌شود.",     to: "/intake" },
-        { title: "راهنمای اظهارنامه", body: "راهنمای گام به گام اظهارنامه رسمی IB.",               to: "/ib-guide" },
+        { icon: "bot",       title: "دستیار مالیاتی هوش مصنوعی", body: "پاسخ سؤالات به زبان ساده، در زبان شما، با استناد به belastingdienst.nl.",               color: "blue"   },
+        { icon: "search",    title: "کشف کسورات",                body: "در ۶۰ ثانیه بدانید به چه کسوراتی در وضعیت دقیق خود واجد شرایط هستید.",               color: "ok"     },
+        { icon: "upload",    title: "آپلود سند و OCR",            body: "اسناد مالیاتی را آپلود کنید. هوش مصنوعی داده‌ها را استخراج می‌کند.",                 color: "purple" },
+        { icon: "users",     title: "پورتال مشتری",               body: "مشتریان آمادگی خود را پیگیری می‌کنند، اسناد آپلود می‌کنند و با حسابدار ارتباط می‌گیرند.", color: "warn"   },
+        { icon: "building",  title: "پورتال حسابدار",             body: "مدیریت همه پرونده‌های مشتری، پیگیری آمادگی، بررسی و تأیید اسناد.",                  color: "blue"   },
+        { icon: "bar",       title: "امتیاز آمادگی",              body: "امتیاز بلادرنگ بر اساس اسناد، چک‌لیست، تأیید و بازخورد حسابدار.",                   color: "ok"     },
+        { icon: "alert",     title: "تشخیص اسناد ناقص",           body: "تشخیص خودکار اینکه کدام اسناد برای اظهارنامه کامل ناقص است.",                       color: "warn"   },
+        { icon: "calc",      title: "ماشین‌حساب قطعی",            body: "باکس ۱، ۲ و ۳ دقیقاً محاسبه می‌شود — هرگز تخمین زده نمی‌شود.",                     color: "blue"   },
+      ],
+    },
+  },
+
+  howItWorks: {
+    eyebrow: { nl: "Hoe het werkt", en: "How it works", fa: "چطور کار می‌کند" },
+    h2:      { nl: "Van vraag tot goedgekeurde aangifte", en: "From question to approved filing", fa: "از سؤال تا اظهارنامه تأییدشده" },
+    steps:   {
+      nl: [
+        { n: "01", title: "Vertel uw situatie",    body: "Vul uw profiel in — ZZP, werknemer, expat of DGA. AI stelt de juiste vragen en leidt u door de intake." },
+        { n: "02", title: "AI analyseert & regels berekenen", body: "Geverifieerde belastingregels berekenen uw Box 1, 2 en 3. AI legt elke stap uit met een citaat." },
+        { n: "03", title: "Accountant keurt goed & dient in", body: "Uw accountant beoordeelt de volledige dossier, keurt documenten goed en dient de aangifte in." },
+      ],
+      en: [
+        { n: "01", title: "Tell us your situation",   body: "Complete your profile — ZZP, employee, expat, or DGA. AI asks the right questions and guides you through intake." },
+        { n: "02", title: "AI analyzes & rules calculate", body: "Verified tax rules calculate your Box 1, 2, and 3. AI explains every step with a citation." },
+        { n: "03", title: "Accountant approves & files", body: "Your accountant reviews the complete file, approves documents, and submits the tax return." },
+      ],
+      fa: [
+        { n: "01", title: "وضعیت خود را بگویید",        body: "پروفایل خود را تکمیل کنید — ZZP، کارمند، مهاجر یا DGA. هوش مصنوعی سؤالات درست می‌پرسد." },
+        { n: "02", title: "هوش مصنوعی تحلیل می‌کند",   body: "قوانین مالیاتی تأییدشده باکس ۱، ۲ و ۳ شما را محاسبه می‌کنند. هوش مصنوعی هر مرحله را توضیح می‌دهد." },
+        { n: "03", title: "حسابدار تأیید و ارسال می‌کند", body: "حسابدار شما پرونده کامل را بررسی، اسناد را تأیید و اظهارنامه مالیاتی را ارسال می‌کند." },
       ],
     },
   },
 
   userTypes: {
-    eyebrow: { nl: "Voor wie",                      en: "Who it's for",                fa: "برای چه کسانی" },
-    h2:      { nl: "Gebouwd voor uw situatie",       en: "Built for your situation",    fa: "ساخته شده برای وضعیت شما" },
-    tabs: {
-      nl: ["ZZP", "Werknemer", "Expat", "DGA"],
-      en: ["ZZP", "Employee",  "Expat", "DGA"],
-      fa: ["ZZP", "کارمند",    "مهاجر", "DGA"],
-    },
-    cards: {
+    eyebrow: { nl: "Voor wie", en: "Who it's for", fa: "برای چه کسانی" },
+    h2:      { nl: "Gebouwd voor uw situatie", en: "Built for your situation", fa: "ساخته شده برای وضعیت شما" },
+    tabs:    { nl: ["ZZP", "Werknemer", "Expat", "DGA / BV"], en: ["ZZP", "Employee", "Expat", "DGA / BV"], fa: ["ZZP", "کارمند", "مهاجر", "DGA / BV"] },
+    items:   {
       nl: [
-        { sub: "Zelfstandige ondernemer",  items: ["Zelfstandigenaftrek €1.200", "MKB-winstvrijstelling 12,7%", "ZVW bijdrage 4,85%", "Wet DBA risicoscore"] },
-        { sub: "In loondienst",            items: ["Arbeidskorting €5.685", "IACK werkende ouders €3.032", "Reiskostenvergoeding", "Pensioenjaarruimte"] },
-        { sub: "Buitenlandse werker",      items: ["30%-regeling 5-jaar afbouw", "Eerste IB-aangifte gids", "Zorgtoeslag €129/maand", "Belastingverdrag"] },
-        { sub: "Directeur-aandeelhouder",  items: ["Gebruikelijk loon €56.000", "Dividend vs salaris", "Box 2 tarieven 24,5%/31%", "BV-optimalisatietips"] },
+        { sub: "Zelfstandig ondernemer", color: "blue",   items: ["Zelfstandigenaftrek €1.200", "MKB-winstvrijstelling 12,7%", "ZVW bijdrage 4,85%", "Wet DBA risicoscore", "Startersaftrek (laatste jaar 2026)", "Maandelijkse belastingreservering"] },
+        { sub: "In loondienst",          color: "ok",     items: ["Arbeidskorting €5.685", "IACK werkende ouders €3.032", "Reiskostenvergoeding 2026", "Pensioenjaarruimte", "Zorgtoeslag grens €40.857", "Huurtoeslag (hervormd 2026)"] },
+        { sub: "Buitenlandse werker",    color: "warn",   items: ["30%-regeling 5-jaar afbouw", "Eerste IB-aangifte begeleiding", "Zorgtoeslag €129/maand", "Belastingverdrag-analyse", "Box 3 drempel €59.357", "Nalevingsdeadlines"] },
+        { sub: "Directeur-aandeelhouder", color: "purple", items: ["Gebruikelijk loon €56.000", "Dividend vs salaris analyse", "Box 2 tarieven 24,5%/31%", "BV-optimalisatietips", "DGA loonheffing 2026", "Pensioen in eigen beheer"] },
       ],
       en: [
-        { sub: "Self-employed freelancer", items: ["Zelfstandigenaftrek €1,200", "MKB exemption 12.7%", "ZVW health contribution 4.85%", "Wet DBA risk score"] },
-        { sub: "Salaried employee",        items: ["Labour tax credit €5,685", "IACK child credit €3,032", "Commuting allowance", "Pension contribution space"] },
-        { sub: "Foreign worker",           items: ["30% ruling phase-down", "First IB return guide", "Zorgtoeslag €129/month", "Tax treaty info"] },
-        { sub: "Director-shareholder",     items: ["Minimum salary €56,000", "Dividend vs salary choice", "Box 2 rates 24.5%/31%", "BV optimisation tips"] },
+        { sub: "Self-employed freelancer", color: "blue",   items: ["Self-employed deduction €1,200", "MKB profit exemption 12.7%", "ZVW health contribution 4.85%", "Wet DBA risk score", "Starter deduction (last year 2026)", "Monthly tax reserve calculation"] },
+        { sub: "Salaried employee",        color: "ok",     items: ["Labour tax credit €5,685", "IACK childcare credit €3,032", "Commuting allowance 2026", "Pension contribution space", "Healthcare allowance threshold €40,857", "Rent allowance (2026 reform)"] },
+        { sub: "Foreign worker",           color: "warn",   items: ["30% ruling 5-year phase-down", "First IB return guided walkthrough", "Zorgtoeslag €129/month", "Tax treaty analysis", "Box 3 threshold €59,357", "Compliance deadline tracking"] },
+        { sub: "Director-shareholder",     color: "purple", items: ["Minimum salary €56,000", "Dividend vs salary analysis", "Box 2 rates 24.5% / 31%", "BV optimisation tips", "DGA payroll tax 2026", "Pension-in-own-management"] },
       ],
       fa: [
-        { sub: "کارآفرین مستقل",   items: ["کسر ZZP €۱٬۲۰۰", "معافیت MKB 12.7%", "کمک بهداشت ZVW 4.85%", "امتیاز ریسک Wet DBA"] },
-        { sub: "کارمند استخدامی",  items: ["اعتبار مالیاتی کار €۵٬۶۸۵", "اعتبار IACK €۳٬۰۳۲", "کمک هزینه رفت‌وآمد", "فضای بازنشستگی"] },
-        { sub: "کارگر خارجی",      items: ["کاهش ۵ ساله قانون ۳۰٪", "راهنمای اولین اظهارنامه IB", "zorgtoeslag €۱۲۹/ماه", "معاهده مالیاتی"] },
-        { sub: "مدیر سهامدار",     items: ["حداقل حقوق €۵۶٬۰۰۰", "سود سهام در مقابل حقوق", "نرخ‌های باکس ۲", "نکات بهینه‌سازی BV"] },
+        { sub: "کارآفرین مستقل",   color: "blue",   items: ["کسر کارآفرینی €۱٬۲۰۰", "معافیت سود MKB 12.7%", "کمک بهداشت ZVW 4.85%", "امتیاز ریسک Wet DBA", "کسر استارتر (آخرین سال ۲۰۲۶)", "محاسبه ذخیره مالیات ماهانه"] },
+        { sub: "کارمند استخدامی",  color: "ok",     items: ["اعتبار مالیاتی کار €۵٬۶۸۵", "اعتبار IACK €۳٬۰۳۲", "کمک هزینه رفت‌وآمد ۲۰۲۶", "فضای مشارکت بازنشستگی", "آستانه zorgtoeslag €۴۰٬۸۵۷", "اصلاحات huurtoeslag ۲۰۲۶"] },
+        { sub: "کارگر خارجی",      color: "warn",   items: ["کاهش ۵ ساله قانون ۳۰٪", "راهنمای اولین اظهارنامه IB", "zorgtoeslag €۱۲۹/ماه", "تحلیل معاهده مالیاتی", "آستانه باکس ۳ €۵۹٬۳۵۷", "پیگیری مهلت‌های انطباق"] },
+        { sub: "مدیر سهامدار",     color: "purple", items: ["حداقل حقوق €۵۶٬۰۰۰", "تحلیل سود سهام در مقابل حقوق", "نرخ‌های باکس ۲: 24.5% / 31%", "نکات بهینه‌سازی BV", "مالیات حقوق DGA ۲۰۲۶", "بازنشستگی در مدیریت خود"] },
       ],
     },
   },
 
-  cta: {
-    h2: {
-      nl: "Doe uw 2026 aangifte met vertrouwen",
-      en: "File your 2026 return with confidence",
-      fa: "اظهارنامه ۲۰۲۶ خود را با اطمینان تکمیل کنید",
+  accountant: {
+    eyebrow: { nl: "Voor accountants", en: "For accountants", fa: "برای حسابداران" },
+    h2:      { nl: "Minder follow-up. Meer voltooide dossiers.", en: "Less follow-up. More completed files.", fa: "پیگیری کمتر. پرونده‌های تکمیل‌شده بیشتر." },
+    sub:     { nl: "TaxWijs vervangt uw accountantssoftware niet — het verbetert de kwaliteit van klantaanleveringen zodat u sneller kunt werken.", en: "TaxWijs doesn't replace your accounting software — it improves client submission quality so you can work faster.", fa: "TaxWijs نرم‌افزار حسابداری شما را جایگزین نمی‌کند — کیفیت تحویل مشتری را بهبود می‌دهد." },
+    items:   {
+      nl: [
+        { icon: "bar",     title: "Gereedheids-dashboard",    body: "Zie in één oogopslag welke klanten klaar zijn, wie documenten mist en wat de prioriteit is." },
+        { icon: "file",    title: "Documentbeheer",           body: "Bekijk, keur goed of wijs af geüploade documenten. AI extraheert gegevens voor verificatie." },
+        { icon: "clip",    title: "Slimme checklists",        body: "Automatisch gegenereerde checklists per klanttype (ZZP, werknemer, expat, DGA)." },
+        { icon: "msg",     title: "Directe clientchat",       body: "Geïntegreerde berichtenservice — geen e-mail meer voor het opvragen van documenten." },
+      ],
+      en: [
+        { icon: "bar",     title: "Readiness Dashboard",      body: "See at a glance which clients are ready, who has missing documents, and what needs priority." },
+        { icon: "file",    title: "Document Management",      body: "View, approve, or reject uploaded documents. AI extracts data for cross-checking." },
+        { icon: "clip",    title: "Smart Checklists",         body: "Auto-generated checklists per client type — ZZP, employee, expat, DGA." },
+        { icon: "msg",     title: "Direct Client Messaging",  body: "Integrated messaging — no more email threads to request documents." },
+      ],
+      fa: [
+        { icon: "bar",     title: "داشبورد آمادگی",          body: "با یک نگاه ببینید کدام مشتریان آماده هستند، چه کسی اسناد ناقص دارد." },
+        { icon: "file",    title: "مدیریت اسناد",             body: "اسناد آپلودشده را مشاهده، تأیید یا رد کنید. هوش مصنوعی داده‌ها را استخراج می‌کند." },
+        { icon: "clip",    title: "چک‌لیست‌های هوشمند",      body: "چک‌لیست‌های تولیدشده خودکار برای هر نوع مشتری — ZZP، کارمند، مهاجر، DGA." },
+        { icon: "msg",     title: "پیام‌رسانی مستقیم با مشتری", body: "پیام‌رسانی یکپارچه — دیگر نیازی به ایمیل برای درخواست اسناد نیست." },
+      ],
     },
-    sub: {
-      nl: "Gratis te proberen · geen account vereist",
-      en: "Free to try · no account required",
-      fa: "رایگان امتحان کنید · بدون نیاز به حساب",
+    cta:     { nl: "Accountant demo boeken", en: "Book Accountant Demo", fa: "رزرو دمو برای حسابداران" },
+    ctaSub:  { nl: "30 minuten · gratis · geen verplichting", en: "30 minutes · free · no obligation", fa: "۳۰ دقیقه · رایگان · بدون تعهد" },
+  },
+
+  safety: {
+    eyebrow: { nl: "Veiligheidsgarantie", en: "Safety guarantee", fa: "ضمانت ایمنی" },
+    h2:      { nl: "AI die zijn grenzen kent.", en: "AI that knows its limits.", fa: "هوش مصنوعی که محدودیت‌هایش را می‌داند." },
+    sub:     { nl: "Vier ingebouwde principes die voorkomen dat AI onjuiste belastingcijfers geeft.", en: "Four built-in principles that prevent AI from giving wrong tax numbers.", fa: "چهار اصل داخلی که از دادن اعداد مالیاتی اشتباه توسط هوش مصنوعی جلوگیری می‌کند." },
+    items:   {
+      nl: [
+        { title: "AI berekent nooit eindcijfers",          body: "Alle belastingbedragen komen uit de deterministische rekenmotor, niet uit de AI." },
+        { title: "AI beslist nooit over aftrekbaarheid",   body: "AI legt regels uit en citeert bronnen. Accountants nemen de definitieve beslissing." },
+        { title: "AI keurt nooit documenten automatisch goed", body: "Elk document vereist menselijke review door een gekwalificeerde accountant." },
+        { title: "Elke claim heeft een bron-URL",          body: "Elk feit dat de AI noemt heeft een citaat van belastingdienst.nl of officiële regelgeving." },
+      ],
+      en: [
+        { title: "AI never calculates final numbers",      body: "All tax amounts come from the deterministic rule engine, never from the AI." },
+        { title: "AI never decides deductibility",         body: "AI explains rules and cites sources. Accountants make the final decision." },
+        { title: "AI never auto-approves documents",       body: "Every document requires human review by a qualified accountant." },
+        { title: "Every claim has a source URL",           body: "Every fact AI states has a citation from belastingdienst.nl or official legislation." },
+      ],
+      fa: [
+        { title: "هوش مصنوعی هرگز اعداد نهایی محاسبه نمی‌کند", body: "تمام مبالغ مالیاتی از موتور قانون قطعی می‌آیند، نه از هوش مصنوعی." },
+        { title: "هوش مصنوعی هرگز در مورد کسرپذیری تصمیم نمی‌گیرد", body: "هوش مصنوعی قوانین را توضیح می‌دهد. حسابداران تصمیم نهایی را می‌گیرند." },
+        { title: "هوش مصنوعی هرگز اسناد را به‌طور خودکار تأیید نمی‌کند", body: "هر سند نیاز به بررسی انسانی توسط حسابدار مجاز دارد." },
+        { title: "هر ادعایی یک URL منبع دارد",                 body: "هر حقیقتی که هوش مصنوعی بیان می‌کند استنادی از belastingdienst.nl دارد." },
+      ],
     },
-    btn1: { nl: "Gratis beginnen", en: "Start free",   fa: "شروع رایگان" },
-    btn2: { nl: "Chat proberen",   en: "Try the chat", fa: "امتحان چت" },
+  },
+
+  faq: {
+    eyebrow: { nl: "Veelgestelde vragen", en: "Frequently asked questions", fa: "سؤالات متداول" },
+    h2:      { nl: "Heeft u vragen?", en: "Have questions?", fa: "سؤال دارید؟" },
+    items:   {
+      nl: [
+        { q: "Vervangt TaxWijs mijn accountant?",       a: "Nee. TaxWijs versnelt de voorbereiding van uw dossier. Uw accountant keurt alles goed en dient in. Wij versterken de samenwerking — wij vervangen niet." },
+        { q: "Is TaxWijs geschikt voor ZZP-ers?",       a: "Ja. TaxWijs is speciaal gebouwd voor ZZP-ers. Het berekent zelfstandigenaftrek, MKB-winstvrijstelling, ZVW-bijdrage, Wet DBA-risico en maandelijkse belastingreservering." },
+        { q: "Welke talen worden ondersteund?",         a: "TaxWijs ondersteunt Nederlands, Engels en Perzisch (Farsi) als volwaardige talen — niet als vertaling. Elke taal heeft volledige belastinginhoud." },
+        { q: "Hoe veilig zijn mijn documenten?",        a: "Documenten worden versleuteld opgeslagen. BSN-nummers worden nooit in plaintext bewaard. Uw gegevens worden conform AVG/GDPR behandeld." },
+        { q: "Kan ik TaxWijs gratis proberen?",         a: "Ja. Start gratis zonder account. U kunt aftrekken controleren, belasting simuleren en vragen stellen. Een account is nodig voor documentopslag en accountantsamenwerking." },
+        { q: "Wat is de gereedheidscore?",              a: "De gereedheidscore geeft aan hoe volledig uw belastingdossier is: documenten (40%), checklist (25%), verificatie (20%) en accountantsbeoordeling (15%)." },
+      ],
+      en: [
+        { q: "Does TaxWijs replace my accountant?",     a: "No. TaxWijs accelerates your file preparation. Your accountant approves everything and submits. We enhance collaboration — we don't replace anyone." },
+        { q: "Is TaxWijs suitable for ZZP freelancers?", a: "Yes. TaxWijs is built specifically for ZZP. It calculates self-employed deductions, MKB exemption, ZVW contribution, Wet DBA risk, and monthly tax reserve." },
+        { q: "Which languages are supported?",          a: "TaxWijs supports Dutch, English, and Persian (Farsi) as first-class languages — not translations. Every language has full tax content." },
+        { q: "How secure are my documents?",            a: "Documents are stored encrypted. BSN numbers are never stored in plaintext. Your data is handled under GDPR / AVG." },
+        { q: "Can I try TaxWijs for free?",             a: "Yes. Start free with no account. You can check deductions, simulate taxes, and ask questions. An account is needed for document storage and accountant collaboration." },
+        { q: "What is the readiness score?",            a: "The readiness score shows how complete your tax file is: documents (40%), checklist (25%), verification (20%), and accountant review (15%)." },
+      ],
+      fa: [
+        { q: "آیا TaxWijs حسابدار من را جایگزین می‌کند؟",  a: "نه. TaxWijs آماده‌سازی پرونده شما را تسریع می‌کند. حسابدار شما همه چیز را تأیید و ارسال می‌کند. ما همکاری را بهبود می‌دهیم — نه جایگزین." },
+        { q: "آیا TaxWijs برای ZZP مناسب است؟",            a: "بله. TaxWijs به‌طور خاص برای ZZP ساخته شده. کسر کارآفرینی، معافیت MKB، ZVW، ریسک Wet DBA و ذخیره مالیات ماهانه را محاسبه می‌کند." },
+        { q: "چه زبان‌هایی پشتیبانی می‌شوند؟",            a: "TaxWijs از هلندی، انگلیسی و فارسی به‌عنوان زبان‌های درجه اول پشتیبانی می‌کند — نه ترجمه. هر زبان محتوای مالیاتی کامل دارد." },
+        { q: "امنیت اسناد من چقدر است؟",                   a: "اسناد رمزگذاری‌شده ذخیره می‌شوند. شماره BSN هرگز به‌صورت متن ساده ذخیره نمی‌شود. داده‌های شما طبق GDPR/AVG پردازش می‌شود." },
+        { q: "آیا می‌توانم TaxWijs را رایگان امتحان کنم؟", a: "بله. بدون نیاز به حساب شروع کنید. می‌توانید کسورات را بررسی، مالیات را شبیه‌سازی و سؤال بپرسید. برای ذخیره اسناد به حساب نیاز است." },
+        { q: "امتیاز آمادگی چیست؟",                        a: "امتیاز آمادگی نشان می‌دهد پرونده مالیاتی شما چقدر کامل است: اسناد (40%)، چک‌لیست (25%)، تأیید (20%) و بررسی حسابدار (15%)." },
+      ],
+    },
+  },
+
+  finalCta: {
+    h2:     { nl: "Klaar om te starten?", en: "Ready to get started?", fa: "آماده شروع هستید؟" },
+    indiv:  {
+      label:  { nl: "Voor particulieren & ZZP", en: "For individuals & ZZP", fa: "برای افراد و ZZP" },
+      h3:     { nl: "Begin gratis vandaag", en: "Start free today", fa: "امروز رایگان شروع کنید" },
+      body:   { nl: "Geen creditcard nodig. Controleer uw aftrekken, simuleer uw belasting en vraag alles.", en: "No credit card required. Check your deductions, simulate your tax, and ask anything.", fa: "کارت اعتباری لازم نیست. کسورات خود را بررسی کنید." },
+      cta:    { nl: "Gratis starten", en: "Start Free", fa: "شروع رایگان" },
+    },
+    acct:   {
+      label:  { nl: "Voor accountants & belastingadviseurs", en: "For accountants & tax advisors", fa: "برای حسابداران" },
+      h3:     { nl: "Zie het accountantsplatform", en: "See the accountant platform", fa: "پلتفرم حسابدار را ببینید" },
+      body:   { nl: "30 minuten demo. Wij laten u zien hoe u klantgereedheid beheert en documentverzameling automatiseert.", en: "30-minute demo. We show you how to manage client readiness and automate document collection.", fa: "دمو ۳۰ دقیقه‌ای. نشان می‌دهیم چطور آمادگی مشتری را مدیریت کنید." },
+      cta:    { nl: "Demo boeken", en: "Book Demo", fa: "رزرو دمو" },
+    },
   },
 } as const;
 
-const SLIDE_INTERVAL = 3800; // ms per slide
-const TAB_INTERVAL   = 4500; // ms per tab
+/* ─── Helpers ────────────────────────────────────────────────────── */
+function t<T extends Record<string, unknown>>(obj: T, lang: Lang): T[typeof lang] {
+  return (obj[lang] ?? obj["en"]) as T[typeof lang];
+}
 
+const COLOR_MAP: Record<string, string> = {
+  blue:   "var(--blue)",
+  ok:     "var(--ok)",
+  warn:   "var(--warn)",
+  purple: "var(--purple)",
+};
+const SUBTLE_MAP: Record<string, string> = {
+  blue:   "var(--blue-subtle)",
+  ok:     "var(--ok-subtle)",
+  warn:   "var(--warn-subtle)",
+  purple: "var(--purple-subtle)",
+};
+
+/* ─── Sub-components ──────────────────────────────────────────────── */
+function SectionLabel({ text, color = "var(--blue)" }: { text: string; color?: string }) {
+  return (
+    <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+      <span style={{ width: 6, height: 6, borderRadius: 999, background: color }} />
+      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--text-3)" }}>{text}</span>
+    </div>
+  );
+}
+
+function FeatureIcon({ icon, color }: { icon: string; color: string }) {
+  const c = COLOR_MAP[color] ?? color;
+  const s = SUBTLE_MAP[color] ?? "var(--bg-2)";
+  const props = { size: 18, color: c };
+  const el = icon === "bot"      ? <Bot {...props} />
+           : icon === "search"   ? <Search {...props} />
+           : icon === "upload"   ? <Upload {...props} />
+           : icon === "users"    ? <Users {...props} />
+           : icon === "building" ? <Building2 {...props} />
+           : icon === "bar"      ? <BarChart3 {...props} />
+           : icon === "alert"    ? <AlertCircle {...props} />
+           : icon === "calc"     ? <Calculator {...props} />
+           : icon === "file"     ? <FileCheck {...props} />
+           : icon === "clip"     ? <ClipboardList {...props} />
+           : icon === "msg"      ? <MessageSquare {...props} />
+           : <Zap {...props} />;
+  return (
+    <span style={{ width: 40, height: 40, borderRadius: "var(--r-md)", background: s, border: `1px solid ${c}22`, display: "grid", placeItems: "center", flexShrink: 0 }}>
+      {el}
+    </span>
+  );
+}
+
+function FAQItem({ q, a, lang }: { q: string; a: string; lang: Lang }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderBottom: "1px solid var(--border)", overflow: "hidden" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "18px 0", background: "none", border: "none", cursor: "pointer",
+          textAlign: lang === "fa" ? "right" : "left",
+          gap: 16,
+        }}
+      >
+        <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", lineHeight: 1.4 }}>{q}</span>
+        <span style={{ flexShrink: 0, transition: "transform .2s", transform: open ? "rotate(180deg)" : "rotate(0)", color: "var(--text-3)" }}>
+          <ChevronDown size={16} />
+        </span>
+      </button>
+      <div style={{
+        maxHeight: open ? 300 : 0, overflow: "hidden", transition: "max-height .3s ease",
+      }}>
+        <p style={{ fontSize: 14, color: "var(--text-3)", lineHeight: 1.65, paddingBottom: 18, marginTop: 0 }}>{a}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Main ────────────────────────────────────────────────────────── */
 export default function LandingPage() {
-  const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
-  const isMobile = useMobile();
-  const lang = i18n.language as Lang;
-  const isRtl = lang === "fa";
+  const { i18n } = useTranslation();
+  const navigate  = useNavigate();
+  const isMobile  = useMobile();
+  const lang      = i18n.language as Lang;
+  const isRtl     = lang === "fa";
 
-  // ── Feature slider state ─────────────────────────────────────────────────
-  const [slideIdx, setSlideIdx]     = useState(0);
-  const [slidePaused, setSlidePaused] = useState(false);
-  const [slideDir, setSlideDir]     = useState<"next" | "prev">("next");
-  const slideTick = useRef<ReturnType<typeof setInterval> | null>(null);
-  const touchStart = useRef<number | null>(null);
-
-  const goSlide = useCallback((idx: number, dir: "next" | "prev" = "next") => {
-    setSlideDir(dir);
-    setSlideIdx(idx);
-  }, []);
-
-  const nextSlide = useCallback(() => {
-    setSlideDir("next");
-    setSlideIdx(i => (i + 1) % 4);
-  }, []);
-
-  const prevSlide = useCallback(() => {
-    setSlideDir("prev");
-    setSlideIdx(i => (i - 1 + 4) % 4);
-  }, []);
-
-  useEffect(() => {
-    if (slidePaused) return;
-    slideTick.current = setInterval(nextSlide, SLIDE_INTERVAL);
-    return () => { if (slideTick.current) clearInterval(slideTick.current); };
-  }, [slidePaused, nextSlide]);
-
-  // ── User-type tabs state ─────────────────────────────────────────────────
-  const [tabIdx, setTabIdx]       = useState(0);
-  const [tabPaused, setTabPaused] = useState(false);
-  const tabTick = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const selectTab = useCallback((idx: number) => {
-    setTabIdx(idx);
-    setTabPaused(true);
-  }, []);
+  const [tabIdx, setTabIdx]         = useState(0);
+  const [tabPaused, setTabPaused]   = useState(false);
+  const tabTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (tabPaused) return;
-    tabTick.current = setInterval(() => setTabIdx(i => (i + 1) % 4), TAB_INTERVAL);
-    return () => { if (tabTick.current) clearInterval(tabTick.current); };
+    tabTimer.current = setInterval(() => setTabIdx(i => (i + 1) % 4), 4500);
+    return () => { if (tabTimer.current) clearInterval(tabTimer.current); };
   }, [tabPaused]);
 
-  // ── Data shortcuts ───────────────────────────────────────────────────────
-  const features   = TX.features.items[lang]      ?? TX.features.items.en;
-  const tabLabels  = TX.userTypes.tabs[lang]       ?? TX.userTypes.tabs.en;
-  const typeCards  = TX.userTypes.cards[lang]      ?? TX.userTypes.cards.en;
-  const pal        = SLIDE_PAL[slideIdx];
-  const activeCard = typeCards[tabIdx];
-  const activeColor = USER_PAL[tabIdx];
-  const hc         = TX.hero.card;
+  const W = 1200; // max-width
+  const px = isMobile ? "20px" : "64px";
 
-  // ── Arrow SVGs ────────────────────────────────────────────────────────────
-  const ArrowLeft  = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
-  const ArrowRight = () => <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 12l4-4-4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+  const featureItems  = t(TX.features.items, lang);
+  const tabLabels     = t(TX.userTypes.tabs, lang);
+  const userItems     = t(TX.userTypes.items, lang);
+  const acctItems     = t(TX.accountant.items, lang);
+  const safetyItems   = t(TX.safety.items, lang);
+  const faqItems      = t(TX.faq.items, lang);
+  const posCards      = t(TX.positioning.cards, lang);
+  const steps         = t(TX.howItWorks.steps, lang);
+  const activeType    = userItems[tabIdx];
 
   return (
-    <main
-      style={{ background: "var(--paper)", flex: 1, overflowX: "hidden" }}
-      dir={isRtl ? "rtl" : "ltr"}
-    >
+    <main dir={isRtl ? "rtl" : "ltr"} style={{ overflowX: "hidden" }}>
 
-      {/* ══════════════════════ HERO ══════════════════════════ */}
-      <section
-        className="grain"
-        style={{
-          padding: isMobile ? "64px 20px 52px" : "96px 64px 80px",
-          borderBottom: "1px solid var(--hairline)",
-        }}
-      >
-        <div style={{
-          maxWidth: 1180, margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "1.1fr 0.9fr",
-          gap: isMobile ? "44px" : "72px",
-          alignItems: "center",
-        }}>
+      {/* ══════════════════════════════════════════════════════════════
+          HERO
+      ══════════════════════════════════════════════════════════════ */}
+      <section style={{
+        padding: isMobile ? "72px 20px 60px" : "100px 64px 88px",
+        borderBottom: "1px solid var(--border)",
+        background: "var(--bg)",
+        position: "relative",
+        overflow: "hidden",
+      }}>
+        {/* Radial glow background */}
+        <div aria-hidden style={{
+          position: "absolute", inset: 0, pointerEvents: "none",
+          background: "radial-gradient(ellipse 70% 55% at 55% 30%, oklch(0.48 0.15 265 / 0.10) 0%, transparent 70%)",
+          zIndex: 0,
+        }} />
 
-          {/* Left — headline + CTAs */}
+        <div style={{ maxWidth: W, margin: "0 auto", position: "relative", zIndex: 1,
+          display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+          gap: isMobile ? 48 : 80, alignItems: "center" }}>
+
+          {/* LEFT: Copy */}
           <div>
             {/* Badge */}
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: 8,
-              padding: "5px 14px", borderRadius: 999,
-              background: "var(--paper)", border: "1px solid var(--accent-line)",
-              marginBottom: 24,
-              animation: "heroFadeUp 0.55s ease both",
-              animationDelay: "0.05s",
-            }}>
-              <span style={{ width: 7, height: 7, borderRadius: 999, background: "var(--sage-500)", flexShrink: 0 }} />
-              <span className="eyebrow eyebrow-accent">{TX.hero.badge[lang]}</span>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "5px 14px", borderRadius: 999,
+              border: "1px solid var(--blue-border)", background: "var(--blue-subtle)", marginBottom: 24,
+              animation: "heroFadeUp .55s ease both" }}>
+              <span style={{ width: 7, height: 7, borderRadius: 999, background: "var(--blue)", flexShrink: 0 }} />
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--blue-text)" }}>
+                {t(TX.hero.badge, lang)}
+              </span>
             </div>
 
             {/* Headline */}
-            <h1 style={{
-              fontSize: isMobile ? "clamp(2.2rem, 9vw, 3.2rem)" : "clamp(2.8rem, 3.8vw, 4rem)",
-              lineHeight: 1.1,
-              fontFamily: "var(--serif)",
-              fontWeight: 400,
-              letterSpacing: "-0.025em",
-              color: "var(--ink)",
-              margin: 0,
-            }}>
-              <span style={{ display: "block", animation: "heroFadeUp 0.65s ease both", animationDelay: "0.15s" }}>
-                {TX.hero.h1a[lang]}
+            <h1 style={{ fontSize: isMobile ? "clamp(2.2rem, 9vw, 3rem)" : "clamp(2.6rem, 3.5vw, 3.8rem)",
+              lineHeight: 1.08, fontWeight: 800, letterSpacing: "-0.035em", margin: 0,
+              color: "var(--text)" }}>
+              <span style={{ display: "block", animation: "heroFadeUp .65s ease both", animationDelay: ".1s" }}>
+                {t(TX.hero.h1a, lang)}
               </span>
-              <span style={{ display: "block", color: "var(--blue-text)", animation: "heroFadeUp 0.65s ease both", animationDelay: "0.28s" }}>
-                {TX.hero.h1b[lang]}
+              <span style={{ display: "block", color: "var(--blue-text)", animation: "heroFadeUp .65s ease both", animationDelay: ".22s" }}>
+                {t(TX.hero.h1b, lang)}
+              </span>
+              <span style={{ display: "block", animation: "heroFadeUp .65s ease both", animationDelay: ".34s" }}>
+                {t(TX.hero.h1c, lang)}
               </span>
             </h1>
 
             {/* Sub */}
-            <p style={{
-              marginTop: 20, fontSize: 16, lineHeight: 1.65,
-              color: "var(--ink-2)", maxWidth: 460,
-              animation: "heroFadeUp 0.65s ease both", animationDelay: "0.40s",
-            }}>
-              {TX.hero.sub[lang]}
+            <p style={{ marginTop: 22, fontSize: 16, lineHeight: 1.65, color: "var(--text-3)", maxWidth: 500,
+              animation: "heroFadeUp .65s ease both", animationDelay: ".46s" }}>
+              {t(TX.hero.sub, lang)}
             </p>
 
             {/* CTAs */}
-            <div style={{
-              marginTop: 28, display: "flex", flexWrap: "wrap", gap: 12,
-              animation: "heroFadeUp 0.65s ease both", animationDelay: "0.52s",
-            }}>
-              <button className="btn btn-accent btn-lg" onClick={() => navigate("/deduction-checker")}>
-                {TX.hero.cta1[lang]} <Icon.arrow />
+            <div style={{ marginTop: 30, display: "flex", flexWrap: "wrap", gap: 12,
+              animation: "heroFadeUp .65s ease both", animationDelay: ".58s" }}>
+              <button className="btn btn-accent btn-lg"
+                onClick={() => navigate("/register")}
+                style={{ display: "inline-flex", alignItems: "center", gap: 8, borderRadius: 999 }}>
+                {t(TX.hero.cta1, lang)} <ArrowRight size={16} />
               </button>
-              <button className="btn btn-ghost btn-lg" onClick={() => navigate("/intake")}>
-                {TX.hero.cta2[lang]}
+              <button className="btn btn-ghost btn-lg"
+                onClick={() => navigate("/register?role=accountant")}
+                style={{ borderRadius: 999 }}>
+                {t(TX.hero.cta2, lang)}
               </button>
             </div>
 
-            {/* Trust row */}
-            <div style={{
-              marginTop: 22, display: "flex", flexWrap: "wrap",
-              gap: "8px 18px", fontSize: 12.5, color: "var(--ink-3)",
-              animation: "heroFadeUp 0.65s ease both", animationDelay: "0.64s",
-            }}>
-              {TX.hero.trust[lang].map((item, i) => (
-                <span key={i} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                  <Icon.check style={{ color: "var(--sage-500)" }} />
-                  {item}
-                </span>
-              ))}
-            </div>
+            {/* Micro-trust */}
+            <p style={{ marginTop: 18, fontSize: 12.5, color: "var(--text-4)", fontStyle: "italic",
+              animation: "heroFadeUp .65s ease both", animationDelay: ".70s" }}>
+              {t(TX.hero.trust, lang)}
+            </p>
           </div>
 
-          {/* Right — floating demo card (desktop only) */}
+          {/* RIGHT: Dashboard composition */}
           {!isMobile && (
-            <div
-              style={{
-                position: "relative",
-                animation: "heroFadeIn 0.9s ease both",
-                animationDelay: "0.30s",
-              }}
-            >
-              <div
-                className="card"
-                style={{
-                  padding: 22,
-                  boxShadow: "var(--shadow-lg)",
-                  borderRadius: "var(--r-xl)",
-                  animation: "floatCard 5.5s ease-in-out infinite",
-                  animationDelay: "0.5s",
-                }}
-              >
+            <div style={{ position: "relative", animation: "heroFadeIn .9s ease both", animationDelay: ".25s" }}>
+              {/* Main card — Readiness overview */}
+              <div className="card" style={{
+                padding: 22, borderRadius: "var(--r-xl)",
+                boxShadow: "var(--sh-lg)",
+                animation: "floatCard 6s ease-in-out infinite", animationDelay: ".3s",
+              }}>
                 {/* Card header */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 14, borderBottom: "1px solid var(--hairline)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+                  paddingBottom: 14, borderBottom: "1px solid var(--border)", marginBottom: 14 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ width: 8, height: 8, borderRadius: 999, background: "var(--sage-500)" }} />
-                    <span className="eyebrow eyebrow-accent">{hc.badge[lang]}</span>
+                    <span style={{ width: 28, height: 28, borderRadius: 8, background: "var(--blue-subtle)",
+                      display: "grid", placeItems: "center" }}>
+                      <BarChart3 size={14} color="var(--blue-text)" />
+                    </span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text)" }}>
+                      {t(TX.hero.card.client, lang)}
+                    </span>
                   </div>
-                  <span style={{ fontSize: 11, color: "var(--ink-4)", fontFamily: "var(--mono)" }}>2.3s</span>
+                  <span style={{ fontSize: 11, color: "var(--text-4)", fontVariantNumeric: "tabular-nums" }}>2026</span>
                 </div>
 
-                {/* User question bubble */}
-                <div style={{ padding: "14px 0 10px", display: "flex", justifyContent: "flex-end" }}>
-                  <div style={{ padding: "10px 16px", borderRadius: "16px 16px 4px 16px", background: "var(--blue)", color: "#fff", fontSize: 13.5, maxWidth: 280, lineHeight: 1.5 }}>
-                    {hc.q[lang]}
+                {/* Readiness bar */}
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 7 }}>
+                    <span style={{ fontSize: 12, color: "var(--text-3)" }}>{t(TX.hero.card.score, lang)}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--blue-text)" }}>78%</span>
+                  </div>
+                  <div style={{ height: 7, borderRadius: 999, background: "var(--bg-3)", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: "78%", borderRadius: 999,
+                      background: "linear-gradient(90deg, var(--blue), var(--ok))" }} />
+                  </div>
+                  <div style={{ marginTop: 7, display: "flex", justifyContent: "flex-end" }}>
+                    <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999,
+                      background: "var(--blue-subtle)", color: "var(--blue-text)", fontWeight: 600 }}>
+                      {t(TX.hero.card.ready, lang)}
+                    </span>
                   </div>
                 </div>
 
-                {/* AI answer */}
-                <div style={{ padding: 16, background: "var(--paper-tint)", borderRadius: "var(--r)", border: "1px solid var(--hairline)" }}>
-                  <p style={{ fontSize: 13.5, color: "var(--ink-2)", lineHeight: 1.6, margin: 0 }}>
-                    {hc.ans[lang]}
-                    <strong style={{ color: "var(--danger)" }}>{hc.risk[lang]}</strong>
-                    {hc.suffix[lang]}
+                {/* Factor pills */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+                  {[
+                    { label: t(TX.hero.card.docs, lang), val: "3/5", color: "warn" },
+                    { label: "Checklist",                val: "✓",   color: "ok"   },
+                    { label: "Verificatie",              val: "✓",   color: "ok"   },
+                    { label: "Accountant",               val: "—",   color: "blue" },
+                  ].map(f => (
+                    <div key={f.label} style={{ padding: "8px 10px", borderRadius: "var(--r)",
+                      background: "var(--bg-2)", border: "1px solid var(--border)",
+                      display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 11, color: "var(--text-3)" }}>{f.label}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: COLOR_MAP[f.color] }}>{f.val}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* AI answer snippet */}
+                <div style={{ padding: 12, borderRadius: "var(--r)", background: "var(--blue-subtle)",
+                  border: "1px solid var(--blue-border)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+                    <Bot size={12} color="var(--blue-text)" />
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "var(--blue-text)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                      {t(TX.hero.card.aiLabel, lang)}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 12.5, color: "var(--text-2)", lineHeight: 1.5, margin: 0 }}>
+                    {t(TX.hero.card.aiA, lang)}
                   </p>
-                  <div style={{ marginTop: 12, padding: "10px 14px", background: "var(--paper)", borderRadius: "var(--r-sm)", border: "1px dashed var(--accent-line)", display: "grid", gridTemplateColumns: "1fr auto", rowGap: 6, fontSize: 13 }}>
-                    <span style={{ color: "var(--ink-3)" }}>{hc.revenue[lang]}</span>
-                    <span className="num">€ 72,000</span>
-                    <span style={{ color: "var(--ink-3)" }}>{hc.share[lang]}</span>
-                    <span className="num">100 %</span>
-                    <span style={{ color: "var(--ink-3)" }}>{hc.risk2[lang]}</span>
-                    <span className="num" style={{ color: "var(--danger)", fontWeight: 700 }}>{hc.risk[lang]}</span>
-                  </div>
-                </div>
-
-                {/* Source */}
-                <div style={{ display: "flex", alignItems: "center", gap: 6, paddingTop: 12, fontSize: 11, color: "var(--ink-4)" }}>
-                  <span className="eyebrow">{hc.source[lang]}:</span>
-                  <span>belastingdienst.nl/wet-dba</span>
+                  <div style={{ marginTop: 8, fontSize: 10, color: "var(--text-4)" }}>{t(TX.hero.card.source, lang)}</div>
                 </div>
               </div>
 
-              {/* Floating stat chip */}
-              <div
-                className="card"
-                style={{ position: "absolute", right: -24, bottom: 60, padding: "10px 16px", display: "flex", alignItems: "center", gap: 10, boxShadow: "var(--shadow)", animation: "floatCard 5.5s ease-in-out infinite", animationDelay: "1s" }}
-              >
-                <span style={{ width: 28, height: 28, borderRadius: 999, background: "var(--accent-soft)", display: "grid", placeItems: "center" }}>
-                  <Icon.spark style={{ color: "var(--sage-700)", width: 13, height: 13 }} />
+              {/* Floating missing-docs chip */}
+              <div className="card" style={{
+                position: "absolute", left: -28, top: 40, padding: "10px 14px",
+                display: "flex", alignItems: "center", gap: 10,
+                boxShadow: "var(--sh-md)", borderRadius: "var(--r-lg)",
+                animation: "floatCard 6s ease-in-out infinite", animationDelay: "1.2s",
+              }}>
+                <span style={{ width: 28, height: 28, borderRadius: 8, background: "var(--warn-subtle)",
+                  display: "grid", placeItems: "center" }}>
+                  <AlertCircle size={13} color="var(--warn)" />
                 </span>
                 <div>
-                  <div className="font-mono" style={{ fontSize: 13, fontWeight: 600, color: "var(--sage-700)" }}>€ 14,736</div>
-                  <div style={{ fontSize: 11, color: "var(--ink-4)" }}>{hc.annualTax[lang]}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)" }}>{t(TX.hero.card.docs, lang)}</div>
+                  <div style={{ fontSize: 11, color: "var(--warn)" }}>{t(TX.hero.card.missing, lang)}</div>
+                </div>
+              </div>
+
+              {/* Floating tax summary chip */}
+              <div className="card" style={{
+                position: "absolute", right: -24, bottom: 48, padding: "10px 14px",
+                display: "flex", alignItems: "center", gap: 10,
+                boxShadow: "var(--sh-md)", borderRadius: "var(--r-lg)",
+                animation: "floatCard 6s ease-in-out infinite", animationDelay: ".8s",
+              }}>
+                <span style={{ width: 28, height: 28, borderRadius: 8, background: "var(--ok-subtle)",
+                  display: "grid", placeItems: "center" }}>
+                  <Calculator size={13} color="var(--ok)" />
+                </span>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--ok)", fontVariantNumeric: "tabular-nums" }}>€ 14,736</div>
+                  <div style={{ fontSize: 11, color: "var(--text-4)" }}>Box 1 · 2026</div>
                 </div>
               </div>
             </div>
@@ -365,306 +560,417 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ══════════════════════ FEATURE SLIDER ══════════════════════════ */}
-      <section
-        style={{ padding: isMobile ? "52px 20px 56px" : "88px 64px", borderBottom: "1px solid var(--hairline)" }}
-        onMouseEnter={() => setSlidePaused(true)}
-        onMouseLeave={() => setSlidePaused(false)}
-      >
-        <div style={{ maxWidth: 1180, margin: "0 auto" }}>
-
-          {/* Section header + nav arrows */}
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 44, flexWrap: "wrap", gap: 16 }}>
-            <div>
-              <div className="eyebrow eyebrow-accent" style={{ marginBottom: 8 }}>
-                {TX.features.eyebrow[lang]}
-              </div>
-              <h2 style={{ fontFamily: "var(--serif)", fontSize: isMobile ? 26 : 36, fontWeight: 400, letterSpacing: "-0.022em", color: "var(--ink)", margin: 0 }}>
-                {TX.features.h2[lang]}
-              </h2>
+      {/* ══════════════════════════════════════════════════════════════
+          TRUST STRIP
+      ══════════════════════════════════════════════════════════════ */}
+      <section style={{ borderBottom: "1px solid var(--border)", background: "var(--bg-2)", padding: "14px 64px", overflowX: "auto" }}>
+        <div style={{ maxWidth: W, margin: "0 auto", display: "flex", alignItems: "center", gap: isMobile ? 20 : 40,
+          justifyContent: isMobile ? "flex-start" : "center", minWidth: "max-content", padding: "0 20px" }}>
+          {t(TX.trust.items, lang).map((item, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 7, flexShrink: 0 }}>
+              <CheckCircle size={13} color="var(--ok)" />
+              <span style={{ fontSize: 12.5, color: "var(--text-3)", fontWeight: 500, whiteSpace: "nowrap" }}>{item}</span>
             </div>
+          ))}
+        </div>
+      </section>
 
-            {/* Prev / Next (always visible, compact on mobile) */}
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <button
-                onClick={() => { prevSlide(); setSlidePaused(true); }}
-                aria-label="Previous feature"
-                style={{ width: 40, height: 40, borderRadius: "50%", border: "1px solid var(--hairline-2)", background: "var(--paper)", cursor: "pointer", display: "grid", placeItems: "center", transition: "all .15s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--sage-600)"; e.currentTarget.style.background = "var(--accent-soft)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--hairline-2)"; e.currentTarget.style.background = "var(--paper)"; }}
-              >
-                {isRtl ? <ArrowRight /> : <ArrowLeft />}
-              </button>
-              <div style={{ display: "flex", gap: 5 }}>
-                {SLIDE_PAL.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => { goSlide(i, i > slideIdx ? "next" : "prev"); setSlidePaused(true); }}
-                    aria-label={`Slide ${i + 1}`}
-                    style={{ width: i === slideIdx ? 22 : 8, height: 8, borderRadius: 4, background: i === slideIdx ? pal.accent : "var(--hairline-2)", border: "none", cursor: "pointer", transition: "all .3s ease", padding: 0 }}
-                  />
-                ))}
-              </div>
-              <button
-                onClick={() => { nextSlide(); setSlidePaused(true); }}
-                aria-label="Next feature"
-                style={{ width: 40, height: 40, borderRadius: "50%", border: "1px solid var(--hairline-2)", background: "var(--paper)", cursor: "pointer", display: "grid", placeItems: "center", transition: "all .15s" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--sage-600)"; e.currentTarget.style.background = "var(--accent-soft)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--hairline-2)"; e.currentTarget.style.background = "var(--paper)"; }}
-              >
-                {isRtl ? <ArrowLeft /> : <ArrowRight />}
-              </button>
+      {/* ══════════════════════════════════════════════════════════════
+          POSITIONING: "What TaxWijs actually is"
+      ══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: isMobile ? "64px 20px" : "96px 64px", borderBottom: "1px solid var(--border)" }}>
+        <div style={{ maxWidth: W, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 56 }}>
+            <SectionLabel text={t(TX.positioning.eyebrow, lang)} />
+            <h2 style={{ fontSize: isMobile ? 28 : 38, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 14 }}>
+              {t(TX.positioning.h2, lang)}
+            </h2>
+            <p style={{ fontSize: 16, color: "var(--text-3)", maxWidth: 540, margin: "0 auto" }}>
+              {t(TX.positioning.sub, lang)}
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 20 }}>
+            {posCards.map((card, i) => {
+              const colors = ["blue", "ok", "purple"];
+              const c = colors[i];
+              return (
+                <div key={i} className="card" style={{
+                  padding: 28, borderRadius: "var(--r-xl)",
+                  border: `1px solid ${COLOR_MAP[c]}33`,
+                  background: SUBTLE_MAP[c],
+                  position: "relative", overflow: "hidden",
+                }}>
+                  {/* "Not X" strike-through label */}
+                  <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 18,
+                    padding: "4px 10px", borderRadius: 999,
+                    background: "var(--bg-3)", border: "1px solid var(--border-2)" }}>
+                    <span style={{ fontSize: 11, color: "var(--text-4)", textDecoration: "line-through" }}>
+                      {card.notLabel}
+                    </span>
+                    <span style={{ color: "var(--text-4)" }}>→</span>
+                  </div>
+                  <FeatureIcon icon={card.icon} color={c} />
+                  <h3 style={{ fontSize: 18, fontWeight: 700, marginTop: 14, marginBottom: 10 }}>{card.title}</h3>
+                  <p style={{ fontSize: 14, color: "var(--text-3)", lineHeight: 1.65, margin: 0 }}>{card.body}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          FEATURE GRID
+      ══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: isMobile ? "64px 20px" : "96px 64px", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>
+        <div style={{ maxWidth: W, margin: "0 auto" }}>
+          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between",
+            alignItems: isMobile ? "flex-start" : "flex-end", gap: 20, marginBottom: 52 }}>
+            <div>
+              <SectionLabel text={t(TX.features.eyebrow, lang)} />
+              <h2 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 10 }}>
+                {t(TX.features.h2, lang)}
+              </h2>
+              <p style={{ fontSize: 15, color: "var(--text-3)" }}>{t(TX.features.sub, lang)}</p>
             </div>
           </div>
 
-          {/* Slide layout: big card (left) + list (right) */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1.1fr 0.9fr",
-            gap: isMobile ? "24px" : "36px",
-            alignItems: "center",
-          }}>
-
-            {/* Main slide card — key change re-triggers the CSS animation */}
-            <div
-              key={slideIdx}
-              onTouchStart={e => { touchStart.current = e.touches[0].clientX; }}
-              onTouchEnd={e => {
-                if (touchStart.current === null) return;
-                const diff = touchStart.current - e.changedTouches[0].clientX;
-                if (Math.abs(diff) > 48) {
-                  if (diff > 0) { nextSlide(); setSlidePaused(true); }
-                  else          { prevSlide(); setSlidePaused(true); }
-                }
-                touchStart.current = null;
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)", gap: 16 }}>
+            {featureItems.map((f, i) => (
+              <div key={i} className="card" style={{
+                padding: "20px 18px", borderRadius: "var(--r-lg)",
+                transition: "transform .2s, box-shadow .2s",
+                cursor: "default",
               }}
-              style={{
-                padding: isMobile ? "28px 22px" : "44px 40px",
-                background: "var(--paper)",
-                border: `1px solid ${pal.border}`,
-                borderRadius: "var(--r-xl)",
-                boxShadow: "var(--shadow)",
-                animation: (slideDir === "next")
-                  ? "slideInFromRight 0.42s cubic-bezier(0.25, 0.46, 0.45, 0.94) both"
-                  : "slideInFromLeft  0.42s cubic-bezier(0.25, 0.46, 0.45, 0.94) both",
-              }}
-            >
-              {/* Icon */}
-              <div style={{ width: 52, height: 52, borderRadius: "var(--r-lg)", background: pal.soft, display: "grid", placeItems: "center", fontSize: 22, color: pal.accent, fontFamily: "var(--mono)", fontWeight: 700, marginBottom: 22 }}>
-                {pal.symbol}
-              </div>
-
-              <div className="eyebrow" style={{ marginBottom: 8 }}>0{slideIdx + 1} / 04</div>
-
-              <h3 style={{ fontFamily: "var(--serif)", fontSize: isMobile ? 26 : 30, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em", margin: 0, lineHeight: 1.2 }}>
-                {features[slideIdx].title}
-              </h3>
-              <p style={{ marginTop: 12, fontSize: 15, color: "var(--ink-2)", lineHeight: 1.65, maxWidth: 380 }}>
-                {features[slideIdx].body}
-              </p>
-
-              <button
-                className="btn btn-sm"
-                style={{ marginTop: 24, background: pal.soft, color: pal.accent, border: "none" }}
-                onClick={() => navigate(features[slideIdx].to)}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "var(--sh-md)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = ""; }}
               >
-                {TX.features.open[lang]} <Icon.arrow style={{ color: pal.accent }} />
-              </button>
-            </div>
+                <FeatureIcon icon={f.icon} color={f.color} />
+                <h3 style={{ fontSize: 14, fontWeight: 700, marginTop: 14, marginBottom: 8 }}>{f.title}</h3>
+                <p style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.6, margin: 0 }}>{f.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            {/* Right: stacked mini-cards (feature list) */}
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {features.map((f, i) => (
-                <button
-                  key={i}
-                  onClick={() => { goSlide(i, i > slideIdx ? "next" : "prev"); setSlidePaused(true); }}
-                  style={{
-                    padding: "14px 16px",
-                    background: i === slideIdx ? "var(--accent-soft)" : "var(--paper)",
-                    border: `1px solid ${i === slideIdx ? "var(--accent-line)" : "var(--hairline)"}`,
-                    borderRadius: "var(--r-lg)",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    textAlign: "start",
-                    transition: "all .2s ease",
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
-                >
-                  <div style={{ width: 34, height: 34, borderRadius: "var(--r-sm)", background: SLIDE_PAL[i].soft, display: "grid", placeItems: "center", fontSize: 15, color: SLIDE_PAL[i].accent, flexShrink: 0 }}>
-                    {SLIDE_PAL[i].symbol}
-                  </div>
-                  <span style={{ fontSize: 13, fontWeight: i === slideIdx ? 600 : 400, color: i === slideIdx ? "var(--sage-700)" : "var(--ink)", lineHeight: 1.3 }}>
-                    {f.title}
-                  </span>
-                  {/* Progress bar on active slide */}
-                  {i === slideIdx && !slidePaused && (
-                    <div
-                      key={`${slideIdx}-prog`}
-                      style={{
-                        position: "absolute",
-                        bottom: 0,
-                        left: 0,
-                        height: 2,
-                        background: pal.accent,
-                        borderRadius: 1,
-                        animation: `progressBar ${SLIDE_INTERVAL}ms linear both`,
-                      }}
-                    />
-                  )}
-                </button>
+      {/* ══════════════════════════════════════════════════════════════
+          HOW IT WORKS
+      ══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: isMobile ? "64px 20px" : "96px 64px", borderBottom: "1px solid var(--border)" }}>
+        <div style={{ maxWidth: W, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 60 }}>
+            <SectionLabel text={t(TX.howItWorks.eyebrow, lang)} />
+            <h2 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, letterSpacing: "-0.03em" }}>
+              {t(TX.howItWorks.h2, lang)}
+            </h2>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: isMobile ? 32 : 48, position: "relative" }}>
+            {/* Connector line on desktop */}
+            {!isMobile && (
+              <div aria-hidden style={{
+                position: "absolute", top: 28, left: "calc(33.33% + 24px)", right: "calc(33.33% + 24px)",
+                height: 1, background: "linear-gradient(90deg, var(--blue) 0%, var(--ok) 100%)",
+                opacity: 0.35,
+              }} />
+            )}
+            {steps.map((s, i) => (
+              <div key={i} style={{ textAlign: "center" }}>
+                <div style={{ width: 56, height: 56, borderRadius: 999, margin: "0 auto 20px",
+                  background: i === 2 ? "var(--blue)" : "var(--bg-2)",
+                  border: `2px solid ${i === 2 ? "var(--blue)" : "var(--border-2)"}`,
+                  display: "grid", placeItems: "center", position: "relative", zIndex: 1 }}>
+                  <span style={{ fontSize: 13, fontWeight: 800, color: i === 2 ? "#fff" : "var(--blue-text)",
+                    fontVariantNumeric: "tabular-nums" }}>{s.n}</span>
+                </div>
+                <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10 }}>{s.title}</h3>
+                <p style={{ fontSize: 14, color: "var(--text-3)", lineHeight: 1.65, maxWidth: 280, margin: "0 auto" }}>{s.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          USER TYPES
+      ══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: isMobile ? "64px 20px" : "96px 64px", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}
+        onMouseEnter={() => setTabPaused(true)} onMouseLeave={() => setTabPaused(false)}>
+        <div style={{ maxWidth: W, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 44 }}>
+            <SectionLabel text={t(TX.userTypes.eyebrow, lang)} />
+            <h2 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, letterSpacing: "-0.03em" }}>
+              {t(TX.userTypes.h2, lang)}
+            </h2>
+          </div>
+
+          {/* Tabs */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 36, flexWrap: "wrap" }}>
+            {tabLabels.map((label, i) => (
+              <button key={i}
+                onClick={() => { setTabIdx(i); setTabPaused(true); }}
+                style={{
+                  padding: "8px 20px", borderRadius: 999, fontSize: 13, fontWeight: 600,
+                  cursor: "pointer", transition: "all .2s",
+                  background: tabIdx === i ? "var(--blue)" : "var(--bg-3)",
+                  color: tabIdx === i ? "#fff" : "var(--text-3)",
+                  border: tabIdx === i ? "1px solid var(--blue)" : "1px solid var(--border)",
+                }}>
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Active tab card */}
+          <div className="card" style={{
+            padding: isMobile ? 24 : 36, borderRadius: "var(--r-xl)",
+            border: `1px solid ${COLOR_MAP[activeType.color]}44`,
+            maxWidth: 740, margin: "0 auto",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+              <span style={{ width: 10, height: 10, borderRadius: 999, background: COLOR_MAP[activeType.color] }} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-3)" }}>{activeType.sub}</span>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
+              {activeType.items.map((item, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10,
+                  padding: "11px 14px", borderRadius: "var(--r)", background: "var(--bg-2)",
+                  border: "1px solid var(--border)" }}>
+                  <CheckCircle size={14} color={COLOR_MAP[activeType.color]} />
+                  <span style={{ fontSize: 13, color: "var(--text-2)", fontWeight: 500 }}>{item}</span>
+                </div>
               ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* ══════════════════════ USER TYPE TABS ══════════════════════════ */}
-      <section
-        style={{ padding: isMobile ? "52px 20px 56px" : "88px 64px", background: "var(--paper-tint)", borderBottom: "1px solid var(--hairline)" }}
-      >
-        <div style={{ maxWidth: 1180, margin: "0 auto" }}>
+      {/* ══════════════════════════════════════════════════════════════
+          ACCOUNTANT SECTION
+      ══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: isMobile ? "64px 20px" : "96px 64px", borderBottom: "1px solid var(--border)" }}>
+        <div style={{ maxWidth: W, margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 48 : 80, alignItems: "center" }}>
+            {/* Left: copy */}
+            <div>
+              <SectionLabel text={t(TX.accountant.eyebrow, lang)} color="var(--ok)" />
+              <h2 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 16, lineHeight: 1.15 }}>
+                {t(TX.accountant.h2, lang)}
+              </h2>
+              <p style={{ fontSize: 15, color: "var(--text-3)", lineHeight: 1.65, marginBottom: 32 }}>
+                {t(TX.accountant.sub, lang)}
+              </p>
+              <button className="btn btn-accent btn-lg"
+                onClick={() => navigate("/register?role=accountant")}
+                style={{ borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8 }}>
+                {t(TX.accountant.cta, lang)} <ArrowRight size={16} />
+              </button>
+              <p style={{ marginTop: 12, fontSize: 12, color: "var(--text-4)" }}>{t(TX.accountant.ctaSub, lang)}</p>
+            </div>
 
-          {/* Header */}
-          <div style={{ marginBottom: 36 }}>
-            <div className="eyebrow eyebrow-accent" style={{ marginBottom: 8 }}>{TX.userTypes.eyebrow[lang]}</div>
-            <h2 style={{ fontFamily: "var(--serif)", fontSize: isMobile ? 26 : 36, fontWeight: 400, letterSpacing: "-0.022em", color: "var(--ink)", margin: 0 }}>
-              {TX.userTypes.h2[lang]}
+            {/* Right: feature cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              {acctItems.map((item, i) => (
+                <div key={i} className="card" style={{ padding: 20, borderRadius: "var(--r-lg)" }}>
+                  <FeatureIcon icon={item.icon} color="ok" />
+                  <h3 style={{ fontSize: 13, fontWeight: 700, marginTop: 12, marginBottom: 7 }}>{item.title}</h3>
+                  <p style={{ fontSize: 12.5, color: "var(--text-3)", lineHeight: 1.6, margin: 0 }}>{item.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          MULTILINGUAL CALLOUT
+      ══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: isMobile ? "48px 20px" : "72px 64px", borderBottom: "1px solid var(--border)",
+        background: "var(--blue-subtle)", borderTop: "1px solid var(--blue-border)" }}>
+        <div style={{ maxWidth: W, margin: "0 auto", textAlign: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 16 }}>
+            <Globe size={20} color="var(--blue-text)" />
+            <h2 style={{ fontSize: isMobile ? 22 : 26, fontWeight: 800, letterSpacing: "-0.03em", color: "var(--text)" }}>
+              {lang === "nl" ? "Volledig drietalig — NL · EN · FA"
+               : lang === "fa" ? "کاملاً سه‌زبانه — NL · EN · FA"
+               : "Fully multilingual — NL · EN · FA"}
+            </h2>
+          </div>
+          <p style={{ fontSize: 15, color: "var(--blue-text)", maxWidth: 600, margin: "0 auto", lineHeight: 1.6 }}>
+            {lang === "nl"
+              ? "Elke taal is een volwaardige implementatie — geen Google Translate. Belastinginhoud, AI-antwoorden en portaalinterface zijn allemaal beschikbaar in Nederlands, Engels en Perzisch (Farsi)."
+              : lang === "fa"
+              ? "هر زبان یک پیاده‌سازی کامل است — نه Google Translate. محتوای مالیاتی، پاسخ‌های هوش مصنوعی و رابط پورتال همه در هلندی، انگلیسی و فارسی موجود است."
+              : "Every language is a first-class implementation — not Google Translate. Tax content, AI answers, and the portal interface are all available in Dutch, English, and Persian (Farsi)."}
+          </p>
+          <div style={{ marginTop: 24, display: "flex", gap: 20, justifyContent: "center", flexWrap: "wrap" }}>
+            {["🇳🇱 Nederlands", "🇬🇧 English", "🇮🇷 فارسی"].map(l => (
+              <span key={l} style={{ fontSize: 14, fontWeight: 600, color: "var(--blue-text)",
+                padding: "6px 16px", borderRadius: 999, background: "var(--bg-2)",
+                border: "1px solid var(--blue-border)" }}>{l}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          SAFETY PRINCIPLES
+      ══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: isMobile ? "64px 20px" : "96px 64px", borderBottom: "1px solid var(--border)", background: "var(--bg-2)" }}>
+        <div style={{ maxWidth: W, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 52 }}>
+            <SectionLabel text={t(TX.safety.eyebrow, lang)} color="var(--ok)" />
+            <h2 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, letterSpacing: "-0.03em", marginBottom: 14 }}>
+              {t(TX.safety.h2, lang)}
+            </h2>
+            <p style={{ fontSize: 15, color: "var(--text-3)", maxWidth: 520, margin: "0 auto" }}>
+              {t(TX.safety.sub, lang)}
+            </p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16 }}>
+            {safetyItems.map((s, i) => (
+              <div key={i} className="card" style={{
+                padding: "22px 24px", borderRadius: "var(--r-lg)", display: "flex", gap: 16, alignItems: "flex-start",
+              }}>
+                <span style={{ width: 36, height: 36, borderRadius: "var(--r)", background: "var(--ok-subtle)",
+                  border: "1px solid var(--ok-border)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                  <Shield size={16} color="var(--ok)" />
+                </span>
+                <div>
+                  <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 7 }}>{s.title}</h3>
+                  <p style={{ fontSize: 13, color: "var(--text-3)", lineHeight: 1.65, margin: 0 }}>{s.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          FAQ
+      ══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: isMobile ? "64px 20px" : "96px 64px", borderBottom: "1px solid var(--border)" }}>
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 52 }}>
+            <SectionLabel text={t(TX.faq.eyebrow, lang)} />
+            <h2 style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, letterSpacing: "-0.03em" }}>
+              {t(TX.faq.h2, lang)}
+            </h2>
+          </div>
+          <div>
+            {faqItems.map((f, i) => (
+              <FAQItem key={i} q={f.q} a={f.a} lang={lang} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════
+          FINAL DUAL CTA
+      ══════════════════════════════════════════════════════════════ */}
+      <section style={{ padding: isMobile ? "64px 20px 80px" : "96px 64px 108px" }}>
+        <div style={{ maxWidth: W, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <h2 style={{ fontSize: isMobile ? 28 : 38, fontWeight: 800, letterSpacing: "-0.035em" }}>
+              {t(TX.finalCta.h2, lang)}
             </h2>
           </div>
 
-          {/* Tab buttons */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 28, flexWrap: "wrap" }}>
-            {tabLabels.map((label, i) => (
-              <button
-                key={i}
-                onClick={() => selectTab(i)}
-                style={{
-                  padding: "8px 20px",
-                  borderRadius: 999,
-                  border: `2px solid ${i === tabIdx ? USER_PAL[i] : "var(--hairline)"}`,
-                  background: i === tabIdx ? `${USER_PAL[i]}18` : "transparent",
-                  color: i === tabIdx ? USER_PAL[i] : "var(--ink-3)",
-                  fontWeight: i === tabIdx ? 600 : 400,
-                  fontSize: 14,
-                  cursor: "pointer",
-                  transition: "all .2s ease",
-                  minHeight: "var(--touch-min)",
-                }}
-              >
-                {label}
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20 }}>
+            {/* Individuals card */}
+            <div className="card" style={{
+              padding: isMobile ? 28 : 36, borderRadius: "var(--r-xl)",
+              border: "1px solid var(--blue-border)",
+              background: "var(--blue-subtle)",
+            }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px",
+                borderRadius: 999, background: "var(--blue)", marginBottom: 20 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  {t(TX.finalCta.indiv.label, lang)}
+                </span>
+              </div>
+              <h3 style={{ fontSize: 22, fontWeight: 800, marginBottom: 12, letterSpacing: "-0.025em" }}>
+                {t(TX.finalCta.indiv.h3, lang)}
+              </h3>
+              <p style={{ fontSize: 14, color: "var(--text-3)", lineHeight: 1.65, marginBottom: 28 }}>
+                {t(TX.finalCta.indiv.body, lang)}
+              </p>
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <button className="btn btn-accent btn-lg"
+                  onClick={() => navigate("/register")}
+                  style={{ borderRadius: 999, display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  {t(TX.finalCta.indiv.cta, lang)} <ArrowRight size={16} />
+                </button>
+                <button className="btn btn-ghost btn-sm"
+                  onClick={() => navigate("/chat")}
+                  style={{ borderRadius: 999 }}>
+                  {lang === "nl" ? "Chat proberen" : lang === "fa" ? "امتحان چت" : "Try the chat"}
+                </button>
+              </div>
+              <p style={{ marginTop: 14, fontSize: 11.5, color: "var(--text-4)" }}>
+                {lang === "nl" ? "Geen creditcard · Geen account vereist om te starten" : lang === "fa" ? "بدون کارت اعتباری · برای شروع نیازی به حساب نیست" : "No credit card · No account needed to get started"}
+              </p>
+            </div>
+
+            {/* Accountants card */}
+            <div className="card" style={{
+              padding: isMobile ? 28 : 36, borderRadius: "var(--r-xl)",
+              border: "1px solid var(--ok-border)",
+              background: "var(--ok-subtle)",
+              position: "relative", overflow: "hidden",
+            }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px",
+                borderRadius: 999, background: "var(--ok)", marginBottom: 20 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+                  {t(TX.finalCta.acct.label, lang)}
+                </span>
+              </div>
+              <h3 style={{ fontSize: 22, fontWeight: 800, marginBottom: 12, letterSpacing: "-0.025em" }}>
+                {t(TX.finalCta.acct.h3, lang)}
+              </h3>
+              <p style={{ fontSize: 14, color: "var(--text-3)", lineHeight: 1.65, marginBottom: 28 }}>
+                {t(TX.finalCta.acct.body, lang)}
+              </p>
+              <button className="btn btn-lg"
+                onClick={() => navigate("/register?role=accountant")}
+                style={{ borderRadius: 999, background: "var(--ok)", color: "#fff",
+                  display: "inline-flex", alignItems: "center", gap: 8,
+                  padding: "0 24px", height: 44, fontWeight: 700, fontSize: 14 }}>
+                {t(TX.finalCta.acct.cta, lang)} <ArrowRight size={16} />
               </button>
+              <p style={{ marginTop: 14, fontSize: 11.5, color: "var(--text-4)" }}>
+                {lang === "nl" ? "30 minuten · Gratis · Geen verplichting" : lang === "fa" ? "۳۰ دقیقه · رایگان · بدون تعهد" : "30 minutes · Free · No obligation"}
+              </p>
+
+              {/* Decorative dots */}
+              <div aria-hidden style={{
+                position: "absolute", right: -20, bottom: -20,
+                width: 120, height: 120, borderRadius: 999,
+                background: "var(--ok)", opacity: 0.07,
+              }} />
+            </div>
+          </div>
+
+          {/* Trust row */}
+          <div style={{ marginTop: 40, display: "flex", justifyContent: "center", gap: isMobile ? 16 : 32, flexWrap: "wrap" }}>
+            {[
+              { icon: <Lock size={13} />, label: lang === "nl" ? "AVG/GDPR-klaar" : lang === "fa" ? "GDPR-ready" : "GDPR-ready" },
+              { icon: <Shield size={13} />, label: lang === "nl" ? "28 geverifieerde regels" : lang === "fa" ? "۲۸ قانون تأییدشده" : "28 verified rules" },
+              { icon: <Star size={13} />, label: lang === "nl" ? "Geverifieerde bronnen" : lang === "fa" ? "منابع تأییدشده" : "Verified sources" },
+              { icon: <BookOpen size={13} />, label: lang === "nl" ? "Deterministische berekeningen" : lang === "fa" ? "محاسبات قطعی" : "Deterministic calculations" },
+            ].map((b, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--text-4)", fontSize: 12.5 }}>
+                <span style={{ color: "var(--text-3)" }}>{b.icon}</span>
+                {b.label}
+              </div>
             ))}
           </div>
-
-          {/* Animated tab content */}
-          <div
-            key={tabIdx}
-            style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-              gap: isMobile ? "20px" : "28px",
-              animation: "fadeSlideIn 0.38s ease both",
-            }}
-          >
-            {/* Feature card */}
-            <div
-              className="card"
-              style={{
-                padding: isMobile ? "22px 18px" : "32px 28px",
-                borderTop: `3px solid ${activeColor}`,
-                borderRadius: "var(--r-xl)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
-                <div style={{ width: 42, height: 42, borderRadius: "var(--r-sm)", background: `${activeColor}18`, display: "grid", placeItems: "center", fontSize: 12, fontWeight: 700, color: activeColor, fontFamily: "var(--mono)", flexShrink: 0 }}>
-                  {tabLabels[tabIdx].slice(0, 3).toUpperCase()}
-                </div>
-                <div>
-                  <div style={{ fontSize: 17, fontWeight: 600, color: "var(--ink)", lineHeight: 1 }}>{tabLabels[tabIdx]}</div>
-                  <div style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 3 }}>{activeCard.sub}</div>
-                </div>
-              </div>
-              <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
-                {activeCard.items.map((item, j) => (
-                  <li key={j} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 14, color: "var(--ink-2)", lineHeight: 1.5 }}>
-                    <span style={{ width: 18, height: 18, borderRadius: "50%", background: `${activeColor}22`, display: "grid", placeItems: "center", flexShrink: 0, marginTop: 2 }}>
-                      <Icon.check style={{ width: 10, height: 10, color: activeColor }} />
-                    </span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* CTA column */}
-            <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 16 }}>
-              <div>
-                <div className="eyebrow eyebrow-accent" style={{ marginBottom: 8 }}>{tabLabels[tabIdx]}</div>
-                <p style={{ fontSize: 15, color: "var(--ink-2)", lineHeight: 1.65, margin: 0 }}>
-                  {TX.hero.sub[lang]}
-                </p>
-              </div>
-              <div style={{ display: "flex", flexDirection: isMobile ? "row" : "column", flexWrap: "wrap", gap: 10 }}>
-                <button
-                  className="btn btn-accent"
-                  style={{ justifyContent: "flex-start" }}
-                  onClick={() => navigate("/deduction-checker")}
-                >
-                  {TX.hero.cta1[lang]} <Icon.arrow />
-                </button>
-                <button
-                  className="btn btn-ghost"
-                  style={{ justifyContent: "flex-start" }}
-                  onClick={() => navigate("/chat")}
-                >
-                  {TX.cta.btn2[lang]}
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* ══════════════════════ FOOTER CTA ══════════════════════════ */}
-      <section style={{ padding: isMobile ? "60px 20px" : "96px 64px", background: "var(--bg-2)", borderTop: "1px solid var(--border)", position: "relative", overflow: "hidden" }}>
-        <div className="dot-grid" style={{ position: "absolute", inset: 0, opacity: 0.2, pointerEvents: "none", maskImage: "radial-gradient(ellipse 60% 80% at 50% 50%, #000 30%, transparent 75%)", WebkitMaskImage: "radial-gradient(ellipse 60% 80% at 50% 50%, #000 30%, transparent 75%)" }} />
-        <div style={{ maxWidth: 600, margin: "0 auto", textAlign: "center", position: "relative" }}>
-          <h2 style={{
-            fontFamily: "var(--font)",
-            fontSize: isMobile ? "var(--text-3xl)" : "var(--text-5xl)",
-            fontWeight: 800,
-            color: "var(--text)",
-            letterSpacing: "-0.03em",
-            lineHeight: 1.12,
-            margin: 0,
-          }}>
-            {TX.cta.h2[lang]}
-          </h2>
-          <p style={{ marginTop: 16, fontSize: 15, color: "var(--text-2)", lineHeight: 1.6 }}>
-            {TX.cta.sub[lang]}
-          </p>
-          <div style={{ marginTop: 32, display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
-            <button
-              className="btn btn-lg btn-accent"
-              onClick={() => navigate("/register")}
-            >
-              {TX.cta.btn1[lang]} <Icon.arrow />
-            </button>
-            <button
-              className="btn btn-ghost btn-lg"
-              onClick={() => navigate("/chat")}
-            >
-              {TX.cta.btn2[lang]}
-            </button>
-          </div>
-          <p style={{ marginTop: 28, fontSize: 11.5, color: "var(--text-4)", lineHeight: 1.7 }}>
-            {t("chat.disclaimer")}
-          </p>
-        </div>
-      </section>
     </main>
   );
 }
