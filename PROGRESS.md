@@ -1,7 +1,40 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 14 Jun 2026 — Bug fixes session: 9 UI issues + Railway build error resolved.
+> Last updated: 14 Jun 2026 — Landing page: complete production redesign merged.
+
+---
+
+## Session — 14 Jun 2026 · Landing Page — Complete Production Redesign ✅ Complete
+
+Branch: `feat/landing-page` → merged to `master`
+
+Complete rewrite of `LandingPage.tsx` based on the TaxWijs landing page spec. Stripe/Linear/Vercel-inspired premium design. All 3 languages (NL/EN/FA). Zero TypeScript errors.
+
+### Sections implemented
+
+| Section | Description |
+|---------|-------------|
+| **Hero** | 3-line headline + dashboard composition (readiness card, AI answer chip, missing-docs badge, tax-summary chip) + dual CTAs ("Start Free" + "Book Accountant Demo") + micro-trust line |
+| **Trust strip** | 6 verified badges in scrolling horizontal band (GDPR, verified rules, multilingual, deterministic, etc.) |
+| **Positioning** | 3-column "Not a chatbot / Not a calculator / Not replacing accountants" with strike-through labels and what TaxWijs IS |
+| **Feature grid** | 8 features with colored Lucide icons — AI Assistant, Deduction Discovery, OCR, Client Portal, Accountant Portal, Readiness Score, Missing Docs, Calculator |
+| **How it works** | 3-step numbered flow with connecting line on desktop |
+| **User types** | Auto-rotating tab switcher: ZZP / Employee / Expat / DGA — 6 specific features per type |
+| **Accountant section** | 2-column layout: copy + "Book Demo" CTA left, 4 feature cards right |
+| **Multilingual callout** | NL / EN / FA first-class language announcement with pill badges |
+| **Safety principles** | 4 AI guardrails with Shield icons (never calculates, never decides, never auto-approves, always cites) |
+| **FAQ accordion** | 6 questions with smooth max-height CSS animation |
+| **Dual CTA** | Side-by-side: Individuals card (blue) + Accountants card (green), trust row underneath |
+
+### Files modified
+
+| File | Change |
+|------|--------|
+| `frontend/src/pages/LandingPage.tsx` | Complete rewrite (866 net new lines) |
+| `frontend/src/components/TopNav.tsx` | Landing-specific marketing nav (Deductions/Chat/Pricing) shown on `/`; "Book Demo" button added |
+
+**TypeScript: 0 errors. No backend changes.**
 
 ---
 
