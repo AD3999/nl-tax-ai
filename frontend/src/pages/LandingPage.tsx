@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  Bot, FileText, Calculator, Shield, Users, CheckCircle,
+  Bot, Calculator, Shield, Users, CheckCircle,
   Building2, Globe, Zap, ChevronDown, ArrowRight,
   Upload, Search, ClipboardList, Star, Lock, BookOpen,
   BarChart3, AlertCircle, FileCheck, MessageSquare,
@@ -356,7 +356,6 @@ export default function LandingPage() {
   }, [tabPaused]);
 
   const W = 1200; // max-width
-  const px = isMobile ? "20px" : "64px";
 
   const featureItems  = t(TX.features.items, lang);
   const tabLabels     = t(TX.userTypes.tabs, lang);
