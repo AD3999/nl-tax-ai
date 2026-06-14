@@ -159,7 +159,6 @@ export default function ClientProfilePage() {
           padding: "var(--sp-4) var(--sp-6)",
           borderBottom: "1px solid var(--border)",
           background: "var(--bg-3)",
-          gap: "var(--sp-3)",
         }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--blue-subtle)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <User size={15} style={{ color: "var(--blue)" }} />
@@ -200,7 +199,6 @@ export default function ClientProfilePage() {
           padding: "var(--sp-4) var(--sp-6)",
           borderBottom: "1px solid var(--border)",
           background: "var(--bg-3)",
-          gap: "var(--sp-3)",
         }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--ok-subtle)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <MapPin size={15} style={{ color: "var(--ok)" }} />
@@ -232,7 +230,6 @@ export default function ClientProfilePage() {
           padding: "var(--sp-4) var(--sp-6)",
           borderBottom: "1px solid var(--border)",
           background: "var(--bg-3)",
-          gap: "var(--sp-3)",
         }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--warn-subtle)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <CreditCard size={15} style={{ color: "var(--warn)" }} />
@@ -280,7 +277,6 @@ export default function ClientProfilePage() {
           padding: "var(--sp-4) var(--sp-6)",
           borderBottom: "1px solid var(--border)",
           background: "var(--bg-3)",
-          gap: "var(--sp-3)",
         }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--purple-subtle, #ede9fe)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Globe size={15} style={{ color: "var(--purple)" }} />
@@ -306,7 +302,6 @@ export default function ClientProfilePage() {
           padding: "var(--sp-4) var(--sp-6)",
           borderBottom: "1px solid var(--border)",
           background: "var(--bg-3)",
-          gap: "var(--sp-3)",
         }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--bg-4, var(--bg-3))", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <FileText size={15} style={{ color: "var(--text-3)" }} />
