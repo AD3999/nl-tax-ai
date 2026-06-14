@@ -1,11 +1,30 @@
 import { useState, useEffect } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import Wordmark from "./Wordmark";
 import LangSwitch from "./LangSwitch";
 import ThemeToggle from "./ThemeToggle";
 import { useMobile } from "../hooks/useMobile";
+
+// Landing page marketing nav (shown only on /)
+const LANDING_NAV: Record<string, { to: string; label: string }[]> = {
+  nl: [
+    { to: "/deduction-checker", label: "Aftrekken" },
+    { to: "/chat",              label: "AI Assistent" },
+    { to: "/pricing",           label: "Prijzen" },
+  ],
+  en: [
+    { to: "/deduction-checker", label: "Deductions" },
+    { to: "/chat",              label: "AI Assistant" },
+    { to: "/pricing",           label: "Pricing" },
+  ],
+  fa: [
+    { to: "/deduction-checker", label: "کسورات" },
+    { to: "/chat",              label: "دستیار هوش مصنوعی" },
+    { to: "/pricing",           label: "قیمت‌ها" },
+  ],
+};
 
 const NAV_ITEMS_GUEST = [
   { to: "/deduction-checker", labelKey: "nav.deduction_checker" },
@@ -42,11 +61,15 @@ export default function TopNav() {
   const { t, i18n } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const isRtl = i18n.language === "fa";
   const isMobile = useMobile();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const isHomePage = pathname === "/";
+  const lang = i18n.language as "nl" | "en" | "fa";
   const navItems = user ? NAV_ITEMS_AUTH : NAV_ITEMS_GUEST;
+  const landingItems = LANDING_NAV[lang] ?? LANDING_NAV.en;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -104,7 +127,7 @@ export default function TopNav() {
             padding: "3px 4px",
             gap: 2,
           }}>
-            {navItems.map(item => (
+            {(isHomePage && !user ? landingItems : navItems).map(item => (
               <NavLink key={item.to} to={item.to} style={({ isActive }) => ({
                 display: "inline-flex", alignItems: "center", height: 32,
                 padding: "0 14px",
@@ -118,7 +141,7 @@ export default function TopNav() {
                 letterSpacing: "-0.01em",
                 whiteSpace: "nowrap",
               })}>
-                {t(item.labelKey)}
+                {"label" in item ? item.label : t(item.labelKey)}
               </NavLink>
             ))}
             {(user?.role === "accountant" || user?.is_admin) && (
@@ -185,6 +208,11 @@ export default function TopNav() {
               <NavLink to="/register" className="btn btn-accent btn-sm" style={{ textDecoration: "none", borderRadius: 999 }}>
                 {t("auth.register")}
               </NavLink>
+              {isHomePage && (
+                <NavLink to="/register?role=accountant" className="btn btn-ghost btn-sm" style={{ textDecoration: "none", borderRadius: 999, marginInlineStart: 4 }}>
+                  {lang === "nl" ? "Demo boeken" : lang === "fa" ? "رزرو دمو" : "Book Demo"}
+                </NavLink>
+              )}
             </>
           ) : null}
 
