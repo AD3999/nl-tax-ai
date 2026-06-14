@@ -17,7 +17,7 @@ if _PROJECT_ROOT not in sys.path:
 
 env = environ.Env(
     DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, ["*"]),
+    ALLOWED_HOSTS=(list, []),
 )
 
 _env_file = BASE_DIR.parent / ".env"

@@ -62,7 +62,11 @@ class DocumentRequestSerializer(serializers.ModelSerializer):
 
 
 class ClientDocumentSerializer(serializers.ModelSerializer):
-    file_url = serializers.SerializerMethodField()
+    file_url    = serializers.SerializerMethodField()
+    client_name = serializers.SerializerMethodField()
+    file_name   = serializers.CharField(source="original_filename", read_only=True)
+    uploaded_at = serializers.DateTimeField(source="created_at", read_only=True)
+    status      = serializers.CharField(source="processing_status", read_only=True)
 
     def get_file_url(self, obj):
         request = self.context.get("request")
@@ -70,17 +74,22 @@ class ClientDocumentSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.file.url)
         return None
 
+    def get_client_name(self, obj):
+        return obj.client_profile.display_name
+
     class Meta:
         model = ClientDocument
         fields = [
             "id", "engagement", "client_profile", "document_request",
-            "uploaded_by", "original_filename", "user_title", "user_note", "file_url",
+            "uploaded_by", "original_filename", "file_name", "user_title", "user_note",
+            "file_url", "client_name", "uploaded_at", "status",
             "mime_type", "file_size", "document_type", "processing_status",
             "extracted_json", "confidence_score", "review_notes",
             "created_at", "updated_at",
         ]
         read_only_fields = [
-            "id", "uploaded_by", "original_filename", "mime_type", "file_size",
+            "id", "uploaded_by", "original_filename", "file_name", "client_name",
+            "uploaded_at", "status", "mime_type", "file_size",
             "processing_status", "extracted_json", "confidence_score",
             "created_at", "updated_at",
         ]
@@ -136,20 +145,31 @@ class ChecklistItemSerializer(serializers.ModelSerializer):
         fields = [
             "id", "engagement", "client_profile", "title", "description",
             "category", "required", "status", "source", "priority",
-            "stable_key", "created_at", "updated_at",
+            "stable_key", "meta_value", "created_at", "updated_at",
         ]
         read_only_fields = ["id", "stable_key", "source", "created_at", "updated_at"]
 
 
 class AccountantActionSerializer(serializers.ModelSerializer):
+    client_name = serializers.SerializerMethodField()
+    description = serializers.CharField(source="body", read_only=True)
+    due_date    = serializers.SerializerMethodField()
+
+    def get_client_name(self, obj):
+        return obj.client_profile.display_name
+
+    def get_due_date(self, _obj):
+        return None
+
     class Meta:
         model = AccountantAction
         fields = [
-            "id", "engagement", "client_profile", "title", "body",
+            "id", "engagement", "client_profile", "client_name",
+            "title", "body", "description",
             "action_type", "priority", "status", "source",
-            "metadata_json", "created_at", "updated_at",
+            "due_date", "metadata_json", "created_at", "updated_at",
         ]
-        read_only_fields = ["id", "stable_key", "source", "created_at", "updated_at"]
+        read_only_fields = ["id", "stable_key", "source", "client_name", "description", "due_date", "created_at", "updated_at"]
 
 
 class PortalAuditLogSerializer(serializers.ModelSerializer):
@@ -190,6 +210,7 @@ class ReminderLogSerializer(serializers.ModelSerializer):
 class PortalMessageSerializer(serializers.ModelSerializer):
     sender_email = serializers.SerializerMethodField()
     sender_name  = serializers.SerializerMethodField()
+    client_name  = serializers.SerializerMethodField()
     is_own       = serializers.SerializerMethodField()
 
     def get_sender_email(self, obj):
@@ -198,6 +219,9 @@ class PortalMessageSerializer(serializers.ModelSerializer):
     def get_sender_name(self, obj):
         name = f"{obj.sender.first_name} {obj.sender.last_name}".strip()
         return name or obj.sender.email
+
+    def get_client_name(self, obj):
+        return obj.client_profile.display_name
 
     def get_is_own(self, obj):
         request = self.context.get("request")
@@ -209,7 +233,7 @@ class PortalMessageSerializer(serializers.ModelSerializer):
         model = PortalMessage
         fields = [
             "id", "engagement", "client_profile", "sender", "sender_email",
-            "sender_name", "is_own", "body", "is_read", "read_at", "created_at",
+            "sender_name", "client_name", "is_own", "body", "is_read", "read_at", "created_at",
         ]
         read_only_fields = [
             "id", "sender", "sender_email", "sender_name", "is_own",

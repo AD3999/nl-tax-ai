@@ -153,7 +153,7 @@ export const fetchClientProfile    = () => get<ClientProfile>("/client/profile/"
 export const fetchClientEngagement = () => get<TaxEngagement>("/client/engagement/");
 export const fetchClientTasks      = () => get<{ tasks: unknown[]; total: number; completed: number; readiness_score: number }>("/client/tasks/");
 export const fetchClientDocuments  = () => get<ClientDocument[]>("/client/documents/");
-export const updateClientTask      = (id: number, data: { status: string }) => patch<ChecklistItem>(`/client/tasks/${id}/`, data);
+export const updateClientTask      = (id: number, data: { status: string; meta_value?: string }) => patch<ChecklistItem>(`/client/tasks/${id}/`, data);
 
 export async function deleteClientDocument(id: number): Promise<void> {
   const r = await fetch(`${base}/client/documents/${id}/`, {

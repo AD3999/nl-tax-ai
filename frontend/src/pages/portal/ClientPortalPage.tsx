@@ -8,6 +8,16 @@ import { fetchClientProfile, fetchClientEngagement, fetchClientTasks } from "../
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
 import ReadinessCard from "../../components/ui/ReadinessCard";
 
+interface PortalTask {
+  id: string;
+  type: string;
+  title: string;
+  category: string;
+  required: boolean;
+  status: string;
+  stable_key?: string;
+}
+
 const TX = {
   title:          { nl: "Mijn Belastingportaal", en: "My Tax Portal", fa: "پورتال مالیاتی من" },
   welcome:        { nl: "Welkom", en: "Welcome", fa: "خوش آمدید" },
@@ -67,7 +77,7 @@ export default function ClientPortalPage() {
 
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [engagement, setEngagement] = useState<TaxEngagement | null>(null);
-  const [taskSummary, setTaskSummary] = useState<{ total: number; completed: number; readiness_score: number } | null>(null);
+  const [taskSummary, setTaskSummary] = useState<{ tasks: PortalTask[]; total: number; completed: number; readiness_score: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -90,7 +100,7 @@ export default function ClientPortalPage() {
       ]);
       setProfile(p);
       setEngagement(e);
-      setTaskSummary(tasks);
+      setTaskSummary(tasks as { tasks: PortalTask[]; total: number; completed: number; readiness_score: number });
       setLastUpdated(new Date());
       if (!silent) setError("");
     } catch (err) {
@@ -132,6 +142,13 @@ export default function ClientPortalPage() {
   const score = taskSummary?.readiness_score ?? engagement.readiness_score;
   const missingCount = engagement.missing_items_count;
   const openTasks = taskSummary ? (taskSummary.total - taskSummary.completed) : 0;
+
+  // Tasks that still need action — used for the "Missing documents" section
+  const pendingTasks = (taskSummary?.tasks ?? []).filter(
+    t => t.required && !["uploaded", "accepted", "waived"].includes(t.status)
+  );
+  const displayMissing = pendingTasks.slice(0, 4);
+  const extraMissing = Math.max(0, pendingTasks.length - 4);
 
   // Derive readiness factor breakdown from available data
   const readinessFactors = [
@@ -221,20 +238,22 @@ export default function ClientPortalPage() {
                 <span style={{ marginInlineStart: "auto", fontSize: 11, fontWeight: 700, background: "var(--danger-subtle)", color: "var(--danger-text)", padding: "2px 8px", borderRadius: 999 }}>{missingCount}</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
-                {Array.from({ length: Math.min(missingCount, 4) }, (_, i) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "var(--sp-2) var(--sp-3)", background: "var(--bg-3)", borderRadius: "var(--r)", border: "1px solid var(--border)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)" }}>
+                {displayMissing.map(task => (
+                  <div key={task.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "var(--sp-2) var(--sp-3)", background: "var(--bg-3)", borderRadius: "var(--r)", border: "1px solid var(--border)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)", minWidth: 0 }}>
                       <div style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--danger)", flexShrink: 0 }} />
-                      <span style={{ fontSize: "var(--text-sm)", color: "var(--text-2)" }}>
-                        {lang === "nl" ? `Vereist document ${i + 1}` : lang === "fa" ? `سند مورد نیاز ${i + 1}` : `Required document ${i + 1}`}
+                      <span style={{ fontSize: "var(--text-sm)", color: "var(--text-2)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {task.title}
                       </span>
                     </div>
-                    <Link to="/client/documents" style={{ fontSize: 12, fontWeight: 700, color: "var(--blue)", textDecoration: "none" }}>{t("uploadNow", lang)}</Link>
+                    <Link to="/client/tasks" style={{ fontSize: 12, fontWeight: 700, color: "var(--blue)", textDecoration: "none", flexShrink: 0, marginInlineStart: "var(--sp-2)" }}>
+                      {lang === "nl" ? "Actie →" : lang === "fa" ? "اقدام →" : "Action →"}
+                    </Link>
                   </div>
                 ))}
-                {missingCount > 4 && (
-                  <Link to="/client/documents" style={{ fontSize: "var(--text-sm)", color: "var(--blue)", fontWeight: 600, textDecoration: "none", paddingInlineStart: "var(--sp-3)" }}>
-                    +{missingCount - 4} {lang === "fa" ? "بیشتر" : lang === "nl" ? "meer" : "more"} →
+                {extraMissing > 0 && (
+                  <Link to="/client/tasks" style={{ fontSize: "var(--text-sm)", color: "var(--blue)", fontWeight: 600, textDecoration: "none", paddingInlineStart: "var(--sp-3)" }}>
+                    +{extraMissing} {lang === "fa" ? "بیشتر" : lang === "nl" ? "meer" : "more"} →
                   </Link>
                 )}
               </div>

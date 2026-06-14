@@ -167,15 +167,15 @@ function OverviewTab({ summary, t }: { summary: ZZPSummary | null; t: T }) {
       </div>
 
       {/* Hours progress */}
-      <div className="card" style={{ marginBottom: "var(--sp-4)" }}>
-        <div style={{ fontWeight: 700, marginBottom: "var(--sp-3)" }}>{t.hoursProgress}</div>
-        <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-4)" }}>
-          <div style={{ flex: 1, height: 12, background: "var(--bg-3)", borderRadius: 6, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${summary.hours_progress}%`, background: summary.hours_progress >= 100 ? "var(--green)" : "var(--blue)", transition: "width 0.5s" }} />
-          </div>
-          <span style={{ fontWeight: 700, minWidth: 100 }}>
+      <div className="card" style={{ marginBottom: "var(--sp-4)", padding: "var(--sp-4)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "var(--sp-3)" }}>
+          <div style={{ fontWeight: 700 }}>{t.hoursProgress}</div>
+          <span style={{ fontWeight: 700, fontSize: "0.85rem", color: summary.hours_progress >= 100 ? "var(--green)" : "var(--text-2)" }}>
             {summary.total_hours.toFixed(1)} {t.of} {summary.urencriterium}h ({summary.hours_progress}%)
           </span>
+        </div>
+        <div style={{ height: 12, background: "var(--bg-3)", borderRadius: 6, overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${summary.hours_progress}%`, background: summary.hours_progress >= 100 ? "var(--green)" : "var(--blue)", transition: "width 0.5s" }} />
         </div>
       </div>
 
@@ -186,10 +186,12 @@ function OverviewTab({ summary, t }: { summary: ZZPSummary | null; t: T }) {
           {summary.quarters.map(q => (
             <div key={q.quarter} style={{ textAlign: "center", padding: "var(--sp-3)", background: "var(--bg-2)", borderRadius: 8 }}>
               <div style={{ fontWeight: 700, color: "var(--text-3)", fontSize: "0.8rem" }}>{t.q}{q.quarter}</div>
-              <div style={{ fontWeight: 800, color: q.vat_payable > 0 ? "var(--danger)" : "var(--green)", marginTop: 4 }}>
+              <div style={{ fontSize: "0.6rem", color: "var(--text-4)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "var(--sp-2)" }}>BTW</div>
+              <div style={{ fontWeight: 800, color: q.vat_payable > 0 ? "var(--danger)" : "var(--text-3)", fontSize: "0.9rem" }}>
                 {fmt(q.vat_payable)}
               </div>
-              <div style={{ fontSize: "0.75rem", color: "var(--text-3)" }}>{fmt(q.revenue)} rev</div>
+              <div style={{ fontSize: "0.6rem", color: "var(--text-4)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "var(--sp-2)" }}>{t.revenue}</div>
+              <div style={{ fontSize: "0.8rem", color: "var(--text-3)", fontWeight: 600 }}>{fmt(q.revenue)}</div>
             </div>
           ))}
         </div>

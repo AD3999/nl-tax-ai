@@ -1,8 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
-import { fetchClientTasks, updateClientTask } from "../../api/portal/client";
+import {
+  fetchClientTasks, updateClientTask,
+  fetchClientEngagement, uploadClientDocument,
+} from "../../api/portal/client";
+import type { TaxEngagement } from "../../api/portal/types";
 
 interface Task {
   id: string;
@@ -14,7 +18,21 @@ interface Task {
   required: boolean;
   status: string;
   priority: string;
+  stable_key?: string;
+  meta_value?: string;
 }
+
+// Stable keys whose "Take action" shows an inline text field instead of upload modal
+const INLINE_INFO_KEYS = new Set(["zzp_kvk", "zzp_btw"]);
+
+function isInfoTask(task: Task): boolean {
+  if (INLINE_INFO_KEYS.has(task.stable_key ?? "")) return true;
+  const lower = (task.title + " " + task.description).toLowerCase();
+  return lower.includes("kvk") || lower.includes("btw-nummer") || lower.includes("btw nummer") || lower.includes("vat number");
+}
+
+// Document-upload categories (everything except AI/chat destinations)
+const DOC_CATEGORIES = new Set(["identity","income","expense","bank","property","box3","box2","business","payroll","household","other"]);
 
 type Lang = "nl" | "en" | "fa";
 
@@ -117,6 +135,15 @@ const TX: Record<Lang, Record<string, string>> = {
     marking:        "Saving…",
     undo:           "Undo",
     completed_of:   "completed of",
+    save:           "Save",
+    cancel:         "Cancel",
+    saving:         "Saving…",
+    upload_doc:     "Upload document",
+    choose_file:    "Choose file…",
+    uploading:      "Uploading…",
+    upload_title_lbl: "Title (optional)",
+    upload_err:     "Upload failed",
+    enter_value:    "Enter value…",
     status_todo:           "To do",
     status_waiting_client: "Waiting for client",
     status_uploaded:       "Uploaded",
@@ -152,6 +179,15 @@ const TX: Record<Lang, Record<string, string>> = {
     marking:        "Opslaan…",
     undo:           "Ongedaan maken",
     completed_of:   "voltooid van",
+    save:           "Opslaan",
+    cancel:         "Annuleren",
+    saving:         "Opslaan…",
+    upload_doc:     "Document uploaden",
+    choose_file:    "Bestand kiezen…",
+    uploading:      "Bezig…",
+    upload_title_lbl: "Titel (optioneel)",
+    upload_err:     "Upload mislukt",
+    enter_value:    "Waarde invoeren…",
     status_todo:           "Te doen",
     status_waiting_client: "Wacht op klant",
     status_uploaded:       "Geüpload",
@@ -187,6 +223,15 @@ const TX: Record<Lang, Record<string, string>> = {
     marking:        "ذخیره‌سازی…",
     undo:           "بازگشت",
     completed_of:   "تکمیل از",
+    save:           "ذخیره",
+    cancel:         "لغو",
+    saving:         "ذخیره‌سازی…",
+    upload_doc:     "بارگذاری سند",
+    choose_file:    "انتخاب فایل…",
+    uploading:      "در حال بارگذاری…",
+    upload_title_lbl: "عنوان (اختیاری)",
+    upload_err:     "بارگذاری ناموفق",
+    enter_value:    "مقدار را وارد کنید…",
     status_todo:           "در انتظار",
     status_waiting_client: "منتظر مشتری",
     status_uploaded:       "بارگذاری شده",
@@ -243,6 +288,21 @@ export default function ClientTasksPage() {
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [markingId, setMarkingId] = useState<number | null>(null);
+  const [engagement, setEngagement] = useState<TaxEngagement | null>(null);
+
+  // Inline text-input state (for KVK, BTW-number type tasks)
+  const [inlineActiveId, setInlineActiveId] = useState<number | null>(null);
+  const [inlineValue, setInlineValue] = useState("");
+  const [inlineSaving, setInlineSaving] = useState(false);
+
+  // Upload modal state (for document-category tasks)
+  const [uploadTaskId, setUploadTaskId] = useState<number | null>(null);
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadTitle, setUploadTitle] = useState("");
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [uploadError, setUploadError] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -254,16 +314,19 @@ export default function ClientTasksPage() {
   async function load(silent = false) {
     if (!silent) setLoading(true);
     try {
-      const result = await fetchClientTasks();
-      // Enrich task objects with raw numeric id
+      const [result, eng] = await Promise.all([
+        fetchClientTasks(),
+        fetchClientEngagement(),
+      ]);
       const enriched = ((result.tasks as Task[]) || []).map(t => ({
         ...t,
-        raw_id: parseInt(t.id.replace("chk_", ""), 10),
+        raw_id: parseInt((t.id as string).replace("chk_", ""), 10),
       }));
       setTasks(enriched);
       setTotal(result.total);
       setCompleted(result.completed);
       setReadiness(result.readiness_score);
+      setEngagement(eng);
       setLastUpdated(new Date());
       if (!silent) setError("");
     } catch {
@@ -303,6 +366,22 @@ export default function ClientTasksPage() {
   }
 
   function handleTakeAction(task: Task) {
+    // Info tasks (KVK number, BTW number, etc.) — show inline text field
+    if (isInfoTask(task)) {
+      setInlineActiveId(task.raw_id);
+      setInlineValue(task.meta_value ?? "");
+      return;
+    }
+    // Document-upload categories — show upload modal on this page
+    if (DOC_CATEGORIES.has(task.category)) {
+      setUploadTaskId(task.raw_id);
+      setUploadTitle(task.title);
+      setUploadError("");
+      setUploadFile(null);
+      setUploadProgress(null);
+      return;
+    }
+    // Everything else (chat, ZZP workspace, deductions) — navigate
     const route = resolveRoute(task);
     if (route === "/chat") {
       const langPrefix =
@@ -314,6 +393,56 @@ export default function ClientTasksPage() {
     } else {
       navigate(route);
     }
+  }
+
+  async function handleSaveInline(task: Task) {
+    if (!inlineValue.trim()) return;
+    setInlineSaving(true);
+    try {
+      await updateClientTask(task.raw_id, { status: "uploaded", meta_value: inlineValue.trim() });
+      setTasks(prev => prev.map(t =>
+        t.raw_id === task.raw_id ? { ...t, status: "uploaded", meta_value: inlineValue.trim() } : t
+      ));
+      setCompleted(c => task.status !== "uploaded" ? c + 1 : c);
+      setInlineActiveId(null);
+      setInlineValue("");
+    } catch { /* fail silently */ }
+    setInlineSaving(false);
+  }
+
+  async function handleUploadDoc() {
+    if (!uploadFile || !engagement || uploadTaskId === null) return;
+    setUploading(true);
+    setUploadProgress(0);
+    setUploadError("");
+    try {
+      await uploadClientDocument(
+        engagement.id,
+        engagement.client_profile,
+        uploadFile,
+        uploadTitle,
+        "",
+        undefined,
+        pct => setUploadProgress(pct),
+      );
+      // Mark the task as uploaded too
+      await updateClientTask(uploadTaskId, { status: "uploaded" });
+      setTasks(prev => prev.map(t =>
+        t.raw_id === uploadTaskId ? { ...t, status: "uploaded" } : t
+      ));
+      setCompleted(c => {
+        const task = tasks.find(t => t.raw_id === uploadTaskId);
+        return task && task.status !== "uploaded" ? c + 1 : c;
+      });
+      setUploadTaskId(null);
+      setUploadFile(null);
+      setUploadTitle("");
+      setUploadProgress(null);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : tx.upload_err);
+      setUploadProgress(null);
+    }
+    setUploading(false);
   }
 
   if (loading) return (
@@ -394,6 +523,48 @@ export default function ClientTasksPage() {
                           {statusLabel(task.status, tx)}
                         </span>
                       </div>
+
+                      {/* Saved meta_value display */}
+                      {task.meta_value && (
+                        <div style={{ marginTop: "var(--sp-2)", fontSize: "var(--text-xs)", color: "var(--ok-text)", fontWeight: 600 }}>
+                          ✓ {task.meta_value}
+                        </div>
+                      )}
+
+                      {/* Inline text-input form (info tasks: KVK, BTW, etc.) */}
+                      {inlineActiveId === task.raw_id && (
+                        <div style={{ marginTop: "var(--sp-3)", display: "flex", gap: "var(--sp-2)", alignItems: "center", flexWrap: "wrap" }}>
+                          <input
+                            autoFocus
+                            type="text"
+                            value={inlineValue}
+                            onChange={e => setInlineValue(e.target.value)}
+                            onKeyDown={e => { if (e.key === "Enter") void handleSaveInline(task); if (e.key === "Escape") setInlineActiveId(null); }}
+                            placeholder={tx.enter_value}
+                            style={{
+                              flex: 1, minWidth: 140, padding: "6px 10px",
+                              border: "1.5px solid var(--blue)", borderRadius: "var(--r)",
+                              background: "var(--bg)", color: "var(--text)",
+                              fontSize: "var(--text-sm)", outline: "none",
+                            }}
+                          />
+                          <button
+                            className="btn btn-accent btn-sm"
+                            style={{ fontSize: "var(--text-xs)", fontWeight: 700 }}
+                            disabled={inlineSaving || !inlineValue.trim()}
+                            onClick={() => void handleSaveInline(task)}
+                          >
+                            {inlineSaving ? tx.saving : tx.save}
+                          </button>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            style={{ fontSize: "var(--text-xs)" }}
+                            onClick={() => setInlineActiveId(null)}
+                          >
+                            {tx.cancel}
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Action buttons */}
@@ -408,8 +579,8 @@ export default function ClientTasksPage() {
                         {isMarking ? tx.marking : isDone ? `↩ ${tx.undo}` : `✓ ${tx.mark_done}`}
                       </button>
 
-                      {/* Take action — redirects to relevant page */}
-                      {!isDone && (
+                      {/* Take action — inline input / upload modal / navigate */}
+                      {!isDone && inlineActiveId !== task.raw_id && (
                         <button
                           className="btn btn-ghost btn-sm"
                           style={{ fontSize: "var(--text-xs)", border: "1px solid var(--blue-border)", color: "var(--blue-text)", fontWeight: 700 }}
@@ -463,6 +634,109 @@ export default function ClientTasksPage() {
           </div>
         )}
       </div>
+
+      {/* Hidden file input for upload modal */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,.jpg,.jpeg,.png,.heic,.heif,.webp,.csv,.xlsx,.xls"
+        style={{ display: "none" }}
+        onChange={e => {
+          const f = e.target.files?.[0];
+          if (f) { setUploadFile(f); if (!uploadTitle) setUploadTitle(f.name.replace(/\.[^.]+$/, "")); }
+          if (fileInputRef.current) fileInputRef.current.value = "";
+        }}
+      />
+
+      {/* Document upload modal */}
+      {uploadTaskId !== null && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 1000,
+          display: "flex", alignItems: "center", justifyContent: "center", padding: "var(--sp-4)",
+        }}
+          onClick={e => { if (e.target === e.currentTarget) { setUploadTaskId(null); setUploadFile(null); } }}
+        >
+          <div className="card" style={{ width: "100%", maxWidth: 480, padding: "var(--sp-6)" }}>
+            <div style={{ fontWeight: 800, fontSize: "var(--text-lg)", marginBottom: "var(--sp-4)" }}>
+              {tx.upload_doc}
+            </div>
+            {/* Task title context */}
+            <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", marginBottom: "var(--sp-4)", padding: "var(--sp-2) var(--sp-3)", background: "var(--bg-3)", borderRadius: "var(--r)", fontWeight: 600 }}>
+              {tasks.find(t => t.raw_id === uploadTaskId)?.title}
+            </div>
+
+            {/* Title field */}
+            <div style={{ marginBottom: "var(--sp-3)" }}>
+              <label style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", display: "block", marginBottom: 4 }}>
+                {tx.upload_title_lbl}
+              </label>
+              <input
+                type="text"
+                value={uploadTitle}
+                onChange={e => setUploadTitle(e.target.value)}
+                style={{
+                  width: "100%", padding: "8px 12px", boxSizing: "border-box",
+                  border: "1.5px solid var(--border)", borderRadius: "var(--r)",
+                  background: "var(--bg)", color: "var(--text)", fontSize: "var(--text-sm)",
+                }}
+              />
+            </div>
+
+            {/* File picker */}
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                border: "2px dashed var(--border-2)", borderRadius: "var(--r-lg)",
+                padding: "var(--sp-5)", textAlign: "center", cursor: "pointer",
+                background: uploadFile ? "var(--ok-subtle)" : "var(--bg-2)",
+                marginBottom: "var(--sp-4)",
+                transition: "background 0.15s",
+              }}
+            >
+              {uploadFile ? (
+                <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ok-text)" }}>
+                  ✓ {uploadFile.name} ({(uploadFile.size / 1024).toFixed(0)} KB)
+                </div>
+              ) : (
+                <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", fontWeight: 600 }}>
+                  {tx.choose_file}
+                </div>
+              )}
+            </div>
+
+            {/* Progress bar */}
+            {uploadProgress !== null && (
+              <div style={{ height: 6, background: "var(--border)", borderRadius: 3, overflow: "hidden", marginBottom: "var(--sp-3)" }}>
+                <div style={{ height: "100%", width: `${uploadProgress}%`, background: "var(--blue)", transition: "width 0.3s" }} />
+              </div>
+            )}
+
+            {uploadError && (
+              <div style={{ color: "var(--danger-text)", fontSize: "var(--text-sm)", fontWeight: 600, marginBottom: "var(--sp-3)" }}>
+                {uploadError}
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: "var(--sp-2)", justifyContent: "flex-end" }}>
+              <button
+                className="btn btn-ghost btn-sm"
+                onClick={() => { setUploadTaskId(null); setUploadFile(null); setUploadError(""); }}
+                disabled={uploading}
+              >
+                {tx.cancel}
+              </button>
+              <button
+                className="btn btn-accent btn-sm"
+                style={{ fontWeight: 700 }}
+                disabled={uploading || !uploadFile}
+                onClick={() => void handleUploadDoc()}
+              >
+                {uploading ? `${tx.uploading} ${uploadProgress ?? 0}%` : tx.upload_doc}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

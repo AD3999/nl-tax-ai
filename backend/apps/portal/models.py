@@ -244,7 +244,9 @@ class ClientDocument(models.Model):
 
     ALLOWED_MIME_TYPES = [
         "application/pdf",
-        "image/jpeg", "image/png", "image/heic",
+        "image/jpeg", "image/jpg", "image/png",
+        "image/heic", "image/heif",  # iPhone formats
+        "image/webp",
         "text/csv",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "application/vnd.ms-excel",
@@ -409,6 +411,8 @@ class ChecklistItem(models.Model):
     priority       = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default="medium")
     # stable_key prevents duplicate creation when the engine runs multiple times
     stable_key     = models.CharField(max_length=100, blank=True, db_index=True)
+    # meta_value stores client-entered text (KVK number, BTW number, etc.)
+    meta_value     = models.TextField(blank=True)
     created_at     = models.DateTimeField(auto_now_add=True)
     updated_at     = models.DateTimeField(auto_now=True)
 

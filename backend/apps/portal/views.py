@@ -12,6 +12,7 @@ All write operations are logged via _audit().
 """
 from __future__ import annotations
 
+from django.db.models import F
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import permissions, status
@@ -91,11 +92,15 @@ class AccountantClientListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        qs = AccountantClientProfile.objects.filter(accountant_user=request.user)
         if request.user.is_staff:
             qs = AccountantClientProfile.objects.all()
         elif not _is_portal_user(request.user):
             return Response({"error": "Portal access requires an accountant account."}, status=403)
+        else:
+            # Exclude self-managed profiles (accountant_user == client_user)
+            qs = AccountantClientProfile.objects.filter(
+                accountant_user=request.user
+            ).exclude(client_user=F("accountant_user"))
         serializer = AccountantClientProfileSerializer(qs, many=True, context={"request": request})
         return Response(serializer.data)
 
@@ -182,9 +187,10 @@ class EngagementListView(APIView):
         if request.user.is_staff:
             qs = TaxEngagement.objects.select_related("client_profile").all()
         else:
+            # Exclude self-managed engagements where accountant == client
             qs = TaxEngagement.objects.select_related("client_profile").filter(
                 accountant=request.user
-            )
+            ).exclude(client_profile__client_user=request.user)
         serializer = TaxEngagementSerializer(qs, many=True, context={"request": request})
         return Response(serializer.data)
 
@@ -360,19 +366,22 @@ class ClientDocumentUploadView(APIView):
             return Response({"detail": "client_profile does not match engagement."}, status=status.HTTP_400_BAD_REQUEST)
 
         uploaded_file = serializer.validated_data["file"]
-        doc = ClientDocument.objects.create(
-            engagement=engagement,
-            client_profile=client_profile,
-            document_request=serializer.validated_data.get("document_request"),
-            uploaded_by=request.user,
-            original_filename=uploaded_file.name,
-            user_title=serializer.validated_data.get("user_title", ""),
-            user_note=serializer.validated_data.get("user_note", ""),
-            file=uploaded_file,
-            mime_type=uploaded_file.content_type,
-            file_size=uploaded_file.size,
-            processing_status="uploaded",
-        )
+        try:
+            doc = ClientDocument.objects.create(
+                engagement=engagement,
+                client_profile=client_profile,
+                document_request=serializer.validated_data.get("document_request"),
+                uploaded_by=request.user,
+                original_filename=uploaded_file.name,
+                user_title=serializer.validated_data.get("user_title", ""),
+                user_note=serializer.validated_data.get("user_note", ""),
+                file=uploaded_file,
+                mime_type=uploaded_file.content_type or "application/octet-stream",
+                file_size=uploaded_file.size,
+                processing_status="uploaded",
+            )
+        except Exception as exc:
+            return Response({"detail": f"Upload failed: {exc}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         _audit(request, "document_uploaded", "ClientDocument", doc.id,
                client_profile=client_profile, engagement=engagement,
@@ -966,6 +975,8 @@ class ClientPortalTasksView(APIView):
                 "required": item.required,
                 "status": item.status,
                 "priority": item.priority,
+                "stable_key": item.stable_key,
+                "meta_value": item.meta_value,
                 "due_date": None,
             })
 
@@ -1030,13 +1041,19 @@ class ClientPortalTaskUpdateView(APIView):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
         new_status = request.data.get("status")
+        meta_value = request.data.get("meta_value", None)
+
         allowed = ("uploaded", "todo")
         if new_status not in allowed:
             return Response({"detail": f"status must be one of {allowed}"}, status=status.HTTP_400_BAD_REQUEST)
 
         old_status = item.status
         item.status = new_status
-        item.save(update_fields=["status", "updated_at"])
+        update_fields = ["status", "updated_at"]
+        if meta_value is not None:
+            item.meta_value = str(meta_value).strip()
+            update_fields.append("meta_value")
+        item.save(update_fields=update_fields)
 
         # Notify accountant when client marks item as done
         if new_status == "uploaded" and old_status != "uploaded":
@@ -1084,10 +1101,13 @@ class AccountantInboxView(APIView):
         if not _is_portal_user(request.user) and not request.user.is_staff:
             return Response({"detail": "Portal access required."}, status=403)
 
-        # Scope to this accountant's clients
-        profiles = AccountantClientProfile.objects.filter(accountant_user=request.user)
+        # Scope to this accountant's clients (exclude self-managed profiles)
         if request.user.is_staff:
             profiles = AccountantClientProfile.objects.all()
+        else:
+            profiles = AccountantClientProfile.objects.filter(
+                accountant_user=request.user
+            ).exclude(client_user=F("accountant_user"))
 
         profile_ids   = list(profiles.values_list("id", flat=True))
         engagement_qs = TaxEngagement.objects.filter(client_profile_id__in=profile_ids)
