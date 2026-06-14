@@ -366,6 +366,7 @@ export default function EngagementPage() {
   useEffect(() => {
     if (!user || !engId) return;
     void loadAll();
+    if (initialTab === "messages") void loadMessages();
     const pollId = setInterval(() => void loadLive(), 10_000);
     return () => clearInterval(pollId);
   }, [user, engId]); // eslint-disable-line react-hooks/exhaustive-deps
