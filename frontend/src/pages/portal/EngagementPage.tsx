@@ -15,12 +15,16 @@ import {
   recalculateReadiness, updateAction, updateIncome, updateExpense,
   uploadDocument,
 } from "../../api/portal/client";
+import {
+  fetchEngagementMessages, sendEngagementMessage,
+  type PortalMessage,
+} from "../../api/portal/messages";
 import type {
   TaxEngagement, ChecklistItem, ClientDocument,
   ExtractedIncome, ExtractedExpense, AccountantAction, ReadinessResult, AuditLog,
 } from "../../api/portal/types";
 
-type Tab = "overview" | "checklist" | "documents" | "income" | "expenses" | "risks" | "audit";
+type Tab = "overview" | "checklist" | "documents" | "income" | "expenses" | "risks" | "messages" | "audit";
 type Lang = "nl" | "en" | "fa";
 
 const TX: Record<Lang, Record<string, string>> = {
@@ -94,6 +98,11 @@ const TX: Record<Lang, Record<string, string>> = {
     reject_reason_placeholder: "Explain why this document was rejected...",
     reject_reason_submit: "Reject document",
     copilot_title: "AI Copilot",
+    tab_messages: "Messages",
+    msg_placeholder: "Type a message… (Enter to send)",
+    msg_send: "Send",
+    msg_no_messages: "No messages yet",
+    done: "Done",
     checklist_updated: "Checklist item updated",
     checklist_error: "Failed to update checklist item",
     action_updated: "Action updated",
@@ -126,7 +135,6 @@ const TX: Record<Lang, Record<string, string>> = {
     next_actions: "Volgende acties",
     open: "open",
     no_actions: "Geen acties — klik op \"Acties genereren\" om het dossier te analyseren",
-    done: "✓ Klaar",
     dismiss: "Verwijderen",
     no_checklist: "Geen checklistitems",
     no_documents: "Geen documenten geüpload",
@@ -175,6 +183,11 @@ const TX: Record<Lang, Record<string, string>> = {
     reject_reason_placeholder: "Leg uit waarom dit document is afgewezen...",
     reject_reason_submit: "Document afwijzen",
     copilot_title: "AI Copilot",
+    tab_messages: "Berichten",
+    msg_placeholder: "Typ een bericht… (Enter om te sturen)",
+    msg_send: "Sturen",
+    msg_no_messages: "Nog geen berichten",
+    done: "Klaar",
     checklist_updated: "Checklistitem bijgewerkt",
     checklist_error: "Bijwerken mislukt",
     action_updated: "Actie bijgewerkt",
@@ -207,7 +220,6 @@ const TX: Record<Lang, Record<string, string>> = {
     next_actions: "اقدامات بعدی",
     open: "باز",
     no_actions: "بدون اقدام — روی «ایجاد اقدامات» کلیک کنید",
-    done: "✓ انجام شد",
     dismiss: "رد کردن",
     no_checklist: "آیتمی در چک‌لیست وجود ندارد",
     no_documents: "سندی بارگذاری نشده",
@@ -256,6 +268,11 @@ const TX: Record<Lang, Record<string, string>> = {
     reject_reason_placeholder: "توضیح دهید چرا این سند رد شد...",
     reject_reason_submit: "رد سند",
     copilot_title: "دستیار هوش مصنوعی",
+    tab_messages: "پیام‌ها",
+    msg_placeholder: "پیام بنویسید… (Enter برای ارسال)",
+    msg_send: "ارسال",
+    msg_no_messages: "هنوز پیامی وجود ندارد",
+    done: "انجام شد",
     checklist_updated: "آیتم چک‌لیست به‌روز شد",
     checklist_error: "به‌روزرسانی ناموفق بود",
     action_updated: "اقدام به‌روز شد",
@@ -339,6 +356,10 @@ export default function EngagementPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [rejectTargetDocId, setRejectTargetDocId] = useState<number | null>(null);
 
+  const [messages, setMessages] = useState<PortalMessage[]>([]);
+  const [msgBody, setMsgBody] = useState("");
+  const [sendingMsg, setSendingMsg] = useState(false);
+
   const engId = Number(id);
 
   useEffect(() => {
@@ -396,6 +417,26 @@ export default function EngagementPage() {
   async function loadAudit() {
     const logs = await fetchAudit(engId);
     setAuditLog(logs);
+  }
+
+  async function loadMessages() {
+    try {
+      const msgs = await fetchEngagementMessages(engId);
+      setMessages(msgs);
+    } catch { /* silent */ }
+  }
+
+  async function handleSendMessage() {
+    if (!msgBody.trim()) return;
+    setSendingMsg(true);
+    try {
+      const msg = await sendEngagementMessage(engId, msgBody.trim());
+      setMessages(prev => [...prev, msg]);
+      setMsgBody("");
+    } catch {
+      showToast("Failed to send message", "error");
+    }
+    setSendingMsg(false);
   }
 
   async function handleGenerateActions() {
@@ -554,6 +595,7 @@ export default function EngagementPage() {
     { key: "income",    label: `${tx.tab_income} (${income.length})` },
     { key: "expenses",  label: `${tx.tab_expenses} (${expenses.length})` },
     { key: "risks",     label: tx.tab_risks },
+    { key: "messages",  label: `${tx.tab_messages} (${messages.length})` },
     { key: "audit",     label: tx.tab_audit },
   ];
 
@@ -582,6 +624,9 @@ export default function EngagementPage() {
               <span style={{ color: RISK_COLOR[engagement.risk_level] }}>{tx.risk}: {engagement.risk_level}</span>
               <span style={{ color: engagement.missing_items_count > 0 ? "var(--danger)" : "var(--ok)" }}>
                 {engagement.missing_items_count} {tx.missing_items}
+              </span>
+              <span style={{ fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 999, background: "var(--blue-subtle)", color: "var(--blue-text)" }}>
+                {tx.readiness}: {engagement.readiness_score}%
               </span>
             </div>
           </div>
@@ -619,6 +664,7 @@ export default function EngagementPage() {
                 setTab(t.key);
                 if (t.key === "risks") void loadRisks();
                 if (t.key === "audit") void loadAudit();
+                if (t.key === "messages") void loadMessages();
               }}
               className="btn btn-ghost btn-sm"
               style={{
@@ -1005,6 +1051,64 @@ export default function EngagementPage() {
                 </table>
               </div>
             )}
+          </div>
+        )}
+
+        {/* ── MESSAGES ─────────────────────────────────────────── */}
+        {tab === "messages" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-4)" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)", maxHeight: 480, overflowY: "auto", paddingBottom: "var(--sp-2)" }}>
+              {messages.length === 0 ? (
+                <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--ink-3)" }}>{tx.msg_no_messages}</div>
+              ) : messages.map(msg => (
+                <div key={msg.id} style={{ display: "flex", gap: "var(--sp-3)", flexDirection: msg.is_own ? "row-reverse" : "row" }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: "50%",
+                    background: msg.is_own ? "var(--blue)" : "var(--bg-3)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 12, fontWeight: 700, color: msg.is_own ? "#fff" : "var(--text-3)", flexShrink: 0,
+                  }}>
+                    {(msg.sender_name || msg.sender_email)?.[0]?.toUpperCase() ?? "?"}
+                  </div>
+                  <div style={{ maxWidth: "70%" }}>
+                    <div style={{ fontSize: "var(--text-xs)", color: "var(--text-3)", marginBottom: 4, textAlign: msg.is_own ? "right" : "left" }}>
+                      {msg.sender_name || msg.sender_email} · {new Date(msg.created_at).toLocaleString()}
+                    </div>
+                    <div style={{
+                      background: msg.is_own ? "var(--blue)" : "var(--bg-3)",
+                      color: msg.is_own ? "#fff" : "var(--text)",
+                      borderRadius: "var(--r-md)", padding: "var(--sp-3) var(--sp-4)",
+                      fontSize: "var(--text-sm)", lineHeight: 1.55,
+                    }}>
+                      {msg.body}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "flex-end" }}>
+              <textarea
+                value={msgBody}
+                onChange={e => setMsgBody(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void handleSendMessage(); } }}
+                placeholder={tx.msg_placeholder}
+                rows={3}
+                style={{
+                  flex: 1, padding: "var(--sp-3)", background: "var(--bg-3)",
+                  border: "1px solid var(--border-2)", borderRadius: "var(--r-md)",
+                  color: "var(--text)", fontSize: "var(--text-sm)", fontFamily: "inherit",
+                  resize: "none", boxSizing: "border-box",
+                }}
+              />
+              <button
+                className="btn btn-accent btn-sm"
+                onClick={() => void handleSendMessage()}
+                disabled={sendingMsg || !msgBody.trim()}
+                style={{ alignSelf: "flex-end", minWidth: 80 }}
+              >
+                {tx.msg_send}
+              </button>
+            </div>
           </div>
         )}
 

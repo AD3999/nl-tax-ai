@@ -48,9 +48,9 @@ interface ChatMsg {
 }
 
 const SIM_CHIP_LABEL: Record<string, string> = {
-  nl: "🧮 Belastingsimulatie 2026",
-  en: "🧮 Tax Simulation 2026",
-  fa: "🧮 شبیه‌سازی مالیاتی ۲۰۲۶",
+  nl: "Belastingsimulatie 2026",
+  en: "Tax Simulation 2026",
+  fa: "شبیه‌سازی مالیاتی ۲۰۲۶",
 };
 
 const SIM_TRIGGER: Record<string, string> = {
@@ -67,9 +67,9 @@ const IB_TRIGGER: Record<string, string> = {
 };
 
 const IB_CHIP_LABEL: Record<string, string> = {
-  nl: "📋 Aangifte doen 2025",
-  en: "📋 Start IB Return 2025",
-  fa: "📋 شروع اظهارنامه ۲۰۲۵",
+  nl: "Aangifte doen 2025",
+  en: "Start IB Return 2025",
+  fa: "شروع اظهارنامه ۲۰۲۵",
 };
 
 const RESULT_QUESTIONS: Record<string, Record<string, { q: string; tag: string }[]>> = {

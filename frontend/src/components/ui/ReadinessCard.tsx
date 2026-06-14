@@ -19,7 +19,7 @@ interface ReadinessCardProps {
 function getStatus(score: number): { label: string; labelFa: string; labelNl: string; color: string; bg: string; Icon: typeof CheckCircle2 } {
   if (score >= 85) return {
     label: "Ready to File", labelFa: "آماده ارسال", labelNl: "Klaar om in te dienen",
-    color: "var(--green)", bg: "oklch(from var(--green) l c h / 0.12)",
+    color: "var(--ok)", bg: "var(--ok-subtle)",
     Icon: CheckCircle2,
   };
   if (score >= 70) return {
@@ -34,7 +34,7 @@ function getStatus(score: number): { label: string; labelFa: string; labelNl: st
   };
   return {
     label: "Critical", labelFa: "بحرانی", labelNl: "Kritiek",
-    color: "var(--error)", bg: "oklch(from var(--error) l c h / 0.12)",
+    color: "var(--danger)", bg: "var(--danger-subtle)",
     Icon: XCircle,
   };
 }

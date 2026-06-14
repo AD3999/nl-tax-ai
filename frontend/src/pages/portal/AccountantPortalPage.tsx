@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Users, Clock, AlertCircle, MailOpen, ArrowRight, Zap, X, RefreshCw } from "lucide-react";
+import { Users, CheckCircle2, AlertCircle, AlertTriangle, ArrowRight, Zap, X, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useMobile } from "../../hooks/useMobile";
@@ -261,8 +261,9 @@ export default function AccountantPortalPage() {
   }
 
   const totalClients      = clients.length;
-  const waitingClient     = engagements.filter(e => e.status === "waiting_client").length;
+  const readyToFile       = engagements.filter(e => e.status === "ready_to_file").length;
   const needsReview       = engagements.filter(e => e.status === "needs_review").length;
+  const highRisk          = engagements.filter(e => e.risk_level === "high").length;
   const pendingInvCount   = invitations.filter(i => i.status === "pending").length;
 
   const priorities = [
@@ -316,10 +317,10 @@ export default function AccountantPortalPage() {
         {/* KPI cards */}
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "var(--sp-3)", marginBottom: "var(--sp-5)" }}>
           {[
-            { label: tx.total_clients,       value: totalClients,    icon: <Users size={15} />,       iconColor: "var(--blue)",        iconBg: "var(--blue-subtle)"   },
-            { label: tx.waiting,             value: waitingClient,   icon: <Clock size={15} />,       iconColor: "var(--warn-text)",   iconBg: "var(--warn-subtle)"   },
-            { label: tx.needs_review,        value: needsReview,     icon: <AlertCircle size={15} />, iconColor: "var(--danger-text)", iconBg: "var(--danger-subtle)" },
-            { label: tx.pending_invitations, value: pendingInvCount, icon: <MailOpen size={15} />,    iconColor: "var(--blue)",        iconBg: "var(--blue-subtle)"   },
+            { label: tx.total_clients, value: totalClients, icon: <Users size={15} />,         iconColor: "var(--blue)",        iconBg: "var(--blue-subtle)"   },
+            { label: tx.ready,         value: readyToFile,  icon: <CheckCircle2 size={15} />,  iconColor: "var(--ok-text)",     iconBg: "var(--ok-subtle)"     },
+            { label: tx.needs_review,  value: needsReview,  icon: <AlertCircle size={15} />,   iconColor: "var(--warn-text)",   iconBg: "var(--warn-subtle)"   },
+            { label: tx.urgent,        value: highRisk,     icon: <AlertTriangle size={15} />, iconColor: "var(--danger-text)", iconBg: "var(--danger-subtle)" },
           ].map(card => (
             <div key={card.label} className="card" style={{ padding: "var(--sp-5)", display: "flex", alignItems: "center", gap: "var(--sp-3)" }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: card.iconBg, display: "flex", alignItems: "center", justifyContent: "center", color: card.iconColor, flexShrink: 0 }}>
