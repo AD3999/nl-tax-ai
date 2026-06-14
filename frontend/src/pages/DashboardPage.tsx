@@ -231,7 +231,7 @@ function SummaryCard({
               }}>{value}</span>
           }
         </div>
-        {subtitle && <div style={{ marginTop: 2, fontSize: 11, color: "var(--ink-3)" }}>{subtitle}</div>}
+        {subtitle && <div style={{ marginTop: 2, fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>{subtitle}</div>}
       </div>
     </div>
   );
@@ -437,13 +437,13 @@ function TaxHealthScoreCard({
               </div>
             </div>
             <div>
-              <div style={{ fontWeight: 600, color, fontSize: 13 }}>{label}</div>
-              <div style={{ fontSize: 11.5, color: "var(--ink-4)", marginTop: 3, lineHeight: 1.4 }}>
+              <div style={{ fontWeight: 600, color, fontSize: "var(--text-sm)" }}>{label}</div>
+              <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: 3, lineHeight: 1.4 }}>
                 Profile, compliance,<br />risks, opportunities
               </div>
               {factors.length > 0 && (
                 <button onClick={() => setShowFactors(v => !v)}
-                  style={{ marginTop: 8, background: "none", border: "none", fontSize: 11, color: "var(--sage-700)", cursor: "pointer", padding: 0, fontWeight: 500 }}>
+                  style={{ marginTop: 8, background: "none", border: "none", fontSize: "var(--text-xs)", color: "var(--sage-700)", cursor: "pointer", padding: 0, fontWeight: 500 }}>
                   {showFactors ? L("hide") : L("show")}
                 </button>
               )}
@@ -454,7 +454,7 @@ function TaxHealthScoreCard({
               {factors.map((f, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "4px 0" }}>
                   <span style={{ fontSize: 11.5, color: "var(--ink-3)", flex: 1, lineHeight: 1.3 }}>{f.label}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: f.positive ? "var(--ok)" : "var(--danger)", fontFamily: "var(--mono)" }}>
+                  <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: f.positive ? "var(--ok)" : "var(--danger)", fontFamily: "var(--mono)" }}>
                     {f.positive ? `+${f.delta}` : f.delta}
                   </span>
                 </div>
@@ -518,15 +518,15 @@ function FinancialOverviewCard({
               display: "flex", justifyContent: "space-between", alignItems: "center",
               padding: "6px 0", borderBottom: i < rows.length - 1 ? "1px solid var(--hairline)" : "none",
             }}>
-              <span style={{ fontSize: 12.5, color: "var(--ink-3)" }}>{row.l}</span>
-              <span className="font-mono" style={{ fontSize: 12.5, fontWeight: 500,
+              <span style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)" }}>{row.l}</span>
+              <span className="font-mono" style={{ fontSize: "var(--text-sm)", fontWeight: 500,
                 color: row.sign === "-" ? "var(--ink-2)" : row.sign === "+" ? "var(--ok)" : "var(--ink)" }}>
                 {row.sign === "-" ? "−" : row.sign === "+" ? "+" : ""}€{Math.abs(Math.round(row.v)).toLocaleString("nl-NL")}
               </span>
             </div>
           ))}
           <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 10, marginTop: 2, borderTop: "2px solid var(--hairline-2)" }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>{L("Totale belasting", "Total tax", "مجموع مالیات")}</span>
+            <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--ink)" }}>{L("Totale belasting", "Total tax", "مجموع مالیات")}</span>
             <span style={{ fontFamily: "var(--serif)", fontSize: 17, fontWeight: 600, color: "var(--ink)" }}>
               €{Math.round(totalTax).toLocaleString("nl-NL")}
             </span>
@@ -551,7 +551,7 @@ function FinancialOverviewCard({
                   transition: "width 0.8s ease",
                 }} />
               </div>
-              <div style={{ fontSize: 11, color: "var(--ink-4)", marginTop: 5 }}>
+              <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: 5 }}>
                 {L(
                   `€${expectedSaved.toLocaleString("nl-NL")} verwacht gespaard van €${Math.round(totalTax).toLocaleString("nl-NL")} totaal`,
                   `€${expectedSaved.toLocaleString("nl-NL")} expected saved of €${Math.round(totalTax).toLocaleString("nl-NL")} total`,
@@ -585,11 +585,11 @@ function ComplianceStatusCard({
           <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: item.ok ? "var(--ok)" : "var(--warn)", flexShrink: 0, marginTop: 5 }} />
             <div>
-              <div style={{ fontSize: 12.5, fontWeight: 500, color: item.ok ? "var(--ink)" : "var(--warn)" }}>
+              <div style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: item.ok ? "var(--ink)" : "var(--warn)" }}>
                 {item.label}
               </div>
               {item.note && (
-                <div style={{ fontSize: 11, color: "var(--ink-4)", marginTop: 2 }}>{item.note}</div>
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: 2 }}>{item.note}</div>
               )}
             </div>
           </div>
@@ -623,15 +623,15 @@ function RecentRuleChangesCard({
           {changes.slice(0, 4).map(r => (
             <div key={r.rule_id} style={{ paddingBottom: 10, borderBottom: "1px solid var(--hairline)" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--sage-700)", fontFamily: "var(--mono)" }}>
+                <span style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: "var(--sage-700)", fontFamily: "var(--mono)" }}>
                   {r.rule_id}
                 </span>
                 <span style={{ fontSize: 10, color: "var(--ink-4)", fontFamily: "var(--mono)" }}>{r.updated_at}</span>
               </div>
-              <div style={{ fontSize: 12, color: "var(--ink)", lineHeight: 1.4 }}>{getText(r)}</div>
+              <div style={{ fontSize: "var(--text-sm)", color: "var(--ink)", lineHeight: 1.4 }}>{getText(r)}</div>
               {r.source_url && (
                 <a href={r.source_url} target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: 11, color: "var(--sage-700)", textDecoration: "none", marginTop: 4, display: "inline-block" }}>
+                  style={{ fontSize: "var(--text-xs)", color: "var(--sage-700)", textDecoration: "none", marginTop: 4, display: "inline-block" }}>
                   {L("Lees meer", "Read more", "بیشتر بخوانید")} →
                 </a>
               )}
@@ -681,12 +681,12 @@ function AlertCard({
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink)" }}>{alert.title}</span>
+          <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--ink)" }}>{alert.title}</span>
           <span style={{ fontSize: 9, padding: "1px 6px", background: s.dot, color: "white", borderRadius: 999, fontWeight: 700, letterSpacing: "0.04em" }}>
             {s.label}
           </span>
         </div>
-        <p style={{ fontSize: 12, color: "var(--ink-2)", margin: 0, lineHeight: 1.5 }}>{alert.body}</p>
+        <p style={{ fontSize: "var(--text-sm)", color: "var(--ink-2)", margin: 0, lineHeight: 1.5 }}>{alert.body}</p>
         <div style={{ display: "flex", gap: 12, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
           <a href={alert.action_url}
             target={alert.action_url.startsWith("http") ? "_blank" : "_self"}
@@ -720,7 +720,7 @@ function AlertCard({
                   <button key={d}
                     onClick={() => { onSnooze(alert.id, d); setShowSnoozeMenu(false); }}
                     style={{ display: "block", width: "100%", textAlign: "start", background: "none", border: "none",
-                      padding: "6px 14px", fontSize: 12, color: "var(--ink)", cursor: "pointer" }}>
+                      padding: "6px 14px", fontSize: "var(--text-sm)", color: "var(--ink)", cursor: "pointer" }}>
                     {d === 1 ? T.tomorrow[lk] : d === 7 ? T.oneWeek[lk] : T.oneMonth[lk]}
                   </button>
                 ))}
@@ -776,7 +776,7 @@ function ActionCard({
             </span>
           )}
         </div>
-        {!isDone && <p style={{ fontSize: 12, color: "var(--ink-2)", margin: 0, lineHeight: 1.5 }}>{action.body}</p>}
+        {!isDone && <p style={{ fontSize: "var(--text-sm)", color: "var(--ink-2)", margin: 0, lineHeight: 1.5 }}>{action.body}</p>}
         {!isDone && (
           <div style={{ display: "flex", gap: 12, marginTop: 8, flexWrap: "wrap", alignItems: "center" }}>
             <a href={action.action_url}
@@ -799,7 +799,7 @@ function ActionCard({
                   {[1, 7, 30].map(d => (
                     <button key={d} onClick={() => { onSnooze(action.id, d); setShowSnoozeMenu(false); }}
                       style={{ display: "block", width: "100%", textAlign: "start", background: "none", border: "none",
-                        padding: "6px 14px", fontSize: 12, color: "var(--ink)", cursor: "pointer" }}>
+                        padding: "6px 14px", fontSize: "var(--text-sm)", color: "var(--ink)", cursor: "pointer" }}>
                       {d === 1 ? "Tomorrow" : d === 7 ? "1 week" : "1 month"}
                     </button>
                   ))}
@@ -834,7 +834,7 @@ function EmptySection({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div className="card" style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 10 }}>
       <span style={{ display: "flex", color: "var(--ok)", flexShrink: 0 }}>{icon}</span>
-      <span style={{ fontSize: 13, color: "var(--ink-3)" }}>{text}</span>
+      <span style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)" }}>{text}</span>
     </div>
   );
 }
@@ -1128,7 +1128,7 @@ export default function DashboardPage() {
   const L = (nl: string, en: string, fa: string) => lang === "nl" ? nl : lang === "fa" ? fa : en;
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} style={{ flex: 1, padding: isMobile ? "24px 16px" : "40px 28px", maxWidth: 1120, margin: "0 auto", width: "100%" }}>
+    <div dir={isRtl ? "rtl" : "ltr"} style={{ flex: 1, maxWidth: 1120, margin: "0 auto", width: "100%" }}>
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div className="afu" style={{ marginBottom: 28 }}>
@@ -1267,7 +1267,7 @@ export default function DashboardPage() {
                   ))}
                   {doneActions.length > 0 && (
                     <details style={{ marginTop: 4 }}>
-                      <summary style={{ fontSize: 12, color: "var(--ink-4)", cursor: "pointer", padding: "6px 0", userSelect: "none" }}>
+                      <summary style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", cursor: "pointer", padding: "6px 0", userSelect: "none" }}>
                         {doneActions.length} {L("voltooid", "completed", "انجام‌شده")}
                       </summary>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
@@ -1377,7 +1377,7 @@ export default function DashboardPage() {
               {history.slice(0, 5).map((item, i) => (
                 <div key={item.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 0", borderTop: i === 0 ? "none" : "1px solid var(--hairline)" }}>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>{String(item.input_snapshot?.user_type ?? "").toUpperCase()} · {item.tax_year}</div>
+                    <div style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--ink)" }}>{String(item.input_snapshot?.user_type ?? "").toUpperCase()} · {item.tax_year}</div>
                     <div style={{ fontSize: 11.5, color: "var(--ink-3)", marginTop: 2 }}>{new Date(item.created_at).toLocaleDateString(lang === "nl" ? "nl-NL" : lang === "fa" ? "fa-IR" : "en-GB")}</div>
                   </div>
                   <div style={{ textAlign: "end" }}>
@@ -1418,7 +1418,7 @@ export default function DashboardPage() {
                   profile.has_partner !== undefined ? { label: L("Partner", "Partner", "شریک"), value: profile.has_partner ? L("Ja","Yes","بله") : L("Nee","No","خیر") } : null,
                   Number(profile.children_under_12) > 0 ? { label: L("Kinderen","Children","فرزندان"), value: String(profile.children_under_12) } : null,
                 ].filter(Boolean).map(row => row && (
-                  <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+                  <div key={row.label} style={{ display: "flex", justifyContent: "space-between", fontSize: "var(--text-sm)" }}>
                     <span style={{ color: "var(--ink-3)" }}>{row.label}</span>
                     <span style={{ color: "var(--ink)", fontWeight: 500 }}>{row.value}</span>
                   </div>
@@ -1435,7 +1435,7 @@ export default function DashboardPage() {
                 <div key={d.date} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                   <div>
                     <div style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>{deadlineLabel(d)}</div>
-                    <div className="font-mono" style={{ fontSize: 11, color: "var(--ink-3)", marginTop: 2 }}>{d.date}</div>
+                    <div className="font-mono" style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: 2 }}>{d.date}</div>
                   </div>
                   <span className={`pill pill-${d.urgency}`} style={{ fontSize: 10, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 3 }}>
                 {d.urgency === "warn" ? <AlertTriangle size={9} /> : <CheckCircle2 size={9} />}
@@ -1448,14 +1448,14 @@ export default function DashboardPage() {
           {/* Account */}
           <div className="card" style={{ padding: "18px 22px" }}>
             <div className="eyebrow" style={{ color: "var(--ink-3)", marginBottom: 10 }}>{L("Account", "Account", "حساب کاربری")}</div>
-            <div style={{ fontSize: 13, color: "var(--ink-2)" }}>{user?.email}</div>
+            <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-2)" }}>{user?.email}</div>
             <div style={{ marginTop: 6 }}>
               {user?.plan === "premium"
                 ? <span className="pill pill-accent" style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Activity size={9} /> Premium</span>
                 : <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
                     <span className="pill" style={{ fontSize: 10.5 }}>Free</span>
                     <button onClick={() => navigate("/pricing")}
-                      style={{ background: "none", border: "none", fontSize: 12, color: "var(--sage-700)", fontWeight: 500, cursor: "pointer", padding: 0 }}>
+                      style={{ background: "none", border: "none", fontSize: "var(--text-xs)", color: "var(--sage-700)", fontWeight: 500, cursor: "pointer", padding: 0 }}>
                       {L("Upgrade →", "Upgrade →", "ارتقاء →")}
                     </button>
                   </div>

@@ -152,20 +152,21 @@ function App() {
               <Route path="/accountant/settings"    element={<AccountantSettingsPage />} />
               <Route path="/zzp-workspace"          element={<ZZPWorkspacePage />} />
 
-              {/* Admin routes */}
-              <Route path="/admin"                    element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-              <Route path="/admin/users"              element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
-              <Route path="/admin/chat-logs"          element={<AdminRoute><AdminChatLogsPage /></AdminRoute>} />
-              <Route path="/admin/rules"              element={<AdminRoute><AdminRulesPage /></AdminRoute>} />
-              <Route path="/admin/rules/new"          element={<AdminRoute><AdminRuleEditorPage /></AdminRoute>} />
-              <Route path="/admin/rules/:id"          element={<AdminRoute><AdminRuleEditorPage /></AdminRoute>} />
-              <Route path="/admin/calculator-preview" element={<AdminRoute><AdminCalcPreviewPage /></AdminRoute>} />
-              <Route path="/admin/rag-preview"        element={<AdminRoute><AdminRAGPreviewPage /></AdminRoute>} />
-              <Route path="/admin/settings"           element={<AdminRoute><AdminSettingsPage /></AdminRoute>} />
-              <Route path="/admin/firms"              element={<AdminRoute><AdminFirmsPage /></AdminRoute>} />
-              <Route path="/admin/audit-logs"         element={<AdminRoute><AdminAuditLogsPage /></AdminRoute>} />
-              <Route path="/admin/ai-monitoring"      element={<AdminRoute><AdminAIMonitoringPage /></AdminRoute>} />
             </Route>
+
+            {/* ── Admin routes: AdminLayout handles its own sidebar/topbar ── */}
+            <Route path="/admin"                    element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/admin/users"              element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+            <Route path="/admin/chat-logs"          element={<AdminRoute><AdminChatLogsPage /></AdminRoute>} />
+            <Route path="/admin/rules"              element={<AdminRoute><AdminRulesPage /></AdminRoute>} />
+            <Route path="/admin/rules/new"          element={<AdminRoute><AdminRuleEditorPage /></AdminRoute>} />
+            <Route path="/admin/rules/:id"          element={<AdminRoute><AdminRuleEditorPage /></AdminRoute>} />
+            <Route path="/admin/calculator-preview" element={<AdminRoute><AdminCalcPreviewPage /></AdminRoute>} />
+            <Route path="/admin/rag-preview"        element={<AdminRoute><AdminRAGPreviewPage /></AdminRoute>} />
+            <Route path="/admin/settings"           element={<AdminRoute><AdminSettingsPage /></AdminRoute>} />
+            <Route path="/admin/firms"              element={<AdminRoute><AdminFirmsPage /></AdminRoute>} />
+            <Route path="/admin/audit-logs"         element={<AdminRoute><AdminAuditLogsPage /></AdminRoute>} />
+            <Route path="/admin/ai-monitoring"      element={<AdminRoute><AdminAIMonitoringPage /></AdminRoute>} />
 
             {/* ── Redirects ── */}
             <Route path="/ib-guide"    element={<Navigate to="/chat?mode=ib-return" replace />} />
