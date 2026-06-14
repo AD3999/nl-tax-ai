@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { client as apiClient } from "../api/client";
 
@@ -16,17 +17,20 @@ interface InboxData {
 
 export default function AccountantInboxPage() {
   const { i18n } = useTranslation();
+  const navigate = useNavigate();
   const isFA = i18n.language?.startsWith("fa");
   const isNL = i18n.language?.startsWith("nl");
 
   const [data, setData] = useState<InboxData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  function refresh() {
     apiClient.get<InboxData>("/portal/inbox/")
       .then(r => { setData(r.data); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => { refresh(); }, []);
 
   const T = {
     title:       isFA ? "صندوق ورودی حسابدار" : isNL ? "Accountant Inbox" : "Accountant Inbox",
@@ -103,10 +107,13 @@ export default function AccountantInboxPage() {
         {(data?.unread_messages ?? []).length === 0
           ? <Empty label={T.noItems} />
           : (data?.unread_messages ?? []).map(m => (
-            <Row key={m.id}>
+            <Row key={m.id} onClick={() => navigate(`/accountant/engagements/${m.engagement}?tab=messages`)}>
               <Cell bold>{m.client_name}</Cell>
               <Cell>{m.body.substring(0, 80)}{m.body.length > 80 ? "…" : ""}</Cell>
               <Cell muted>{new Date(m.created_at).toLocaleDateString()}</Cell>
+              <Cell><span style={{ fontSize: 11, color: "var(--blue)", fontWeight: 700 }}>
+                {isFA ? "باز کردن ↗" : isNL ? "Openen ↗" : "Open ↗"}
+              </span></Cell>
             </Row>
           ))
         }
@@ -140,9 +147,20 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Row({ children }: { children: React.ReactNode }) {
+function Row({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
   return (
-    <div style={{ display: "flex", gap: "var(--sp-4)", alignItems: "center", padding: "var(--sp-2) 0", borderBottom: "1px solid var(--border)" }}>
+    <div
+      onClick={onClick}
+      style={{
+        display: "flex", gap: "var(--sp-4)", alignItems: "center",
+        padding: "var(--sp-2) 0", borderBottom: "1px solid var(--border)",
+        cursor: onClick ? "pointer" : "default",
+        borderRadius: onClick ? 6 : 0,
+        transition: "background 0.1s",
+      }}
+      onMouseEnter={e => { if (onClick) e.currentTarget.style.background = "var(--bg-3)"; }}
+      onMouseLeave={e => { if (onClick) e.currentTarget.style.background = ""; }}
+    >
       {children}
     </div>
   );

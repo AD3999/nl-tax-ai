@@ -203,12 +203,24 @@ function RevenueTab({ t, entries, onRefresh }: { t: T; entries: RevenueEntry[]; 
   const isMobile = useMobile();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ date: "", description: "", client_name: "", amount_excl_vat: "", vat_rate: 21, payment_status: "unpaid" });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
 
   const handleAdd = async () => {
-    await createRevenue(form as unknown as Partial<RevenueEntry>);
-    setShowForm(false);
-    setForm({ date: "", description: "", client_name: "", amount_excl_vat: "", vat_rate: 21, payment_status: "unpaid" });
-    onRefresh();
+    if (!form.date || !form.description || !form.amount_excl_vat) {
+      setErr(t.date && !form.date ? "Date is required" : !form.description ? "Description is required" : "Amount is required");
+      return;
+    }
+    setSaving(true); setErr("");
+    try {
+      await createRevenue(form as unknown as Partial<RevenueEntry>);
+      setShowForm(false);
+      setForm({ date: "", description: "", client_name: "", amount_excl_vat: "", vat_rate: 21, payment_status: "unpaid" });
+      onRefresh();
+    } catch {
+      setErr("Failed to save. Please try again.");
+    }
+    setSaving(false);
   };
 
   return (
@@ -230,9 +242,10 @@ function RevenueTab({ t, entries, onRefresh }: { t: T; entries: RevenueEntry[]; 
               </select>
             </div>
           </div>
+          {err && <div style={{ color: "var(--danger)", fontSize: "0.82rem", marginTop: "var(--sp-2)" }}>{err}</div>}
           <div style={{ display: "flex", gap: "var(--sp-3)", marginTop: "var(--sp-4)" }}>
-            <button className="btn btn-primary" onClick={handleAdd}>{t.save}</button>
-            <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t.cancel}</button>
+            <button className="btn btn-primary" onClick={handleAdd} disabled={saving}>{saving ? "…" : t.save}</button>
+            <button className="btn btn-ghost" onClick={() => { setShowForm(false); setErr(""); }}>{t.cancel}</button>
           </div>
         </div>
       )}
@@ -262,12 +275,24 @@ function ExpensesTab({ t, entries, onRefresh }: { t: T; entries: ExpenseEntry[];
   const isMobile = useMobile();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ date: "", description: "", category: "other", amount_gross: "", vat_rate: 21, business_use_pct: 100 });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
 
   const handleAdd = async () => {
-    await createExpense(form as unknown as Partial<ExpenseEntry>);
-    setShowForm(false);
-    setForm({ date: "", description: "", category: "other", amount_gross: "", vat_rate: 21, business_use_pct: 100 });
-    onRefresh();
+    if (!form.date || !form.description || !form.amount_gross) {
+      setErr(!form.date ? "Date is required" : !form.description ? "Description is required" : "Amount is required");
+      return;
+    }
+    setSaving(true); setErr("");
+    try {
+      await createExpense(form as unknown as Partial<ExpenseEntry>);
+      setShowForm(false);
+      setForm({ date: "", description: "", category: "other", amount_gross: "", vat_rate: 21, business_use_pct: 100 });
+      onRefresh();
+    } catch {
+      setErr("Failed to save. Please try again.");
+    }
+    setSaving(false);
   };
 
   return (
@@ -294,9 +319,10 @@ function ExpensesTab({ t, entries, onRefresh }: { t: T; entries: ExpenseEntry[];
             </div>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Zakelijk %</label><input className="input" type="number" min={0} max={100} value={form.business_use_pct} onChange={e => setForm({ ...form, business_use_pct: +e.target.value })} /></div>
           </div>
+          {err && <div style={{ color: "var(--danger)", fontSize: "0.82rem", marginTop: "var(--sp-2)" }}>{err}</div>}
           <div style={{ display: "flex", gap: "var(--sp-3)", marginTop: "var(--sp-4)" }}>
-            <button className="btn btn-primary" onClick={handleAdd}>{t.save}</button>
-            <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t.cancel}</button>
+            <button className="btn btn-primary" onClick={handleAdd} disabled={saving}>{saving ? "…" : t.save}</button>
+            <button className="btn btn-ghost" onClick={() => { setShowForm(false); setErr(""); }}>{t.cancel}</button>
           </div>
         </div>
       )}
@@ -323,12 +349,24 @@ function HoursTab({ t, data, onRefresh }: { t: T; data: HoursResponse | null; on
   const isMobile = useMobile();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ date: "", hours: "", description: "", client_name: "" });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
 
   const handleAdd = async () => {
-    await createHours(form as unknown as Partial<HoursEntry>);
-    setShowForm(false);
-    setForm({ date: "", hours: "", description: "", client_name: "" });
-    onRefresh();
+    if (!form.date || !form.hours || !form.description) {
+      setErr(!form.date ? "Date is required" : !form.hours ? "Hours are required" : "Description is required");
+      return;
+    }
+    setSaving(true); setErr("");
+    try {
+      await createHours(form as unknown as Partial<HoursEntry>);
+      setShowForm(false);
+      setForm({ date: "", hours: "", description: "", client_name: "" });
+      onRefresh();
+    } catch {
+      setErr("Failed to save. Please try again.");
+    }
+    setSaving(false);
   };
 
   if (!data) return <div className="skel" style={{ height: 200 }} />;
@@ -359,9 +397,10 @@ function HoursTab({ t, data, onRefresh }: { t: T; data: HoursResponse | null; on
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.description}</label><input className="input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.client}</label><input className="input" value={form.client_name} onChange={e => setForm({ ...form, client_name: e.target.value })} /></div>
           </div>
+          {err && <div style={{ color: "var(--danger)", fontSize: "0.82rem", marginTop: "var(--sp-2)" }}>{err}</div>}
           <div style={{ display: "flex", gap: "var(--sp-3)", marginTop: "var(--sp-4)" }}>
-            <button className="btn btn-primary" onClick={handleAdd}>{t.save}</button>
-            <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t.cancel}</button>
+            <button className="btn btn-primary" onClick={handleAdd} disabled={saving}>{saving ? "…" : t.save}</button>
+            <button className="btn btn-ghost" onClick={() => { setShowForm(false); setErr(""); }}>{t.cancel}</button>
           </div>
         </div>
       )}
@@ -386,12 +425,24 @@ function MileageTab({ t, data, onRefresh }: { t: T; data: MileageResponse | null
   const isMobile = useMobile();
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ date: "", from_location: "", to_location: "", km: "", purpose: "", is_business: true });
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
 
   const handleAdd = async () => {
-    await createMileage(form as unknown as Partial<MileageEntry>);
-    setShowForm(false);
-    setForm({ date: "", from_location: "", to_location: "", km: "", purpose: "", is_business: true });
-    onRefresh();
+    if (!form.date || !form.km || !form.from_location || !form.to_location) {
+      setErr(!form.date ? "Date is required" : !form.km ? "KM is required" : "From/To location is required");
+      return;
+    }
+    setSaving(true); setErr("");
+    try {
+      await createMileage(form as unknown as Partial<MileageEntry>);
+      setShowForm(false);
+      setForm({ date: "", from_location: "", to_location: "", km: "", purpose: "", is_business: true });
+      onRefresh();
+    } catch {
+      setErr("Failed to save. Please try again.");
+    }
+    setSaving(false);
   };
 
   if (!data) return <div className="skel" style={{ height: 200 }} />;
@@ -422,9 +473,10 @@ function MileageTab({ t, data, onRefresh }: { t: T; data: MileageResponse | null
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>KM</label><input className="input" type="number" step="0.1" value={form.km} onChange={e => setForm({ ...form, km: e.target.value })} /></div>
             <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.purpose}</label><input className="input" value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })} /></div>
           </div>
+          {err && <div style={{ color: "var(--danger)", fontSize: "0.82rem", marginTop: "var(--sp-2)" }}>{err}</div>}
           <div style={{ display: "flex", gap: "var(--sp-3)", marginTop: "var(--sp-4)" }}>
-            <button className="btn btn-primary" onClick={handleAdd}>{t.save}</button>
-            <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t.cancel}</button>
+            <button className="btn btn-primary" onClick={handleAdd} disabled={saving}>{saving ? "…" : t.save}</button>
+            <button className="btn btn-ghost" onClick={() => { setShowForm(false); setErr(""); }}>{t.cancel}</button>
           </div>
         </div>
       )}

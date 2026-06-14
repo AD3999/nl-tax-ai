@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard, MessageSquare, Calendar, Search,
   Users, Calculator, ClipboardList, Shield, FileText,
@@ -7,11 +8,28 @@ import {
   ListChecks, Building2, Activity,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { client as apiClient } from "../api/client";
 import Wordmark from "./Wordmark";
 import LangSwitch from "./LangSwitch";
 import ThemeToggle from "./ThemeToggle";
 
 export const SIDEBAR_W = 280;
+
+function useUnreadCount(isAccountant: boolean) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!isAccountant) return;
+    const fetch = () => {
+      apiClient.get<{ counts: { unread_messages: number } }>("/portal/inbox/")
+        .then(r => setCount(r.data.counts.unread_messages))
+        .catch(() => null);
+    };
+    fetch();
+    const id = setInterval(fetch, 30_000);
+    return () => clearInterval(id);
+  }, [isAccountant]);
+  return count;
+}
 
 // ── Nav item definitions ─────────────────────────────────────────────────────
 
@@ -71,6 +89,7 @@ function SidebarContent({ onNav }: SidebarContentProps) {
   const isAccountant = user?.role === "accountant";
   const items        = isAdmin ? adminNav() : isAccountant ? accountantNav() : clientNav(t);
   const sectionLabel = isAdmin ? "Admin" : isAccountant ? "Accountant" : "Menu";
+  const unreadCount  = useUnreadCount(isAccountant);
 
   const initials = user
     ? (user.username?.[0] ?? user.email[0]).toUpperCase()
@@ -125,6 +144,24 @@ function SidebarContent({ onNav }: SidebarContentProps) {
           >
             <span className="sb-nav-icon">{item.icon}</span>
             <span className="sb-nav-label">{item.label}</span>
+            {item.to === "/accountant/inbox" && unreadCount > 0 && (
+              <span style={{
+                marginInlineStart: "auto",
+                minWidth: 18, height: 18,
+                borderRadius: 999,
+                background: "var(--danger)",
+                color: "#fff",
+                fontSize: 10,
+                fontWeight: 800,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 4px",
+                flexShrink: 0,
+              }}>
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { CheckSquare, FolderOpen, AlertTriangle, Wrench, RefreshCw, User, TrendingUp, FileWarning, MessageSquare } from "lucide-react";
+import { CheckSquare, FolderOpen, AlertTriangle, Wrench, RefreshCw, User, TrendingUp, FileWarning, MessageSquare, Bot } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useMobile } from "../../hooks/useMobile";
 import { fetchClientProfile, fetchClientEngagement, fetchClientTasks } from "../../api/portal/client";
@@ -33,6 +33,17 @@ const TX = {
   engStatus:      { nl: "Aangiftestatus", en: "Filing status", fa: "وضعیت اظهارنامه" },
   sendMessage:    { nl: "Bericht sturen", en: "Send message", fa: "ارسال پیام" },
   continuePrep:   { nl: "Doorgaan met voorbereiding", en: "Continue tax preparation", fa: "ادامه آماده‌سازی" },
+  askAI:          { nl: "Vraag de AI", en: "Ask AI", fa: "از هوش مصنوعی بپرسید" },
+  aiTasksQ:       {
+    nl: "Ik heb openstaande belastingtaken in mijn portaal. Welke taken zijn het meest urgent en hoe voltooi ik ze stap voor stap in TaxWijs?",
+    en: "I have open tax tasks in my portal. Which tasks are most urgent and how do I complete them step by step in TaxWijs?",
+    fa: "وظایف مالیاتی باز در پورتالم دارم. کدام وظایف فوری‌ترند و چطور آنها را گام به گام در TaxWijs کامل کنم؟",
+  },
+  aiDocsQ:        {
+    nl: "Ik moet documenten uploaden in mijn belastingportaal. Welke documenten heb ik nodig en hoe upload ik ze in TaxWijs?",
+    en: "I need to upload documents in my tax portal. Which documents do I need and how do I upload them in TaxWijs?",
+    fa: "باید اسناد را در پورتال مالیاتی‌ام آپلود کنم. به چه اسنادی نیاز دارم و چطور آنها را در TaxWijs آپلود کنم؟",
+  },
 };
 
 function t(key: keyof typeof TX, lang: "nl" | "en" | "fa") { return TX[key][lang]; }
@@ -50,6 +61,7 @@ function SkeletonCard() {
 export default function ClientPortalPage() {
   const { i18n } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isMobile = useMobile();
   const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as "nl" | "en" | "fa";
 
@@ -274,31 +286,53 @@ export default function ClientPortalPage() {
 
         {/* ── CTA action cards ── */}
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-4)" }}>
-          <Link to="/client/tasks" style={{ textDecoration: "none" }}>
-            <div className="card portal-cta-card" style={{ padding: "var(--sp-5)", cursor: "pointer" }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--blue-subtle)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--blue)", marginBottom: "var(--sp-3)" }}>
-                <CheckSquare size={18} />
-              </div>
-              <div style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--text)", marginBottom: "var(--sp-1)", letterSpacing: "-0.02em" }}>{t("tasks", lang)}</div>
-              {taskSummary && (
-                <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", marginBottom: "var(--sp-3)" }}>
-                  {openTasks} {t("open", lang)}
-                </div>
-              )}
-              <span style={{ fontSize: "var(--text-sm)", color: "var(--blue)", fontWeight: 600 }}>{t("viewTasks", lang)} →</span>
+          {/* Tasks card */}
+          <div className="card portal-cta-card" style={{ padding: "var(--sp-5)" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--blue-subtle)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--blue)", marginBottom: "var(--sp-3)" }}>
+              <CheckSquare size={18} />
             </div>
-          </Link>
+            <div style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--text)", marginBottom: "var(--sp-1)", letterSpacing: "-0.02em" }}>{t("tasks", lang)}</div>
+            {taskSummary && (
+              <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", marginBottom: "var(--sp-3)" }}>
+                {openTasks} {t("open", lang)}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: "var(--sp-2)", flexWrap: "wrap", marginTop: "var(--sp-3)" }}>
+              <Link to="/client/tasks" style={{ textDecoration: "none" }}>
+                <span style={{ fontSize: "var(--text-sm)", color: "var(--blue)", fontWeight: 600 }}>{t("viewTasks", lang)} →</span>
+              </Link>
+              <button
+                onClick={() => navigate("/chat", { state: { question: TX.aiTasksQ[lang] } })}
+                className="btn btn-ghost btn-sm"
+                style={{ fontSize: "var(--text-xs)", display: "inline-flex", alignItems: "center", gap: 4, marginInlineStart: "auto" }}
+              >
+                <Bot size={12} />
+                {t("askAI", lang)}
+              </button>
+            </div>
+          </div>
 
-          <Link to="/client/documents" style={{ textDecoration: "none" }}>
-            <div className="card portal-cta-card" style={{ padding: "var(--sp-5)", cursor: "pointer" }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--blue-subtle)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--blue)", marginBottom: "var(--sp-3)" }}>
-                <FolderOpen size={18} />
-              </div>
-              <div style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--text)", marginBottom: "var(--sp-1)", letterSpacing: "-0.02em" }}>{t("documents", lang)}</div>
-              <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", marginBottom: "var(--sp-3)" }}>{t("uploadView", lang)}</div>
-              <span style={{ fontSize: "var(--text-sm)", color: "var(--blue)", fontWeight: 600 }}>{t("viewDocs", lang)} →</span>
+          {/* Documents card */}
+          <div className="card portal-cta-card" style={{ padding: "var(--sp-5)" }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: "var(--blue-subtle)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--blue)", marginBottom: "var(--sp-3)" }}>
+              <FolderOpen size={18} />
             </div>
-          </Link>
+            <div style={{ fontSize: "var(--text-xl)", fontWeight: 700, color: "var(--text)", marginBottom: "var(--sp-1)", letterSpacing: "-0.02em" }}>{t("documents", lang)}</div>
+            <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", marginBottom: "var(--sp-3)" }}>{t("uploadView", lang)}</div>
+            <div style={{ display: "flex", gap: "var(--sp-2)", flexWrap: "wrap", marginTop: "var(--sp-3)" }}>
+              <Link to="/client/documents" style={{ textDecoration: "none" }}>
+                <span style={{ fontSize: "var(--text-sm)", color: "var(--blue)", fontWeight: 600 }}>{t("viewDocs", lang)} →</span>
+              </Link>
+              <button
+                onClick={() => navigate("/chat", { state: { question: TX.aiDocsQ[lang] } })}
+                className="btn btn-ghost btn-sm"
+                style={{ fontSize: "var(--text-xs)", display: "inline-flex", alignItems: "center", gap: 4, marginInlineStart: "auto" }}
+              >
+                <Bot size={12} />
+                {t("askAI", lang)}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </main>

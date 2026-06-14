@@ -45,6 +45,8 @@ interface ChatMsg {
   streaming?: boolean;
   isIntake?: boolean;
   isIBResult?: boolean;
+  isSavePrompt?: boolean;
+  saveProfileData?: Record<string, unknown>;
 }
 
 const SIM_CHIP_LABEL: Record<string, string> = {
@@ -409,6 +411,42 @@ export default function ChatPage() {
     }
   }
 
+  async function handleSaveToDashboard(data: Record<string, unknown>, msgId: string) {
+    // Dismiss the save prompt immediately
+    setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isSavePrompt: false } : m));
+    const token = localStorage.getItem("access_token");
+    try {
+      const res = await fetch("/api/users/profile/", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ intake_profile: data }),
+      });
+      if (!res.ok) throw new Error("save_failed");
+      showToast(
+        lang === "nl" ? "Profiel opgeslagen in dashboard" : lang === "fa" ? "پروفایل در داشبورد ذخیره شد" : "Profile saved to dashboard",
+        "success",
+      );
+      const confirmText: Record<string, string> = {
+        nl: "✓ Uw belastingprofiel is opgeslagen. Bekijk uw dashboard voor het volledige overzicht.",
+        en: "✓ Your tax profile has been saved. Visit your dashboard to see the full overview.",
+        fa: "✓ پروفایل مالیاتی شما ذخیره شد. برای مشاهده خلاصه کامل به داشبورد مراجعه کنید.",
+      };
+      setMessages(prev => [...prev, {
+        id: `save-confirmed-${Date.now()}`,
+        role: "assistant",
+        content: confirmText[lang] ?? confirmText.en,
+      }]);
+    } catch {
+      showToast(
+        lang === "nl" ? "Opslaan mislukt — probeer het opnieuw" : lang === "fa" ? "ذخیره‌سازی ناموفق بود" : "Save failed — please try again",
+        "error",
+      );
+    }
+  }
+
   const submit = async (question: string, fromInput = false, ibReturnOverride = false, simModeOverride = false) => {
     if (!question.trim() || loading || sessionLimitReached) return;
     const isIBMode = ibMode || ibReturnOverride;
@@ -535,19 +573,6 @@ export default function ChatPage() {
         setIntakeComplete(true);
         setSimMode(false); // simulation complete — switch to normal chat
 
-        // For authenticated users: also persist to server so it works across devices
-        if (user) {
-          const token = localStorage.getItem("access_token");
-          fetch("/api/users/profile/", {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-              ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
-            body: JSON.stringify({ intake_profile: extracted }),
-          }).catch(() => null); // non-fatal
-        }
-
         showToast(
           lang === "nl" ? "Profiel aangemaakt — belasting wordt berekend" : lang === "fa" ? "پروفایل ایجاد شد — در حال محاسبه مالیات شما" : "Profile created — calculating your taxes",
           "success",
@@ -583,6 +608,22 @@ export default function ChatPage() {
           }
         } catch {
           // Calculator error is non-fatal
+        }
+
+        // Ask authenticated users if they want to persist data to their dashboard
+        if (user) {
+          const savePromptText: Record<string, string> = {
+            nl: "Wilt u uw belastingprofiel opslaan in uw dashboard? Dan heeft u het altijd bij de hand en kan ik uw situatie in toekomstige gesprekken onthouden.",
+            en: "Would you like to save your tax profile to your dashboard? This lets me remember your situation in future conversations.",
+            fa: "آیا می‌خواهید پروفایل مالیاتی خود را در داشبورد ذخیره کنید؟ این کار به من اجازه می‌دهد وضعیت شما را در مکالمات آینده به خاطر بسپارم.",
+          };
+          setMessages(prev => [...prev, {
+            id: `save-prompt-${Date.now()}`,
+            role: "assistant",
+            content: savePromptText[lang] ?? savePromptText.en,
+            isSavePrompt: true,
+            saveProfileData: extracted,
+          }]);
         }
       }
     } catch (err: unknown) {
@@ -822,6 +863,29 @@ export default function ChatPage() {
                       </button>
                     </div>
                   )}
+                  {msg.isSavePrompt && msg.saveProfileData && (
+                    <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--hairline)", display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+                      <button
+                        className="btn btn-accent btn-sm"
+                        onClick={() => void handleSaveToDashboard(msg.saveProfileData!, msg.id)}
+                      >
+                        {lang === "nl" ? "Ja, opslaan" : lang === "fa" ? "بله، ذخیره کن" : "Yes, save"}
+                      </button>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => setMessages(prev => prev.map(m => m.id === msg.id ? { ...m, isSavePrompt: false } : m))}
+                      >
+                        {lang === "nl" ? "Nee, bedankt" : lang === "fa" ? "نه، ممنون" : "No thanks"}
+                      </button>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => navigate("/dashboard")}
+                        style={{ marginInlineStart: "auto" }}
+                      >
+                        {lang === "nl" ? "Bekijk dashboard →" : lang === "fa" ? "مشاهده داشبورد →" : "View dashboard →"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -1000,6 +1064,15 @@ export default function ChatPage() {
                   setIbAnswers(null);
                   setSimMode(false);
                   localStorage.removeItem(historyKey());
+                  if (user) {
+                    const token = localStorage.getItem("access_token");
+                    if (token) {
+                      fetch("/api/chat/history/", {
+                        method: "DELETE",
+                        headers: { Authorization: `Bearer ${token}` },
+                      }).catch(() => null);
+                    }
+                  }
                   if (!profile) startIntakeGreeting();
                 }}
               >

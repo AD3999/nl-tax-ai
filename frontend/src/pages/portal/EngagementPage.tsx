@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useSearchParams, Link } from "react-router-dom";
 import { ChevronRight, FileText, RefreshCw, X, AlertTriangle, Bot } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
@@ -102,7 +102,6 @@ const TX: Record<Lang, Record<string, string>> = {
     msg_placeholder: "Type a message… (Enter to send)",
     msg_send: "Send",
     msg_no_messages: "No messages yet",
-    done: "Done",
     checklist_updated: "Checklist item updated",
     checklist_error: "Failed to update checklist item",
     action_updated: "Action updated",
@@ -314,6 +313,7 @@ const RISK_COLOR: Record<string, string> = {
 
 export default function EngagementPage() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { i18n } = useTranslation();
   const { showToast } = useToast();
@@ -331,7 +331,8 @@ export default function EngagementPage() {
   const [auditLog, setAuditLog] = useState<AuditLog[]>([]);
   const [readiness, setReadiness] = useState<ReadinessResult | null>(null);
 
-  const [tab, setTab] = useState<Tab>("overview");
+  const initialTab = (searchParams.get("tab") as Tab) ?? "overview";
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);

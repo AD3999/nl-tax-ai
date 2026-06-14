@@ -67,97 +67,122 @@ export default function TopNav() {
 
   function closeMenu() { setMenuOpen(false); }
 
-  const navLinkStyle = ({ isActive }: { isActive: boolean }) => ({
-    display: "inline-flex",
-    alignItems: "center",
-    height: 44,
-    padding: "0 8px",
-    fontSize: "var(--text-sm)" as string,
-    fontWeight: isActive ? 700 : 600,
-    color: isActive ? "var(--blue-text)" : "var(--text-2)",
-    borderBottom: isActive ? "2px solid var(--blue)" : "2px solid transparent",
-    textDecoration: "none",
-    transition: "color var(--t-fast), border-color var(--t-fast)",
-    letterSpacing: "-0.01em",
-  });
-
   return (
     <>
       <header
         dir={isRtl ? "rtl" : "ltr"}
         style={{
-          height: 64,
-          padding: isMobile ? "0 var(--sp-4)" : "0 var(--sp-8)",
+          height: 60,
+          padding: isMobile ? "0 var(--sp-4)" : "0 48px",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          borderBottom: "1px solid var(--border)",
-          background: scrolled ? "var(--paper-glass)" : "var(--bg)",
-          backdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
-          WebkitBackdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
-          boxShadow: scrolled ? "var(--sh-sm)" : "none",
-          transition: "background .25s, box-shadow .25s, border-color .25s",
+          borderBottom: scrolled ? "1px solid var(--border)" : "1px solid transparent",
+          background: scrolled ? "var(--paper-glass)" : "transparent",
+          backdropFilter: scrolled ? "blur(20px) saturate(180%)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(20px) saturate(180%)" : "none",
+          boxShadow: scrolled ? "0 1px 0 var(--border)" : "none",
+          transition: "background .3s, box-shadow .3s, border-color .3s",
           position: "sticky",
           top: 0,
           zIndex: 30,
           flexShrink: 0,
         }}
       >
-        {/* Left: wordmark + nav links */}
-        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 0 : 4 }}>
-          <NavLink to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", marginInlineEnd: isMobile ? 0 : 20 }} onClick={closeMenu}>
-            <Wordmark size={16} />
-          </NavLink>
+        {/* Left: wordmark */}
+        <NavLink to="/" style={{ textDecoration: "none", display: "flex", alignItems: "center" }} onClick={closeMenu}>
+          <Wordmark size={15} />
+        </NavLink>
 
-          {!isMobile && (
-            <nav aria-label="Main navigation" style={{ display: "flex", alignItems: "center" }}>
-              {navItems.map(item => (
-                <NavLink key={item.to} to={item.to} style={navLinkStyle}>
-                  {t(item.labelKey)}
-                </NavLink>
-              ))}
-              {(user?.role === "accountant" || user?.is_admin) && (
-                <NavLink to="/accountant/portal" style={navLinkStyle}>
-                  Accountant
-                </NavLink>
-              )}
-              {user && user.role !== "accountant" && !user.is_admin && (
-                <NavLink to="/client" style={navLinkStyle}>
-                  My Portal
-                </NavLink>
-              )}
-              {user?.is_admin && (
-                <NavLink to="/admin" end style={navLinkStyle}>
-                  Admin
-                </NavLink>
-              )}
-            </nav>
-          )}
-        </div>
+        {/* Centre: nav links (desktop) */}
+        {!isMobile && (
+          <nav aria-label="Main navigation" style={{
+            display: "flex", alignItems: "center",
+            background: "var(--bg-2)",
+            border: "1px solid var(--border)",
+            borderRadius: 999,
+            padding: "3px 4px",
+            gap: 2,
+          }}>
+            {navItems.map(item => (
+              <NavLink key={item.to} to={item.to} style={({ isActive }) => ({
+                display: "inline-flex", alignItems: "center", height: 32,
+                padding: "0 14px",
+                fontSize: "var(--text-sm)", fontWeight: isActive ? 700 : 500,
+                color: isActive ? "var(--text)" : "var(--text-3)",
+                borderRadius: 999,
+                background: isActive ? "var(--bg)" : "transparent",
+                boxShadow: isActive ? "var(--sh-sm)" : "none",
+                textDecoration: "none",
+                transition: "all .15s",
+                letterSpacing: "-0.01em",
+                whiteSpace: "nowrap",
+              })}>
+                {t(item.labelKey)}
+              </NavLink>
+            ))}
+            {(user?.role === "accountant" || user?.is_admin) && (
+              <NavLink to="/accountant/portal" style={({ isActive }) => ({
+                display: "inline-flex", alignItems: "center", height: 32, padding: "0 14px",
+                fontSize: "var(--text-sm)", fontWeight: isActive ? 700 : 500,
+                color: isActive ? "var(--text)" : "var(--text-3)",
+                borderRadius: 999, background: isActive ? "var(--bg)" : "transparent",
+                boxShadow: isActive ? "var(--sh-sm)" : "none",
+                textDecoration: "none", transition: "all .15s",
+              })}>Accountant</NavLink>
+            )}
+            {user && user.role !== "accountant" && !user.is_admin && (
+              <NavLink to="/client" style={({ isActive }) => ({
+                display: "inline-flex", alignItems: "center", height: 32, padding: "0 14px",
+                fontSize: "var(--text-sm)", fontWeight: isActive ? 700 : 500,
+                color: isActive ? "var(--text)" : "var(--text-3)",
+                borderRadius: 999, background: isActive ? "var(--bg)" : "transparent",
+                boxShadow: isActive ? "var(--sh-sm)" : "none",
+                textDecoration: "none", transition: "all .15s",
+              })}>My Portal</NavLink>
+            )}
+            {user?.is_admin && (
+              <NavLink to="/admin" end style={({ isActive }) => ({
+                display: "inline-flex", alignItems: "center", height: 32, padding: "0 14px",
+                fontSize: "var(--text-sm)", fontWeight: isActive ? 700 : 500,
+                color: isActive ? "var(--text)" : "var(--text-3)",
+                borderRadius: 999, background: isActive ? "var(--bg)" : "transparent",
+                boxShadow: isActive ? "var(--sh-sm)" : "none",
+                textDecoration: "none", transition: "all .15s",
+              })}>Admin</NavLink>
+            )}
+          </nav>
+        )}
 
-        {/* Right: theme toggle + lang switch + auth + hamburger */}
-        <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 }}>
+        {/* Right: controls + auth */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <ThemeToggle />
           <LangSwitch />
+
+          {!isMobile && (
+            <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
+          )}
 
           {!isMobile && user ? (
             <>
               {user.plan === "premium" && (
-                <span className="pill pill-accent">⚡ Premium</span>
+                <span className="pill pill-accent">⚡</span>
               )}
-              <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {user.email}
-              </span>
-              <button onClick={handleLogout} className="btn btn-ghost btn-sm">
+              <button onClick={handleLogout} className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-sm)" }}>
                 {t("nav.logout")}
               </button>
             </>
           ) : !isMobile ? (
             <>
-              <NavLink to="/login" style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", textDecoration: "none", padding: "0 8px", height: 44, display: "inline-flex", alignItems: "center" }}>
+              <NavLink to="/login" style={{
+                fontSize: "var(--text-sm)", color: "var(--text-3)", textDecoration: "none",
+                padding: "0 12px", height: 36, display: "inline-flex", alignItems: "center",
+                borderRadius: 999, fontWeight: 500,
+                transition: "color .15s",
+              }}>
                 {t("nav.login")}
               </NavLink>
-              <NavLink to="/register" className="btn btn-accent btn-sm" style={{ textDecoration: "none" }}>
+              <NavLink to="/register" className="btn btn-accent btn-sm" style={{ textDecoration: "none", borderRadius: 999 }}>
                 {t("auth.register")}
               </NavLink>
             </>
@@ -174,8 +199,8 @@ export default function TopNav() {
                 background: "none",
                 border: "1px solid var(--border-2)",
                 borderRadius: "var(--r-sm)",
-                width: 44,
-                height: 44,
+                width: 40,
+                height: 40,
                 display: "grid",
                 placeItems: "center",
                 cursor: "pointer",

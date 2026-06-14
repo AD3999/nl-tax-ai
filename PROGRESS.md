@@ -1,7 +1,42 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 14 Jun 2026 — UI/UX Bible compliance: all 20 chapters implemented.
+> Last updated: 14 Jun 2026 — Bug fixes session: 9 UI issues + Railway build error resolved.
+
+---
+
+## Session — 14 Jun 2026 · Bug Fixes — 9 UI Issues + Railway Build Error ✅ Complete
+
+### Issues Fixed
+
+| # | Issue | Fix |
+|---|-------|-----|
+| Railway | TS1117 build error in `EngagementPage.tsx` | Removed duplicate `done` key in `en:` object (line 105) |
+| #1 | Inbox badge missing; accountant can't open/reply to messages | Added `useUnreadCount` polling hook in `AppSidebar.tsx` (30s interval), badge on Inbox nav item; made message rows in `AccountantInboxPage` clickable → navigate to `EngagementPage?tab=messages`; added `useSearchParams` support in `EngagementPage` to activate Messages tab from URL |
+| #2 | My Profile form ugly / off-theme | Full redesign in `ClientProfilePage.tsx`: icon-headed section cards (Personal, Address, Tax, Preferences, Notes), gradient avatar with initials, sticky bottom save bar, checkmark on save |
+| #3 | ZZP Workspace data not saving | Added client-side validation + try/catch + inline error messages to all 4 tabs (Revenue, Expenses, Hours, Mileage) in `ZZPWorkspacePage.tsx`; save button shows `"…"` while saving |
+| #4 | Landing page navbar | Redesigned `TopNav.tsx`: transparent/glass scroll state, pill-style centred nav container, pill Login/Register buttons, 60px height |
+| #5 | Form validations | ZZP tabs fully validated; Login/Register already had `required`; `ClientMessagesPage` validates empty messages |
+| #6 | Clear chat must delete from DB | Added `DELETE /api/chat/history/` endpoint in `backend/apps/chat/views.py`; wired clear button in `ChatPage.tsx` to call it for authenticated users |
+| #7 | Ask AI on portal cards must auto-answer & guide using platform only | Added contextual "Ask AI" buttons on Tasks + Documents cards in `ClientPortalPage.tsx` that pre-fill platform-specific questions; AI system prompt already contains `PLATFORM NAVIGATION` + `EXTERNAL SITE BAN` |
+| #8 | Chatbot data persistence — save to dashboard prompt | After intake completion, bot shows "Save to dashboard?" with Yes/No buttons; Yes calls `PATCH /api/users/profile/` and shows confirmation with "View dashboard →" link |
+| #9 | Accountant tasks vs client tasks | Confirmed: KVK number in checklist is the *client's* own Chamber of Commerce registration — correctly assigned to ZZP clients |
+
+### Files modified
+
+| File | Change |
+|------|--------|
+| `frontend/src/pages/portal/EngagementPage.tsx` | Removed duplicate `done` key; added `useSearchParams` + `?tab=messages` URL support |
+| `frontend/src/components/AppSidebar.tsx` | Added `useUnreadCount` hook, unread badge on Inbox nav item |
+| `frontend/src/pages/AccountantInboxPage.tsx` | Clickable message rows → navigate to engagement Messages tab; "Open ↗" link |
+| `frontend/src/pages/ClientProfilePage.tsx` | Full form redesign with icon sections and sticky save bar |
+| `frontend/src/pages/ZZPWorkspacePage.tsx` | Validation + error handling on all 4 workspace tabs |
+| `frontend/src/components/TopNav.tsx` | Landing navbar redesign: pill nav, glass scroll effect |
+| `backend/apps/chat/views.py` | Added `delete()` method to `ChatHistoryView` for DB clearing |
+| `frontend/src/pages/ChatPage.tsx` | Clear-chat calls DELETE endpoint; "Ask AI" receives pre-filled question; added `isSavePrompt` message type + `handleSaveToDashboard`; save-prompt with Yes/No/"View dashboard" buttons after intake |
+| `frontend/src/pages/portal/ClientPortalPage.tsx` | "Ask AI" buttons on Tasks + Documents cards with contextual platform questions |
+
+**TypeScript: 0 errors. Railway build error resolved.**
 
 ---
 

@@ -630,8 +630,8 @@ class ConversationDetailView(generics.RetrieveAPIView):
 
 class ChatHistoryView(APIView):
     """
-    GET  /api/chat/history/         — return last 80 messages for authenticated user
-    POST /api/chat/history/save/    — save a client-side session batch to DB
+    GET    /api/chat/history/  — return last 80 messages for authenticated user
+    DELETE /api/chat/history/  — delete all conversations and messages for this user
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -651,6 +651,10 @@ class ChatHistoryView(APIView):
             }
             for m in messages
         ])
+
+    def delete(self, request):
+        Conversation.objects.filter(user=request.user).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class SaveChatHistoryView(APIView):

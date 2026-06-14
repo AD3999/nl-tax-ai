@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { User, MapPin, CreditCard, Globe, FileText, Check, Shield } from "lucide-react";
 import { client as apiClient } from "../api/client";
 import { useMobile } from "../hooks/useMobile";
 
@@ -30,14 +31,6 @@ const LABEL_STYLE: React.CSSProperties = {
   display: "block",
 };
 
-const SECTION_HEAD: React.CSSProperties = {
-  fontWeight: 700,
-  fontSize: "0.8rem",
-  color: "var(--text-3)",
-  textTransform: "uppercase",
-  letterSpacing: "0.08em",
-  margin: "0 0 var(--sp-5)",
-};
 
 export default function ClientProfilePage() {
   const { i18n } = useTranslation();
@@ -119,194 +112,231 @@ export default function ClientProfilePage() {
     );
   }
 
-  return (
-    <div dir={dir} style={{ maxWidth: 700, margin: "0 auto" }}>
+  const initials = ((form.full_name as string | undefined) ?? (form.email as string | undefined) ?? "?")[0]?.toUpperCase() ?? "?";
 
-      {/* Page header */}
-      <div style={{ marginBottom: "var(--sp-6)" }}>
-        <h1 style={{ fontWeight: 800, fontSize: "1.6rem", margin: "0 0 4px", letterSpacing: "-0.03em" }}>
-          {T.title}
-        </h1>
-        <p style={{ margin: 0, color: "var(--text-3)", fontSize: "0.9rem" }}>{T.subtitle}</p>
+  return (
+    <div dir={dir} style={{ maxWidth: 720, margin: "0 auto", padding: "var(--sp-6) var(--sp-4)" }}>
+
+      {/* ── Profile header ── */}
+      <div style={{
+        display: "flex", alignItems: "center", gap: "var(--sp-5)",
+        marginBottom: "var(--sp-7)",
+        padding: "var(--sp-6)",
+        background: "var(--bg-2)",
+        border: "1px solid var(--border)",
+        borderRadius: "var(--r-xl)",
+        borderLeft: "4px solid var(--blue)",
+      }}>
+        <div style={{
+          width: 64, height: 64, borderRadius: "50%",
+          background: "linear-gradient(135deg, var(--blue) 0%, var(--blue-text) 100%)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: "1.6rem", fontWeight: 800, color: "#fff", flexShrink: 0,
+          boxShadow: "0 4px 16px var(--blue)44",
+        }}>
+          {initials}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h1 style={{ fontWeight: 800, fontSize: "var(--text-2xl)", margin: "0 0 4px", letterSpacing: "-0.03em", color: "var(--text)" }}>
+            {T.title}
+          </h1>
+          <p style={{ margin: 0, color: "var(--text-3)", fontSize: "var(--text-sm)" }}>{T.subtitle}</p>
+        </div>
+        <button
+          className={saved ? "btn btn-ghost" : "btn btn-accent"}
+          onClick={handleSave}
+          disabled={saving}
+          style={{ minWidth: 140, flexShrink: 0, display: "flex", alignItems: "center", gap: 6 }}
+        >
+          {saved ? <><Check size={14} /> {T.saved}</> : saving ? "…" : T.save}
+        </button>
       </div>
 
       {/* ── Personal Information ── */}
-      <div className="card" style={{ marginBottom: "var(--sp-4)", padding: "var(--sp-6)" }}>
-        <p style={SECTION_HEAD}>{T.personal}</p>
+      <div className="card" style={{ marginBottom: "var(--sp-4)", overflow: "hidden" }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: "var(--sp-3)",
+          padding: "var(--sp-4) var(--sp-6)",
+          borderBottom: "1px solid var(--border)",
+          background: "var(--bg-3)",
+        }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--blue-subtle)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <User size={15} style={{ color: "var(--blue)" }} />
+          </div>
+          <span style={{ fontWeight: 700, fontSize: "var(--text-sm)", color: "var(--text)", letterSpacing: "-0.01em" }}>{T.personal}</span>
+        </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-4)" }}>
+        <div style={{ padding: "var(--sp-6)", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-5)" }}>
 
-          {/* Full Name */}
           <div>
             <label style={LABEL_STYLE}>{T.fullName}</label>
-            <input className="input" type="text"
-              value={(form.full_name ?? "") as string}
-              placeholder="Jan de Vries"
-              onChange={set("full_name")}
-            />
+            <input className="input" type="text" value={(form.full_name ?? "") as string} placeholder="Jan de Vries" onChange={set("full_name")} />
           </div>
 
-          {/* Email (read-only) */}
           <div>
             <label style={LABEL_STYLE}>{T.email}</label>
-            <input className="input" type="email"
-              value={(form.email ?? "") as string}
-              readOnly
-              style={{ opacity: 0.55, cursor: "not-allowed" }}
-            />
-            <span style={{ fontSize: "0.7rem", color: "var(--text-4)", marginTop: 4, display: "block" }}>
-              {T.emailReadOnly}
-            </span>
+            <input className="input" type="email" value={(form.email ?? "") as string} readOnly
+              style={{ opacity: 0.5, cursor: "not-allowed", background: "var(--bg-3)" }} />
+            <span style={{ fontSize: "0.7rem", color: "var(--text-4)", marginTop: 4, display: "block" }}>{T.emailReadOnly}</span>
           </div>
 
-          {/* Phone */}
           <div>
             <label style={LABEL_STYLE}>{T.phone}</label>
-            <input className="input" type="tel"
-              value={(form.phone ?? "") as string}
-              placeholder="+31 6 12 34 56 78"
-              onChange={set("phone")}
-            />
+            <input className="input" type="tel" value={(form.phone ?? "") as string} placeholder="+31 6 12 34 56 78" onChange={set("phone")} />
           </div>
 
-          {/* Date of Birth */}
           <div>
             <label style={LABEL_STYLE}>{T.birth}</label>
-            <input className="input" type="date"
-              value={(form.birth_date ?? "") as string}
-              onChange={set("birth_date")}
-            />
+            <input className="input" type="date" value={(form.birth_date ?? "") as string} onChange={set("birth_date")} />
           </div>
+        </div>
+      </div>
 
-          {/* Street — full width */}
+      {/* ── Address ── */}
+      <div className="card" style={{ marginBottom: "var(--sp-4)", overflow: "hidden" }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: "var(--sp-3)",
+          padding: "var(--sp-4) var(--sp-6)",
+          borderBottom: "1px solid var(--border)",
+          background: "var(--bg-3)",
+        }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--ok-subtle)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <MapPin size={15} style={{ color: "var(--ok)" }} />
+          </div>
+          <span style={{ fontWeight: 700, fontSize: "var(--text-sm)", color: "var(--text)", letterSpacing: "-0.01em" }}>
+            {isFA ? "آدرس" : isNL ? "Adres" : "Address"}
+          </span>
+        </div>
+        <div style={{ padding: "var(--sp-6)", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-5)" }}>
           <div style={{ gridColumn: "1 / -1" }}>
             <label style={LABEL_STYLE}>{T.street}</label>
-            <input className="input" type="text"
-              value={(form.address_street ?? "") as string}
-              placeholder="Keizersgracht 123"
-              onChange={set("address_street")}
-            />
+            <input className="input" type="text" value={(form.address_street ?? "") as string} placeholder="Keizersgracht 123" onChange={set("address_street")} />
           </div>
-
-          {/* City */}
           <div>
             <label style={LABEL_STYLE}>{T.city}</label>
-            <input className="input" type="text"
-              value={(form.address_city ?? "") as string}
-              placeholder="Amsterdam"
-              onChange={set("address_city")}
-            />
+            <input className="input" type="text" value={(form.address_city ?? "") as string} placeholder="Amsterdam" onChange={set("address_city")} />
           </div>
-
-          {/* Postcode */}
           <div>
             <label style={LABEL_STYLE}>{T.postcode}</label>
-            <input className="input" type="text"
-              value={(form.address_postcode ?? "") as string}
-              placeholder="1016 EG"
-              onChange={set("address_postcode")}
-            />
+            <input className="input" type="text" value={(form.address_postcode ?? "") as string} placeholder="1016 EG" onChange={set("address_postcode")} />
           </div>
-
         </div>
       </div>
 
       {/* ── Tax Information ── */}
-      <div className="card" style={{ marginBottom: "var(--sp-4)", padding: "var(--sp-6)" }}>
-        <p style={SECTION_HEAD}>{T.tax}</p>
+      <div className="card" style={{ marginBottom: "var(--sp-4)", overflow: "hidden" }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: "var(--sp-3)",
+          padding: "var(--sp-4) var(--sp-6)",
+          borderBottom: "1px solid var(--border)",
+          background: "var(--bg-3)",
+        }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--warn-subtle)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <CreditCard size={15} style={{ color: "var(--warn)" }} />
+          </div>
+          <span style={{ fontWeight: 700, fontSize: "var(--text-sm)", color: "var(--text)", letterSpacing: "-0.01em" }}>{T.tax}</span>
+        </div>
+        <div style={{ padding: "var(--sp-6)", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-5)" }}>
 
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-4)" }}>
-
-          {/* BSN */}
           <div>
             <label style={LABEL_STYLE}>{T.bsn}</label>
-            <input className="input" type="text"
-              value={(form.bsn ?? "") as string}
-              placeholder="123456789"
-              onChange={set("bsn")}
-            />
-            <span style={{ fontSize: "0.7rem", color: "var(--text-4)", marginTop: 4, display: "block" }}>
-              {T.bsnHint}
-            </span>
+            <div style={{ position: "relative" }}>
+              <input className="input" type="text" value={(form.bsn ?? "") as string} placeholder="123456789" onChange={set("bsn")}
+                style={{ paddingInlineEnd: 32 }} />
+              <Shield size={13} style={{ position: "absolute", insetInlineEnd: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-4)", pointerEvents: "none" }} />
+            </div>
+            <span style={{ fontSize: "0.7rem", color: "var(--text-4)", marginTop: 4, display: "block" }}>{T.bsnHint}</span>
           </div>
 
-          {/* KvK */}
           <div>
             <label style={LABEL_STYLE}>{T.kvk}</label>
-            <input className="input" type="text"
-              value={(form.kvk_number ?? "") as string}
-              placeholder="12345678"
-              onChange={set("kvk_number")}
-            />
+            <input className="input" type="text" value={(form.kvk_number ?? "") as string} placeholder="12345678" onChange={set("kvk_number")} />
           </div>
 
-          {/* BTW */}
           <div>
             <label style={LABEL_STYLE}>{T.btw}</label>
-            <input className="input" type="text"
-              value={(form.btw_number ?? "") as string}
-              placeholder="NL123456789B01"
-              onChange={set("btw_number")}
-            />
+            <input className="input" type="text" value={(form.btw_number ?? "") as string} placeholder="NL123456789B01" onChange={set("btw_number")} />
           </div>
 
-          {/* Tax Type */}
           <div>
             <label style={LABEL_STYLE}>{T.taxType}</label>
-            <select className="input"
-              value={form.tax_type ?? ""}
-              onChange={set("tax_type")}
-            >
+            <select className="input" value={form.tax_type ?? ""} onChange={set("tax_type")}>
               <option value="zzp">ZZP / Freelancer</option>
               <option value="employee">{isNL ? "Werknemer" : isFA ? "کارمند" : "Employee"}</option>
               <option value="expat">Expat</option>
               <option value="dga">DGA</option>
             </select>
           </div>
+        </div>
+      </div>
 
-          {/* Preferred Language — full width */}
-          <div style={{ gridColumn: "1 / -1" }}>
-            <label style={LABEL_STYLE}>{T.lang}</label>
-            <select className="input"
-              value={form.preferred_language ?? ""}
-              onChange={set("preferred_language")}
-              style={{ maxWidth: 280 }}
-            >
-              <option value="nl">Nederlands</option>
-              <option value="en">English</option>
-              <option value="fa">فارسی</option>
-            </select>
+      {/* ── Preferences ── */}
+      <div className="card" style={{ marginBottom: "var(--sp-4)", overflow: "hidden" }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: "var(--sp-3)",
+          padding: "var(--sp-4) var(--sp-6)",
+          borderBottom: "1px solid var(--border)",
+          background: "var(--bg-3)",
+        }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--purple-subtle, #ede9fe)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Globe size={15} style={{ color: "var(--purple)" }} />
           </div>
-
+          <span style={{ fontWeight: 700, fontSize: "var(--text-sm)", color: "var(--text)", letterSpacing: "-0.01em" }}>
+            {isFA ? "تنظیمات" : isNL ? "Voorkeuren" : "Preferences"}
+          </span>
+        </div>
+        <div style={{ padding: "var(--sp-6)" }}>
+          <label style={LABEL_STYLE}>{T.lang}</label>
+          <select className="input" value={form.preferred_language ?? ""} onChange={set("preferred_language")} style={{ maxWidth: 280 }}>
+            <option value="nl">Nederlands</option>
+            <option value="en">English</option>
+            <option value="fa">فارسی</option>
+          </select>
         </div>
       </div>
 
       {/* ── Notes ── */}
-      <div className="card" style={{ marginBottom: "var(--sp-6)", padding: "var(--sp-6)" }}>
-        <p style={SECTION_HEAD}>{T.notesSection}</p>
-        <textarea
-          className="input"
-          rows={4}
-          style={{ width: "100%", resize: "vertical", fontFamily: "inherit", boxSizing: "border-box" }}
-          placeholder={
-            isFA ? "یادداشت‌هایی برای حسابدار یا خودتان…" :
-            isNL ? "Notities voor uw accountant of uzelf…" :
-            "Notes for your accountant or yourself…"
-          }
-          value={form.notes ?? ""}
-          onChange={set("notes")}
-        />
+      <div className="card" style={{ marginBottom: "var(--sp-6)", overflow: "hidden" }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: "var(--sp-3)",
+          padding: "var(--sp-4) var(--sp-6)",
+          borderBottom: "1px solid var(--border)",
+          background: "var(--bg-3)",
+        }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--bg-4, var(--bg-3))", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <FileText size={15} style={{ color: "var(--text-3)" }} />
+          </div>
+          <span style={{ fontWeight: 700, fontSize: "var(--text-sm)", color: "var(--text)", letterSpacing: "-0.01em" }}>{T.notesSection}</span>
+        </div>
+        <div style={{ padding: "var(--sp-6)" }}>
+          <textarea
+            className="input"
+            rows={4}
+            style={{ width: "100%", resize: "vertical", fontFamily: "inherit", boxSizing: "border-box" }}
+            placeholder={isFA ? "یادداشت‌هایی برای حسابدار یا خودتان…" : isNL ? "Notities voor uw accountant of uzelf…" : "Notes for your accountant or yourself…"}
+            value={form.notes ?? ""}
+            onChange={set("notes")}
+          />
+        </div>
       </div>
 
-      {/* Save button */}
-      <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-3)" }}>
+      {/* Bottom save bar */}
+      <div style={{
+        position: "sticky", bottom: "var(--sp-4)",
+        display: "flex", justifyContent: "flex-end",
+        padding: "var(--sp-4) var(--sp-5)",
+        background: "var(--bg-2)",
+        border: "1px solid var(--border)",
+        borderRadius: "var(--r-lg)",
+        boxShadow: "var(--shadow)",
+      }}>
         <button
-          className={saved ? "btn btn-ghost" : "btn btn-primary"}
+          className={saved ? "btn btn-ghost" : "btn btn-accent"}
           onClick={handleSave}
           disabled={saving}
-          style={{ minWidth: 160 }}
+          style={{ minWidth: 160, display: "flex", alignItems: "center", gap: 6 }}
         >
-          {saved ? T.saved : saving ? "…" : T.save}
+          {saved ? <><Check size={14} /> {T.saved}</> : saving ? "…" : T.save}
         </button>
       </div>
 
