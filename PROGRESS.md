@@ -1,7 +1,28 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 15 Jun 2026 — Document "View" button: authenticated API file endpoint, blob URL viewer, Railway-safe
+> Last updated: 15 Jun 2026 — Nav double-active-link fix, client unread message dot badge, language sync to backend
+
+---
+
+## Session — 15 Jun 2026 · Nav Link, Unread Badge, Language Sync ✅ Complete
+
+### Issues fixed
+
+| # | Issue | Fix |
+|---|-------|-----|
+| 1 | "My Portal" and "My Profile" both showed as active simultaneously in the sidebar | React Router `NavLink` without `end: true` prefix-matches child routes — `/client` matched `/client/profile`. Added `end: true` to `/client`, `/client/messages`, and `/client/profile` nav items |
+| 2 | No indication in sidebar when client has an unread message | New `ClientMessageUnreadCountView` (`GET /portal/client/messages/unread-count/`) returns `{"count": N}` without side effects (full messages endpoint marks as read). `useUnreadCount` hook now accepts `isClient` param and polls this endpoint every 30s. Glowing red dot appears on the Messages nav link when count > 0 |
+| 3 | Auto-generated rejection notification was in Dutch even when user communicates in English | `preferred_language` on `AccountantClientProfile` defaulted to `"nl"` and was never updated when the user changed the UI language. `LangSwitch` now calls `PATCH /portal/client/profile/` with `{"preferred_language": lang}` on every language change. `ClientPortalProfileView` extended with a `patch()` method |
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `backend/apps/portal/views.py` | Added `ClientPortalProfileView.patch`: accepts `preferred_language`, `first_name`, `last_name`, `phone`; added `ClientMessageUnreadCountView`: counts unread messages for the client without marking them read |
+| `backend/apps/portal/urls.py` | Added `client/messages/unread-count/` route; imported `ClientMessageUnreadCountView` |
+| `frontend/src/components/AppSidebar.tsx` | `useUnreadCount` extended to handle both accountant (polls `/portal/inbox/`) and client (polls `/portal/client/messages/unread-count/`); glowing dot badge on Messages link; `end: true` on `/client`, `/client/messages`, `/client/profile` |
+| `frontend/src/components/LangSwitch.tsx` | On language change, syncs `preferred_language` to backend via `PATCH /portal/client/profile/` (client users only) |
 
 ---
 
