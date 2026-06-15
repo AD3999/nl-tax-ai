@@ -1,7 +1,28 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 15 Jun 2026 — My Tasks: all inline action types fixed (text / date / number / upload / navigate)
+> Last updated: 15 Jun 2026 — My Tasks: sticky progress bar, real-time fill, hours inline + ZZP sync, upload 500 fixed
+
+---
+
+## Session — 15 Jun 2026 · My Tasks — Progress Bar, Upload Fix, Hours Sync ✅ Complete
+
+### Issues fixed
+
+| # | Issue | Fix |
+|---|-------|-----|
+| 1 | Progress bar scrolls away and isn't visible while working through tasks | Split layout: title scrolls, progress strip is `position: sticky; top: 0` with `backdrop-filter: blur(16px)` and `--paper-glass` background — sticks to top while task list scrolls beneath it |
+| 2 | Progress bar doesn't fill when tasks are completed | All three save handlers (`handleMarkDone`, `handleSaveInline`, `handleUploadDoc`) now call `setReadiness(Math.round((newC / total) * 100))` optimistically — bar animates immediately without waiting for next API poll |
+| 3 | Hours task ("Hours registration (urencriterium)") redirected to ZZP workspace instead of staying on page | Added `zzp_hours` to `INLINE_INFO_KEYS` + `NUMBER_KEYS` — shows inline number input; backend `ClientPortalTaskUpdateView` syncs the saved hours to `ZZPHoursEntry` (tagged `notes="task_checklist_summary"`) so ZZP workspace total updates immediately |
+| 4 | Upload failed: "Could not find config for 'default' in settings.STORAGES" | Django 4.2+ requires explicit `"default"` key in `STORAGES` dict; added `FileSystemStorage` as the default backend alongside the existing `staticfiles` entry |
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `backend/config/settings.py` | Added `"default": {"BACKEND": "django.core.files.storage.FileSystemStorage"}` to `STORAGES` |
+| `backend/apps/portal/views.py` | `ClientPortalTaskUpdateView.patch`: after saving `zzp_hours` meta_value, deletes previous `task_checklist_summary` ZZPHoursEntry and creates a new one for the year |
+| `frontend/src/pages/portal/ClientTasksPage.tsx` | Sticky progress strip with glass blur; real-time readiness on all save actions; `zzp_hours` in INLINE_INFO_KEYS + NUMBER_KEYS; `enter_hours` TX string (NL/EN/FA); hours display as "1.300 h"; hours placeholder shows urencriterium hint |
 
 ---
 

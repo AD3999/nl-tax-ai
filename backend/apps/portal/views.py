@@ -1055,6 +1055,29 @@ class ClientPortalTaskUpdateView(APIView):
             update_fields.append("meta_value")
         item.save(update_fields=update_fields)
 
+        # When client saves hours, sync to ZZP workspace so the hours counter reflects it
+        if item.stable_key == "zzp_hours" and meta_value:
+            try:
+                from apps.zzp.models import ZZPHoursEntry
+                import datetime as _dt
+                hours_val = float(str(meta_value).strip())
+                tax_year  = item.engagement.tax_year if item.engagement else _dt.date.today().year
+                # Replace any previous task-summary entry for this user+year
+                ZZPHoursEntry.objects.filter(
+                    user=request.user, year=tax_year, notes="task_checklist_summary"
+                ).delete()
+                ZZPHoursEntry.objects.create(
+                    user=request.user,
+                    date=_dt.date(tax_year, 12, 31),
+                    hours=hours_val,
+                    description="Uren totaal (urencriterium opgave)",
+                    year=tax_year,
+                    week=52,
+                    notes="task_checklist_summary",
+                )
+            except Exception:
+                pass  # Never block the task save if ZZP sync fails
+
         # Notify accountant when client marks item as done
         if new_status == "uploaded" and old_status != "uploaded":
             AccountantAction.objects.get_or_create(

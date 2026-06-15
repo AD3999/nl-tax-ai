@@ -25,7 +25,7 @@ interface Task {
 // Stable keys whose "Take action" shows an inline input (text / date / number)
 const INLINE_INFO_KEYS = new Set([
   // ZZP identity + info
-  "zzp_kvk", "zzp_btw", "zzp_start_date", "zzp_revenue", "zzp_wet_dba_clients",
+  "zzp_kvk", "zzp_btw", "zzp_start_date", "zzp_revenue", "zzp_wet_dba_clients", "zzp_hours",
   // Employee identity
   "emp_bsn", "emp_personal_details",
   // Expat identity
@@ -40,7 +40,7 @@ const INLINE_INFO_KEYS = new Set([
 const DATE_KEYS = new Set(["zzp_start_date", "exp_start_date"]);
 
 // Inline inputs that render as <input type="number">
-const NUMBER_KEYS = new Set(["zzp_revenue", "dga_salary", "dga_shareholding"]);
+const NUMBER_KEYS = new Set(["zzp_revenue", "dga_salary", "dga_shareholding", "zzp_hours"]);
 
 function isInfoTask(task: Task): boolean {
   if (INLINE_INFO_KEYS.has(task.stable_key ?? "")) return true;
@@ -72,6 +72,9 @@ function formatMetaValue(task: Task, lang: Lang): string {
       const loc = lang === "nl" ? "nl-NL" : lang === "fa" ? "fa-IR" : "en-GB";
       return new Date(val + "T00:00:00").toLocaleDateString(loc, { day: "numeric", month: "long", year: "numeric" });
     } catch { return val; }
+  }
+  if (task.stable_key === "zzp_hours" && !isNaN(Number(val))) {
+    return `${Number(val).toLocaleString("nl-NL")} h`;
   }
   if (NUMBER_KEYS.has(task.stable_key ?? "") && !isNaN(Number(val))) {
     return `€ ${Number(val).toLocaleString("nl-NL")}`;
@@ -190,6 +193,7 @@ const TX: Record<Lang, Record<string, string>> = {
     upload_err:     "Upload failed",
     enter_value:    "Enter value…",
     enter_number:   "Enter amount (€)…",
+    enter_hours:    "Enter total hours (e.g. 1300)…",
     status_todo:           "To do",
     status_waiting_client: "Waiting for client",
     status_uploaded:       "Uploaded",
@@ -235,6 +239,7 @@ const TX: Record<Lang, Record<string, string>> = {
     upload_err:     "Upload mislukt",
     enter_value:    "Waarde invoeren…",
     enter_number:   "Bedrag invoeren (€)…",
+    enter_hours:    "Totaal uren invoeren (bijv. 1300)…",
     status_todo:           "Te doen",
     status_waiting_client: "Wacht op klant",
     status_uploaded:       "Geüpload",
@@ -280,6 +285,7 @@ const TX: Record<Lang, Record<string, string>> = {
     upload_err:     "بارگذاری ناموفق",
     enter_value:    "مقدار را وارد کنید…",
     enter_number:   "مبلغ را وارد کنید (€)…",
+    enter_hours:    "ساعت کل را وارد کنید (مثلاً ۱۳۰۰)…",
     status_todo:           "در انتظار",
     status_waiting_client: "منتظر مشتری",
     status_uploaded:       "بارگذاری شده",
@@ -401,12 +407,12 @@ export default function ClientTasksPage() {
       setTasks(prev => prev.map(t =>
         t.raw_id === task.raw_id ? { ...t, status: newStatus } : t
       ));
-      // Optimistically update counter
-      if (newStatus === "uploaded") {
-        setCompleted(c => c + 1);
-      } else {
-        setCompleted(c => Math.max(0, c - 1));
-      }
+      // Optimistically update counter + progress bar
+      setCompleted(c => {
+        const newC = newStatus === "uploaded" ? c + 1 : Math.max(0, c - 1);
+        setReadiness(total > 0 ? Math.round((newC / total) * 100) : 0);
+        return newC;
+      });
     } catch {
       /* fail silently — server state will reconcile on next poll */
     }
@@ -451,7 +457,11 @@ export default function ClientTasksPage() {
       setTasks(prev => prev.map(t =>
         t.raw_id === task.raw_id ? { ...t, status: "uploaded", meta_value: inlineValue.trim() } : t
       ));
-      setCompleted(c => task.status !== "uploaded" ? c + 1 : c);
+      setCompleted(c => {
+        const newC = task.status !== "uploaded" ? c + 1 : c;
+        if (newC !== c) setReadiness(total > 0 ? Math.round((newC / total) * 100) : 0);
+        return newC;
+      });
       setInlineActiveId(null);
       setInlineValue("");
     } catch { /* fail silently */ }
@@ -479,8 +489,10 @@ export default function ClientTasksPage() {
         t.raw_id === uploadTaskId ? { ...t, status: "uploaded" } : t
       ));
       setCompleted(c => {
-        const task = tasks.find(t => t.raw_id === uploadTaskId);
-        return task && task.status !== "uploaded" ? c + 1 : c;
+        const uploadedTask = tasks.find(t => t.raw_id === uploadTaskId);
+        const newC = uploadedTask && uploadedTask.status !== "uploaded" ? c + 1 : c;
+        if (newC !== c) setReadiness(total > 0 ? Math.round((newC / total) * 100) : 0);
+        return newC;
       });
       setUploadTaskId(null);
       setUploadFile(null);
@@ -514,23 +526,37 @@ export default function ClientTasksPage() {
 
   return (
     <main style={{ background: "var(--bg)", flex: 1 }}>
-      <div style={{ maxWidth: 740, margin: "0 auto", padding: "var(--sp-8) var(--sp-6)" }}>
 
+      {/* Title + back — scrolls with content */}
+      <div style={{ maxWidth: 740, margin: "0 auto", padding: "var(--sp-8) var(--sp-6) var(--sp-3)" }}>
         <Link to="/client" style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", textDecoration: "none", fontWeight: 600 }}>{tx.back}</Link>
+        <h1 style={{ fontSize: "var(--text-3xl)", fontWeight: 800, color: "var(--text)", margin: "var(--sp-3) 0 0", letterSpacing: "-0.03em" }}>{tx.title}</h1>
+      </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", margin: "var(--sp-3) 0 var(--sp-4)" }}>
-          <h1 style={{ fontSize: "var(--text-3xl)", fontWeight: 800, color: "var(--text)", margin: 0, letterSpacing: "-0.03em" }}>{tx.title}</h1>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      {/* Sticky progress strip — stays visible while scrolling */}
+      <div style={{
+        position: "sticky", top: 0, zIndex: 10,
+        background: "var(--paper-glass)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
+        borderBottom: "1px solid var(--border)",
+      }}>
+        <div style={{ maxWidth: 740, margin: "0 auto", padding: "var(--sp-2) var(--sp-6) var(--sp-3)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--sp-2)" }}>
             <span style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", fontWeight: 600 }}>{completed} {tx.completed_of} {total}</span>
-            {lastUpdated && <span style={{ fontSize: 10, color: "var(--text-4)" }}>{lastUpdated.toLocaleTimeString()}</span>}
-            <button onClick={() => void load(true)} title="Refresh" style={{ background: "none", border: "1px solid var(--border-2)", borderRadius: 6, cursor: "pointer", color: "var(--text-3)", fontSize: 14, width: 30, height: 30, display: "grid", placeItems: "center" }}>↻</button>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              {lastUpdated && <span style={{ fontSize: 10, color: "var(--text-4)" }}>{lastUpdated.toLocaleTimeString()}</span>}
+              <button onClick={() => void load(true)} title="Refresh" style={{ background: "none", border: "1px solid var(--border-2)", borderRadius: 6, cursor: "pointer", color: "var(--text-3)", fontSize: 14, width: 28, height: 28, display: "grid", placeItems: "center" }}>↻</button>
+            </div>
+          </div>
+          <div style={{ height: 6, borderRadius: 3, background: "var(--border)", overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${readiness}%`, background: readiness >= 85 ? "var(--ok)" : "var(--warn)", borderRadius: 3, transition: "width 0.5s ease" }} />
           </div>
         </div>
+      </div>
 
-        {/* Progress bar */}
-        <div style={{ height: 6, borderRadius: 3, background: "var(--border)", marginBottom: "var(--sp-5)", overflow: "hidden" }}>
-          <div style={{ height: "100%", width: `${readiness}%`, background: readiness >= 85 ? "var(--ok)" : "var(--warn)", borderRadius: 3, transition: "width 0.6s ease" }} />
-        </div>
+      {/* Task list */}
+      <div style={{ maxWidth: 740, margin: "0 auto", padding: "var(--sp-5) var(--sp-6)" }}>
 
         {tasks.length === 0 && (
           <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--text-3)" }}>{tx.empty}</div>
@@ -590,7 +616,7 @@ export default function ClientTasksPage() {
                             value={inlineValue}
                             onChange={e => setInlineValue(e.target.value)}
                             onKeyDown={e => { if (e.key === "Enter") void handleSaveInline(task); if (e.key === "Escape") setInlineActiveId(null); }}
-                            placeholder={inputType === "number" ? tx.enter_number : inputType === "date" ? "" : tx.enter_value}
+                            placeholder={inputType === "number" ? (task.stable_key === "zzp_hours" ? tx.enter_hours : tx.enter_number) : inputType === "date" ? "" : tx.enter_value}
                             min={inputType === "number" ? "0" : undefined}
                             style={{
                               flex: 1, minWidth: 160, padding: "6px 10px",
