@@ -5,6 +5,30 @@
 
 ---
 
+## Session — 15 Jun 2026 · Rejected Task Reactivation + Client Notification ✅ Complete
+
+### Issues fixed
+
+| # | Issue | Fix |
+|---|-------|-----|
+| 1 | When accountant rejects a document the task stays crossed-out/uploaded on client's My Tasks | `DocumentReviewView.patch` now resets `ChecklistItem.status → "todo"` and `DocumentRequest.status → "open"` on rejection, so the task reappears as an active open item |
+| 2 | Client not notified when their document is rejected | Creates a `PortalMessage` in the client's preferred language (NL/EN/FA) with the accountant's rejection reason; appears as unread in the client's messages tab |
+| 3 | When accountant approves, ChecklistItem didn't advance | On approval: `ChecklistItem.status → "accepted"` and `DocumentRequest.status → "accepted"` |
+| 4 | No visual indicator on task that needs resubmission | Red "Document rejected — please re-upload" banner appears inside the task card (with accountant's reason below); uses `rejection_note` computed field from a single prefetch query (no N+1) |
+
+### How it works
+
+`ClientPortalTasksView` prefetches all rejected documents for the engagement in one query. For each `ChecklistItem` with `status == "todo"`, if there's a rejected document with matching `stable_key`, the `rejection_note` is attached. The banner clears automatically once the client re-uploads (status changes away from "todo").
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `backend/apps/portal/views.py` | `DocumentReviewView.patch`: rejection cascades to ChecklistItem + DocumentRequest + sends PortalMessage in NL/EN/FA; approval cascades to both; `ClientPortalTasksView.get`: prefetches rejected docs, adds `rejection_note` to task dicts |
+| `frontend/src/pages/portal/ClientTasksPage.tsx` | Added `rejection_note` to `Task` interface; red rejection banner in task card with localized label (NL/EN/FA); left border turns red on rejection |
+
+---
+
 ## Session — 15 Jun 2026 · Document Viewer Fix ✅ Complete
 
 ### Issue fixed
