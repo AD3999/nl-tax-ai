@@ -486,6 +486,7 @@ export default function ClientTasksPage() {
         "",
         undefined,
         pct => setUploadProgress(pct),
+        uploadTaskId ?? undefined,
       );
       // Mark the task as uploaded too
       await updateClientTask(uploadTaskId, { status: "uploaded" });

@@ -171,6 +171,7 @@ export function uploadClientDocument(
   note: string,
   documentRequestId?: number,
   onProgress?: (pct: number) => void,
+  checklistItemId?: number,
 ): Promise<ClientDocument> {
   const formData = new FormData();
   formData.append("engagement", String(engagementId));
@@ -179,5 +180,6 @@ export function uploadClientDocument(
   if (title) formData.append("user_title", title);
   if (note)  formData.append("user_note", note);
   if (documentRequestId) formData.append("document_request", String(documentRequestId));
+  if (checklistItemId)   formData.append("checklist_item_id", String(checklistItemId));
   return xhrUpload<ClientDocument>(`${base}/documents/upload/`, formData, onProgress);
 }

@@ -263,6 +263,10 @@ class ClientDocument(models.Model):
         DocumentRequest, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="documents"
     )
+    checklist_item    = models.ForeignKey(
+        "ChecklistItem", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="client_documents"
+    )
     uploaded_by       = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
         related_name="portal_uploads"

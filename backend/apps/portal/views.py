@@ -366,12 +366,24 @@ class ClientDocumentUploadView(APIView):
         if client_profile.id != engagement.client_profile_id:
             return Response({"detail": "client_profile does not match engagement."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Resolve optional checklist_item_id sent from the client task page
+        checklist_item_obj = None
+        checklist_item_id = request.data.get("checklist_item_id")
+        if checklist_item_id:
+            try:
+                checklist_item_obj = ChecklistItem.objects.get(
+                    id=int(checklist_item_id), engagement=engagement
+                )
+            except (ChecklistItem.DoesNotExist, ValueError, TypeError):
+                pass
+
         uploaded_file = serializer.validated_data["file"]
         try:
             doc = ClientDocument.objects.create(
                 engagement=engagement,
                 client_profile=client_profile,
                 document_request=serializer.validated_data.get("document_request"),
+                checklist_item=checklist_item_obj,
                 uploaded_by=request.user,
                 original_filename=uploaded_file.name,
                 user_title=serializer.validated_data.get("user_title", ""),
@@ -449,8 +461,10 @@ class DocumentReviewView(APIView):
                    after={"status": new_status, "notes": review_notes})
 
             # ── Cascade to linked ChecklistItem and DocumentRequest ────────────
-            linked_item = None
-            if doc.document_request and doc.document_request.stable_key:
+            # Primary: direct FK set at upload time (covers task-page uploads)
+            # Fallback: match via document_request → stable_key (covers accountant-initiated requests)
+            linked_item = doc.checklist_item
+            if linked_item is None and doc.document_request and doc.document_request.stable_key:
                 linked_item = ChecklistItem.objects.filter(
                     engagement=doc.engagement,
                     stable_key=doc.document_request.stable_key,
