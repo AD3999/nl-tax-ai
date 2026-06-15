@@ -20,6 +20,7 @@ interface Task {
   priority: string;
   stable_key?: string;
   meta_value?: string;
+  rejection_note?: string | null;
 }
 
 // Stable keys whose "Take action" shows an inline input (text / date / number)
@@ -172,6 +173,7 @@ const TX: Record<Lang, Record<string, string>> = {
     back:           "← Back",
     done_section:   "Done",
     required:       "Required",
+    rejected_doc:   "Document rejected — please re-upload",
     all_done:       "All tasks done!",
     all_done_sub:   "Your file is ready — your accountant will be in touch.",
     empty:          "No tasks found.",
@@ -218,6 +220,7 @@ const TX: Record<Lang, Record<string, string>> = {
     back:           "← Terug",
     done_section:   "Voltooid",
     required:       "Vereist",
+    rejected_doc:   "Document afgewezen — upload een nieuw bestand",
     all_done:       "Alle taken voltooid!",
     all_done_sub:   "Uw dossier is klaar — uw accountant neemt contact op.",
     empty:          "Geen taken gevonden.",
@@ -264,6 +267,7 @@ const TX: Record<Lang, Record<string, string>> = {
     back:           "← بازگشت",
     done_section:   "انجام شده",
     required:       "ضروری",
+    rejected_doc:   "سند رد شد — لطفاً فایل جدیدی بارگذاری کنید",
     all_done:       "تمام وظایف انجام شد!",
     all_done_sub:   "پرونده شما آماده است — حسابدار شما تماس خواهد گرفت.",
     empty:          "وظیفه‌ای یافت نشد.",
@@ -571,7 +575,7 @@ export default function ClientTasksPage() {
               return (
                 <div key={task.id} className="card" style={{
                   padding: "var(--sp-4)", marginBottom: "var(--sp-3)",
-                  borderInlineStart: `3px solid ${task.required ? "var(--danger)" : "var(--border-2)"}`,
+                  borderInlineStart: `3px solid ${task.rejection_note ? "var(--danger)" : task.required ? "var(--danger)" : "var(--border-2)"}`,
                   opacity: isDone ? 0.75 : 1,
                   transition: "opacity 0.2s",
                 }}>
@@ -584,6 +588,29 @@ export default function ClientTasksPage() {
                       {task.description && (
                         <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", marginBottom: 8, fontWeight: 500 }}>{task.description}</div>
                       )}
+
+                      {/* Rejection banner — shown when accountant rejected a previously uploaded document */}
+                      {task.rejection_note && (
+                        <div style={{
+                          marginBottom: 8,
+                          padding: "6px 10px",
+                          borderRadius: "var(--r)",
+                          background: "var(--danger-subtle)",
+                          border: "1px solid var(--danger)",
+                          fontSize: "var(--text-xs)",
+                          fontWeight: 700,
+                          color: "var(--danger-text)",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 2,
+                        }}>
+                          <span>{tx.rejected_doc}</span>
+                          {task.rejection_note !== "Document was rejected. Please re-upload." && (
+                            <span style={{ fontWeight: 400, opacity: 0.85 }}>{task.rejection_note}</span>
+                          )}
+                        </div>
+                      )}
+
                       <div style={{ display: "flex", gap: "var(--sp-2)", flexWrap: "wrap", alignItems: "center" }}>
                         <span className="pill" style={{ fontSize: "var(--text-2xs)", fontWeight: 700 }}>{categoryLabel(task.category, tx)}</span>
                         {task.required && (

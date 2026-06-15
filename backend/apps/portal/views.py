@@ -421,6 +421,13 @@ class DocumentReviewView(APIView):
     """PATCH /api/portal/documents/<id>/review/"""
     permission_classes = [permissions.IsAuthenticated]
 
+    # Rejection notification text in all three supported languages
+    _REJECTION_MSG = {
+        "nl": "Uw document '{title}' is afgewezen door uw accountant.{note} Upload een gecorrigeerde versie via 'Mijn taken'.",
+        "en": "Your document '{title}' has been rejected by your accountant.{note} Please re-upload a corrected version from 'My tasks'.",
+        "fa": "سند '{title}' شما توسط حسابدارتان رد شد.{note} لطفاً نسخه اصلاح‌شده را از طریق 'وظایف من' مجدداً بارگذاری کنید.",
+    }
+
     def patch(self, request, pk):
         doc = get_object_or_404(ClientDocument, pk=pk)
         if not _is_accountant_of_client(request.user, doc.client_profile) and not request.user.is_staff:
@@ -440,6 +447,56 @@ class DocumentReviewView(APIView):
             _audit(request, f"document_{new_status}", "ClientDocument", doc.id,
                    client_profile=doc.client_profile, engagement=doc.engagement,
                    after={"status": new_status, "notes": review_notes})
+
+            # ── Cascade to linked ChecklistItem and DocumentRequest ────────────
+            linked_item = None
+            if doc.document_request and doc.document_request.stable_key:
+                linked_item = ChecklistItem.objects.filter(
+                    engagement=doc.engagement,
+                    stable_key=doc.document_request.stable_key,
+                ).first()
+
+            if new_status == "rejected":
+                # Reopen the DocumentRequest so the client can re-upload
+                if doc.document_request and doc.document_request.status != "open":
+                    doc.document_request.status = "open"
+                    doc.document_request.save(update_fields=["status"])
+
+                # Reset the ChecklistItem back to "todo" so it reappears as active
+                if linked_item and linked_item.status not in ("accepted", "waived"):
+                    linked_item.status = "todo"
+                    linked_item.save(update_fields=["status"])
+
+                # Notify the client via in-app message (in their preferred language)
+                try:
+                    doc_title = doc.user_title or doc.original_filename or "document"
+                    lang = doc.client_profile.preferred_language or "nl"
+                    note_part = f" Reden: {review_notes}" if review_notes else ""
+                    if lang == "en":
+                        note_part = f" Reason: {review_notes}" if review_notes else ""
+                    elif lang == "fa":
+                        note_part = f" دلیل: {review_notes}" if review_notes else ""
+                    msg_tmpl = self._REJECTION_MSG.get(lang, self._REJECTION_MSG["en"])
+                    body = msg_tmpl.format(title=doc_title, note=note_part)
+                    PortalMessage.objects.create(
+                        engagement=doc.engagement,
+                        client_profile=doc.client_profile,
+                        sender=request.user,
+                        body=body,
+                    )
+                except Exception:
+                    pass  # Notification failure must never block the review action
+
+            elif new_status == "approved":
+                # Advance the DocumentRequest to accepted
+                if doc.document_request and doc.document_request.status not in ("accepted", "waived"):
+                    doc.document_request.status = "accepted"
+                    doc.document_request.save(update_fields=["status"])
+
+                # Mark the ChecklistItem as accepted
+                if linked_item and linked_item.status not in ("accepted", "waived"):
+                    linked_item.status = "accepted"
+                    linked_item.save(update_fields=["status"])
 
         return Response(ClientDocumentSerializer(doc, context={"request": request}).data)
 
@@ -1004,8 +1061,28 @@ class ClientPortalTasksView(APIView):
             engagement=engagement
         ).order_by("-required", "priority", "created_at")
 
+        # Pre-fetch all rejected documents for this engagement in one query so we
+        # can attach rejection_note to tasks without N+1 queries.
+        rejected_docs = (
+            ClientDocument.objects
+            .filter(engagement=engagement, processing_status="rejected", document_request__isnull=False)
+            .select_related("document_request")
+            .order_by("-updated_at")
+        )
+        rejection_by_stable_key: dict[str, str] = {}
+        for rdoc in rejected_docs:
+            sk = rdoc.document_request.stable_key
+            if sk and sk not in rejection_by_stable_key:
+                rejection_by_stable_key[sk] = rdoc.review_notes or "Document was rejected. Please re-upload."
+
         tasks = []
         for item in checklist_items:
+            # Only surface the rejection note when the task is actively awaiting
+            # resubmission (status == "todo"). Once re-uploaded it clears naturally.
+            rejection_note = (
+                rejection_by_stable_key.get(item.stable_key or "")
+                if item.status == "todo" else None
+            )
             tasks.append({
                 "id": f"chk_{item.id}",
                 "type": "checklist",
@@ -1017,6 +1094,7 @@ class ClientPortalTasksView(APIView):
                 "priority": item.priority,
                 "stable_key": item.stable_key,
                 "meta_value": item.meta_value,
+                "rejection_note": rejection_note,
                 "due_date": None,
             })
 
