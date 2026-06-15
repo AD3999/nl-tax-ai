@@ -3,10 +3,11 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.http import HttpResponse, Http404
+from django.views.static import serve as _media_serve
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from config.serializers import EmailOrUsernameTokenSerializer
 
-# Serve React's index.html for every non-API, non-admin route so that
+# Serve React's index.html for every non-API, non-admin, non-media route so that
 # React Router can handle client-side navigation on the deployed build.
 _FRONTEND_INDEX = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist" / "index.html"
 
@@ -28,11 +29,10 @@ urlpatterns = [
     path("api/payments/", include("apps.payments.urls")),
     path("api/portal/", include("apps.portal.urls")),
     path("api/zzp/",    include("apps.zzp.urls")),
-    # SPA catch-all — must be last
-    re_path(r"^(?!api/|admin/).*$", spa_index),
+    # Media files — must come before the SPA catch-all.
+    # Uses Django's built-in serve view (works in dev and prod; for prod at scale
+    # replace FileSystemStorage with S3/Cloudinary and remove this line).
+    re_path(r"^media/(?P<path>.*)$", _media_serve, {"document_root": settings.MEDIA_ROOT}),
+    # SPA catch-all — excludes api/, admin/, and media/ so those reach their own handlers
+    re_path(r"^(?!api/|admin/|media/).*$", spa_index),
 ]
-
-# Serve uploaded media files in development
-if settings.DEBUG:
-    from django.conf.urls.static import static
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
