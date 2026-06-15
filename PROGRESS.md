@@ -1,7 +1,33 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 15 Jun 2026 — My Tasks: sticky progress bar, real-time fill, hours inline + ZZP sync, upload 500 fixed
+> Last updated: 15 Jun 2026 — Document "View" button: authenticated API file endpoint, blob URL viewer, Railway-safe
+
+---
+
+## Session — 15 Jun 2026 · Document Viewer Fix ✅ Complete
+
+### Issue fixed
+
+| # | Issue | Fix |
+|---|-------|-----|
+| 1 | "View ↗" on uploaded document → "Not Found" (Django raw 404 page) | Root cause: `file_url` was the raw `/media/...` URL which (a) the SPA catch-all previously intercepted and (b) breaks on Railway after any redeploy because the ephemeral filesystem resets. Fix: added `DocumentFileView` (`GET /api/portal/documents/<id>/file/`) that reads the file through Django's storage API with full JWT auth + permission checks, returns a helpful JSON 404 if the file is missing. Frontend now fetches via `fetch()` with `Authorization: Bearer` header, creates a blob URL, and opens it in a new tab — so it works without cookies and shows a toast if the file is gone |
+| 2 | `file_url` exposed raw `/media/...` path (no auth protection) | `get_file_url` in `ClientDocumentSerializer` now returns `/api/portal/documents/<id>/file/` — a proper authenticated API endpoint |
+| 3 | "View" link on client documents page (`ClientDocumentsPage`) had same problem | Same blob-URL approach applied |
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `backend/apps/portal/views.py` | Added `DocumentFileView`: GET streams file via `FileResponse(doc.file.open('rb'))`, permission checks for both accountant and client, clean JSON 404 on missing file |
+| `backend/apps/portal/urls.py` | Added `documents/<int:pk>/file/` route; imported `DocumentFileView` |
+| `backend/apps/portal/serializers.py` | `get_file_url` returns `/api/portal/documents/{id}/file/` instead of raw media URL |
+| `frontend/src/pages/portal/EngagementPage.tsx` | Replaced `<a href target="_blank">` with `openDocumentFile()` helper that fetches with JWT auth header, creates blob URL, opens in new tab, toasts on error |
+| `frontend/src/pages/portal/ClientDocumentsPage.tsx` | Same `openDocumentFile()` pattern; added `useToast` import |
+
+### Important note on Railway persistence
+
+Files uploaded to Railway's ephemeral filesystem are lost on every deployment. The code is now correct and gracefully handles missing files with a "please re-upload" message. **Long-term fix: add S3/Cloudinary storage** (`django-storages[boto3]`) before going to production — this will make `doc.file.open()` read from S3 and the `DocumentFileView` approach works with any storage backend without code changes.
 
 ---
 
