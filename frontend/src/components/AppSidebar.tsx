@@ -15,19 +15,20 @@ import ThemeToggle from "./ThemeToggle";
 
 export const SIDEBAR_W = 280;
 
-function useUnreadCount(isAccountant: boolean) {
+function useUnreadCount(isAccountant: boolean, isClient: boolean) {
   const [count, setCount] = useState(0);
   useEffect(() => {
-    if (!isAccountant) return;
-    const fetch = () => {
-      apiClient.get<{ counts: { unread_messages: number } }>("/portal/inbox/")
-        .then(r => setCount(r.data.counts.unread_messages))
-        .catch(() => null);
+    if (!isAccountant && !isClient) return;
+    const url = isAccountant ? "/portal/inbox/" : "/portal/client/messages/unread-count/";
+    const pick = (r: { data: { counts?: { unread_messages?: number }; count?: number } }) =>
+      isAccountant ? (r.data.counts?.unread_messages ?? 0) : (r.data.count ?? 0);
+    const poll = () => {
+      apiClient.get(url).then(r => setCount(pick(r as never))).catch(() => null);
     };
-    fetch();
-    const id = setInterval(fetch, 30_000);
+    poll();
+    const id = setInterval(poll, 30_000);
     return () => clearInterval(id);
-  }, [isAccountant]);
+  }, [isAccountant, isClient]);
   return count;
 }
 
@@ -39,9 +40,9 @@ function clientNav(t: (k: string) => string): NavItem[] {
   return [
     { to: "/dashboard",         label: t("nav.dashboard"),         icon: <LayoutDashboard size={15} />, end: true },
     { to: "/chat",              label: t("nav.chat"),              icon: <MessageSquare size={15} /> },
-    { to: "/client",            label: "My Portal",                icon: <Briefcase size={15} /> },
-    { to: "/client/messages",   label: "Messages",                 icon: <MessageSquare size={15} /> },
-    { to: "/client/profile",    label: "My Profile",               icon: <User size={15} /> },
+    { to: "/client",            label: "My Portal",                icon: <Briefcase size={15} />, end: true },
+    { to: "/client/messages",   label: "Messages",                 icon: <MessageSquare size={15} />, end: true },
+    { to: "/client/profile",    label: "My Profile",               icon: <User size={15} />, end: true },
     { to: "/zzp-workspace",     label: "ZZP Workspace",            icon: <Truck size={15} /> },
     { to: "/deduction-checker", label: t("nav.deduction_checker"), icon: <Search size={15} /> },
     { to: "/tax-calendar",      label: t("nav.tax_calendar"),      icon: <Calendar size={15} /> },
@@ -87,9 +88,10 @@ function SidebarContent({ onNav }: SidebarContentProps) {
 
   const isAdmin      = !!user?.is_admin;
   const isAccountant = user?.role === "accountant";
+  const isClient     = !!user && !isAdmin && !isAccountant;
   const items        = isAdmin ? adminNav() : isAccountant ? accountantNav() : clientNav(t);
   const sectionLabel = isAdmin ? "Admin" : isAccountant ? "Accountant" : "Menu";
-  const unreadCount  = useUnreadCount(isAccountant);
+  const unreadCount  = useUnreadCount(isAccountant, isClient);
 
   const initials = user
     ? (user.username?.[0] ?? user.email[0]).toUpperCase()
@@ -144,6 +146,7 @@ function SidebarContent({ onNav }: SidebarContentProps) {
           >
             <span className="sb-nav-icon">{item.icon}</span>
             <span className="sb-nav-label">{item.label}</span>
+            {/* Accountant inbox: number badge */}
             {item.to === "/accountant/inbox" && unreadCount > 0 && (
               <span style={{
                 marginInlineStart: "auto",
@@ -161,6 +164,17 @@ function SidebarContent({ onNav }: SidebarContentProps) {
               }}>
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
+            )}
+            {/* Client messages: glowing dot — no number, just a presence signal */}
+            {item.to === "/client/messages" && unreadCount > 0 && (
+              <span style={{
+                marginInlineStart: "auto",
+                width: 8, height: 8,
+                borderRadius: "50%",
+                background: "var(--danger)",
+                flexShrink: 0,
+                boxShadow: "0 0 0 2px oklch(0.13 0.018 265), 0 0 6px var(--danger)",
+              }} />
             )}
           </NavLink>
         ))}

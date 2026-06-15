@@ -1,14 +1,24 @@
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../context/AuthContext";
+import { client as apiClient } from "../api/client";
 
 const LANGS = ["NL", "EN", "FA"] as const;
 
 export default function LangSwitch() {
   const { i18n } = useTranslation();
+  const { user } = useAuth();
   const current = i18n.language.toUpperCase() as typeof LANGS[number];
 
+  const isClient = !!user && !user.is_admin && user.role !== "accountant";
+
   const change = (l: string) => {
-    void i18n.changeLanguage(l.toLowerCase());
-    localStorage.setItem("lang", l.toLowerCase());
+    const lang = l.toLowerCase();
+    void i18n.changeLanguage(lang);
+    localStorage.setItem("lang", lang);
+    // Sync to backend so system messages (e.g. rejection notifications) use the right language
+    if (isClient) {
+      apiClient.patch("/portal/client/profile/", { preferred_language: lang }).catch(() => null);
+    }
   };
 
   return (

@@ -1040,11 +1040,26 @@ def _get_or_create_engagement(profile):
 
 
 class ClientPortalProfileView(APIView):
-    """GET /api/portal/client/profile/  — returns (or auto-creates) the client's portal profile."""
+    """
+    GET   /api/portal/client/profile/  — returns (or auto-creates) the client's portal profile
+    PATCH /api/portal/client/profile/  — update preferred_language (synced from UI language switcher)
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         profile = _get_or_create_self_service_profile(request.user)
+        return Response(AccountantClientProfileSerializer(profile, context={"request": request}).data)
+
+    def patch(self, request):
+        profile = _get_or_create_self_service_profile(request.user)
+        allowed = {"preferred_language", "first_name", "last_name", "phone"}
+        data = {k: v for k, v in request.data.items() if k in allowed}
+        if not data:
+            return Response({"detail": "No updatable fields."}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = AccountantClientProfileSerializer(profile, data=data, partial=True, context={"request": request})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save()
         return Response(AccountantClientProfileSerializer(profile, context={"request": request}).data)
 
 
@@ -1342,6 +1357,21 @@ class EngagementMessagesView(APIView):
             PortalMessageSerializer(msg, context={"request": request}).data,
             status=201,
         )
+
+
+class ClientMessageUnreadCountView(APIView):
+    """GET /api/portal/client/messages/unread-count/ — lightweight badge count without marking as read."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        profile = _get_or_create_self_service_profile(request.user)
+        eng = _get_or_create_engagement(profile)
+        if not eng:
+            return Response({"count": 0})
+        count = PortalMessage.objects.filter(
+            engagement=eng, is_read=False
+        ).exclude(sender=request.user).count()
+        return Response({"count": count})
 
 
 class ClientMessagesView(APIView):

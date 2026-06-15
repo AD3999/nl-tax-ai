@@ -14,7 +14,7 @@ from .views import (
     ClientPortalTasksView, ClientPortalDocumentsView,
     ClientPortalTaskUpdateView, ClientPortalDocumentDeleteView,
     AccountantInboxView,
-    EngagementMessagesView, ClientMessagesView,
+    EngagementMessagesView, ClientMessagesView, ClientMessageUnreadCountView,
 )
 
 urlpatterns = [
@@ -64,4 +64,5 @@ urlpatterns = [
     path("client/documents/",              ClientPortalDocumentsView.as_view(),         name="portal-client-documents"),
     path("client/documents/<int:pk>/",     ClientPortalDocumentDeleteView.as_view(),    name="portal-client-document-delete"),
     path("client/messages/",               ClientMessagesView.as_view(),                name="portal-client-messages"),
+    path("client/messages/unread-count/",  ClientMessageUnreadCountView.as_view(),      name="portal-client-messages-unread"),
 ]
