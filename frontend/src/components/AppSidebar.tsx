@@ -1,6 +1,6 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   LayoutDashboard, MessageSquare, Calendar, Search,
   Users, Calculator, ClipboardList, Shield, FileText,
@@ -17,18 +17,32 @@ export const SIDEBAR_W = 280;
 
 function useUnreadCount(isAccountant: boolean, isClient: boolean) {
   const [count, setCount] = useState(0);
-  useEffect(() => {
+  const location = useLocation();
+
+  const poll = useCallback(() => {
     if (!isAccountant && !isClient) return;
     const url = isAccountant ? "/portal/inbox/" : "/portal/client/messages/unread-count/";
-    const pick = (r: { data: { counts?: { unread_messages?: number }; count?: number } }) =>
-      isAccountant ? (r.data.counts?.unread_messages ?? 0) : (r.data.count ?? 0);
-    const poll = () => {
-      apiClient.get(url).then(r => setCount(pick(r as never))).catch(() => null);
-    };
+    apiClient
+      .get(url)
+      .then((r: { data: { counts?: { unread_messages?: number }; count?: number } }) => {
+        setCount(isAccountant ? (r.data.counts?.unread_messages ?? 0) : (r.data.count ?? 0));
+      })
+      .catch(() => null);
+  }, [isAccountant, isClient]);
+
+  // Regular 30s background poll
+  useEffect(() => {
     poll();
     const id = setInterval(poll, 30_000);
     return () => clearInterval(id);
-  }, [isAccountant, isClient]);
+  }, [poll]);
+
+  // Re-fetch 1s after any navigation — catches mark-as-read that happens on page load
+  useEffect(() => {
+    const t = setTimeout(poll, 1000);
+    return () => clearTimeout(t);
+  }, [location.pathname, poll]);
+
   return count;
 }
 

@@ -102,6 +102,9 @@ const TX: Record<Lang, Record<string, string>> = {
     msg_placeholder: "Type a message… (Enter to send)",
     msg_send: "Send",
     msg_no_messages: "No messages yet",
+    missing_required_items: "Missing Required Items",
+    go_to_checklist: "Go to Checklist →",
+    all_items_provided: "All required items provided",
     checklist_updated: "Checklist item updated",
     checklist_error: "Failed to update checklist item",
     action_updated: "Action updated",
@@ -187,6 +190,9 @@ const TX: Record<Lang, Record<string, string>> = {
     msg_send: "Sturen",
     msg_no_messages: "Nog geen berichten",
     done: "Klaar",
+    missing_required_items: "Ontbrekende verplichte items",
+    go_to_checklist: "Naar checklist →",
+    all_items_provided: "Alle verplichte items aangeleverd",
     checklist_updated: "Checklistitem bijgewerkt",
     checklist_error: "Bijwerken mislukt",
     action_updated: "Actie bijgewerkt",
@@ -272,6 +278,9 @@ const TX: Record<Lang, Record<string, string>> = {
     msg_send: "ارسال",
     msg_no_messages: "هنوز پیامی وجود ندارد",
     done: "انجام شد",
+    missing_required_items: "آیتم‌های اجباری ناقص",
+    go_to_checklist: "← رفتن به چک‌لیست",
+    all_items_provided: "همه موارد اجباری ارائه شده",
     checklist_updated: "آیتم چک‌لیست به‌روز شد",
     checklist_error: "به‌روزرسانی ناموفق بود",
     action_updated: "اقدام به‌روز شد",
@@ -709,51 +718,134 @@ export default function EngagementPage() {
         </div>
 
         {/* ── OVERVIEW ─────────────────────────────────────── */}
-        {tab === "overview" && (
+        {tab === "overview" && (() => {
+          const missingItems = checklist.filter(
+            i => i.required && (i.status === "todo" || i.status === "waiting_client")
+          );
+          return (
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 300px", gap: "var(--sp-6)", alignItems: "start" }}>
             {/* Main content */}
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: "var(--sp-6)", alignItems: "start" }}>
-              {/* ReadinessCard */}
-              <div>
-                <ReadinessCard score={engagement.readiness_score} />
-                {readiness && readiness.blocking_reasons.length > 0 && (
-                  <div className="card" style={{ padding: "var(--sp-3)", marginTop: "var(--sp-3)", fontSize: "var(--text-xs)" }}>
-                    <strong style={{ color: "var(--danger)", display: "block", marginBottom: "var(--sp-2)" }}>{tx.blocking}:</strong>
-                    <ul style={{ margin: 0, paddingInlineStart: "var(--sp-4)" }}>
-                      {readiness.blocking_reasons.map((r, i) => <li key={i} style={{ color: "var(--danger)", marginBottom: 2 }}>{r}</li>)}
-                    </ul>
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-6)" }}>
+              {/* Readiness + Actions row */}
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr", gap: "var(--sp-6)", alignItems: "start" }}>
+                {/* ReadinessCard */}
+                <div>
+                  <ReadinessCard score={engagement.readiness_score} />
+                  {readiness && readiness.blocking_reasons.length > 0 && (
+                    <div className="card" style={{ padding: "var(--sp-3)", marginTop: "var(--sp-3)", fontSize: "var(--text-xs)" }}>
+                      <strong style={{ color: "var(--danger)", display: "block", marginBottom: "var(--sp-2)" }}>{tx.blocking}:</strong>
+                      <ul style={{ margin: 0, paddingInlineStart: "var(--sp-4)" }}>
+                        {readiness.blocking_reasons.map((r, i) => <li key={i} style={{ color: "var(--danger)", marginBottom: 2 }}>{r}</li>)}
+                      </ul>
+                    </div>
+                  )}
+                  <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: "var(--sp-2)" }}>{tx.status}: {engagement.status}</div>
+                </div>
+
+                {/* Actions */}
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--sp-3)" }}>
+                    <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, margin: 0 }}>{tx.next_actions}</h3>
+                    <span className="pill pill-accent" style={{ fontSize: "var(--text-2xs)" }}>{actions.filter(a => a.status === "open").length} {tx.open}</span>
                   </div>
-                )}
-                <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: "var(--sp-2)" }}>{tx.status}: {engagement.status}</div>
+                  {actions.length === 0 ? (
+                    <div className="card" style={{ padding: "var(--sp-4)", textAlign: "center", color: "var(--ink-3)", fontSize: "var(--text-sm)" }}>
+                      {tx.no_actions}
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
+                      {actions.filter(a => a.status === "open").slice(0, 8).map(action => (
+                        <div key={action.id} className="card" style={{ padding: "var(--sp-3)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--sp-3)", borderInlineStart: `3px solid ${action.priority === "high" ? "var(--danger)" : action.priority === "medium" ? "var(--warn)" : "var(--ok)"}` }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ink)", marginBottom: 4 }}>{action.title}</div>
+                            <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>{action.body}</div>
+                          </div>
+                          <div style={{ display: "flex", gap: "var(--sp-1)", flexShrink: 0 }}>
+                            <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)", padding: "2px 8px" }} onClick={() => void handleActionStatus(action.id, "done")}>{tx.done}</button>
+                            <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)", padding: "2px 8px", color: "var(--ink-4)" }} onClick={() => void handleActionStatus(action.id, "dismissed")}>{tx.dismiss}</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Actions */}
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--sp-3)" }}>
-                  <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, margin: 0 }}>{tx.next_actions}</h3>
-                  <span className="pill pill-accent" style={{ fontSize: "var(--text-2xs)" }}>{actions.filter(a => a.status === "open").length} {tx.open}</span>
-                </div>
-                {actions.length === 0 ? (
-                  <div className="card" style={{ padding: "var(--sp-4)", textAlign: "center", color: "var(--ink-3)", fontSize: "var(--text-sm)" }}>
-                    {tx.no_actions}
+              {/* ── Missing Required Items ── full-width, only when items are missing */}
+              {missingItems.length > 0 && (
+                <div className="card" style={{
+                  padding: "var(--sp-4)",
+                  borderTop: "3px solid var(--danger)",
+                }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--sp-3)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)" }}>
+                      <AlertTriangle size={15} style={{ color: "var(--danger)", flexShrink: 0 }} />
+                      <span style={{ fontWeight: 700, fontSize: "var(--text-sm)", color: "var(--danger)" }}>
+                        {tx.missing_required_items}
+                      </span>
+                      <span style={{
+                        minWidth: 20, height: 20, borderRadius: 999,
+                        background: "var(--danger)", color: "#fff",
+                        fontSize: 11, fontWeight: 800,
+                        display: "inline-flex", alignItems: "center", justifyContent: "center",
+                        padding: "0 6px",
+                      }}>
+                        {missingItems.length}
+                      </span>
+                    </div>
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      style={{ fontSize: "var(--text-xs)", color: "var(--blue)" }}
+                      onClick={() => setTab("checklist")}
+                    >
+                      {tx.go_to_checklist}
+                    </button>
                   </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
-                    {actions.filter(a => a.status === "open").slice(0, 8).map(action => (
-                      <div key={action.id} className="card" style={{ padding: "var(--sp-3)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--sp-3)", borderInlineStart: `3px solid ${action.priority === "high" ? "var(--danger)" : action.priority === "medium" ? "var(--warn)" : "var(--ok)"}` }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ink)", marginBottom: 4 }}>{action.title}</div>
-                          <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>{action.body}</div>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(260px, 1fr))",
+                    gap: "var(--sp-2)",
+                  }}>
+                    {missingItems.map(item => (
+                      <button
+                        key={item.id}
+                        onClick={() => setTab("checklist")}
+                        style={{
+                          display: "flex", alignItems: "flex-start", gap: "var(--sp-3)",
+                          padding: "var(--sp-3)", borderRadius: "var(--r-sm)",
+                          background: "var(--danger-subtle)",
+                          border: "1px solid var(--danger)",
+                          cursor: "pointer", textAlign: "start",
+                          transition: "opacity 0.15s",
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.opacity = "0.8")}
+                        onMouseLeave={e => (e.currentTarget.style.opacity = "1")}
+                      >
+                        <span style={{
+                          width: 7, height: 7, borderRadius: "50%",
+                          background: "var(--danger)", flexShrink: 0, marginTop: 4,
+                        }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--danger-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {item.title}
+                          </div>
+                          {item.description && (
+                            <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {item.description}
+                            </div>
+                          )}
+                          <div style={{ display: "flex", gap: "var(--sp-1)", marginTop: "var(--sp-1)", flexWrap: "wrap" }}>
+                            <span className="pill" style={{ fontSize: "var(--text-2xs)" }}>{item.category}</span>
+                            <span className="pill" style={{ fontSize: "var(--text-2xs)", color: item.status === "waiting_client" ? "var(--warn-text)" : "var(--ink-3)", background: item.status === "waiting_client" ? "var(--warn-subtle)" : undefined }}>
+                              {tx[`status_${item.status}`] ?? item.status}
+                            </span>
+                          </div>
                         </div>
-                        <div style={{ display: "flex", gap: "var(--sp-1)", flexShrink: 0 }}>
-                          <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)", padding: "2px 8px" }} onClick={() => void handleActionStatus(action.id, "done")}>{tx.done}</button>
-                          <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)", padding: "2px 8px", color: "var(--ink-4)" }} onClick={() => void handleActionStatus(action.id, "dismissed")}>{tx.dismiss}</button>
-                        </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* ── RIGHT: AI Copilot panel (desktop only) ── */}
@@ -789,7 +881,8 @@ export default function EngagementPage() {
               </aside>
             )}
           </div>
-        )}
+          );
+        })()}
 
         {/* ── CHECKLIST ─────────────────────────────────────── */}
         {tab === "checklist" && (
