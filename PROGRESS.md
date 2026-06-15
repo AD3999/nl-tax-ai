@@ -1,7 +1,61 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 14 Jun 2026 — Landing page: complete production redesign merged.
+> Last updated: 15 Jun 2026 — My Tasks: all inline action types fixed (text / date / number / upload / navigate)
+
+---
+
+## Session — 15 Jun 2026 · My Tasks — Inline Action Type Fixes ✅ Complete
+
+### Issues fixed
+
+| # | Issue | Fix |
+|---|-------|-----|
+| 1 | "BTW returns Q1–Q4" (category `vat`) → "Take action" redirected to `/chat` | Added `"vat"` to `DOC_CATEGORIES` — BTW return documents now open the upload modal instead |
+| 2 | "Business start date" / "Start date in NL" → text input instead of calendar | Added `DATE_KEYS` set (`zzp_start_date`, `exp_start_date`) — these tasks now render `<input type="date">` (browser date picker) |
+| 3 | Many tasks (BSN, BV details, country, Wet DBA clients, shareholding %, salary, etc.) → wrong action (upload or chat instead of inline input) | Expanded `INLINE_INFO_KEYS` from 2 keys to 15 (all identity/info tasks that need a typed value rather than a document) |
+| 4 | Revenue / salary inputs treated as text | Added `NUMBER_KEYS` set (`zzp_revenue`, `dga_salary`, `dga_shareholding`) — these render `<input type="number" min="0">` with € placeholder |
+| 5 | `zzp_wet_dba_contracts` (compliance category → chat) should be document upload | Added `DOC_STABLE_KEYS` set — specific stable_keys force upload modal regardless of category |
+| 6 | `meta_value` display showed raw ISO date / raw number | Added `formatMetaValue()` helper — dates render as localised "15 juni 2026", numbers render as "€ 72.000" |
+
+### Routing logic (final state)
+
+| Task type | Detection | Action |
+|-----------|-----------|--------|
+| Inline info (KVK, BTW, BSN, country, etc.) | `INLINE_INFO_KEYS.has(stable_key)` | Inline `<input type="text">` |
+| Inline date (business start, NL arrival) | `DATE_KEYS.has(stable_key)` | Inline `<input type="date">` |
+| Inline number (revenue, salary, shareholding %) | `NUMBER_KEYS.has(stable_key)` | Inline `<input type="number">` |
+| Document upload (vat, income, expense, identity…) | `DOC_CATEGORIES.has(category)` | Upload modal on same page |
+| Compliance doc override (Wet DBA contracts) | `DOC_STABLE_KEYS.has(stable_key)` | Upload modal on same page |
+| Hours / mileage / ZZP workspace | title keyword override in `resolveRoute` | Navigate to `/zzp-workspace` |
+| Pension / toeslagen / M-form | category fallback | Navigate to `/chat` |
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `frontend/src/pages/portal/ClientTasksPage.tsx` | Added `DATE_KEYS`, `NUMBER_KEYS`, `DOC_STABLE_KEYS`; expanded `INLINE_INFO_KEYS` (2→15 keys); updated `DOC_CATEGORIES` to include `"vat"`; `handleTakeAction` checks `DOC_STABLE_KEYS`; inline form uses correct `type` per task; `formatMetaValue` for localised date/number display; `enter_number` TX string in NL/EN/FA |
+
+**TypeScript: 0 errors. No backend changes.**
+
+---
+
+## Session — 15 Jun 2026 · UX Audit — 6 Bugs + Serializer Gaps + Security ✅ Complete
+
+### Issues fixed
+
+| # | Issue | Fix |
+|---|-------|-----|
+| 1 | Client portal "Missing documents" showed "Required document 1, 2, 3…" | `ClientPortalPage.tsx` now reads real task titles from `taskSummary.tasks`, links to `/client/tasks` |
+| 2 | Accountant sees themselves in client list / inbox | `exclude(client_user=F("accountant_user"))` added to `AccountantClientListView`, `EngagementListView`, `AccountantInboxView` |
+| 3 | Document upload HTTP 500 | `ClientDocumentUploadView` wrapped in try/except; heic/jpg/webp added to `ALLOWED_MIME_TYPES` |
+| 4 | Client messages invisible to accountant | `client_name` added to `PortalMessageSerializer`; self-managed profiles excluded from inbox query |
+| 5 | ZZP quarterly boxes "€1.200,00 rev" text wrapped | Stacked BTW/revenue labels with separate `<div>` rows; hours card got `padding: var(--sp-4)` |
+| 6 | "Take action →" navigated away | Inline text input for info tasks; upload modal for doc tasks; `meta_value` persists to DB via `PATCH /client/tasks/<id>/` |
+| Serializer | `ClientDocumentSerializer` missing `client_name`, `file_name`, `uploaded_at`, `status` | Added all four as aliased fields |
+| Serializer | `AccountantActionSerializer` missing `client_name`, `description`, `due_date` | Added all three (`description` aliases `body`, `due_date` returns `None`) |
+| Migration | `meta_value TextField` on `ChecklistItem` | Migration `0007_checklist_meta_value` applied |
+| Security | `ALLOWED_HOSTS` defaulted to `["*"]` | Changed default to `[]` — misconfigured prod deploys now fail loudly |
 
 ---
 

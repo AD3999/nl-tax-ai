@@ -22,8 +22,25 @@ interface Task {
   meta_value?: string;
 }
 
-// Stable keys whose "Take action" shows an inline text field instead of upload modal
-const INLINE_INFO_KEYS = new Set(["zzp_kvk", "zzp_btw"]);
+// Stable keys whose "Take action" shows an inline input (text / date / number)
+const INLINE_INFO_KEYS = new Set([
+  // ZZP identity + info
+  "zzp_kvk", "zzp_btw", "zzp_start_date", "zzp_revenue", "zzp_wet_dba_clients",
+  // Employee identity
+  "emp_bsn", "emp_personal_details",
+  // Expat identity
+  "exp_start_date", "exp_prev_country",
+  // DGA identity + compliance
+  "dga_bv_details", "dga_shareholding", "dga_salary", "dga_gebruikelijk_loon",
+  // Other
+  "oth_employment_status",
+]);
+
+// Inline inputs that render as <input type="date">
+const DATE_KEYS = new Set(["zzp_start_date", "exp_start_date"]);
+
+// Inline inputs that render as <input type="number">
+const NUMBER_KEYS = new Set(["zzp_revenue", "dga_salary", "dga_shareholding"]);
 
 function isInfoTask(task: Task): boolean {
   if (INLINE_INFO_KEYS.has(task.stable_key ?? "")) return true;
@@ -31,8 +48,36 @@ function isInfoTask(task: Task): boolean {
   return lower.includes("kvk") || lower.includes("btw-nummer") || lower.includes("btw nummer") || lower.includes("vat number");
 }
 
-// Document-upload categories (everything except AI/chat destinations)
-const DOC_CATEGORIES = new Set(["identity","income","expense","bank","property","box3","box2","business","payroll","household","other"]);
+// Document-upload categories — includes vat (BTW returns are submitted documents)
+const DOC_CATEGORIES = new Set([
+  "identity","income","expense","bank","property","box3","box2",
+  "business","payroll","household","other","vat",
+]);
+
+// Specific stable keys that force upload modal even for non-DOC_CATEGORIES (e.g. compliance)
+const DOC_STABLE_KEYS = new Set(["zzp_wet_dba_contracts"]);
+
+function getInlineType(task: Task): "text" | "date" | "number" {
+  const key = task.stable_key ?? "";
+  if (DATE_KEYS.has(key)) return "date";
+  if (NUMBER_KEYS.has(key)) return "number";
+  return "text";
+}
+
+function formatMetaValue(task: Task, lang: Lang): string {
+  const val = task.meta_value ?? "";
+  if (!val) return "";
+  if (DATE_KEYS.has(task.stable_key ?? "") && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
+    try {
+      const loc = lang === "nl" ? "nl-NL" : lang === "fa" ? "fa-IR" : "en-GB";
+      return new Date(val + "T00:00:00").toLocaleDateString(loc, { day: "numeric", month: "long", year: "numeric" });
+    } catch { return val; }
+  }
+  if (NUMBER_KEYS.has(task.stable_key ?? "") && !isNaN(Number(val))) {
+    return `€ ${Number(val).toLocaleString("nl-NL")}`;
+  }
+  return val;
+}
 
 type Lang = "nl" | "en" | "fa";
 
@@ -144,6 +189,7 @@ const TX: Record<Lang, Record<string, string>> = {
     upload_title_lbl: "Title (optional)",
     upload_err:     "Upload failed",
     enter_value:    "Enter value…",
+    enter_number:   "Enter amount (€)…",
     status_todo:           "To do",
     status_waiting_client: "Waiting for client",
     status_uploaded:       "Uploaded",
@@ -188,6 +234,7 @@ const TX: Record<Lang, Record<string, string>> = {
     upload_title_lbl: "Titel (optioneel)",
     upload_err:     "Upload mislukt",
     enter_value:    "Waarde invoeren…",
+    enter_number:   "Bedrag invoeren (€)…",
     status_todo:           "Te doen",
     status_waiting_client: "Wacht op klant",
     status_uploaded:       "Geüpload",
@@ -232,6 +279,7 @@ const TX: Record<Lang, Record<string, string>> = {
     upload_title_lbl: "عنوان (اختیاری)",
     upload_err:     "بارگذاری ناموفق",
     enter_value:    "مقدار را وارد کنید…",
+    enter_number:   "مبلغ را وارد کنید (€)…",
     status_todo:           "در انتظار",
     status_waiting_client: "منتظر مشتری",
     status_uploaded:       "بارگذاری شده",
@@ -372,8 +420,8 @@ export default function ClientTasksPage() {
       setInlineValue(task.meta_value ?? "");
       return;
     }
-    // Document-upload categories — show upload modal on this page
-    if (DOC_CATEGORIES.has(task.category)) {
+    // Document-upload categories or specific doc stable_keys — show upload modal on this page
+    if (DOC_CATEGORIES.has(task.category) || DOC_STABLE_KEYS.has(task.stable_key ?? "")) {
       setUploadTaskId(task.raw_id);
       setUploadTitle(task.title);
       setUploadError("");
@@ -527,22 +575,25 @@ export default function ClientTasksPage() {
                       {/* Saved meta_value display */}
                       {task.meta_value && (
                         <div style={{ marginTop: "var(--sp-2)", fontSize: "var(--text-xs)", color: "var(--ok-text)", fontWeight: 600 }}>
-                          ✓ {task.meta_value}
+                          ✓ {formatMetaValue(task, lang)}
                         </div>
                       )}
 
-                      {/* Inline text-input form (info tasks: KVK, BTW, etc.) */}
-                      {inlineActiveId === task.raw_id && (
+                      {/* Inline input form (info tasks: KVK, BTW, dates, numbers, etc.) */}
+                      {inlineActiveId === task.raw_id && (() => {
+                        const inputType = getInlineType(task);
+                        return (
                         <div style={{ marginTop: "var(--sp-3)", display: "flex", gap: "var(--sp-2)", alignItems: "center", flexWrap: "wrap" }}>
                           <input
                             autoFocus
-                            type="text"
+                            type={inputType}
                             value={inlineValue}
                             onChange={e => setInlineValue(e.target.value)}
                             onKeyDown={e => { if (e.key === "Enter") void handleSaveInline(task); if (e.key === "Escape") setInlineActiveId(null); }}
-                            placeholder={tx.enter_value}
+                            placeholder={inputType === "number" ? tx.enter_number : inputType === "date" ? "" : tx.enter_value}
+                            min={inputType === "number" ? "0" : undefined}
                             style={{
-                              flex: 1, minWidth: 140, padding: "6px 10px",
+                              flex: 1, minWidth: 160, padding: "6px 10px",
                               border: "1.5px solid var(--blue)", borderRadius: "var(--r)",
                               background: "var(--bg)", color: "var(--text)",
                               fontSize: "var(--text-sm)", outline: "none",
@@ -564,7 +615,8 @@ export default function ClientTasksPage() {
                             {tx.cancel}
                           </button>
                         </div>
-                      )}
+                        );
+                      })()}
                     </div>
 
                     {/* Action buttons */}
