@@ -503,6 +503,33 @@ export default function EngagementPage() {
     }
   }
 
+  async function openDocumentFile(fileUrl: string, filename: string) {
+    const token = localStorage.getItem("access_token") ?? "";
+    try {
+      const res = await fetch(fileUrl, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({})) as { detail?: string };
+        showToast(data.detail ?? "File not found. Please re-upload.", "error");
+        return;
+      }
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
+    } catch {
+      showToast("Could not open document.", "error");
+    }
+  }
+
   async function handleApproveIncome(incomeId: number, newStatus: "approved" | "rejected") {
     try {
       const updated = await updateIncome(incomeId, { review_status: newStatus });
@@ -994,7 +1021,7 @@ export default function EngagementPage() {
 
                     <div style={{ display: "flex", gap: "var(--sp-2)", flexWrap: "wrap" }}>
                       {selectedDoc.file_url && (
-                        <a href={selectedDoc.file_url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">{tx.view} ↗</a>
+                        <button className="btn btn-ghost btn-sm" onClick={() => void openDocumentFile(selectedDoc.file_url!, selectedDoc.original_filename)}>{tx.view} ↗</button>
                       )}
                       <button className="btn btn-ghost btn-sm" style={{ color: "var(--ok)" }} onClick={() => void handleReviewDoc(selectedDoc.id, "approved")}>{tx.approve}</button>
                       <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)" }} onClick={() => { setRejectTargetDocId(selectedDoc.id); setRejectReason(""); setShowRejectDialog(true); }}>{tx.reject}</button>

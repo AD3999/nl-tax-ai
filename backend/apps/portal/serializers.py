@@ -69,9 +69,8 @@ class ClientDocumentSerializer(serializers.ModelSerializer):
     status      = serializers.CharField(source="processing_status", read_only=True)
 
     def get_file_url(self, obj):
-        request = self.context.get("request")
-        if obj.file and request:
-            return request.build_absolute_uri(obj.file.url)
+        if obj.file:
+            return f"/api/portal/documents/{obj.id}/file/"
         return None
 
     def get_client_name(self, obj):

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import {
   fetchClientDocuments, fetchClientEngagement,
   uploadClientDocument, deleteClientDocument,
@@ -77,6 +78,7 @@ function SkeletonDoc() {
 export default function ClientDocumentsPage() {
   const { i18n } = useTranslation();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as "nl"|"en"|"fa";
 
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
@@ -122,6 +124,33 @@ export default function ClientDocumentsPage() {
       if (!silent) setError("Could not load documents.");
     }
     if (!silent) setLoading(false);
+  }
+
+  async function openDocumentFile(fileUrl: string, filename: string) {
+    const token = localStorage.getItem("access_token") ?? "";
+    try {
+      const res = await fetch(fileUrl, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({})) as { detail?: string };
+        showToast(data.detail ?? "File not found. Please re-upload.", "error");
+        return;
+      }
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
+    } catch {
+      showToast("Could not open document.", "error");
+    }
   }
 
   function handleFileChosen(e: React.ChangeEvent<HTMLInputElement>) {
@@ -358,9 +387,9 @@ export default function ClientDocumentsPage() {
                     </span>
 
                     {doc.file_url && (
-                      <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-xs)", fontWeight: 700 }}>
+                      <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-xs)", fontWeight: 700 }} onClick={() => void openDocumentFile(doc.file_url!, doc.original_filename)}>
                         {t("view", lang)}
-                      </a>
+                      </button>
                     )}
 
                     {/* Delete */}

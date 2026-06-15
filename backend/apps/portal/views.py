@@ -13,6 +13,7 @@ All write operations are logged via _audit().
 from __future__ import annotations
 
 from django.db.models import F
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import permissions, status
@@ -441,6 +442,45 @@ class DocumentReviewView(APIView):
                    after={"status": new_status, "notes": review_notes})
 
         return Response(ClientDocumentSerializer(doc, context={"request": request}).data)
+
+
+class DocumentFileView(APIView):
+    """
+    GET /api/portal/documents/<id>/file/
+    Streams the uploaded file back to the authenticated caller.
+    Accountants can view their clients' files; clients can view their own.
+    Returns a clean JSON 404 (not a raw Django 404 page) if the file is
+    missing from storage (e.g. after a Railway ephemeral-filesystem reset).
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        doc = get_object_or_404(ClientDocument, pk=pk)
+
+        # Permission: staff, accountant of this client, or the client themselves
+        if not request.user.is_staff:
+            if not (_is_accountant_of_client(request.user, doc.client_profile)
+                    or _is_client_of_profile(request.user, doc.client_profile)):
+                return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if not doc.file:
+            return Response({"detail": "No file attached to this document."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            fh = doc.file.open("rb")
+            response = FileResponse(
+                fh,
+                content_type=doc.mime_type or "application/octet-stream",
+                as_attachment=False,
+            )
+            safe_name = (doc.original_filename or "document").replace('"', "")
+            response["Content-Disposition"] = f'inline; filename="{safe_name}"'
+            return response
+        except (FileNotFoundError, OSError):
+            return Response(
+                {"detail": "File not found on server. It may have been lost after a deployment. Please re-upload."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
 
 # ── Extracted Income / Expense ────────────────────────────────────────────────
