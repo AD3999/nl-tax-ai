@@ -639,7 +639,7 @@ export default function AdminRuleEditorPage() {
                 <p className="text-xs text-gray-500">Loading impact data…</p>
               ) : (
                 <div className="space-y-3">
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="bg-white rounded-lg p-3 border border-amber-100 text-center">
                       <div className="text-2xl font-semibold text-amber-700">{impact.affected_users_estimate}</div>
                       <div className="text-xs text-gray-500 mt-0.5">Affected users</div>

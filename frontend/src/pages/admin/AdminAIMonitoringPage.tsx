@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Activity, MessageSquare, AlertTriangle, TrendingUp, RefreshCw, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useMobile } from "@/hooks/useMobile";
 
 interface AIMetrics {
   total_messages: number;
@@ -15,6 +16,7 @@ interface AIMetrics {
 export default function AdminAIMonitoringPage() {
   const { i18n } = useTranslation();
   const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as "nl" | "en" | "fa";
+  const isMobile = useMobile();
 
   const [metrics, setMetrics] = useState<AIMetrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,7 +97,7 @@ export default function AdminAIMonitoringPage() {
       ) : metrics ? (
         <>
           {/* KPI row */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "var(--sp-4)", marginBottom: "var(--sp-6)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)", gap: "var(--sp-4)", marginBottom: "var(--sp-6)" }}>
             {kpis.map(kpi => (
               <div key={kpi.label} className="card" style={{ padding: "var(--sp-4)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)", marginBottom: "var(--sp-2)" }}>
@@ -108,7 +110,7 @@ export default function AdminAIMonitoringPage() {
           </div>
 
           {/* Two-column: topics + model distribution */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-5)", marginBottom: "var(--sp-5)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-5)", marginBottom: "var(--sp-5)" }}>
             {/* Top topics */}
             <div className="card" style={{ padding: "var(--sp-5)" }}>
               <h3 style={{ fontWeight: 700, fontSize: "var(--text-base)", color: "var(--text)", marginBottom: "var(--sp-4)", margin: "0 0 var(--sp-4)" }}>{t("top_topics")}</h3>

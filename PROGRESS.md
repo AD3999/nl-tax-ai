@@ -1,7 +1,57 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 16 Jun 2026 — Fixed uploaded documents being lost after every Railway deploy (ephemeral local storage)
+> Last updated: 16 Jun 2026 — Mobile nav gap fix + full admin dashboard responsiveness pass
+
+---
+
+## Session — 16 Jun 2026 · Mobile Nav Gap + Admin Dashboard Responsiveness ✅ Complete
+
+### Issue 1 — Mobile nav: pages unreachable on small screens
+
+**Problem:** Client-role users on mobile only had the 5-item `BottomNav` (Home/Tasks/Documents/AI/Profile) — [AppLayout.tsx:40](frontend/src/components/AppLayout.tsx) explicitly disabled the hamburger drawer whenever `isClientRole && isClientPath`. Result: Calculator, Tax Calendar, Tax History, ZZP Workspace, Deduction Checker, Intake, and Messages had **no nav entry point at all** on mobile.
+
+**Decision:** keep the 5-item bottom nav (it's a deliberate, spec'd pattern — docs/05-ux UI Bible Ch5+18 — and 5 items is the right size for a tab bar), but stop disabling the drawer. Standard "tab bar + overflow drawer" pattern, not a redesign.
+
+**Fix (`frontend/src/components/AppLayout.tsx`):**
+- Mobile drawer (`AppSidebarMobileDrawer`) now renders for every authenticated role, not just accountant/admin — it already contained the full client nav ([AppSidebar.tsx:53-66](frontend/src/components/AppSidebar.tsx)), it was just gated off.
+- Hamburger button in the mobile topbar is now always shown, not conditionally hidden for clients on client paths.
+
+### Issue 2 — Admin dashboard not responsive at all
+
+**Problem:** `AdminSidebar` was a permanent 240px (`w-60`) fixed sidebar with zero responsive handling, `admin.css` had zero `@media` queries, no drawer existed. All 11 admin pages share this one shell.
+
+**Fix — shared shell (3 files):**
+- `frontend/src/components/admin/AdminSidebar.tsx` — now an off-canvas drawer on mobile (`fixed`, `-translate-x-full` ↔ `translate-x-0`, with backdrop), static sidebar unchanged on `md:` and up. Also added 3 nav items that were routed but missing from the sidebar entirely: Firms, Audit Logs, AI Monitor.
+- `frontend/src/components/admin/AdminTopbar.tsx` — added a hamburger trigger (`md:hidden`), title/subtitle now truncate instead of overflowing, admin email hidden below `sm:` to make room.
+- `frontend/src/components/admin/AdminLayout.tsx` — holds the drawer open/close state, wires it to both; main content padding reduces on mobile (`p-4` → `p-6`).
+
+**Fix — per-page content (pattern-audited all 11 admin pages for fixed grids/tables/widths, not just the shell):**
+
+| File | Issue | Fix |
+|------|-------|-----|
+| `AdminDashboard.tsx` | Raw `<table>`, no scroll wrapper | Wrapped in `overflow-x-auto` |
+| `AdminFirmsPage.tsx` | Raw `<table>` inside `overflow:hidden` (clipped, not scrollable) + 3-col KPI grid fixed at all sizes | `overflowX:auto` + `minWidth:640` on table; KPI grid collapses to 1 column via `useMobile()` |
+| `AdminAuditLogsPage.tsx` | Same as above, 4-col KPI grid | Same fix; KPI grid collapses to 1 column via `useMobile()` |
+| `AdminAIMonitoringPage.tsx` | 4-col KPI grid + 2-col topics/models grid, both fixed at all sizes | Both collapse to 1 column via `useMobile()` |
+| `AdminUsersPage.tsx` | User detail drawer fixed at `w-[520px]` (wider than a phone viewport); 2-col field grid fixed at all sizes | Drawer → `w-full max-w-[520px]`; grid → `grid-cols-1 sm:grid-cols-2` |
+| `AdminRuleEditorPage.tsx` | 3-col impact-stats grid fixed at all sizes | `grid-cols-1 sm:grid-cols-3` |
+| `AdminChatLogsPage.tsx`, `AdminRulesPage.tsx` | Tables already wrapped in `overflow-x-auto`; filter-bar `min-w-[Npx]` inputs already inside `flex-wrap` rows | Confirmed already correct — no change |
+| `AdminCalculatorPreviewPage.tsx`, `AdminRAGPreviewPage.tsx`, `AdminSettingsPage.tsx` | No fixed grid/table/width patterns found | No change needed |
+
+### Issue 3 — "Some pages" responsiveness audit
+
+Cross-checked every page against the `useMobile()` pattern already adopted elsewhere in the app (per earlier sessions' responsiveness audits) to find candidates instead of guessing:
+- **`PricingPage.tsx`** — 2-column plan-comparison grid (`1fr 1.05fr`) fixed at all sizes → now collapses to 1 column via `useMobile()`.
+- **`AccountantInboxPage.tsx`, `ClientMessagesPage.tsx`** — inspected directly; already correctly responsive (KPI row already has `flexWrap: wrap`; messages page already redesigned as a flex column). No change needed.
+- `GoogleCallbackPage.tsx`, `Phase2Demo.tsx` — low-stakes (redirect screen, dev demo) — left alone.
+
+### Verification
+
+- `tsc --noEmit` across the whole frontend: **0 errors**, run twice (after the admin shell changes and again after all page-content edits).
+- Sandbox had no system Node.js with working shared libraries (`apt`-installed `nodejs` needed `libnode127`, `libllhttp9.3`, `libada-url0-3`, `libsimdjson29`, then hit a Debian-specific externalized-builtins issue) — switched to the official self-contained binary from nodejs.org instead, which ran cleanly.
+- `vite build` could not be run in this sandbox — pre-existing missing native binary (`@rolldown/binding-linux-x64-gnu`) unrelated to this change; would fail identically on a clean checkout with no edits. Not chased further (out of scope, would need a fresh `npm install`).
+- Not visually tested in a real browser at mobile widths — flagging this explicitly rather than claiming a visual check that didn't happen.
 
 ---
 

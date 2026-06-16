@@ -53,7 +53,7 @@ function UserDetailDrawer({
     <div className="fixed inset-0 z-50 flex" onClick={onClose}>
       <div className="flex-1 bg-black/30" />
       <div
-        className="w-[520px] bg-white h-full overflow-y-auto shadow-2xl flex flex-col"
+        className="w-full max-w-[520px] bg-white h-full overflow-y-auto shadow-2xl flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
@@ -79,7 +79,7 @@ function UserDetailDrawer({
           </div>
 
           {/* Read-only fields */}
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <div><p className="text-xs text-gray-400 mb-0.5">Username</p><p className="font-medium text-gray-800">{user.username}</p></div>
             <div><p className="text-xs text-gray-400 mb-0.5">Language</p><p className="font-medium text-gray-800">{user.preferred_language.toUpperCase()}</p></div>
             <div><p className="text-xs text-gray-400 mb-0.5">Last login</p><p className="font-medium text-gray-800">{fmt(user.last_login)}</p></div>

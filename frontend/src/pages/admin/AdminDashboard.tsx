@@ -82,6 +82,7 @@ export default function AdminDashboard() {
                 All rules are verified ✓
               </div>
             ) : (
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100">
@@ -117,6 +118,7 @@ export default function AdminDashboard() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </CardBody>
         </Card>

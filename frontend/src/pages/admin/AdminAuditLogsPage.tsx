@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ClipboardList, RefreshCw, Search, Filter } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useMobile } from "@/hooks/useMobile";
 
 interface AuditEntry {
   id: number;
@@ -25,6 +26,7 @@ const ACTION_COLORS: Record<string, string> = {
 export default function AdminAuditLogsPage() {
   const { i18n } = useTranslation();
   const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as "nl" | "en" | "fa";
+  const isMobile = useMobile();
 
   const [logs, setLogs] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,7 +81,7 @@ export default function AdminAuditLogsPage() {
       </div>
 
       {/* KPI */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "var(--sp-4)", marginBottom: "var(--sp-6)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)", gap: "var(--sp-4)", marginBottom: "var(--sp-6)" }}>
         {[
           { label: t("total"),   value: logs.length },
           { label: "Creates",   value: logs.filter(l => l.action === "create").length },
@@ -138,8 +140,8 @@ export default function AdminAuditLogsPage() {
           <div style={{ color: "var(--text-3)", fontSize: "var(--text-sm)" }}>{t("empty")}</div>
         </div>
       ) : (
-        <div className="card" style={{ overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "var(--text-sm)" }}>
+        <div className="card" style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", minWidth: 640, borderCollapse: "collapse", fontSize: "var(--text-sm)" }}>
             <thead>
               <tr style={{ borderBottom: "2px solid var(--border-2)" }}>
                 {[t("time"), t("actor"), t("action"), t("entity"), t("ip")].map(h => (

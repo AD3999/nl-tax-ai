@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { createCheckoutSession, createBillingPortalSession } from "../api/payments";
 import { useAuth } from "../context/AuthContext";
 import { Icon } from "../components/Icon";
+import { useMobile } from "../hooks/useMobile";
 
 const PRICING_ROWS: [string, string, string][] = [
   ["Verified 2026 rules",       "all 28",    "all 28"],
@@ -57,6 +58,7 @@ export default function PricingPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useMobile();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -100,7 +102,7 @@ export default function PricingPage() {
 
       {/* Plan cards */}
       <section style={{ padding: "8px 40px 64px" }}>
-        <div style={{ maxWidth: 940, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr 1.05fr", gap: 22 }}>
+        <div style={{ maxWidth: 940, margin: "0 auto", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1.05fr", gap: 22 }}>
           {/* Free */}
           <div className="card" style={{ padding: 32 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>

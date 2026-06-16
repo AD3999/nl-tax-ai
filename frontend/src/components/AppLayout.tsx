@@ -35,9 +35,9 @@ export default function AppLayout() {
       maxWidth: 1600,
       margin: "0 auto",
     }}>
-      {/* ── Sidebar: desktop always visible; mobile: drawer only for accountant/admin ── */}
+      {/* ── Sidebar: desktop always visible; mobile: drawer for all roles ── */}
       {!isMobile && <AppSidebarDesktop />}
-      {isMobile && !isClientRole && (
+      {isMobile && (
         <AppSidebarMobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
       )}
 
@@ -65,24 +65,23 @@ export default function AppLayout() {
             top: 0,
             zIndex: 50,
           }}>
-            {/* Show hamburger for non-client roles OR client on non-client paths */}
-            {(!isClientRole || !isClientPath) && (
-              <button
-                onClick={() => setDrawerOpen(true)}
-                aria-label="Open navigation menu"
-                style={{
-                  width: 36, height: 36, borderRadius: 8,
-                  border: "1px solid var(--border-2)",
-                  background: "transparent",
-                  color: "var(--text-2)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  cursor: "pointer",
-                  flexShrink: 0,
-                }}
-              >
-                <Menu size={16} />
-              </button>
-            )}
+            {/* Always available: bottom nav only covers 5 frequent client destinations,
+                everything else (Calculator, Tax Calendar, ZZP Workspace, etc.) lives here. */}
+            <button
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Open navigation menu"
+              style={{
+                width: 36, height: 36, borderRadius: 8,
+                border: "1px solid var(--border-2)",
+                background: "transparent",
+                color: "var(--text-2)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+            >
+              <Menu size={16} />
+            </button>
 
             <span style={{
               fontFamily: "var(--font)",

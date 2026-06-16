@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Building2, Users, RefreshCw, Search, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useMobile } from "@/hooks/useMobile";
 
 interface Firm {
   id: number;
@@ -15,6 +16,7 @@ interface Firm {
 export default function AdminFirmsPage() {
   const { i18n } = useTranslation();
   const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as "nl" | "en" | "fa";
+  const isMobile = useMobile();
 
   const [firms, setFirms] = useState<Firm[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +63,7 @@ export default function AdminFirmsPage() {
       </div>
 
       {/* KPI */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "var(--sp-4)", marginBottom: "var(--sp-6)" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: "var(--sp-4)", marginBottom: "var(--sp-6)" }}>
         {[
           { label: t("total"),   value: firms.length,                            color: "var(--blue)", icon: <Building2 size={16} /> },
           { label: t("active"),  value: firms.filter(f => f.is_active).length,   color: "var(--ok)",   icon: <Users size={16} /> },
@@ -115,8 +117,8 @@ export default function AdminFirmsPage() {
           <div style={{ color: "var(--text-3)", fontSize: "var(--text-sm)" }}>{t("empty")}</div>
         </div>
       ) : (
-        <div className="card" style={{ overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "var(--text-sm)" }}>
+        <div className="card" style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", minWidth: 640, borderCollapse: "collapse", fontSize: "var(--text-sm)" }}>
             <thead>
               <tr style={{ borderBottom: "2px solid var(--border-2)" }}>
                 {[t("name"), t("plan"), t("users"), t("created"), t("status")].map(h => (
