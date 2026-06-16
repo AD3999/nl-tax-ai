@@ -112,22 +112,37 @@ def extract_from_document(document) -> dict:
     import os
     ocr_provider_name = os.environ.get("OCR_PROVIDER", "none").lower()
 
-    if ocr_provider_name != "none":
+    # Read the raw bytes once via the storage API (works for local disk AND
+    # remote backends like S3 — unlike document.file.path, which only exists
+    # for FileSystemStorage).
+    file_bytes = None
+    if ocr_provider_name != "none" or "pdf" in mime_type:
+        try:
+            document.file.open("rb")
+            try:
+                file_bytes = document.file.read()
+            finally:
+                document.file.close()
+        except (FileNotFoundError, OSError) as e:
+            logger.warning("Could not read document file from storage: %s", e)
+
+    if ocr_provider_name != "none" and file_bytes is not None:
         # Use configured OCR provider (Google Vision / Document AI / Azure)
         try:
             from apps.portal.ocr.factory import get_ocr_provider
             ocr = get_ocr_provider()
-            ocr_result = ocr.extract(document.file.path)
+            ocr_result = ocr.extract_bytes(file_bytes, mime_type)
             text_content = ocr_result.text
             logger.info("OCR provider '%s' confidence=%.2f", ocr_result.provider, ocr_result.confidence)
         except Exception as e:
             logger.warning("OCR provider failed, falling back to pdfminer: %s", e)
 
-    if not text_content and "pdf" in mime_type:
+    if not text_content and "pdf" in mime_type and file_bytes is not None:
         # pdfminer fallback (always available, no API key needed)
         try:
+            import io
             from pdfminer.high_level import extract_text as pdf_extract_text
-            text_content = pdf_extract_text(document.file.path) or ""
+            text_content = pdf_extract_text(io.BytesIO(file_bytes)) or ""
         except Exception as e:
             logger.debug("PDF text extraction skipped: %s", e)
 

@@ -214,14 +214,49 @@ MEDIA_ROOT = BASE_DIR / "media"
 # WhiteNoise intercepts these before Django's URL router.
 WHITENOISE_ROOT = BASE_DIR.parent / "frontend" / "dist"
 
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
+# ── File storage for uploaded client documents ────────────────────────────────
+# "local" (default) writes to MEDIA_ROOT on local disk — fine for dev, but
+# Railway's filesystem is ephemeral: every deploy wipes backend/media/, so any
+# previously uploaded document 404s on download even though its DB row (and
+# "approved" status) survives. Set FILE_STORAGE_PROVIDER=s3 with AWS_* env vars
+# to persist documents in any S3-compatible bucket (AWS S3, Cloudflare R2,
+# Backblaze B2, MinIO) so they survive deploys/restarts.
+FILE_STORAGE_PROVIDER = env("FILE_STORAGE_PROVIDER", default="local").lower()
+
+if FILE_STORAGE_PROVIDER == "s3":
+    AWS_ACCESS_KEY_ID = env("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
+    AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
+    AWS_S3_REGION_NAME = env("AWS_S3_REGION_NAME", default="eu-central-1")
+    AWS_S3_ENDPOINT_URL = env("AWS_S3_ENDPOINT_URL", default=None)  # set for R2 / B2 / MinIO
+    AWS_DEFAULT_ACL = None        # private — documents are only ever served via DocumentFileView
+    AWS_S3_FILE_OVERWRITE = False  # match FileSystemStorage's collision behaviour (auto-suffix, never overwrite)
+
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+    if not DEBUG:
+        print(
+            "WARNING: FILE_STORAGE_PROVIDER=local in a non-DEBUG environment. "
+            "Uploaded client documents are stored on local disk and WILL BE LOST on the "
+            "next deploy/restart (e.g. Railway's ephemeral filesystem). Set "
+            "FILE_STORAGE_PROVIDER=s3 with AWS_* credentials to persist them.",
+            file=sys.stderr,
+        )
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

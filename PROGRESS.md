@@ -1,7 +1,45 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 15 Jun 2026 — Nav double-active-link fix, client unread message dot badge, language sync to backend
+> Last updated: 16 Jun 2026 — Fixed uploaded documents being lost after every Railway deploy (ephemeral local storage)
+
+---
+
+## Session — 16 Jun 2026 · Fix: Uploaded Documents Lost After Deploy ("File not found on server") ✅ Complete
+
+### Problem reported
+
+Accountant Portal → client engagement → Documents tab → clicking **View** on an already-`approved` document (e.g. `Screenshot 2026-05-19 161705.png`) returned: *"File not found on server. It may have been lost after a deployment. Please re-upload."* The DB row and its `approved` status survived; the underlying file did not. All 3 documents on that engagement were affected.
+
+### Root cause
+
+`backend/config/settings.py` had `STORAGES["default"]` hardcoded to `FileSystemStorage`, writing into `MEDIA_ROOT` on local disk. Railway's filesystem is ephemeral — every deploy starts from a fresh container and silently wipes `backend/media/`. `DocumentFileView` already had a try/except anticipating exactly this failure (the friendly error message was already written), but nothing actually fixed the cause — uploaded documents were never durable in production.
+
+### Fix
+
+| File | Change |
+|------|--------|
+| `backend/config/settings.py` | `STORAGES["default"]` now driven by a `FILE_STORAGE_PROVIDER` env var (mirrors the existing `OCR_PROVIDER` pattern). Default `"local"` keeps dev behavior unchanged but prints a stderr warning at boot if `DEBUG=False` (production) and still on local storage. `"s3"` switches to `storages.backends.s3.S3Storage` against any S3-compatible bucket (AWS S3, Cloudflare R2, Backblaze B2, MinIO) via `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_STORAGE_BUCKET_NAME` / `AWS_S3_REGION_NAME` / `AWS_S3_ENDPOINT_URL`. `AWS_DEFAULT_ACL=None` (bucket-owner-enforced, no object ACLs) + `AWS_S3_FILE_OVERWRITE=False` (matches FileSystemStorage's never-overwrite-on-collision behavior). |
+| `backend/requirements.txt` | Added `django-storages[s3]>=1.14,<2.0` (pulls `boto3`). |
+| `backend/apps/portal/services/document_extraction.py` | OCR/pdfminer text extraction used `document.file.path`, which only exists for `FileSystemStorage` — `S3Storage` has no local path and raises. Now reads the file once via the storage API (`document.file.open("rb")` → bytes) and feeds bytes to `OCRProvider.extract_bytes()` (already existed, previously unused) and to `pdfminer.extract_text(io.BytesIO(...))`. Works identically on local disk or S3. |
+| `backend/apps/portal/views.py` | `DocumentFileView.get()` only caught `(FileNotFoundError, OSError)` around the file read — correct for local disk, but S3 failures raise `botocore.exceptions.ClientError`, which is **not** an `OSError` subclass, so a missing/misconfigured S3 object would have surfaced as an unhandled 500 instead of the existing friendly 404. Broadened to catch `Exception`, log it, and return the same clean 404. |
+| `.env.example`, `.env.production.example` | Documented `FILE_STORAGE_PROVIDER` + `AWS_*` vars. Production example now defaults to `FILE_STORAGE_PROVIDER=s3` with a comment explaining why `local` is unsafe on Railway. |
+
+### Verification
+
+Sandbox shell had neither `git` nor `pip` available by default. Bootstrapped both without root rather than skip verification: extracted the `git` `.deb` with `dpkg -x` (no root needed for extraction), and built a venv + bootstrapped `pip` via `get-pip.py` (the same method `nixpacks.toml` already uses for Railway).
+
+- `manage.py check` → 0 issues, in both `FILE_STORAGE_PROVIDER=local` (default) and `FILE_STORAGE_PROVIDER=s3` (dummy `AWS_*` vars) modes.
+- Confirmed at runtime that `default_storage` resolves to `storages.backends.s3.S3Storage` with `bucket_name`, `file_overwrite=False`, `default_acl=None` correctly wired from env vars.
+- Full Django test suite: **97/97 pass** (no regressions from the storage swap or the broadened exception handling).
+
+### Known limitation — not fixed, by design
+
+The 3 documents already shown as broken (2 "Purchase invoices / receipts" + 1 "Bank statements", all `approved`) have their actual bytes permanently gone. Switching the storage backend going forward cannot recover files that were never durably stored. The existing workflow already covers recovery: accountant clicks **Reject** with a note (e.g. "file lost, please re-upload") — `DocumentReviewView.patch` resets the `ChecklistItem`/`DocumentRequest` to `todo`/`open` and notifies the client in their preferred language (per the 15 Jun "Rejected Task Reactivation" session). No new code needed for that.
+
+### Still open (deployment action, not code)
+
+`FILE_STORAGE_PROVIDER=s3` requires a real bucket + credentials in Railway's env vars — an infra decision only the project owner can make (which provider, which region). Until that's set, production keeps using ephemeral local storage, now at least with a loud boot-time warning instead of silent data loss.
 
 ---
 

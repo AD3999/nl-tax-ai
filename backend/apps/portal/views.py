@@ -12,6 +12,8 @@ All write operations are logged via _audit().
 """
 from __future__ import annotations
 
+import logging
+
 from django.db.models import F
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
@@ -35,6 +37,8 @@ from .serializers import (
     AccountantActionSerializer, PortalAuditLogSerializer,
     ReminderLogSerializer, PortalMessageSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -520,8 +524,10 @@ class DocumentFileView(APIView):
     GET /api/portal/documents/<id>/file/
     Streams the uploaded file back to the authenticated caller.
     Accountants can view their clients' files; clients can view their own.
-    Returns a clean JSON 404 (not a raw Django 404 page) if the file is
-    missing from storage (e.g. after a Railway ephemeral-filesystem reset).
+    Returns a clean JSON 404 (not a raw Django 404 page or a 500) if the file
+    is missing or unreadable from storage (e.g. a stale row pointing at a file
+    that was lost from local disk before FILE_STORAGE_PROVIDER=s3 was enabled,
+    or a transient error talking to the S3-compatible bucket).
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -547,7 +553,12 @@ class DocumentFileView(APIView):
             safe_name = (doc.original_filename or "document").replace('"', "")
             response["Content-Disposition"] = f'inline; filename="{safe_name}"'
             return response
-        except (FileNotFoundError, OSError):
+        except Exception as exc:
+            # Broad on purpose: FileSystemStorage raises FileNotFoundError/OSError,
+            # but S3-backed storage raises botocore.exceptions.ClientError (not an
+            # OSError subclass) for a missing key or bucket/credential problem. Any
+            # of these should degrade to the same clean, actionable 404.
+            logger.warning("Document %s file unreadable from storage: %s", doc.pk, exc)
             return Response(
                 {"detail": "File not found on server. It may have been lost after a deployment. Please re-upload."},
                 status=status.HTTP_404_NOT_FOUND,
