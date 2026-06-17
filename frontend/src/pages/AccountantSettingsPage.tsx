@@ -3,6 +3,24 @@ import { useTranslation } from "react-i18next";
 import { client as apiClient } from "../api/client";
 import { useMobile } from "../hooks/useMobile";
 
+// WCAG 2.1 relative luminance for a hex color
+function relativeLuminance(hex: string): number {
+  const clean = hex.replace("#", "");
+  if (clean.length !== 6) return 0.5;
+  const r = parseInt(clean.slice(0, 2), 16) / 255;
+  const g = parseInt(clean.slice(2, 4), 16) / 255;
+  const b = parseInt(clean.slice(4, 6), 16) / 255;
+  const lin = (c: number) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+
+function contrastRatio(hexA: string, hexB: string): number {
+  const lA = relativeLuminance(hexA);
+  const lB = relativeLuminance(hexB);
+  const [lighter, darker] = lA > lB ? [lA, lB] : [lB, lA];
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
 interface AccountantSetup {
   firm_name: string;
   kvk_number: string;
@@ -48,6 +66,8 @@ export default function AccountantSettingsPage() {
     plan:         isFA ? "طرح" : isNL ? "Abonnement" : "Plan",
     maxClients:   isFA ? "حداکثر مشتریان" : isNL ? "Max. cliënten" : "Max Clients",
     branding:     isFA ? "برندینگ" : isNL ? "Huisstijl" : "Branding",
+    contrastOk:   isFA ? "کنتراست خوب" : isNL ? "Contrast voldoende" : "Contrast OK",
+    contrastWarn: isFA ? "کنتراست ضعیف (WCAG AA نیاز دارد ۴.۵:۱)" : isNL ? "Contrast te laag (WCAG AA vereist 4,5:1)" : "Contrast too low (WCAG AA requires 4.5:1)",
     contact:      isFA ? "اطلاعات تماس" : isNL ? "Contactgegevens" : "Contact Info",
     subscription: isFA ? "اشتراک" : isNL ? "Abonnement" : "Subscription",
   };
@@ -115,6 +135,17 @@ export default function AccountantSettingsPage() {
               <input type="color" value={form.accent_color ?? "#3b82f6"} onChange={e => setForm({ ...form, accent_color: e.target.value })} style={{ width: 44, height: 36, border: "1px solid var(--border)", borderRadius: 6, cursor: "pointer" }} />
               <input className="input" style={{ flex: 1 }} value={form.accent_color ?? "#3b82f6"} onChange={e => setForm({ ...form, accent_color: e.target.value })} />
             </div>
+            {(() => {
+              const color = form.accent_color ?? "#3b82f6";
+              const ratio = contrastRatio(color, "#ffffff");
+              const passes = ratio >= 4.5;
+              return (
+                <div style={{ marginTop: 6, fontSize: "var(--text-xs)", display: "flex", alignItems: "center", gap: 6, color: passes ? "var(--ok)" : "var(--danger)" }}>
+                  <span style={{ fontWeight: 700 }}>{ratio.toFixed(1)}:1</span>
+                  <span>{passes ? T.contrastOk : T.contrastWarn}</span>
+                </div>
+              );
+            })()}
           </div>
           <div>
             <label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 4 }}>{T.signature}</label>

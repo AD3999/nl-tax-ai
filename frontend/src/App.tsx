@@ -7,6 +7,7 @@ import AppLayout from "./components/AppLayout";
 import LoadingScreen from "./components/LoadingScreen";
 import { useAuth } from "./context/AuthContext";
 import { trackPageView } from "./lib/analytics";
+import CookieConsentBanner, { type ConsentDecision } from "./components/CookieConsentBanner";
 
 // ── Error Boundary ─────────────────────────────────────────────────────────────
 class ErrorBoundary extends Component<
@@ -114,8 +115,14 @@ function App() {
     trackPageView(location.pathname);
   }, [location.pathname]);
 
+  function handleConsent(_decision: ConsentDecision) {
+    // Re-trigger page view now that consent may have been given
+    trackPageView(location.pathname);
+  }
+
   return (
     <div dir={isRtl ? "rtl" : "ltr"}>
+      <CookieConsentBanner onDecision={handleConsent} />
       <ErrorBoundary>
         <Suspense fallback={<LoadingScreen />}>
           <Routes>

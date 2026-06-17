@@ -8,6 +8,20 @@ export default {
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
       },
+      fontSize: {
+        "2xs":   ["11px",  { lineHeight: "1.4" }],
+        xs:      ["12px",  { lineHeight: "1.5" }],
+        sm:      ["14px",  { lineHeight: "1.5" }],
+        base:    ["16px",  { lineHeight: "1.6" }],
+        md:      ["18px",  { lineHeight: "1.55" }],
+        lg:      ["20px",  { lineHeight: "1.4" }],
+        xl:      ["24px",  { lineHeight: "1.3" }],
+        "2xl":   ["30px",  { lineHeight: "1.25" }],
+        "3xl":   ["38px",  { lineHeight: "1.2" }],
+        "4xl":   ["48px",  { lineHeight: "1.1" }],
+        "5xl":   ["62px",  { lineHeight: "1.05" }],
+        "6xl":   ["72px",  { lineHeight: "1" }],
+      },
       colors: {
         accent: "var(--accent)",
         "accent-bg": "var(--accent-bg)",

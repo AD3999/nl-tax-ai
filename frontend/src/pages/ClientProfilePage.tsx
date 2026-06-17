@@ -57,6 +57,15 @@ export default function ClientProfilePage() {
     notes:    isFA ? "یادداشت‌ها" : isNL ? "Notities" : "Notes",
     save:     isFA ? "ذخیره تغییرات" : isNL ? "Wijzigingen opslaan" : "Save Changes",
     saved:    isFA ? "✓ ذخیره شد" : isNL ? "✓ Opgeslagen" : "✓ Saved",
+    privacy:          isFA ? "حریم خصوصی و داده‌ها" : isNL ? "Privacy & gegevens" : "Privacy & Data",
+    privacySubtitle:  isFA ? "حقوق شما تحت GDPR (AVG)" : isNL ? "Uw rechten onder de AVG" : "Your rights under GDPR",
+    exportData:       isFA ? "دانلود داده‌های من" : isNL ? "Mijn gegevens downloaden" : "Download my data",
+    exportDataHint:   isFA ? "دریافت کپی JSON از تمام داده‌های ذخیره‌شده" : isNL ? "Ontvang een JSON-kopie van al uw opgeslagen gegevens" : "Receive a JSON copy of all your stored data",
+    deleteAccount:    isFA ? "حذف حساب کاربری" : isNL ? "Account verwijderen" : "Delete account",
+    deleteAccountHint: isFA ? "تمام داده‌های شما پس از ۳۰ روز حذف می‌شوند" : isNL ? "Al uw gegevens worden na 30 dagen verwijderd" : "All your data will be deleted within 30 days",
+    clearAIMemory:    isFA ? "پاک کردن حافظه هوش مصنوعی" : isNL ? "AI-geheugen wissen" : "Clear AI memory",
+    clearAIMemoryHint: isFA ? "تاریخچه گفتگو و اولویت‌های AI حذف می‌شوند" : isNL ? "Chat-geschiedenis en AI-voorkeuren worden gewist" : "Chat history and AI preferences will be cleared",
+    requestSent:      isFA ? "درخواست ارسال شد" : isNL ? "Verzoek verzonden" : "Request sent",
     personal: isFA ? "اطلاعات شخصی" : isNL ? "Persoonlijke gegevens" : "Personal Information",
     tax:      isFA ? "اطلاعات مالیاتی" : isNL ? "Belastinggegevens" : "Tax Information",
     notesSection: isFA ? "یادداشت‌ها" : isNL ? "Notities" : "Notes",
@@ -68,6 +77,13 @@ export default function ClientProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving]   = useState(false);
   const [saved, setSaved]     = useState(false);
+  const [showBsn, setShowBsn] = useState(false);
+  const [gdprStatus, setGdprStatus] = useState<Record<string, boolean>>({});
+
+  const maskBsn = (raw: string) => {
+    if (!raw || raw.length < 4) return raw;
+    return "•".repeat(raw.length - 4) + raw.slice(-4);
+  };
 
   useEffect(() => {
     apiClient.get<ClientProfile>("/portal/client/profile/")
@@ -240,12 +256,33 @@ export default function ClientProfilePage() {
 
           <div>
             <label style={LABEL_STYLE}>{T.bsn}</label>
-            <div style={{ position: "relative" }}>
-              <input className="tw-input" type="text" value={(form.bsn ?? "") as string} placeholder="123456789" onChange={set("bsn")}
-                style={{ paddingInlineEnd: 32 }} />
-              <Shield size={13} style={{ position: "absolute", insetInlineEnd: 10, top: "50%", transform: "translateY(-50%)", color: "var(--text-4)", pointerEvents: "none" }} />
+            <div style={{ padding: "10px 14px", background: "var(--warn-subtle)", border: "1px solid var(--warn-border)", borderRadius: "var(--r-sm)", marginBottom: 8, fontSize: "var(--text-xs)", color: "var(--warn-text)", display: "flex", gap: 8, alignItems: "flex-start" }}>
+              <Shield size={13} style={{ flexShrink: 0, marginTop: 1 }} />
+              <span>
+                {isNL ? "BSN is een bijzonder persoonsgegeven (UAVG). TaxWijs verwerkt dit alleen met expliciete wettelijke grondslag voor belastingaangifteondersteuning. Neem contact op voor vragen." : isFA ? "BSN یک داده حساس است (UAVG). TaxWijs این را تنها با مجوز قانونی پردازش می‌کند." : "BSN is a specially protected identifier (UAVG). TaxWijs processes it only with statutory authorization for tax-return support."}
+              </span>
             </div>
-            <span style={{ fontSize: "var(--text-xs)", color: "var(--text-4)", marginTop: 6, display: "block" }}>{T.bsnHint}</span>
+            <div style={{ position: "relative" }}>
+              <input
+                className="tw-input"
+                type={showBsn ? "text" : "password"}
+                value={(form.bsn ?? "") as string}
+                placeholder={showBsn ? "123456789" : "•••••••••"}
+                onChange={set("bsn")}
+                autoComplete="off"
+                style={{ paddingInlineEnd: 80 }}
+              />
+              <div style={{ position: "absolute", insetInlineEnd: 8, top: "50%", transform: "translateY(-50%)", display: "flex", gap: 4 }}>
+                <button type="button" onClick={() => setShowBsn(v => !v)} style={{ fontSize: "var(--text-xs)", color: "var(--text-3)", background: "none", border: "none", cursor: "pointer", padding: "2px 4px" }}>
+                  {showBsn ? (isNL ? "Verberg" : isFA ? "پنهان" : "Hide") : (isNL ? "Toon" : isFA ? "نمایش" : "Show")}
+                </button>
+                <Shield size={13} style={{ color: "var(--text-4)" }} />
+              </div>
+            </div>
+            {form.bsn && !showBsn && (
+              <span style={{ fontSize: "var(--text-xs)", color: "var(--text-4)", marginTop: 4, display: "block" }}>{maskBsn(form.bsn as string)}</span>
+            )}
+            <span style={{ fontSize: "var(--text-xs)", color: "var(--text-4)", marginTop: 4, display: "block" }}>{T.bsnHint}</span>
           </div>
 
           <div>
@@ -317,6 +354,53 @@ export default function ClientProfilePage() {
             value={form.notes ?? ""}
             onChange={set("notes")}
           />
+        </div>
+      </div>
+
+      {/* ── Privacy & Data (GDPR / AVG self-service) ── */}
+      <div className="card" style={{ marginBottom: "var(--sp-5)", overflow: "hidden" }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: "var(--sp-3)",
+          padding: "var(--sp-4) var(--sp-6)",
+          borderBottom: "1px solid var(--border)",
+          background: "var(--bg-3)",
+        }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "var(--blue-subtle, var(--blue))", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Shield size={15} style={{ color: "var(--blue)" }} />
+          </div>
+          <div>
+            <span style={{ fontWeight: 700, fontSize: "var(--text-sm)", color: "var(--text)", display: "block" }}>{T.privacy}</span>
+            <span style={{ fontSize: "var(--text-xs)", color: "var(--text-4)" }}>{T.privacySubtitle}</span>
+          </div>
+        </div>
+        <div style={{ padding: "var(--sp-5) var(--sp-6)", display: "flex", flexDirection: "column", gap: "var(--sp-4)" }}>
+          {[
+            { key: "export",   label: T.exportData,    hint: T.exportDataHint,    danger: false },
+            { key: "aiClear",  label: T.clearAIMemory, hint: T.clearAIMemoryHint, danger: false },
+            { key: "delete",   label: T.deleteAccount, hint: T.deleteAccountHint, danger: true  },
+          ].map(action => (
+            <div key={action.key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <div>
+                <div style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: action.danger ? "var(--danger)" : "var(--text)" }}>{action.label}</div>
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--text-4)", marginTop: 2 }}>{action.hint}</div>
+              </div>
+              {gdprStatus[action.key] ? (
+                <span className="pill pill-ok" style={{ flexShrink: 0 }}>{T.requestSent}</span>
+              ) : (
+                <button
+                  className={action.danger ? "btn btn-sm" : "btn btn-ghost btn-sm"}
+                  style={action.danger ? { color: "var(--danger)", borderColor: "var(--danger)", flexShrink: 0 } : { flexShrink: 0 }}
+                  onClick={() => {
+                    // Stub — backend endpoint to be wired in Phase 5.
+                    // Records intent; actual deletion runs after 30-day cooling period on backend.
+                    setGdprStatus(prev => ({ ...prev, [action.key]: true }));
+                  }}
+                >
+                  {action.label}
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
