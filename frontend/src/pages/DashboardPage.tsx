@@ -26,6 +26,7 @@ import { apiBase, authHeader } from "../api/client";
 import InvitationBanner from "../components/InvitationBanner";
 import { usePushNotifications } from "../hooks/usePushNotifications";
 import { useToast } from "../context/ToastContext";
+import { formatEur, formatDate } from "../lib/utils";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -522,14 +523,14 @@ function FinancialOverviewCard({
               <span style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)" }}>{row.l}</span>
               <span className="font-mono" style={{ fontSize: "var(--text-sm)", fontWeight: 500,
                 color: row.sign === "-" ? "var(--ink-2)" : row.sign === "+" ? "var(--ok)" : "var(--ink)" }}>
-                {row.sign === "-" ? "−" : row.sign === "+" ? "+" : ""}€{Math.abs(Math.round(row.v)).toLocaleString("nl-NL")}
+                {row.sign === "-" ? "−" : row.sign === "+" ? "+" : ""}{formatEur(Math.abs(Math.round(row.v)))}
               </span>
             </div>
           ))}
           <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 10, marginTop: 2, borderTop: "2px solid var(--hairline-2)" }}>
             <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--ink)" }}>{L("Totale belasting", "Total tax", "مجموع مالیات")}</span>
             <span style={{ fontFamily: "var(--serif)", fontSize: 17, fontWeight: 600, color: "var(--ink)" }}>
-              €{Math.round(totalTax).toLocaleString("nl-NL")}
+              {formatEur(Math.round(totalTax))}
             </span>
           </div>
 
@@ -554,9 +555,9 @@ function FinancialOverviewCard({
               </div>
               <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: 5 }}>
                 {L(
-                  `€${expectedSaved.toLocaleString("nl-NL")} verwacht gespaard van €${Math.round(totalTax).toLocaleString("nl-NL")} totaal`,
-                  `€${expectedSaved.toLocaleString("nl-NL")} expected saved of €${Math.round(totalTax).toLocaleString("nl-NL")} total`,
-                  `€${expectedSaved.toLocaleString("nl-NL")} انتظار پس‌انداز از €${Math.round(totalTax).toLocaleString("nl-NL")} کل`,
+                  `${formatEur(expectedSaved)} verwacht gespaard van ${formatEur(Math.round(totalTax))} totaal`,
+                  `${formatEur(expectedSaved)} expected saved of ${formatEur(Math.round(totalTax))} total`,
+                  `${formatEur(expectedSaved)} انتظار پس‌انداز از ${formatEur(Math.round(totalTax))} کل`,
                 )}
               </div>
             </div>
@@ -773,7 +774,7 @@ function ActionCard({
           </span>
           {action.due_date && !isDone && (
             <span style={{ fontSize: 10, color: "var(--ink-4)", fontFamily: "var(--mono)" }}>
-              Due {new Date(action.due_date).toLocaleDateString("nl-NL")}
+              Due {formatDate(action.due_date)}
             </span>
           )}
         </div>
@@ -1217,11 +1218,11 @@ export default function DashboardPage() {
       {/* ── Summary cards ──────────────────────────────────────────────────── */}
       {profile && (
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: 14, marginBottom: 28 }}>
-          <SummaryCard title={L("Totale belasting", "Total tax", "مجموع مالیات")} value={`€${Math.round(totalTax).toLocaleString("nl-NL")}`} subtitle="2026" accent loading={loadingCalc}
+          <SummaryCard title={L("Totale belasting", "Total tax", "مجموع مالیات")} value={formatEur(Math.round(totalTax))} subtitle="2026" accent loading={loadingCalc}
             icon={<TrendingUp size={16} />} iconBg="var(--accent-soft)" iconColor="var(--sage-600)" />
           <SummaryCard title={L("Effectief tarief", "Effective rate", "نرخ مؤثر")} value={loadingCalc ? "—" : `${(effectiveRate * 100).toFixed(1)}%`} subtitle={loadingCalc ? undefined : `~€${Math.round(effectiveRate * 100)} per €100`} loading={loadingCalc}
             icon={<Percent size={16} />} iconBg="var(--blue-subtle)" iconColor="var(--blue)" />
-          <SummaryCard title={L("Maandelijks reserveren", "Monthly reserve", "ذخیره ماهانه")} value={`€${Math.round(monthlyRsrv).toLocaleString("nl-NL")}`} subtitle={L("Apart zetten", "Set aside", "کنار بگذارید")} loading={loadingCalc}
+          <SummaryCard title={L("Maandelijks reserveren", "Monthly reserve", "ذخیره ماهانه")} value={formatEur(Math.round(monthlyRsrv))} subtitle={L("Apart zetten", "Set aside", "کنار بگذارید")} loading={loadingCalc}
             icon={<PiggyBank size={16} />} iconBg="var(--blue-subtle)" iconColor="var(--blue)" />
           {userType === "zzp" ? (
             <SummaryCard title={L("Wet DBA risico", "Wet DBA risk", "ریسک Wet DBA")}
@@ -1379,10 +1380,10 @@ export default function DashboardPage() {
                 <div key={item.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "11px 0", borderTop: i === 0 ? "none" : "1px solid var(--hairline)" }}>
                   <div>
                     <div style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--ink)" }}>{String(item.input_snapshot?.user_type ?? "").toUpperCase()} · {item.tax_year}</div>
-                    <div style={{ fontSize: 11.5, color: "var(--ink-3)", marginTop: 2 }}>{new Date(item.created_at).toLocaleDateString(lang === "nl" ? "nl-NL" : lang === "fa" ? "fa-IR" : "en-GB")}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--ink-3)", marginTop: 2 }}>{formatDate(item.created_at)}</div>
                   </div>
                   <div style={{ textAlign: "end" }}>
-                    <div className="font-mono" style={{ fontSize: 14, color: "var(--ink)", fontWeight: 600 }}>€{Math.round(item.total_tax_due).toLocaleString("nl-NL")}</div>
+                    <div className="font-mono" style={{ fontSize: 14, color: "var(--ink)", fontWeight: 600 }}>{formatEur(Math.round(item.total_tax_due))}</div>
                     <div style={{ fontSize: 11.5, color: "var(--ink-3)" }}>{(item.effective_rate * 100).toFixed(1)}%</div>
                   </div>
                 </div>
@@ -1415,7 +1416,7 @@ export default function DashboardPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {[
                   { label: L("Type", "Type", "نوع"), value: String(profile.user_type ?? "").toUpperCase() },
-                  { label: L("Inkomen", "Income", "درآمد"), value: `€${((Number(profile.annual_revenue_zzp) || Number(profile.employment_income) || 0)).toLocaleString("nl-NL")}` },
+                  { label: L("Inkomen", "Income", "درآمد"), value: formatEur(Number(profile.annual_revenue_zzp) || Number(profile.employment_income) || 0) },
                   profile.has_partner !== undefined ? { label: L("Partner", "Partner", "شریک"), value: profile.has_partner ? L("Ja","Yes","بله") : L("Nee","No","خیر") } : null,
                   Number(profile.children_under_12) > 0 ? { label: L("Kinderen","Children","فرزندان"), value: String(profile.children_under_12) } : null,
                 ].filter(Boolean).map(row => row && (

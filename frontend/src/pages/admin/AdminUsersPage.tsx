@@ -17,9 +17,11 @@ const TYPE_COLORS: Record<string, string> = {
   dga: "bg-orange-100 text-orange-700",
 };
 
+import { formatDate } from "../../lib/utils";
+
 function fmt(iso: string | null) {
   if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return formatDate(iso);
 }
 
 function UserDetailDrawer({

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { MessageSquare } from "lucide-react";
 import { client as apiClient } from "../api/client";
 import { fetchEngagementMessages } from "../api/portal/messages";
+import { formatDate } from "../lib/utils";
 
 interface InboxData {
   counts: {
@@ -156,7 +157,7 @@ export default function AccountantInboxPage() {
               {/* Date + action */}
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
                 <span style={{ fontSize: "var(--text-xs)", color: "var(--text-4)" }}>
-                  {new Date(m.created_at).toLocaleDateString()}
+                  {formatDate(m.created_at)}
                 </span>
                 <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--blue)" }}>{T.open}</span>
               </div>
@@ -172,7 +173,7 @@ export default function AccountantInboxPage() {
             <Row key={d.id}>
               <Cell bold>{d.client_name}</Cell>
               <Cell>{d.file_name}</Cell>
-              <Cell muted>{new Date(d.uploaded_at).toLocaleDateString()}</Cell>
+              <Cell muted>{formatDate(d.uploaded_at)}</Cell>
               <Cell><span className="pill-blue">{d.status}</span></Cell>
             </Row>
           ))}
@@ -186,7 +187,7 @@ export default function AccountantInboxPage() {
             <Row key={a.id}>
               <Cell bold>{a.client_name}</Cell>
               <Cell>{a.description}</Cell>
-              <Cell muted>{a.due_date ? new Date(a.due_date).toLocaleDateString() : "—"}</Cell>
+              <Cell muted>{a.due_date ? formatDate(a.due_date) : "—"}</Cell>
             </Row>
           ))}
         </Section>

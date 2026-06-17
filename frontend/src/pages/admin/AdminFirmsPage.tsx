@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Building2, Users, RefreshCw, Search, Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useMobile } from "@/hooks/useMobile";
+import { formatDate } from "@/lib/utils";
 
 interface Firm {
   id: number;
@@ -143,7 +144,7 @@ export default function AdminFirmsPage() {
                     </div>
                   </td>
                   <td style={{ padding: "var(--sp-3) var(--sp-4)", color: "var(--text-3)", fontSize: "var(--text-xs)" }}>
-                    {new Date(firm.created_at).toLocaleDateString()}
+                    {formatDate(firm.created_at)}
                   </td>
                   <td style={{ padding: "var(--sp-3) var(--sp-4)" }}>
                     <span style={{

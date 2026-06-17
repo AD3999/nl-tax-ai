@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { answersToCalcProfile, type Answers, type Lang } from "../data/simulationSteps";
 import { calculateTax, type CalcResult, type CalcInput } from "../api/calculator";
 import { Icon } from "./Icon";
+import { formatEur } from "../lib/utils";
 
 export interface SimOverviewCardProps {
   answers: Answers;
@@ -72,7 +73,7 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
   const metricRows: [string, string][] = [
     [
       lang === "nl" ? "Totale belasting" : lang === "fa" ? "کل مالیات" : "Total tax",
-      `€ ${result.result.total_tax_due.toLocaleString("nl-NL")}`,
+      formatEur(result.result.total_tax_due),
     ],
     [
       lang === "nl" ? "Effectief tarief" : lang === "fa" ? "نرخ مؤثر" : "Effective rate",
@@ -81,7 +82,7 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
     ...(result.result.monthly_reserve_needed > 0
       ? [[
           lang === "nl" ? "Per maand reserveren" : lang === "fa" ? "ذخیره ماهانه" : "Monthly reserve",
-          `€ ${result.result.monthly_reserve_needed.toLocaleString("nl-NL")}`,
+          formatEur(result.result.monthly_reserve_needed),
         ] as [string, string]]
       : []),
   ];
@@ -110,10 +111,10 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
 
   const discussQ =
     lang === "nl"
-      ? `Ik heb de belastingsimulatie ingevuld. Mijn geschatte belasting is €${result.result.total_tax_due.toLocaleString("nl-NL")} voor 2026. Kunt u dit uitleggen en tips geven om minder belasting te betalen?`
+      ? `Ik heb de belastingsimulatie ingevuld. Mijn geschatte belasting is ${formatEur(result.result.total_tax_due)} voor 2026. Kunt u dit uitleggen en tips geven om minder belasting te betalen?`
       : lang === "fa"
-      ? `شبیه‌سازی مالیاتی را تکمیل کردم. مالیات تخمینی من €${result.result.total_tax_due.toLocaleString("nl-NL")} است. توضیح دهید و نکاتی برای کاهش مالیات ارائه دهید.`
-      : `I completed the tax simulation. My estimated tax is €${result.result.total_tax_due.toLocaleString("nl-NL")} for 2026. Can you explain this and give tips to reduce it?`;
+      ? `شبیه‌سازی مالیاتی را تکمیل کردم. مالیات تخمینی من ${formatEur(result.result.total_tax_due)} است. توضیح دهید و نکاتی برای کاهش مالیات ارائه دهید.`
+      : `I completed the tax simulation. My estimated tax is ${formatEur(result.result.total_tax_due)} for 2026. Can you explain this and give tips to reduce it?`;
 
   return (
     <div className="card" style={{ padding: 0, overflow: "hidden" }}>
@@ -137,15 +138,15 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
             letterSpacing: "-0.03em", lineHeight: 1, marginTop: 4,
           }}>
             {netToPay >= 0
-              ? `€ ${netToPay.toLocaleString("nl-NL")}`
-              : `−€ ${Math.abs(netToPay).toLocaleString("nl-NL")}`}
+              ? formatEur(netToPay)
+              : `−${formatEur(Math.abs(netToPay))}`}
           </div>
           {hadVoorlopige && voorlopige > 0 && (
             <div style={{ marginTop: 6, fontSize: 12, color: "oklch(0.82 0.01 95)" }}>
               {t(
-                `na €${voorlopige.toLocaleString("nl-NL")} voorlopige aanslag`,
-                `after €${voorlopige.toLocaleString("nl-NL")} provisional assessment`,
-                `پس از €${voorlopige.toLocaleString("nl-NL")} ارزیابی موقت`,
+                `na ${formatEur(voorlopige)} voorlopige aanslag`,
+                `after ${formatEur(voorlopige)} provisional assessment`,
+                `پس از ${formatEur(voorlopige)} ارزیابی موقت`,
               )}
             </div>
           )}
@@ -176,8 +177,8 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
               <span style={{ fontSize: 13, color: "var(--ink-2)" }}>{label}</span>
               <span className="num" style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>
                 {val < 0
-                  ? `−€ ${Math.abs(val).toLocaleString("nl-NL")}`
-                  : `€ ${val.toLocaleString("nl-NL")}`}
+                  ? `−${formatEur(Math.abs(val))}`
+                  : formatEur(val)}
               </span>
             </div>
           ))}

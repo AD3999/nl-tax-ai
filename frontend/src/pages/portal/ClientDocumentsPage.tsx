@@ -8,6 +8,7 @@ import {
   uploadClientDocument, deleteClientDocument,
 } from "../../api/portal/client";
 import type { ClientDocument, TaxEngagement } from "../../api/portal/types";
+import { formatDate } from "../../lib/utils";
 
 const STATUS_COLOR: Record<string, string> = {
   uploaded:     "var(--text-3)",
@@ -370,7 +371,7 @@ export default function ClientDocumentsPage() {
                     )}
                     <div style={{ display: "flex", gap: "var(--sp-3)", marginTop: 4, fontSize: "var(--text-xs)", color: "var(--text-4)", fontWeight: 600 }}>
                       <span>{formatSize(doc.file_size)}</span>
-                      <span>{new Date(doc.created_at).toLocaleDateString()}</span>
+                      <span>{formatDate(doc.created_at)}</span>
                     </div>
                   </div>
 
