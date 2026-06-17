@@ -135,25 +135,26 @@ export default function ClientProfilePage() {
 
       {/* ── Profile header ── */}
       <div style={{
-        display: "flex", alignItems: "center", gap: "var(--sp-5)",
-        marginBottom: "var(--sp-8)",
-        padding: "var(--sp-6) var(--sp-7)",
+        display: "flex", alignItems: "center", gap: "var(--sp-4)",
+        marginBottom: "var(--sp-6)",
+        padding: isMobile ? "var(--sp-4) var(--sp-5)" : "var(--sp-5) var(--sp-6)",
         background: "var(--bg-2)",
         border: "1px solid var(--border)",
         borderRadius: "var(--r-xl)",
         borderInlineStart: "4px solid var(--blue)",
+        flexWrap: "wrap",
       }}>
         <div style={{
-          width: 64, height: 64, borderRadius: "50%",
+          width: 52, height: 52, borderRadius: "50%",
           background: "linear-gradient(135deg, var(--blue) 0%, var(--blue-text) 100%)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: "1.6rem", fontWeight: 800, color: "#fff", flexShrink: 0,
+          fontSize: "1.3rem", fontWeight: 800, color: "#fff", flexShrink: 0,
           boxShadow: "0 4px 16px var(--blue)44",
         }}>
           {initials}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h1 style={{ fontWeight: 800, fontSize: "var(--text-2xl)", margin: "0 0 4px", letterSpacing: "-0.03em", color: "var(--text)" }}>
+          <h1 style={{ fontWeight: 800, fontSize: isMobile ? "var(--text-xl)" : "var(--text-2xl)", margin: "0 0 3px", letterSpacing: "-0.03em", color: "var(--text)" }}>
             {T.title}
           </h1>
           <p style={{ margin: 0, color: "var(--text-3)", fontSize: "var(--text-sm)" }}>{T.subtitle}</p>
@@ -162,7 +163,7 @@ export default function ClientProfilePage() {
           className={saved ? "btn btn-ghost" : "btn btn-accent"}
           onClick={handleSave}
           disabled={saving}
-          style={{ minWidth: 140, flexShrink: 0, display: "flex", alignItems: "center", gap: 6 }}
+          style={{ flex: isMobile ? "0 0 100%" : "0 0 auto", minWidth: isMobile ? "auto" : 140, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
         >
           {saved ? <><Check size={14} /> {T.saved}</> : saving ? "…" : T.save}
         </button>

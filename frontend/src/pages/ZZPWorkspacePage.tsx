@@ -29,7 +29,7 @@ const TX = {
     category: "Categorie", from: "Van", to: "Naar", purpose: "Doel",
     delete: "Verwijder", save: "Opslaan", cancel: "Annuleer",
     paid: "Betaald", unpaid: "Onbetaald", overdue: "Verlopen",
-    q: "K", of: "van",
+    q: "K", of: "van", business: "Zakelijk", private: "Privé",
   },
   en: {
     title: "ZZP Workspace",
@@ -49,7 +49,7 @@ const TX = {
     category: "Category", from: "From", to: "To", purpose: "Purpose",
     delete: "Delete", save: "Save", cancel: "Cancel",
     paid: "Paid", unpaid: "Unpaid", overdue: "Overdue",
-    q: "Q", of: "of",
+    q: "Q", of: "of", business: "Business", private: "Private",
   },
   fa: {
     title: "فضای کار ZZP",
@@ -69,7 +69,7 @@ const TX = {
     category: "دسته‌بندی", from: "از", to: "به", purpose: "هدف",
     delete: "حذف", save: "ذخیره", cancel: "لغو",
     paid: "پرداخت شده", unpaid: "پرداخت نشده", overdue: "گذشته",
-    q: "فصل", of: "از",
+    q: "فصل", of: "از", business: "کسب‌وکار", private: "شخصی",
   },
 } as const;
 
@@ -83,7 +83,7 @@ type T = {
   description: string; date: string; amount: string; client: string; vatRate: string;
   payment: string; category: string; from: string; to: string; purpose: string;
   delete: string; save: string; cancel: string; paid: string; unpaid: string; overdue: string;
-  q: string; of: string;
+  q: string; of: string; business: string; private: string;
 };
 
 function fmt(n: number) {
@@ -234,11 +234,11 @@ function RevenueTab({ t, entries, onRefresh }: { t: T; entries: RevenueEntry[]; 
       {showForm && (
         <div className="card" style={{ marginBottom: "var(--sp-4)" }}>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr 1fr", gap: "var(--sp-3)" }}>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.date}</label><input className="input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.description}</label><input className="input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.client}</label><input className="input" value={form.client_name} onChange={e => setForm({ ...form, client_name: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.amount} (excl. BTW)</label><input className="input" type="number" step="0.01" value={form.amount_excl_vat} onChange={e => setForm({ ...form, amount_excl_vat: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.vatRate}</label>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.date}</label><input className="input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.description}</label><input className="input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.client}</label><input className="input" value={form.client_name} onChange={e => setForm({ ...form, client_name: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.amount} (excl. BTW)</label><input className="input" type="number" step="0.01" value={form.amount_excl_vat} onChange={e => setForm({ ...form, amount_excl_vat: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.vatRate}</label>
               <select className="input" value={form.vat_rate} onChange={e => setForm({ ...form, vat_rate: +e.target.value })}>
                 <option value={0}>0%</option><option value={9}>9%</option><option value={21}>21%</option>
               </select>
@@ -254,16 +254,17 @@ function RevenueTab({ t, entries, onRefresh }: { t: T; entries: RevenueEntry[]; 
 
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
         {entries.map(e => (
-          <div key={e.id} className="card" style={{ display: "flex", alignItems: "center", gap: "var(--sp-4)" }}>
-            <div style={{ width: 90, color: "var(--text-3)", fontSize: "0.85rem" }}>{e.date}</div>
-            <div style={{ flex: 1, fontWeight: 600 }}>{e.description}</div>
-            <div style={{ color: "var(--text-3)", fontSize: "0.85rem" }}>{e.client_name}</div>
-            <div style={{ fontWeight: 700 }}>{fmt(+e.amount_excl_vat)}</div>
-            <span className="pill-blue" style={{ fontSize: "0.75rem" }}>{e.vat_rate}% BTW</span>
-            <span style={{ fontSize: "0.75rem", color: e.payment_status === "paid" ? "var(--green)" : "var(--warn)" }}>
+          <div key={e.id} className="card" style={{ display: "flex", alignItems: "center", gap: "var(--sp-3)", flexWrap: "wrap" }}>
+            <div style={{ fontWeight: 600, flex: "1 1 160px", minWidth: 0 }}>
+              <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.description}</div>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-3)", marginTop: 2 }}>{e.date}{e.client_name ? ` · ${e.client_name}` : ""}</div>
+            </div>
+            <div style={{ fontWeight: 700, whiteSpace: "nowrap" }}>{fmt(+e.amount_excl_vat)}</div>
+            <span className="pill-blue" style={{ fontSize: "0.72rem" }}>{e.vat_rate}% BTW</span>
+            <span style={{ fontSize: "0.72rem", fontWeight: 600, color: e.payment_status === "paid" ? "var(--ok)" : "var(--warn)" }}>
               {e.payment_status === "paid" ? t.paid : e.payment_status === "overdue" ? t.overdue : t.unpaid}
             </span>
-            <button className="btn btn-ghost btn-sm" onClick={() => { deleteRevenue(e.id).then(onRefresh); }}>✕</button>
+            <button className="btn btn-ghost btn-sm" style={{ marginInlineStart: "auto" }} onClick={() => { deleteRevenue(e.id).then(onRefresh); }}>✕</button>
           </div>
         ))}
         {entries.length === 0 && <div style={{ color: "var(--text-3)", padding: "var(--sp-6)", textAlign: "center" }}>No revenue entries yet.</div>}
@@ -306,20 +307,20 @@ function ExpensesTab({ t, entries, onRefresh }: { t: T; entries: ExpenseEntry[];
       {showForm && (
         <div className="card" style={{ marginBottom: "var(--sp-4)" }}>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 2fr 1fr 1fr", gap: "var(--sp-3)" }}>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.date}</label><input className="input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.description}</label><input className="input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.category}</label>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.date}</label><input className="input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.description}</label><input className="input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.category}</label>
               <select className="input" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
                 {["laptop","phone","internet","software","travel","car","office","home_office","training","accountant","marketing","insurance","pension","equipment","meal","other"].map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.amount} (incl. BTW)</label><input className="input" type="number" step="0.01" value={form.amount_gross} onChange={e => setForm({ ...form, amount_gross: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.vatRate}</label>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.amount} (incl. BTW)</label><input className="input" type="number" step="0.01" value={form.amount_gross} onChange={e => setForm({ ...form, amount_gross: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.vatRate}</label>
               <select className="input" value={form.vat_rate} onChange={e => setForm({ ...form, vat_rate: +e.target.value })}>
                 <option value={0}>0%</option><option value={9}>9%</option><option value={21}>21%</option>
               </select>
             </div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Zakelijk %</label><input className="input" type="number" min={0} max={100} value={form.business_use_pct} onChange={e => setForm({ ...form, business_use_pct: +e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>Zakelijk %</label><input className="input" type="number" min={0} max={100} value={form.business_use_pct} onChange={e => setForm({ ...form, business_use_pct: +e.target.value })} /></div>
           </div>
           {err && <div style={{ color: "var(--danger)", fontSize: "0.82rem", marginTop: "var(--sp-2)" }}>{err}</div>}
           <div style={{ display: "flex", gap: "var(--sp-3)", marginTop: "var(--sp-4)" }}>
@@ -331,13 +332,14 @@ function ExpensesTab({ t, entries, onRefresh }: { t: T; entries: ExpenseEntry[];
 
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
         {entries.map(e => (
-          <div key={e.id} className="card" style={{ display: "flex", alignItems: "center", gap: "var(--sp-4)" }}>
-            <div style={{ width: 90, color: "var(--text-3)", fontSize: "0.85rem" }}>{e.date}</div>
-            <div style={{ flex: 1, fontWeight: 600 }}>{e.description}</div>
-            <span className="pill-blue" style={{ fontSize: "0.75rem" }}>{e.category}</span>
-            <div style={{ fontWeight: 700 }}>{fmt(+e.amount_gross)}</div>
-            <div style={{ color: "var(--text-3)", fontSize: "0.85rem" }}>aft. {fmt(+e.deductible_amount)}</div>
-            <button className="btn btn-ghost btn-sm" onClick={() => { deleteExpense(e.id).then(onRefresh); }}>✕</button>
+          <div key={e.id} className="card" style={{ display: "flex", alignItems: "center", gap: "var(--sp-3)", flexWrap: "wrap" }}>
+            <div style={{ fontWeight: 600, flex: "1 1 160px", minWidth: 0 }}>
+              <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.description}</div>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-3)", marginTop: 2 }}>{e.date} · <span className="pill-blue" style={{ fontSize: "0.68rem" }}>{e.category}</span></div>
+            </div>
+            <div style={{ fontWeight: 700, whiteSpace: "nowrap" }}>{fmt(+e.amount_gross)}</div>
+            <div style={{ fontSize: "0.75rem", color: "var(--text-3)" }}>aft. {fmt(+e.deductible_amount)}</div>
+            <button className="btn btn-ghost btn-sm" style={{ marginInlineStart: "auto" }} onClick={() => { deleteExpense(e.id).then(onRefresh); }}>✕</button>
           </div>
         ))}
         {entries.length === 0 && <div style={{ color: "var(--text-3)", padding: "var(--sp-6)", textAlign: "center" }}>No expense entries yet.</div>}
@@ -394,10 +396,10 @@ function HoursTab({ t, data, onRefresh }: { t: T; data: HoursResponse | null; on
       {showForm && (
         <div className="card" style={{ marginBottom: "var(--sp-4)" }}>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 2fr 1fr", gap: "var(--sp-3)" }}>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.date}</label><input className="input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>Uren</label><input className="input" type="number" step="0.5" value={form.hours} onChange={e => setForm({ ...form, hours: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.description}</label><input className="input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.client}</label><input className="input" value={form.client_name} onChange={e => setForm({ ...form, client_name: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.date}</label><input className="input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.hours}</label><input className="input" type="number" step="0.5" value={form.hours} onChange={e => setForm({ ...form, hours: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.description}</label><input className="input" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.client}</label><input className="input" value={form.client_name} onChange={e => setForm({ ...form, client_name: e.target.value })} /></div>
           </div>
           {err && <div style={{ color: "var(--danger)", fontSize: "0.82rem", marginTop: "var(--sp-2)" }}>{err}</div>}
           <div style={{ display: "flex", gap: "var(--sp-3)", marginTop: "var(--sp-4)" }}>
@@ -409,12 +411,13 @@ function HoursTab({ t, data, onRefresh }: { t: T; data: HoursResponse | null; on
 
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
         {data.entries.map(e => (
-          <div key={e.id} className="card" style={{ display: "flex", alignItems: "center", gap: "var(--sp-4)" }}>
-            <div style={{ width: 90, color: "var(--text-3)", fontSize: "0.85rem" }}>{e.date}</div>
-            <div style={{ fontWeight: 700, minWidth: 60 }}>{e.hours}h</div>
-            <div style={{ flex: 1 }}>{e.description}</div>
-            <div style={{ color: "var(--text-3)", fontSize: "0.85rem" }}>{e.client_name}</div>
-            <button className="btn btn-ghost btn-sm" onClick={() => { deleteHours(e.id).then(onRefresh); }}>✕</button>
+          <div key={e.id} className="card" style={{ display: "flex", alignItems: "center", gap: "var(--sp-3)", flexWrap: "wrap" }}>
+            <div style={{ flex: "1 1 160px", minWidth: 0 }}>
+              <div style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.description}</div>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-3)", marginTop: 2 }}>{e.date}{e.client_name ? ` · ${e.client_name}` : ""}</div>
+            </div>
+            <div style={{ fontWeight: 800, fontSize: "1rem", whiteSpace: "nowrap" }}>{e.hours}h</div>
+            <button className="btn btn-ghost btn-sm" style={{ marginInlineStart: "auto" }} onClick={() => { deleteHours(e.id).then(onRefresh); }}>✕</button>
           </div>
         ))}
       </div>
@@ -469,11 +472,11 @@ function MileageTab({ t, data, onRefresh }: { t: T; data: MileageResponse | null
       {showForm && (
         <div className="card" style={{ marginBottom: "var(--sp-4)" }}>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr 1fr 1fr", gap: "var(--sp-3)" }}>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.date}</label><input className="input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.from}</label><input className="input" value={form.from_location} onChange={e => setForm({ ...form, from_location: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.to}</label><input className="input" value={form.to_location} onChange={e => setForm({ ...form, to_location: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>KM</label><input className="input" type="number" step="0.1" value={form.km} onChange={e => setForm({ ...form, km: e.target.value })} /></div>
-            <div><label style={{ fontSize: "0.8rem", fontWeight: 600 }}>{t.purpose}</label><input className="input" value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.date}</label><input className="input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.from}</label><input className="input" value={form.from_location} onChange={e => setForm({ ...form, from_location: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.to}</label><input className="input" value={form.to_location} onChange={e => setForm({ ...form, to_location: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>KM</label><input className="input" type="number" step="0.1" value={form.km} onChange={e => setForm({ ...form, km: e.target.value })} /></div>
+            <div><label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 6 }}>{t.purpose}</label><input className="input" value={form.purpose} onChange={e => setForm({ ...form, purpose: e.target.value })} /></div>
           </div>
           {err && <div style={{ color: "var(--danger)", fontSize: "0.82rem", marginTop: "var(--sp-2)" }}>{err}</div>}
           <div style={{ display: "flex", gap: "var(--sp-3)", marginTop: "var(--sp-4)" }}>
@@ -485,13 +488,14 @@ function MileageTab({ t, data, onRefresh }: { t: T; data: MileageResponse | null
 
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
         {data.entries.map(e => (
-          <div key={e.id} className="card" style={{ display: "flex", alignItems: "center", gap: "var(--sp-4)" }}>
-            <div style={{ width: 90, color: "var(--text-3)", fontSize: "0.85rem" }}>{e.date}</div>
-            <div style={{ flex: 1 }}>{e.from_location} → {e.to_location}</div>
-            <div style={{ fontWeight: 700 }}>{e.km} km</div>
-            <div style={{ color: "var(--text-3)", fontSize: "0.85rem" }}>{e.purpose}</div>
-            <span className="pill-blue" style={{ fontSize: "0.75rem" }}>{e.is_business ? "Zakelijk" : "Privé"}</span>
-            <button className="btn btn-ghost btn-sm" onClick={() => { deleteMileage(e.id).then(onRefresh); }}>✕</button>
+          <div key={e.id} className="card" style={{ display: "flex", alignItems: "center", gap: "var(--sp-3)", flexWrap: "wrap" }}>
+            <div style={{ flex: "1 1 160px", minWidth: 0 }}>
+              <div style={{ fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{e.from_location} → {e.to_location}</div>
+              <div style={{ fontSize: "0.75rem", color: "var(--text-3)", marginTop: 2 }}>{e.date}{e.purpose ? ` · ${e.purpose}` : ""}</div>
+            </div>
+            <div style={{ fontWeight: 700, whiteSpace: "nowrap" }}>{e.km} km</div>
+            <span className="pill-blue" style={{ fontSize: "0.72rem" }}>{e.is_business ? t.business : t.private}</span>
+            <button className="btn btn-ghost btn-sm" style={{ marginInlineStart: "auto" }} onClick={() => { deleteMileage(e.id).then(onRefresh); }}>✕</button>
           </div>
         ))}
       </div>

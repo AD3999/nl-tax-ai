@@ -419,16 +419,16 @@ function TaxHealthScoreCard({
       <div className="eyebrow" style={{ color: "var(--ink-3)", marginBottom: 14 }}>{L("title")}</div>
       {loading ? (
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Skeleton height={80} width={80} radius="50%" />
+          <Skeleton height={90} width={90} radius="50%" />
           <div style={{ flex: 1 }}><Skeleton height={14} width="60%" radius="4px" /></div>
         </div>
       ) : (
         <>
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 12 }}>
-            <div style={{ position: "relative", width: 80, height: 80, flexShrink: 0 }}>
-              <svg width={80} height={80} style={{ transform: "rotate(-90deg)" }}>
-                <circle cx={40} cy={40} r={radius} fill="none" stroke="var(--hairline)" strokeWidth={6} />
-                <circle cx={40} cy={40} r={radius} fill="none" stroke={color} strokeWidth={6}
+            <div style={{ position: "relative", width: 90, height: 90, flexShrink: 0 }}>
+              <svg width={90} height={90} style={{ transform: "rotate(-90deg)" }}>
+                <circle cx={45} cy={45} r={radius} fill="none" stroke="var(--hairline)" strokeWidth={6} />
+                <circle cx={45} cy={45} r={radius} fill="none" stroke={color} strokeWidth={6}
                   strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
                   style={{ transition: "stroke-dasharray 0.8s ease" }} />
               </svg>
@@ -439,7 +439,8 @@ function TaxHealthScoreCard({
             <div>
               <div style={{ fontWeight: 600, color, fontSize: "var(--text-sm)" }}>{label}</div>
               <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: 3, lineHeight: 1.4 }}>
-                Profile, compliance,<br />risks, opportunities
+                {L("Profiel, naleving,", "Profile, compliance,", "پروفایل، انطباق،")}<br />
+                {L("risico's, kansen", "risks, opportunities", "ریسک‌ها، فرصت‌ها")}
               </div>
               {factors.length > 0 && (
                 <button onClick={() => setShowFactors(v => !v)}

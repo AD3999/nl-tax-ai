@@ -204,7 +204,7 @@ export default function ClientDocumentsPage() {
   }
 
   if (loading) return (
-    <main style={{ flex: 1, padding: "var(--sp-8) var(--sp-6)", maxWidth: 740, margin: "0 auto", width: "100%" }}>
+    <main style={{ flex: 1, padding: "var(--sp-5) 0", maxWidth: 740, margin: "0 auto", width: "100%" }}>
       <div className="skel" style={{ height: 12, width: 60, marginBottom: 20 }} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div className="skel" style={{ height: 28, width: 180 }} />
@@ -325,15 +325,14 @@ export default function ClientDocumentsPage() {
       )}
 
       <main style={{ background: "var(--bg)", flex: 1 }}>
-        <div style={{ maxWidth: 740, margin: "0 auto", padding: "var(--sp-8) var(--sp-6)" }}>
+        <div style={{ maxWidth: 740, margin: "0 auto", padding: "var(--sp-5) 0" }}>
 
           <Link to="/client" style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", textDecoration: "none", fontWeight: 600 }}>{t("back", lang)}</Link>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "var(--sp-3) 0 var(--sp-4)" }}>
-            <h1 style={{ fontSize: "var(--text-3xl)", fontWeight: 800, color: "var(--text)", margin: 0, letterSpacing: "-0.03em" }}>{t("title", lang)}</h1>
-            <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "center" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "var(--sp-3) 0 var(--sp-4)", flexWrap: "wrap", gap: "var(--sp-3)" }}>
+            <h1 style={{ fontSize: "clamp(1.4rem, 5vw, var(--text-3xl))", fontWeight: 800, color: "var(--text)", margin: 0, letterSpacing: "-0.03em" }}>{t("title", lang)}</h1>
+            <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "center", flexShrink: 0 }}>
               {error && <span style={{ color: "var(--danger-text)", fontSize: "var(--text-xs)", fontWeight: 600 }}>{error}</span>}
-              {lastUpdated && <span style={{ fontSize: 10, color: "var(--text-4)" }}>{lastUpdated.toLocaleTimeString()}</span>}
               <button onClick={() => void load(true)} title="Refresh" style={{ background: "none", border: "1px solid var(--border-2)", borderRadius: 6, cursor: "pointer", color: "var(--text-3)", fontSize: 14, width: 30, height: 30, display: "grid", placeItems: "center" }}>↻</button>
               <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.heic,.csv,.xlsx" style={{ display: "none" }} onChange={handleFileChosen} />
               <button className="btn btn-accent btn-sm" onClick={() => fileInputRef.current?.click()} disabled={!engagement} style={{ fontWeight: 700 }}>
@@ -357,8 +356,8 @@ export default function ClientDocumentsPage() {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
               {documents.map(doc => (
-                <div key={doc.id} className="card" style={{ padding: "var(--sp-3) var(--sp-4)", display: "flex", gap: "var(--sp-3)", alignItems: "center" }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                <div key={doc.id} className="card" style={{ padding: "var(--sp-3) var(--sp-4)", display: "flex", gap: "var(--sp-3)", alignItems: "center", flexWrap: "wrap" }}>
+                  <div style={{ flex: "1 1 180px", minWidth: 0 }}>
                     {/* Title / filename */}
                     <div style={{ fontWeight: 700, fontSize: "var(--text-sm)", color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {doc.user_title || doc.original_filename}
@@ -372,11 +371,10 @@ export default function ClientDocumentsPage() {
                     <div style={{ display: "flex", gap: "var(--sp-3)", marginTop: 4, fontSize: "var(--text-xs)", color: "var(--text-4)", fontWeight: 600 }}>
                       <span>{formatSize(doc.file_size)}</span>
                       <span>{new Date(doc.created_at).toLocaleDateString()}</span>
-                      <span style={{ fontFamily: "var(--mono)", fontSize: 10 }}>{doc.original_filename}</span>
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "center", flexShrink: 0 }}>
+                  <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "center", flexShrink: 0, marginInlineStart: "auto" }}>
                     {/* Status badge */}
                     <span style={{
                       fontSize: "var(--text-xs)", fontWeight: 700, padding: "2px 8px", borderRadius: 999,
