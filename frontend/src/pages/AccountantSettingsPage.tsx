@@ -66,8 +66,10 @@ export default function AccountantSettingsPage() {
     plan:         isFA ? "طرح" : isNL ? "Abonnement" : "Plan",
     maxClients:   isFA ? "حداکثر مشتریان" : isNL ? "Max. cliënten" : "Max Clients",
     branding:     isFA ? "برندینگ" : isNL ? "Huisstijl" : "Branding",
-    contrastOk:   isFA ? "کنتراست خوب" : isNL ? "Contrast voldoende" : "Contrast OK",
-    contrastWarn: isFA ? "کنتراست ضعیف (WCAG AA نیاز دارد ۴.۵:۱)" : isNL ? "Contrast te laag (WCAG AA vereist 4,5:1)" : "Contrast too low (WCAG AA requires 4.5:1)",
+    contrastOk:        isFA ? "کنتراست خوب" : isNL ? "Contrast voldoende" : "Contrast OK",
+    contrastWarn:      isFA ? "کنتراست ضعیف (WCAG AA نیاز دارد ۴.۵:۱)" : isNL ? "Contrast te laag (WCAG AA vereist 4,5:1)" : "Contrast too low (WCAG AA requires 4.5:1)",
+    contrastLight:     isFA ? "پس‌زمینه روشن" : isNL ? "Lichte achtergrond" : "Light bg",
+    contrastDark:      isFA ? "پس‌زمینه تاریک" : isNL ? "Donkere achtergrond" : "Dark bg",
     contact:      isFA ? "اطلاعات تماس" : isNL ? "Contactgegevens" : "Contact Info",
     subscription: isFA ? "اشتراک" : isNL ? "Abonnement" : "Subscription",
   };
@@ -137,12 +139,22 @@ export default function AccountantSettingsPage() {
             </div>
             {(() => {
               const color = form.accent_color ?? "#3b82f6";
-              const ratio = contrastRatio(color, "#ffffff");
-              const passes = ratio >= 4.5;
+              const ratioLight = contrastRatio(color, "#ffffff");
+              const ratioDark  = contrastRatio(color, "#111827");
+              const passesLight = ratioLight >= 4.5;
+              const passesDark  = ratioDark  >= 4.5;
               return (
-                <div style={{ marginTop: 6, fontSize: "var(--text-xs)", display: "flex", alignItems: "center", gap: 6, color: passes ? "var(--ok)" : "var(--danger)" }}>
-                  <span style={{ fontWeight: 700 }}>{ratio.toFixed(1)}:1</span>
-                  <span>{passes ? T.contrastOk : T.contrastWarn}</span>
+                <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 4 }}>
+                  {[
+                    { label: T.contrastLight, ratio: ratioLight, passes: passesLight },
+                    { label: T.contrastDark,  ratio: ratioDark,  passes: passesDark  },
+                  ].map(({ label, ratio, passes }) => (
+                    <div key={label} style={{ fontSize: "var(--text-xs)", display: "flex", alignItems: "center", gap: 6, color: passes ? "var(--ok)" : "var(--danger)" }}>
+                      <span style={{ fontWeight: 700 }}>{ratio.toFixed(1)}:1</span>
+                      <span style={{ color: "var(--text-3)" }}>{label}</span>
+                      <span>{passes ? T.contrastOk : T.contrastWarn}</span>
+                    </div>
+                  ))}
                 </div>
               );
             })()}
