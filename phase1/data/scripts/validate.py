@@ -133,7 +133,7 @@ def calc_mkb(profit_after_oa: float) -> float:
     return profit_after_oa * 0.127
 
 def calc_zvw_zzp(profit: float) -> float:
-    return min(profit, 71628) * 0.0532
+    return min(profit, 79409) * 0.0485
 
 
 def validate_calculations(verbose: bool = False) -> tuple[int, int]:
@@ -171,9 +171,9 @@ def validate_calculations(verbose: bool = False) -> tuple[int, int]:
                 max(0, 5685 - (80000 - 45592) * 0.0651), results)
 
     # ── Test 4: ZVW ceiling ────────────────────────────────────────
-    assert_near("T4: ZVW €50k profit", calc_zvw_zzp(50000), 50000 * 0.0532, results)
-    assert_near("T4: ZVW €100k profit (capped)", calc_zvw_zzp(100000), 71628 * 0.0532, results)
-    assert_near("T4: ZVW max amount", calc_zvw_zzp(999999), 3810.61, results)
+    assert_near("T4: ZVW €50k profit", calc_zvw_zzp(50000), 50000 * 0.0485, results)
+    assert_near("T4: ZVW €100k profit (capped)", calc_zvw_zzp(100000), 79409 * 0.0485, results)
+    assert_near("T4: ZVW max amount", calc_zvw_zzp(999999), 3851.34, results)
 
     # ── Test 5: MKB-winstvrijstelling ─────────────────────────────
     assert_near("T5: MKB 12.7% of €50k", calc_mkb(50000), 6350, results)

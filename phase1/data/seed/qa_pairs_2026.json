@@ -14,9 +14,9 @@
       "short_nl": "Ongeveer €10.000-€13.000 afhankelijk van je aftrekposten — plan 25-28% te reserveren.",
       "short_en": "Approximately €10,000-€13,000 depending on deductions — budget to reserve 25-28%.",
       "short_fa": "تقریباً ۱۰٬۰۰۰ تا ۱۳٬۰۰۰ یورو بسته به کسرها — ۲۵ تا ۲۸٪ ذخیره کنید.",
-      "detailed_nl": "Bij €50.000 winst en standaard ZZP-aftrekposten: Zelfstandigenaftrek €1.200, MKB-winstvrijstelling 12,7% = €6.200, Belastbaar inkomen: ~€42.600. Box 1 belasting vóór kortingen: ~€15.230. Na algemene heffingskorting (~€1.900) en arbeidskorting (~€3.600): ~€9.730 inkomstenbelasting. Plus ZVW 5,32% over €42.600 = ~€2.266. Totaal: ~€12.000. Maandelijkse reservering: €1.000/maand.",
-      "detailed_en": "With €50,000 profit and standard ZZP deductions: After zelfstandigenaftrek (€1,200) and MKB-winstvrijstelling (12.7%), taxable income is ~€42,600. Box 1 tax before credits ~€15,230. After AHK and arbeidskorting: ~€9,730 income tax + ZVW €2,266 = total ~€12,000.",
-      "detailed_fa": "با ۵۰٬۰۰۰ یورو سود و کسرهای استاندارد ZZP: ابتدا zelfstandigenaftrek (۱٬۲۰۰ یورو) کم می‌شود، سپس MKB-winstvrijstelling (۱۲.۷٪) اعمال می‌شود. درآمد مشمول مالیات: ~۴۲٬۶۰۰ یورو. مالیات باکس ۱ قبل از تخفیف‌ها: ~۱۵٬۲۳۰ یورو. پس از algemene heffingskorting (~۱٬۹۰۰ یورو) و arbeidskorting (~۳٬۶۰۰ یورو): ~۹٬۷۳۰ یورو مالیات بر درآمد. به علاوه ZVW (۵.۳۲٪ بر سود): ~۲٬۲۶۶ یورو. مجموع: ~۱۲٬۰۰۰ یورو. توصیه: ماهانه ۱٬۰۰۰ یورو کنار بگذارید.",
+      "detailed_nl": "Bij €50.000 winst en standaard ZZP-aftrekposten: Zelfstandigenaftrek €1.200, MKB-winstvrijstelling 12,7% = €6.200, Belastbaar inkomen: ~€42.600. Box 1 belasting vóór kortingen: ~€15.230. Na algemene heffingskorting (~€1.900) en arbeidskorting (~€3.600): ~€9.730 inkomstenbelasting. Plus ZVW 4,85% over €42.600 = ~€2.066. Totaal: ~€11.800. Maandelijkse reservering: €1.000/maand.",
+      "detailed_en": "With €50,000 profit and standard ZZP deductions: After zelfstandigenaftrek (€1,200) and MKB-winstvrijstelling (12.7%), taxable income is ~€42,600. Box 1 tax before credits ~€15,230. After AHK and arbeidskorting: ~€9,730 income tax + ZVW €2,066 = total ~€11,800.",
+      "detailed_fa": "با ۵۰٬۰۰۰ یورو سود و کسرهای استاندارد ZZP: ابتدا zelfstandigenaftrek (۱٬۲۰۰ یورو) کم می‌شود، سپس MKB-winstvrijstelling (۱۲.۷٪) اعمال می‌شود. درآمد مشمول مالیات: ~۴۲٬۶۰۰ یورو. مالیات باکس ۱ قبل از تخفیف‌ها: ~۱۵٬۲۳۰ یورو. پس از algemene heffingskorting (~۱٬۹۰۰ یورو) و arbeidskorting (~۳٬۶۰۰ یورو): ~۹٬۷۳۰ یورو مالیات بر درآمد. به علاوه ZVW (۴.۸۵٪ بر سود): ~۲٬۰۶۶ یورو. مجموع: ~۱۱٬۸۰۰ یورو. توصیه: ماهانه ۱٬۰۰۰ یورو کنار بگذارید.",
       "numeric_answer": 12000,
       "conditions_that_change_answer": [
         "If eligible for startersaftrek (€2,123 extra): reduces bill by ~€800",
@@ -112,15 +112,15 @@
       "wat is het zvw tarief 2026 voor zzp"
     ],
     "answer": {
-      "short_nl": "De ZVW-bijdrage is 5,32% over je winst (max €71.628). Dit staat los van Box 1 maar wordt via de aangifte IB berekend.",
-      "short_en": "ZVW is 5.32% on profit up to €71,628. It's separate from Box 1 but calculated via the IB return.",
-      "short_fa": "ZVW برابر ۵.۳۲٪ از سود تا ۷۱٬۶۲۸ یورو است. جدا از مالیات باکس ۱ اما از طریق اظهارنامه IB محاسبه می‌شود.",
-      "detailed_nl": "De ZVW (Zorgverzekeringswet) bijdrage voor zelfstandigen is 5,32% in 2026, berekend over je winst uit onderneming tot een maximum van €71.628. Maximale bijdrage: ~€3.811. Het wordt NIET vooringevuld omdat de Belastingdienst je winst pas definitief weet na je aangifte. Het wordt berekend naast je Box 1 belasting. Vergeet het niet te reserveren — het staat apart op de eindafrekening en verrast veel ZZP'ers.",
-      "detailed_en": "5.32% on profit up to €71,628 = max ~€3,811/year. Not pre-filled because Belastingdienst doesn't know your final profit until you file. Calculated alongside Box 1 tax but shown separately on the final assessment.",
-      "detailed_fa": "ZVW (Zorgverzekeringswet) برای ZZP‌کاران ۵.۳۲٪ از سود کسب‌وکار تا سقف ۷۱٬۶۲۸ یورو است. حداکثر مبلغ: ~۳٬۸۱۱ یورو در سال. این مبلغ در اظهارنامه از قبل پر نیست زیرا Belastingdienst تا زمان دریافت اظهارنامه از سود نهایی شما اطلاع ندارد. ZVW جدا از مالیات باکس ۱ است اما همزمان با آن محاسبه می‌شود و در قبض مالیاتی نهایی (aanslag) به عنوان ردیف مجزا ظاهر می‌شود. این مهم‌ترین هزینه‌ای است که ZZP‌کاران تازه‌کار از آن غافل می‌شوند — حتماً برایش ذخیره جداگانه داشته باشید.",
-      "numeric_answer": 0.0532,
+      "short_nl": "De ZVW-bijdrage is 4,85% over je winst (max €79.409). Dit staat los van Box 1 maar wordt via de aangifte IB berekend.",
+      "short_en": "ZVW is 4.85% on profit up to €79,409. It's separate from Box 1 but calculated via the IB return.",
+      "short_fa": "ZVW برابر ۴.۸۵٪ از سود تا ۷۹٬۴۰۹ یورو است. جدا از مالیات باکس ۱ اما از طریق اظهارنامه IB محاسبه می‌شود.",
+      "detailed_nl": "De ZVW (Zorgverzekeringswet) bijdrage voor zelfstandigen is 4,85% in 2026, berekend over je winst uit onderneming tot een maximum van €79.409. Maximale bijdrage: ~€3.851. Het wordt NIET vooringevuld omdat de Belastingdienst je winst pas definitief weet na je aangifte. Het wordt berekend naast je Box 1 belasting. Vergeet het niet te reserveren — het staat apart op de eindafrekening en verrast veel ZZP'ers.",
+      "detailed_en": "4.85% on profit up to €79,409 = max ~€3,851/year. Not pre-filled because Belastingdienst doesn't know your final profit until you file. Calculated alongside Box 1 tax but shown separately on the final assessment.",
+      "detailed_fa": "ZVW (Zorgverzekeringswet) برای ZZP‌کاران ۴.۸۵٪ از سود کسب‌وکار تا سقف ۷۹٬۴۰۹ یورو است. حداکثر مبلغ: ~۳٬۸۵۱ یورو در سال. این مبلغ در اظهارنامه از قبل پر نیست زیرا Belastingdienst تا زمان دریافت اظهارنامه از سود نهایی شما اطلاع ندارد. ZVW جدا از مالیات باکس ۱ است اما همزمان با آن محاسبه می‌شود و در قبض مالیاتی نهایی (aanslag) به عنوان ردیف مجزا ظاهر می‌شود. این مهم‌ترین هزینه‌ای است که ZZP‌کاران تازه‌کار از آن غافل می‌شوند — حتماً برایش ذخیره جداگانه داشته باشید.",
+      "numeric_answer": 0.0485,
       "conditions_that_change_answer": [
-        "Profit above €71,628: ZVW is capped at ~€3,811 regardless of higher profit"
+        "Profit above €79,409: ZVW is capped at ~€3,851 regardless of higher profit"
       ]
     },
     "rule_ids": ["ZVW-2026-001"],
