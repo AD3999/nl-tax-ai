@@ -18,10 +18,20 @@ function ph(): PH | null {
 
 const KEY = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
 
-// Init on first call if key is set and posthog snippet is loaded
+// Init on first call — only after the user has given explicit cookie consent
 let _initialised = false;
+function hasConsent(): boolean {
+  try {
+    const raw = localStorage.getItem("taxwijs_cookie_consent");
+    if (!raw) return false;
+    return (JSON.parse(raw) as { decision: string }).decision === "accepted";
+  } catch {
+    return false;
+  }
+}
+
 function ensureInit() {
-  if (_initialised || !KEY) return;
+  if (_initialised || !KEY || !hasConsent()) return;
   const p = ph();
   if (!p) return;
   p.init(KEY, {

@@ -11,8 +11,11 @@ const T = (tx: Record<Lang, string>, l: Lang) => tx[l] ?? tx.en;
 
 type UserType = "zzp" | "employee" | "expat" | "dga";
 
-const EUR = (n: number) => "€ " + n.toLocaleString("nl-NL");
-const PCT = (n: number) => (n * 100).toFixed(1) + "%";
+import { formatEUR, formatPct } from "../lib/format";
+import TrustStrip from "../components/TrustStrip";
+
+const EUR = (n: number) => formatEUR(n);
+const PCT = (n: number) => formatPct(n);
 
 const USER_TYPES = {
   zzp:      { color: "var(--blue)",    dot: "var(--blue)",    labels: { nl: "ZZP",        en: "ZZP",      fa: "ZZP"            } },
@@ -208,14 +211,16 @@ export default function CalculatorPage() {
   const r = result?.result;
 
   return (
-    <div style={{ flex: 1, background: "var(--paper)", overflowY: "auto" }}>
+    <div style={{ flex: 1, background: "var(--paper)", display: "flex", flexDirection: "column" }}>
+      <TrustStrip />
+      <div style={{ flex: 1, overflowY: "auto" }}>
       <div style={{ maxWidth: 1140, margin: "0 auto", padding: "44px 40px 64px" }}>
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 28 }}>
           <div>
             <div className="eyebrow eyebrow-accent">{T(CALC_TX.eyebrow, lang)}</div>
-            <h1 style={{ marginTop: 6, fontFamily: "var(--serif)", fontSize: 42, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+            <h1 style={{ marginTop: 6, fontFamily: "var(--serif)", fontSize: 42, fontWeight: 500, color: "var(--ink)", letterSpacing: "-0.02em" }}>
               {T(CALC_TX.heading, lang)}
             </h1>
             <p style={{ marginTop: 6, color: "var(--ink-3)", fontSize: 14 }}>
@@ -405,6 +410,7 @@ export default function CalculatorPage() {
             )}
           </div>
         </form>}
+      </div>
       </div>
     </div>
   );

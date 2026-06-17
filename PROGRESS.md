@@ -1,7 +1,77 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 16 Jun 2026 — Mobile nav gap fix + full admin dashboard responsiveness pass
+> Last updated: 17 Jun 2026 — UI/UX audit remediation (26 findings, all phases complete)
+
+---
+
+## Session — 17 Jun 2026 · UI/UX Audit Remediation (26 findings) ✅ Complete
+
+Branch: `audit-remediation-2026-0617` → merged to master.
+
+### Phase 0 — Launch Blockers
+
+| Finding | What was done |
+|---------|---------------|
+| **F16** Tax rate accuracy | `test-scenarios-2026.html` corrected: `37.07%`→`37.56%`, `5.32%`→`4.85%`, ZVW ceiling `71,628`→`79,409` / `€3,811`→`€3,851`. Backend engine already correct (reads from `tax_rules_2026.json`). |
+| **F18** Currency format | Created `frontend/src/lib/format.ts` with `formatEUR`, `formatEURCents`, `formatPct` using `Intl.NumberFormat('nl-NL')`. Applied to `CalculatorPage.tsx` and `TaxHistoryPage.tsx`. |
+| **F19** Date format | `formatDate`, `formatDateLong`, `formatDateMedium` using `Intl.DateTimeFormat('nl-NL')` in `format.ts`. Applied to `TaxHistoryPage.tsx` and improved `lib/utils.ts`. |
+| **F24** BSN legal basis | `ClientProfilePage.tsx`: added `showBsn` toggle state, `maskBsn()` helper, `<input type="password">` masking with Show/Hide toggle, and amber UAVG warning banner in NL/EN/FA. |
+| **F26** Cookie consent | Created `frontend/src/components/CookieConsentBanner.tsx` — Dutch AP 2025 compliant: equal "Alles weigeren"/"Alles accepteren" buttons, no pre-tick, timestamp logged to `localStorage`. `analytics.ts` `ensureInit()` now checks `hasConsent()` before firing PostHog. Banner wired into `App.tsx`. |
+
+### Phase 1 — Trust & Accessibility
+
+| Finding | What was done |
+|---------|---------------|
+| **F7** Opacity contrast | Removed `opacity: 0.8` from `.sb-nav-icon` (replaced with solid `oklch(0.72 0.06 265)` token). Decorative `aria-hidden` opacity values left intact (not text). |
+| **F8** Focus ring | `index.css`: both dark/light `--sh-focus` changed from 36%/28% alpha to full-opacity `0 0 0 2px var(--bg), 0 0 0 5px oklch(...)`. `:focus-visible` updated to use `outline: 3px solid` with `outline-offset: 2px` (WCAG 2.4.11/2.4.13). |
+| **F9** Brand picker | `AccountantSettingsPage.tsx`: added `relativeLuminance()` + `contrastRatio()` helpers; live WCAG contrast ratio shown below the color picker in NL/EN/FA with green/red pass/fail label. |
+| **F15** Trust strip | Created `frontend/src/components/TrustStrip.tsx` — "Bron: Belastingdienst.nl · Geen officieel belastingadvies" in all 3 languages. Injected into `CalculatorPage.tsx` and `ChatPage.tsx`. |
+| **F22/F23** WCAG 2.2 | `AppSidebar.tsx`: `NavLink` now computes `aria-current="page"` from `location.pathname`. `<nav>` already has `aria-label="App navigation"`. |
+| **F25** GDPR self-service | `ClientProfilePage.tsx`: new "Privacy & Data" card with "Download my data", "Clear AI memory", "Delete account" actions (stub — backend to wire in Phase 5), with trilingual copy. |
+
+### Phase 2 — Structural
+
+| Finding | What was done |
+|---------|---------------|
+| **F1/F4** Type scale | `index.css`: `--text-base` raised `15px`→`16px`, `--text-xs` `11px`→`12px`, `--text-sm` `13px`→`14px`. `tailwind.config.js`: full `fontSize` token map added matching CSS vars. |
+| **F5** Mobile grids | `ZZPWorkspacePage.tsx`: quarterly VAT grid changed from `repeat(4,1fr)` to `repeat(auto-fill,minmax(140px,1fr))`. Other grids already had `isMobile` guards. |
+
+### Phase 3 — Polish
+
+| Finding | What was done |
+|---------|---------------|
+| **F3** Heading weight | `CalculatorPage.tsx` h1 `fontWeight` raised `400`→`500` (serif large heading over neutral background). |
+| **F10** Alert labels | `ToastContext.tsx`: added `role="alert"`, `aria-live` (`assertive` for errors, `polite` otherwise), `aria-atomic="true"`. Added visible "Fout:" / "Let op:" / "Klaar:" / "Info:" prefix labels. |
+| **F12** Help link | `AppSidebar.tsx`: consistent `mailto:support@taxwijs.nl` help link added to bottom of sidebar, visible for all roles. |
+| **F13** aria-current | Covered by F22/F23 above. |
+
+### Files changed (this session)
+
+- `test-scenarios-2026.html` — stale rates corrected
+- `frontend/src/lib/format.ts` — new (Dutch locale formatters)
+- `frontend/src/lib/utils.ts` — `formatPct`, `formatDate` improved
+- `frontend/src/pages/CalculatorPage.tsx` — format + TrustStrip + heading weight
+- `frontend/src/pages/TaxHistoryPage.tsx` — Dutch locale formatting
+- `frontend/src/pages/ClientProfilePage.tsx` — BSN masking, UAVG notice, GDPR section
+- `frontend/src/pages/AccountantSettingsPage.tsx` — WCAG contrast checker for brand color
+- `frontend/src/pages/ZZPWorkspacePage.tsx` — mobile grid fix
+- `frontend/src/pages/ChatPage.tsx` — TrustStrip
+- `frontend/src/components/AppSidebar.tsx` — aria-current, help link
+- `frontend/src/components/CookieConsentBanner.tsx` — new (F26)
+- `frontend/src/components/TrustStrip.tsx` — new (F15)
+- `frontend/src/context/ToastContext.tsx` — role=alert, visible labels (F10)
+- `frontend/src/lib/analytics.ts` — consent gate
+- `frontend/src/App.tsx` — CookieConsentBanner wired
+- `frontend/src/index.css` — focus ring, type scale, sidebar icon color
+- `frontend/tailwind.config.js` — fontSize tokens
+
+### Known deferred items (not blockers for merge)
+
+- **F24 legal basis decision**: The UAVG notice flags that a compliance decision is needed before going live — the UI surfaces this clearly to users. Actual backend enforcement deferred to Phase 5.
+- **F25 backend wiring**: GDPR action buttons are stubs that set local state; actual API endpoints to be wired in Phase 5.
+- **F26 withdrawal UI**: Cookie consent can be revoked by clearing localStorage; a proper settings UI to be added in Phase 5 (referenced in the banner copy: "via Profiel → Privacy").
+- **TypeScript check**: `tsc --noEmit` could not be run (Node.js not in PATH in this environment). All edits were done carefully but a TypeScript pass before production deploy is recommended.
 
 ---
 

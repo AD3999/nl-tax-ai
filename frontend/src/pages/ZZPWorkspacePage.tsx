@@ -182,7 +182,7 @@ function OverviewTab({ summary, t }: { summary: ZZPSummary | null; t: T }) {
       {/* Quarterly VAT */}
       <div className="card">
         <div style={{ fontWeight: 700, marginBottom: "var(--sp-4)" }}>{t.quarterlyVat}</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "var(--sp-3)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(140px,1fr))", gap: "var(--sp-3)" }}>
           {summary.quarters.map(q => (
             <div key={q.quarter} style={{ textAlign: "center", padding: "var(--sp-3)", background: "var(--bg-2)", borderRadius: 8 }}>
               <div style={{ fontWeight: 700, color: "var(--text-3)", fontSize: "0.8rem" }}>{t.q}{q.quarter}</div>

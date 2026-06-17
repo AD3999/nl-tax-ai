@@ -25,6 +25,14 @@ const ICONS: Record<ToastType, string> = {
   info:    "i",
 };
 
+// Visible text prefixes for screen readers (F10 — "Fout:", "Let op:")
+const SR_LABELS: Record<ToastType, string> = {
+  error:   "Fout:",
+  success: "Klaar:",
+  warn:    "Let op:",
+  info:    "Info:",
+};
+
 const COLORS: Record<ToastType, { bg: string; border: string; icon: string; text: string }> = {
   error:   { bg: "var(--danger-soft)",  border: "var(--danger)",  icon: "var(--danger)",  text: "var(--ink)" },
   success: { bg: "var(--ok-soft)",      border: "var(--ok)",      icon: "var(--ok)",      text: "var(--ink)" },
@@ -67,6 +75,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           return (
             <div
               key={toast.id}
+              role="alert"
+              aria-live={toast.type === "error" ? "assertive" : "polite"}
+              aria-atomic="true"
               style={{
                 pointerEvents: "all",
                 background: c.bg,
@@ -98,8 +109,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 {ICONS[toast.type]}
               </span>
 
-              {/* Message */}
+              {/* Message — prefixed with visible label for screen readers (F10) */}
               <span style={{ flex: 1, fontSize: 13.5, color: c.text, lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 700, marginInlineEnd: 4 }}>{SR_LABELS[toast.type]}</span>
                 {toast.message}
               </span>
 

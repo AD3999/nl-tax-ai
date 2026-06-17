@@ -18,10 +18,10 @@
 
   /* Typography */
   --text-2xs:  11px;
-  --text-xs:   11px;
-  --text-sm:   13px;
-  --text-base: 15px;
-  --text-md:   17px;
+  --text-xs:   12px;
+  --text-sm:   14px;
+  --text-base: 16px;
+  --text-md:   18px;
   --text-lg:   20px;
   --text-xl:   24px;
   --text-2xl:  30px;
@@ -115,7 +115,7 @@
   --sh-sm:    0 1px 3px oklch(0 0 0 / 0.40), 0 1px 2px oklch(0 0 0 / 0.28);
   --sh-md:    0 4px 14px oklch(0 0 0 / 0.50), 0 2px 6px oklch(0 0 0 / 0.32);
   --sh-lg:    0 10px 36px oklch(0 0 0 / 0.60), 0 4px 16px oklch(0 0 0 / 0.38);
-  --sh-focus: 0 0 0 3px oklch(0.60 0.22 265 / 0.36);
+  --sh-focus: 0 0 0 2px var(--bg), 0 0 0 5px oklch(0.60 0.22 265);
   --sh-blue:  0 0 0 1px var(--blue-border), 0 4px 20px oklch(0.60 0.22 265 / 0.18);
 
   /* ── Legacy aliases (existing code keeps working) ── */
@@ -220,7 +220,7 @@
   --sh-sm:    0 1px 3px oklch(0 0 0 / 0.10), 0 1px 2px oklch(0 0 0 / 0.06);
   --sh-md:    0 4px 14px oklch(0 0 0 / 0.08), 0 2px 6px oklch(0 0 0 / 0.04);
   --sh-lg:    0 10px 36px oklch(0 0 0 / 0.10), 0 4px 16px oklch(0 0 0 / 0.06);
-  --sh-focus: 0 0 0 3px oklch(0.48 0.22 265 / 0.28);
+  --sh-focus: 0 0 0 2px var(--bg), 0 0 0 5px oklch(0.48 0.22 265);
   --sh-blue:  0 0 0 1px var(--blue-border), 0 4px 20px oklch(0.48 0.22 265 / 0.12);
 
   /* Legacy aliases */
@@ -335,17 +335,25 @@ img, svg { display: block; max-width: 100%; }
   unicode-bidi: embed;
 }
 
-/* ─── Focus ──────────────────────────────────────────────────── */
+/* ─── Focus (WCAG 2.4.11 / 2.4.13) ─────────────────────────── */
+/* Full-opacity 3px ring with 2px gap — passes 3:1 contrast check. */
+/* outline is preferred over box-shadow: not clipped by overflow:hidden. */
 :focus-visible {
-  outline: none;
-  box-shadow: var(--sh-focus);
+  outline: 3px solid oklch(0.60 0.22 265);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+[data-theme="light"] :focus-visible,
+:root[data-theme="light"] :focus-visible {
+  outline-color: oklch(0.48 0.22 265);
 }
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: none;
+  outline: 3px solid oklch(0.60 0.22 265);
+  outline-offset: 0;
   border-color: var(--blue) !important;
-  box-shadow: var(--sh-focus);
+  box-shadow: none;
 }
 
 /* ─── High-contrast ─────────────────────────────────────────── */
@@ -619,7 +627,7 @@ select:focus-visible {
     font-weight: 700;
     border-inline-start-color: oklch(0.62 0.22 265);
   }
-  .sb-nav-icon { display: flex; align-items: center; flex-shrink: 0; opacity: 0.8; }
+  .sb-nav-icon { display: flex; align-items: center; flex-shrink: 0; color: oklch(0.72 0.06 265); }
   .sb-nav-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
   .sb-logout-btn {

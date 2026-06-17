@@ -11,6 +11,7 @@ import { useMobile } from "../hooks/useMobile";
 import { useToast } from "../context/ToastContext";
 import { Skeleton } from "../components/Skeleton";
 import { printIBReport, type IBAnswers } from "../utils/ibReport";
+import TrustStrip from "../components/TrustStrip";
 
 const SOURCE_CHIP_COLORS: Record<string, string> = {
   Profile:             "var(--blue)",
@@ -659,6 +660,7 @@ export default function ChatPage() {
       style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", minHeight: 0, overflow: "hidden" }}
       dir={isRtl ? "rtl" : "ltr"}
     >
+      <TrustStrip />
       {upgradeModal && <UpgradeModal reason={upgradeModal.reason} onClose={() => setUpgradeModal(null)} />}
 
       {/* Profile bar — only when profile exists */}

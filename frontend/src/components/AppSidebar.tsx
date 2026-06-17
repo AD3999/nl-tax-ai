@@ -156,7 +156,17 @@ function SidebarContent({ onNav }: SidebarContentProps) {
             to={item.to}
             end={item.end}
             onClick={onNav}
-            className="sb-nav-item"
+            className={({ isActive }) =>
+              isActive ? "sb-nav-item sb-nav-item--active" : "sb-nav-item"
+            }
+            aria-current={
+              // NavLink does not auto-add aria-current; derive from location already at top
+              (item.end
+                ? location.pathname === item.to
+                : location.pathname.startsWith(item.to))
+                ? ("page" as const)
+                : undefined
+            }
           >
             <span className="sb-nav-icon">{item.icon}</span>
             <span className="sb-nav-label">{item.label}</span>
@@ -196,6 +206,20 @@ function SidebarContent({ onNav }: SidebarContentProps) {
 
       {/* ── Bottom: lang / theme / user ──────────────────────────────────── */}
       <div style={{ padding: 8, borderTop: "1px solid var(--border)", flexShrink: 0 }}>
+        {/* Help link — consistent across all roles (F12) */}
+        <a
+          href="mailto:support@taxwijs.nl"
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "6px 12px", borderRadius: "var(--r-sm)", marginBottom: 4,
+            fontSize: "var(--text-xs)", color: "var(--text-4)", textDecoration: "none",
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = "var(--bg-2)")}
+          onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+        >
+          <Shield size={12} aria-hidden />
+          {t("nav.help") || "Help & Support"}
+        </a>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, padding: "0 4px" }}>
           <LangSwitch />
           <ThemeToggle />
