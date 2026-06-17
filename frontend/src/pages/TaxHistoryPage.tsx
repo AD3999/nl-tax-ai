@@ -31,7 +31,6 @@ function SnapshotCard({
   prev: YearSnapshot | null;
   lang: string;
 }) {
-  const locale = lang === "nl" ? "nl-NL" : lang === "fa" ? "fa-IR" : "en-GB";
   const taxDelta    = delta(snap.total_tax_due,  prev?.total_tax_due  ?? null);
   const rateDelta   = delta(snap.effective_rate, prev?.effective_rate ?? null);
   const reserveDelta = delta(snap.monthly_reserve, prev?.monthly_reserve ?? null);
