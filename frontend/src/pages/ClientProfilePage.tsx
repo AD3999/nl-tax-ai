@@ -314,6 +314,7 @@ export default function ClientProfilePage() {
 
           <div>
             <label style={LABEL_STYLE}>{T.bsn}</label>
+            {/* PROVISIONAL — legal copy not yet reviewed. See LEGAL_REVIEW_NEEDED.md Item 1. */}
             <div style={{ padding: "10px 14px", background: "var(--warn-subtle)", border: "1px solid var(--warn-border)", borderRadius: "var(--r-sm)", marginBottom: 8, fontSize: "var(--text-xs)", color: "var(--warn-text)", display: "flex", gap: 8, alignItems: "flex-start" }}>
               <Shield size={13} style={{ flexShrink: 0, marginTop: 1 }} />
               <span>
