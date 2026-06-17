@@ -11,8 +11,10 @@ const T = (tx: Record<Lang, string>, l: Lang) => tx[l] ?? tx.en;
 
 type UserType = "zzp" | "employee" | "expat" | "dga";
 
-const EUR = (n: number) => "€ " + n.toLocaleString("nl-NL");
-const PCT = (n: number) => (n * 100).toFixed(1) + "%";
+import { formatEUR, formatPct } from "../lib/format";
+
+const EUR = (n: number) => formatEUR(n);
+const PCT = (n: number) => formatPct(n);
 
 const USER_TYPES = {
   zzp:      { color: "var(--blue)",    dot: "var(--blue)",    labels: { nl: "ZZP",        en: "ZZP",      fa: "ZZP"            } },

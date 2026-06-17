@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext";
 import { fetchSnapshots, saveSnapshot, type YearSnapshot } from "../api/snapshots";
 import { useMobile } from "../hooks/useMobile";
+import { formatEur, formatDate } from "../lib/utils";
 
 function delta(curr: number | null, prev: number | null): { abs: number; pct: number } | null {
   if (curr == null || prev == null || prev === 0) return null;
@@ -62,7 +63,7 @@ function SnapshotCard({
           </div>
           {snap.total_tax_due != null && (
             <div style={{ fontFamily: "var(--serif)", fontSize: 28, fontWeight: 400, lineHeight: 1, letterSpacing: "-0.03em" }}>
-              €{Math.round(snap.total_tax_due).toLocaleString(locale)}
+              {formatEur(Math.round(snap.total_tax_due))}
             </div>
           )}
         </div>
@@ -98,7 +99,7 @@ function SnapshotCard({
             <span style={{ fontSize: 12, color: "var(--ink-3)" }}>{L("reserve")}</span>
             <span style={{ display: "flex", alignItems: "center" }}>
               <span className="font-mono" style={{ fontSize: 13, color: "var(--ink)", fontWeight: 600 }}>
-                €{Math.round(snap.monthly_reserve).toLocaleString(locale)}/mo
+                {formatEur(Math.round(snap.monthly_reserve))}/mo
               </span>
               <DeltaChip d={reserveDelta} />
             </span>
@@ -108,7 +109,7 @@ function SnapshotCard({
 
       {/* Footer */}
       <div style={{ padding: "10px 20px", borderTop: "1px solid var(--hairline)", fontSize: 11, color: "var(--ink-4)" }}>
-        {L("saved")}: {new Date(snap.created_at).toLocaleDateString(locale)}
+        {L("saved")}: {formatDate(snap.created_at)}
       </div>
     </div>
   );
