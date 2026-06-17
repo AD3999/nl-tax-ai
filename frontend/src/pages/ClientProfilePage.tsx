@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { User, MapPin, CreditCard, Globe, FileText, Check, Shield } from "lucide-react";
 import { client as apiClient } from "../api/client";
+import { useAuth } from "../context/AuthContext";
 import { useMobile } from "../hooks/useMobile";
 
 interface ClientProfile {
@@ -34,6 +36,8 @@ const LABEL_STYLE: React.CSSProperties = {
 
 export default function ClientProfilePage() {
   const { i18n } = useTranslation();
+  const { logout } = useAuth();
+  const navigate   = useNavigate();
   const isMobile = useMobile();
   const isFA = i18n.language?.startsWith("fa");
   const isNL = i18n.language?.startsWith("nl");
@@ -66,6 +70,11 @@ export default function ClientProfilePage() {
     clearAIMemory:    isFA ? "پاک کردن حافظه هوش مصنوعی" : isNL ? "AI-geheugen wissen" : "Clear AI memory",
     clearAIMemoryHint: isFA ? "تاریخچه گفتگو و اولویت‌های AI حذف می‌شوند" : isNL ? "Chat-geschiedenis en AI-voorkeuren worden gewist" : "Chat history and AI preferences will be cleared",
     requestSent:      isFA ? "درخواست ارسال شد" : isNL ? "Verzoek verzonden" : "Request sent",
+    confirmDeleteTitle: isFA ? "حذف حساب کاربری؟" : isNL ? "Account verwijderen?" : "Delete account?",
+    confirmDeleteBody:  isFA ? "تمام داده‌های شما بلافاصله ناشناس می‌شوند. این عمل قابل بازگشت نیست." : isNL ? "Al uw gegevens worden direct geanonimiseerd. Dit kan niet ongedaan worden gemaakt." : "All your data will be anonymized immediately. This cannot be undone.",
+    confirmYes:  isFA ? "بله، حذف شود" : isNL ? "Ja, verwijderen" : "Yes, delete",
+    confirmNo:   isFA ? "لغو" : isNL ? "Annuleren" : "Cancel",
+    errorRetry:  isFA ? "خطا — دوباره تلاش کنید" : isNL ? "Fout — probeer het opnieuw" : "Error — please try again",
     personal: isFA ? "اطلاعات شخصی" : isNL ? "Persoonlijke gegevens" : "Personal Information",
     tax:      isFA ? "اطلاعات مالیاتی" : isNL ? "Belastinggegevens" : "Tax Information",
     notesSection: isFA ? "یادداشت‌ها" : isNL ? "Notities" : "Notes",
@@ -78,7 +87,10 @@ export default function ClientProfilePage() {
   const [saving, setSaving]   = useState(false);
   const [saved, setSaved]     = useState(false);
   const [showBsn, setShowBsn] = useState(false);
-  const [gdprStatus, setGdprStatus] = useState<Record<string, boolean>>({});
+  const [gdprStatus, setGdprStatus]   = useState<Record<string, boolean>>({});
+  const [gdprLoading, setGdprLoading] = useState<string | null>(null);
+  const [gdprError, setGdprError]     = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const maskBsn = (raw: string) => {
     if (!raw || raw.length < 4) return raw;
@@ -99,6 +111,51 @@ export default function ClientProfilePage() {
       setTimeout(() => setSaved(false), 2500);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleGdprAction = async (key: string) => {
+    setGdprError(null);
+    if (key === "delete") {
+      setDeleteConfirmOpen(true);
+      return;
+    }
+    setGdprLoading(key);
+    try {
+      if (key === "export") {
+        const r = await apiClient.get("/users/me/data-export/");
+        const blob = new Blob([JSON.stringify(r.data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "taxwijs-data-export.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        setGdprStatus(prev => ({ ...prev, [key]: true }));
+      } else if (key === "aiClear") {
+        await apiClient.delete("/chat/history/");
+        setGdprStatus(prev => ({ ...prev, [key]: true }));
+      }
+    } catch {
+      setGdprError(key);
+    } finally {
+      setGdprLoading(null);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    setDeleteConfirmOpen(false);
+    setGdprLoading("delete");
+    try {
+      await apiClient.delete("/users/me/", { data: { confirm: true } });
+      logout();
+      navigate("/");
+    } catch {
+      setGdprError("delete");
+    } finally {
+      setGdprLoading(null);
     }
   };
 
@@ -384,6 +441,9 @@ export default function ClientProfilePage() {
               <div>
                 <div style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: action.danger ? "var(--danger)" : "var(--text)" }}>{action.label}</div>
                 <div style={{ fontSize: "var(--text-xs)", color: "var(--text-4)", marginTop: 2 }}>{action.hint}</div>
+                {gdprError === action.key && (
+                  <div style={{ fontSize: "var(--text-xs)", color: "var(--danger)", marginTop: 4 }}>{T.errorRetry}</div>
+                )}
               </div>
               {gdprStatus[action.key] ? (
                 <span className="pill pill-ok" style={{ flexShrink: 0 }}>{T.requestSent}</span>
@@ -391,13 +451,10 @@ export default function ClientProfilePage() {
                 <button
                   className={action.danger ? "btn btn-sm" : "btn btn-ghost btn-sm"}
                   style={action.danger ? { color: "var(--danger)", borderColor: "var(--danger)", flexShrink: 0 } : { flexShrink: 0 }}
-                  onClick={() => {
-                    // Stub — backend endpoint to be wired in Phase 5.
-                    // Records intent; actual deletion runs after 30-day cooling period on backend.
-                    setGdprStatus(prev => ({ ...prev, [action.key]: true }));
-                  }}
+                  disabled={gdprLoading === action.key}
+                  onClick={() => handleGdprAction(action.key)}
                 >
-                  {action.label}
+                  {gdprLoading === action.key ? "…" : action.label}
                 </button>
               )}
             </div>
@@ -426,6 +483,44 @@ export default function ClientProfilePage() {
           {saved ? <><Check size={14} /> {T.saved}</> : saving ? "…" : T.save}
         </button>
       </div>
+
+      {/* Delete account confirmation modal */}
+      {deleteConfirmOpen && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 200,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "var(--sp-4)",
+        }} onClick={() => setDeleteConfirmOpen(false)}>
+          <div style={{
+            background: "var(--bg)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--r-xl)",
+            padding: "var(--sp-6)",
+            maxWidth: 400, width: "100%",
+            boxShadow: "var(--sh-lg)",
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontWeight: 800, fontSize: "var(--text-lg)", marginBottom: "var(--sp-3)", color: "var(--danger)" }}>
+              {T.confirmDeleteTitle}
+            </div>
+            <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", marginBottom: "var(--sp-5)", lineHeight: 1.6 }}>
+              {T.confirmDeleteBody}
+            </div>
+            <div style={{ display: "flex", gap: "var(--sp-3)", justifyContent: "flex-end" }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => setDeleteConfirmOpen(false)}>
+                {T.confirmNo}
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{ color: "var(--danger)", borderColor: "var(--danger)" }}
+                onClick={handleDeleteConfirm}
+              >
+                {T.confirmYes}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
