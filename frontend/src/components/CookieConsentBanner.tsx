@@ -130,7 +130,7 @@ export default function CookieConsentBanner({ onDecision }: Props) {
       {/* Buttons — equal visual weight as required by AP 2025 rules */}
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         <button
-          className="btn btn-sm"
+          className="btn btn-accent btn-sm"
           style={{ minWidth: 140 }}
           onClick={() => decide("rejected")}
         >
