@@ -762,8 +762,8 @@ export default function EngagementPage() {
                             <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>{action.body}</div>
                           </div>
                           <div style={{ display: "flex", gap: "var(--sp-1)", flexShrink: 0 }}>
-                            <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)", padding: "2px 8px" }} onClick={() => void handleActionStatus(action.id, "done")}>{tx.done}</button>
-                            <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-2xs)", padding: "2px 8px", color: "var(--ink-4)" }} onClick={() => void handleActionStatus(action.id, "dismissed")}>{tx.dismiss}</button>
+                            <button className="btn btn-ghost btn-sm" onClick={() => void handleActionStatus(action.id, "done")}>{tx.done}</button>
+                            <button className="btn btn-ghost btn-sm" style={{ color: "var(--ink-4)" }} onClick={() => void handleActionStatus(action.id, "dismissed")}>{tx.dismiss}</button>
                           </div>
                         </div>
                       ))}
@@ -1163,8 +1163,8 @@ export default function EngagementPage() {
                         <td style={{ padding: "var(--sp-2) var(--sp-3)" }}>
                           {inc.review_status === "candidate" && (
                             <div style={{ display: "flex", gap: "var(--sp-1)" }}>
-                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--ok)", fontSize: "var(--text-2xs)" }} onClick={() => void handleApproveIncome(inc.id, "approved")}>{tx.approve}</button>
-                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", fontSize: "var(--text-2xs)" }} onClick={() => void handleApproveIncome(inc.id, "rejected")}>{tx.reject}</button>
+                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--ok)" }} onClick={() => void handleApproveIncome(inc.id, "approved")}>{tx.approve}</button>
+                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)" }} onClick={() => void handleApproveIncome(inc.id, "rejected")}>{tx.reject}</button>
                             </div>
                           )}
                         </td>
@@ -1263,8 +1263,8 @@ export default function EngagementPage() {
                         <td style={{ padding: "var(--sp-2) var(--sp-3)" }}>
                           {exp.review_status === "candidate" && (
                             <div style={{ display: "flex", gap: "var(--sp-1)" }}>
-                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--ok)", fontSize: "var(--text-2xs)" }} onClick={() => void handleApproveExpense(exp.id, "approved")}>{tx.approve}</button>
-                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)", fontSize: "var(--text-2xs)" }} onClick={() => void handleApproveExpense(exp.id, "rejected")}>{tx.reject}</button>
+                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--ok)" }} onClick={() => void handleApproveExpense(exp.id, "approved")}>{tx.approve}</button>
+                              <button className="btn btn-ghost btn-sm" style={{ color: "var(--danger)" }} onClick={() => void handleApproveExpense(exp.id, "rejected")}>{tx.reject}</button>
                             </div>
                           )}
                         </td>

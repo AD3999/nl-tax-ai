@@ -5,6 +5,7 @@ import { User, MapPin, CreditCard, Globe, FileText, Check, Shield } from "lucide
 import { client as apiClient } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { useMobile } from "../hooks/useMobile";
+import { getStoredConsent, saveConsent, type ConsentDecision } from "../components/CookieConsentBanner";
 
 interface ClientProfile {
   id: number;
@@ -80,6 +81,13 @@ export default function ClientProfilePage() {
     notesSection: isFA ? "یادداشت‌ها" : isNL ? "Notities" : "Notes",
     emailReadOnly: isFA ? "ایمیل قابل تغییر نیست" : isNL ? "E-mail kan niet worden gewijzigd" : "Email cannot be changed",
     bsnHint:  isFA ? "اطلاعات حساس — فقط با حسابدار خود به اشتراک بگذارید" : isNL ? "Gevoelig — deel alleen met uw accountant" : "Sensitive — share only with your accountant",
+    cookieTitle:    isFA ? "کوکی‌های تحلیلی" : isNL ? "Analytische cookies" : "Analytics cookies",
+    cookieHint:     isFA ? "آمار ناشناس برای بهبود برنامه (PostHog). هیچ داده شخصی ذخیره نمی‌شود." : isNL ? "Anonieme statistieken voor app-verbetering (PostHog). Geen persoonsgegevens opgeslagen." : "Anonymous usage statistics to improve the app (PostHog). No personal data stored.",
+    cookieAccepted: isFA ? "پذیرفته شده" : isNL ? "Geaccepteerd" : "Accepted",
+    cookieRejected: isFA ? "رد شده" : isNL ? "Geweigerd" : "Rejected",
+    cookieNotSet:   isFA ? "تنظیم نشده" : isNL ? "Niet ingesteld" : "Not set",
+    cookieAccept:   isFA ? "تغییر به پذیرش" : isNL ? "Wijzigen naar accepteren" : "Change to accept",
+    cookieReject:   isFA ? "تغییر به رد کردن" : isNL ? "Wijzigen naar weigeren" : "Change to reject",
   };
 
   const [form, setForm]   = useState<Partial<ClientProfile>>({});
@@ -91,6 +99,11 @@ export default function ClientProfilePage() {
   const [gdprLoading, setGdprLoading] = useState<string | null>(null);
   const [gdprError, setGdprError]     = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [cookieConsent, setCookieConsent] = useState<ConsentDecision | null>(null);
+
+  useEffect(() => {
+    setCookieConsent(getStoredConsent()?.decision ?? null);
+  }, []);
 
   const maskBsn = (raw: string) => {
     if (!raw || raw.length < 4) return raw;
@@ -433,6 +446,34 @@ export default function ClientProfilePage() {
           </div>
         </div>
         <div style={{ padding: "var(--sp-5) var(--sp-6)", display: "flex", flexDirection: "column", gap: "var(--sp-4)" }}>
+          {/* Cookie consent toggle */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text)" }}>{T.cookieTitle}</div>
+              <div style={{ fontSize: "var(--text-xs)", color: "var(--text-4)", marginTop: 2 }}>{T.cookieHint}</div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--sp-3)", flexShrink: 0 }}>
+              <span style={{
+                fontSize: "var(--text-xs)", fontWeight: 700, padding: "2px 10px", borderRadius: 999,
+                background: cookieConsent === "accepted" ? "var(--ok-subtle, #dcfce7)" : cookieConsent === "rejected" ? "var(--warn-subtle, #fef3c7)" : "var(--bg-3)",
+                color: cookieConsent === "accepted" ? "var(--ok)" : cookieConsent === "rejected" ? "var(--warn, #92400e)" : "var(--text-4)",
+              }}>
+                {cookieConsent === "accepted" ? T.cookieAccepted : cookieConsent === "rejected" ? T.cookieRejected : T.cookieNotSet}
+              </span>
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ flexShrink: 0 }}
+                onClick={() => {
+                  const next: ConsentDecision = cookieConsent === "accepted" ? "rejected" : "accepted";
+                  saveConsent(next);
+                  setCookieConsent(next);
+                }}
+              >
+                {cookieConsent === "accepted" ? T.cookieReject : T.cookieAccept}
+              </button>
+            </div>
+          </div>
+          <hr style={{ border: "none", borderTop: "1px solid var(--border)", margin: 0 }} />
           {[
             { key: "export",   label: T.exportData,    hint: T.exportDataHint,    danger: false },
             { key: "aiClear",  label: T.clearAIMemory, hint: T.clearAIMemoryHint, danger: false },

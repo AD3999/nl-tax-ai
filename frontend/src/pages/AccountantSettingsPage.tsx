@@ -103,6 +103,11 @@ export default function AccountantSettingsPage() {
     </div>
   );
 
+  const accentColor = form.accent_color ?? "#3b82f6";
+  const passesLight = contrastRatio(accentColor, "#ffffff") >= 4.5;
+  const passesDark  = contrastRatio(accentColor, "#111827") >= 4.5;
+  const contrastBlocked = !passesLight && !passesDark;
+
   if (loading) return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: "var(--sp-6) var(--sp-4)" }}>
       <div className="skel" style={{ height: 500 }} />
@@ -138,11 +143,8 @@ export default function AccountantSettingsPage() {
               <input className="input" style={{ flex: 1 }} value={form.accent_color ?? "#3b82f6"} onChange={e => setForm({ ...form, accent_color: e.target.value })} />
             </div>
             {(() => {
-              const color = form.accent_color ?? "#3b82f6";
-              const ratioLight = contrastRatio(color, "#ffffff");
-              const ratioDark  = contrastRatio(color, "#111827");
-              const passesLight = ratioLight >= 4.5;
-              const passesDark  = ratioDark  >= 4.5;
+              const ratioLight = contrastRatio(accentColor, "#ffffff");
+              const ratioDark  = contrastRatio(accentColor, "#111827");
               return (
                 <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 4 }}>
                   {[
@@ -188,10 +190,17 @@ export default function AccountantSettingsPage() {
         </div>
       </div>
 
+      {contrastBlocked && (
+        <p style={{ fontSize: "var(--text-xs)", color: "var(--danger)", marginBottom: "var(--sp-2)" }}>
+          {isFA ? "رنگ برند باید حداقل کنتراست ۴.۵:۱ را بر روی یک پس‌زمینه داشته باشد (WCAG AA)."
+                : isNL ? "Accentkleur moet minimaal 4,5:1 contrast hebben op één achtergrond (WCAG AA)."
+                : "Brand color must pass 4.5:1 contrast on at least one background (WCAG AA)."}
+        </p>
+      )}
       <button
         className="btn btn-primary"
         onClick={handleSave}
-        disabled={saving}
+        disabled={saving || contrastBlocked}
         style={{ minWidth: 140 }}
       >
         {saved ? T.saved : saving ? "…" : T.save}

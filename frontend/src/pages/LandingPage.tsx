@@ -25,6 +25,7 @@ const TX = {
     },
     cta1:  { nl: "Gratis starten", en: "Start Free", fa: "شروع رایگان" },
     cta2:  { nl: "Accountant demo boeken", en: "Book Accountant Demo", fa: "رزرو دمو برای حسابداران" },
+    cta3:  { nl: "Probeer zonder account →", en: "Try without account →", fa: "بدون ثبت‌نام امتحان کنید ←" },
     trust: { nl: "AI legt uit. Regels berekenen. Accountants keuren goed.", en: "AI explains. Rules calculate. Accountants approve.", fa: "هوش مصنوعی توضیح می‌دهد. قوانین محاسبه می‌کنند. حسابداران تأیید می‌کنند." },
     card: {
       readiness: { nl: "Gereedheid", en: "Readiness", fa: "آمادگی" },
@@ -439,8 +440,19 @@ export default function LandingPage() {
               </button>
             </div>
 
+            {/* Value-first no-account link */}
+            <p style={{ marginTop: 12, fontSize: 13, animation: "heroFadeUp .65s ease both", animationDelay: ".64s" }}>
+              <button
+                className="btn-link"
+                onClick={() => navigate("/deduction-checker")}
+                style={{ background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "inherit", color: "var(--blue-text)", textDecoration: "underline" }}
+              >
+                {t(TX.hero.cta3, lang)}
+              </button>
+            </p>
+
             {/* Micro-trust */}
-            <p style={{ marginTop: 18, fontSize: 12.5, color: "var(--text-4)", fontStyle: "italic",
+            <p style={{ marginTop: 10, fontSize: 12.5, color: "var(--text-4)", fontStyle: "italic",
               animation: "heroFadeUp .65s ease both", animationDelay: ".70s" }}>
               {t(TX.hero.trust, lang)}
             </p>

@@ -35,7 +35,7 @@ export function hasAnalyticsConsent(): boolean {
   return getStoredConsent()?.decision === "accepted";
 }
 
-function saveConsent(decision: ConsentDecision): ConsentRecord {
+export function saveConsent(decision: ConsentDecision): ConsentRecord {
   const record: ConsentRecord = { decision, timestamp: new Date().toISOString() };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
   return record;

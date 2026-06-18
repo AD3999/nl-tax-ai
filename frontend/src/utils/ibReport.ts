@@ -106,21 +106,21 @@ export function printIBReport(answers: IBAnswers, lang: Lang = "nl"): void {
     .brand { font-size: 22px; font-weight: 600; color: #2d5a27; letter-spacing: -0.02em; }
     .meta { text-align: end; font-size: 12px; color: #666; }
     .meta strong { display: block; font-size: 16px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
-    .badge { display: inline-block; padding: 3px 10px; background: #e8f5e3; color: #2d5a27; border-radius: 999px; font-size: 11px; font-weight: 600; margin-top: 8px; }
+    .badge { display: inline-block; padding: 3px 10px; background: #e8f5e3; color: #2d5a27; border-radius: 999px; font-size: 12px; font-weight: 600; margin-top: 8px; }
     table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-    th { text-align: start; font-size: 11px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.06em; padding: 10px 12px; background: #f5f5f5; }
+    th { text-align: start; font-size: 12px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: 0.06em; padding: 10px 12px; background: #f5f5f5; }
     td { padding: 11px 12px; border-bottom: 1px solid #e8e8e8; vertical-align: middle; }
     td.code { font-family: monospace; font-size: 12px; color: #888; width: 40px; }
     td.label { color: #333; }
     td.value { font-weight: 600; color: #1a1a1a; text-align: end; white-space: nowrap; }
     .rec-section { margin-top: 32px; }
     .rec-title { font-size: 13px; font-weight: 600; color: #2d5a27; margin-bottom: 4px; }
-    .rec-subtitle { font-size: 11px; color: #666; margin-bottom: 14px; }
+    .rec-subtitle { font-size: 12px; color: #666; margin-bottom: 14px; }
     .rec-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
     .rec-item { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; background: #f0f7ed; border-left: 3px solid #2d5a27; border-radius: 4px; font-size: 13px; line-height: 1.55; color: #1a1a1a; }
-    .rec-num { font-size: 11px; font-weight: 700; color: #2d5a27; min-width: 20px; padding-top: 1px; }
+    .rec-num { font-size: 12px; font-weight: 700; color: #2d5a27; min-width: 20px; padding-top: 1px; }
     .disclaimer { margin-top: 32px; padding: 14px 16px; background: #fffbe6; border: 1px solid #ffe066; border-radius: 6px; font-size: 12px; color: #7a6000; line-height: 1.5; }
-    .footer { margin-top: 24px; font-size: 11px; color: #aaa; text-align: center; }
+    .footer { margin-top: 24px; font-size: 12px; color: #aaa; text-align: center; }
     @media print {
       body { padding: 0; }
       .no-print { display: none; }

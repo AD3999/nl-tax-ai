@@ -1,43 +1,42 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 18 Jun 2026 — Round 2 remediation complete; validate.py 100% green
+> Last updated: 18 Jun 2026 — Brutal re-audit complete; all 6 new findings fixed
 
 ---
 
-## Session — 18 Jun 2026 · Round 2 Remediation ✅ Complete
+## Session — 18 Jun 2026 · Brutal Re-audit Fixes ✅ Complete
 
-All items from the Round 2 audit brief (`taxwijs-remediation-prompt-v2.md`) are now closed.
+Full re-audit against `taxwijs-uiux-audit.html` (26 findings) surfaced 6 genuine issues that had been missed. All 6 are now fixed.
 
-### Phase 0 — Launch Blockers (all verified complete from prior sessions)
+### New Fixes (post-Round-2 re-audit)
+
+| Finding | File(s) | What was done |
+|---------|---------|---------------|
+| **F1** `--text-2xs` 11px | `frontend/src/index.css` | `--text-2xs: 11px` → `12px` (below WCAG AA text minimum) |
+| **F1** PDF 11px values | `frontend/src/utils/ibReport.ts` | 5× `font-size: 11px` → `12px` in inline CSS of PDF print generator (`.badge`, `th`, `.rec-subtitle`, `.rec-num`, `.footer`) |
+| **F9** Brand-color save block | `frontend/src/pages/AccountantSettingsPage.tsx` | Contrast check lifted from IIFE to component scope; save button now `disabled={saving \|\| contrastBlocked}` where `contrastBlocked = !passesLight && !passesDark`; blocking error message shown in NL/EN/FA |
+| **F26** Cookie withdrawal | `frontend/src/components/CookieConsentBanner.tsx`, `frontend/src/pages/ClientProfilePage.tsx` | Exported `saveConsent`; added cookie consent toggle row at top of Privacy & Data card — shows current status (Accepted/Rejected/Not set) with toggle button in all 3 languages. Banner text "via Profiel → Privacy" now fulfilled. |
+| **F17** Value-first landing CTA | `frontend/src/pages/LandingPage.tsx` | Added `cta3` translation ("Probeer zonder account →") and a plain text-link below the hero buttons that navigates to `/deduction-checker` — no account required |
+| **WCAG 2.5.8** Touch targets | `frontend/src/pages/portal/EngagementPage.tsx` | Removed inline `padding: "2px 8px"` and `fontSize: "var(--text-2xs)"` overrides from 6 `btn-sm` buttons (action done/dismiss + income/expense approve/reject). `btn-sm` class (32px height) now applies unobstructed. |
+
+### Round 2 Remediation ✅ (from previous session, fully closed)
+
+All items from the Round 2 audit brief (`taxwijs-remediation-prompt-v2.md`) are closed.
 
 | Item | Status | Notes |
 |------|--------|-------|
-| 0.1 GDPR self-service buttons | ✅ Done | All 3 real API calls wired: export → `GET /users/me/data-export/`, clear AI → `DELETE /chat/history/`, delete account → `DELETE /users/me/` with confirm dialog. Error states show on failure. |
+| 0.1 GDPR self-service buttons | ✅ Done | All 3 real API calls wired: export → `GET /users/me/data-export/`, clear AI → `DELETE /chat/history/`, delete account → `DELETE /users/me/` with confirm dialog. |
 | 0.2 Stale ZVW rate | ✅ Done | `grep -rn "5.32\|71628"` in phase1/ returns zero hits. validate.py passes. |
 | 0.3 Cookie banner equal weight | ✅ Done | Both buttons use `className="btn btn-accent btn-sm"`. |
-| 0.4 BSN legal-basis copy | ✅ Done | `LEGAL_REVIEW_NEEDED.md` exists with 3 candidate texts (Options A/B/C), detailed legal background, and 5 questions for counsel. UI copy marked `// PROVISIONAL`. |
-| 0.5 Broken deploy workflow | ✅ Done | `deploy-production.yml` does not exist in `.github/workflows/`. |
-
-**Additional fix this session:** `deleteAccountHint` corrected from "deleted within 30 days" → "anonymized immediately" to match actual endpoint behavior and the confirmation dialog body (`ClientProfilePage.tsx:69`).
-
-### Phase 1 — Should Fix (all complete)
-
-| Item | Status | Commits |
-|------|--------|---------|
-| 1.1 Locale formatting rollout | ✅ Done | `55434fd` — 8 files: `AdminChatLogsPage` (en-GB→nl-NL), `AccountantInboxPage` (bare→formatDate), `EngagementPage` (6 inline calls), `DeductionCheckerPage` ("nl"/"en"→"nl-NL"), `AdminAIMonitoringPage` / `AdminAuditLogsPage` / `AdminCalculatorPreviewPage` (bare→nl-NL). Post-fix grep: zero no-locale hits. |
-| 1.2 Brand-color contrast check | ✅ Done | `8d86303` — checks against dark-theme bg tokens, not just white. |
-| 1.3 Mobile handling (4 pages) | ✅ Done | `9a8c5ce` — `ClientMessagesPage`, `ClientDocumentsPage`, `ClientTasksPage`, `AccountantInboxPage`. |
-| 1.4 Focus-not-obscured (WCAG 2.4.11) | ✅ Done | `d6c1f90` — `scroll-padding-top: var(--topbar-h)` in `index.css`. |
-
-### Phase 2 — Nice to Have
-
-| Item | Status |
-|------|--------|
-| 2.1 ZZP VAT table overflow-x | ✅ Done | `d09466f` |
-| 2.2 Use DataTable component | ⏳ Not started — not urgent, no deadline |
-| 2.3 Tablet breakpoint | ⏳ Not started — not urgent, product decision needed |
-| 2.4 autoComplete on IntakePage | ✅ Done | `a091338` |
+| 0.4 BSN legal-basis copy | ✅ Done | `LEGAL_REVIEW_NEEDED.md` exists with 3 candidate texts. UI marked `// PROVISIONAL`. |
+| 0.5 Broken deploy workflow | ✅ Done | `deploy-production.yml` does not exist. |
+| 1.1 Locale formatting | ✅ Done | `55434fd` — 8 files, zero no-locale hits post-fix. |
+| 1.2 Brand-color contrast check | ✅ Done | `8d86303` |
+| 1.3 Mobile handling (4 pages) | ✅ Done | `9a8c5ce` |
+| 1.4 Focus-not-obscured WCAG 2.4.11 | ✅ Done | `d6c1f90` |
+| 2.1 ZZP VAT overflow-x | ✅ Done | `d09466f` |
+| 2.4 autoComplete IntakePage | ✅ Done | `a091338` |
 
 ### validate.py — 179/179 checks passing
 
@@ -46,9 +45,16 @@ Three pre-existing failures fixed (`34a65fc`):
 - `qa_pair.schema.json`: `rule_ids` minItems 1→0 (QA-2026-012 is a documented misconception rule)
 - `validate.py`: BASE path fixed (one extra `.parent`); T1 expected total corrected 12000→7990
 
+### Known deferred items (not urgent)
+
+| Item | Status |
+|------|--------|
+| 2.2 Use DataTable component | ⏳ Not started — not urgent |
+| 2.3 Tablet breakpoint | ⏳ Not started — product decision needed |
+
 ### What's next
 
-The audit brief is fully closed. The project is ready to continue with **Phase 2 — RAG Pipeline**.
+All audit findings are closed. The project is ready to continue with **Phase 2 — RAG Pipeline**.
 Start with `phase2/store/schema.py` (the Chunk dataclass) per CLAUDE.md instructions.
 
 ---
