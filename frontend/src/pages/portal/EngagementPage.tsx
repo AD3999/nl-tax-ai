@@ -70,7 +70,7 @@ const TX: Record<Lang, Record<string, string>> = {
     no_audit: "No audit events",
     blocking: "Blocking",
     none: "None",
-    reminder_preview: "Reminder preview",
+    reminder_sent: "Reminder sent",
     reminder_missing: "missing",
     status_todo: "To do",
     status_waiting_client: "Waiting for client",
@@ -157,7 +157,7 @@ const TX: Record<Lang, Record<string, string>> = {
     no_audit: "Geen auditgebeurtenissen",
     blocking: "Blokkerend",
     none: "Geen",
-    reminder_preview: "Herinneringsvoorbeeld",
+    reminder_sent: "Herinnering verzonden",
     reminder_missing: "ontbreekt",
     status_todo: "Te doen",
     status_waiting_client: "Wacht op klant",
@@ -245,7 +245,7 @@ const TX: Record<Lang, Record<string, string>> = {
     no_audit: "رویداد حسابرسی وجود ندارد",
     blocking: "مسدودکننده",
     none: "هیچ",
-    reminder_preview: "پیش‌نمایش یادآوری",
+    reminder_sent: "یادآوری ارسال شد",
     reminder_missing: "ناقص",
     status_todo: "در انتظار",
     status_waiting_client: "منتظر مشتری",
@@ -682,14 +682,17 @@ export default function EngagementPage() {
           </div>
         </div>
 
-        {/* Reminder preview */}
+        {/* Reminder sent confirmation */}
         {reminderPreview && (
-          <div className="card" style={{ padding: "var(--sp-4)", marginBottom: "var(--sp-4)", background: "var(--accent-soft)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "var(--sp-2)" }}>
-              <strong style={{ fontSize: "var(--text-sm)" }}>{tx.reminder_preview} ({reminderPreview.missing_count} {tx.reminder_missing})</strong>
+          <div className="card" style={{ padding: "var(--sp-4)", marginBottom: "var(--sp-4)", background: "var(--ok-soft)", border: "1px solid var(--ok)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--sp-2)" }}>
+              <strong style={{ fontSize: "var(--text-sm)", color: "var(--ok-text)", display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ width: 16, height: 16, borderRadius: "50%", background: "var(--ok)", color: "#fff", display: "inline-grid", placeItems: "center", fontSize: 9, flexShrink: 0 }}>✓</span>
+                {tx.reminder_sent} — {reminderPreview.missing_count} {tx.reminder_missing}
+              </strong>
               <button className="btn btn-ghost btn-sm" onClick={() => setReminderPreview(null)} style={{ padding: "0 6px" }}><X size={12} /></button>
             </div>
-            <div style={{ fontWeight: 600, marginBottom: 4, fontSize: "var(--text-xs)" }}>{reminderPreview.subject}</div>
+            <div style={{ fontWeight: 600, marginBottom: 4, fontSize: "var(--text-xs)", color: "var(--ink-2)" }}>{reminderPreview.subject}</div>
             <pre style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", whiteSpace: "pre-wrap", margin: 0 }}>{reminderPreview.body}</pre>
           </div>
         )}

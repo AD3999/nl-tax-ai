@@ -29,6 +29,7 @@ from .models import (
     ChecklistItem, AccountantAction, PortalAuditLog,
     ReminderLog, PortalMessage,
 )
+from apps.users.push_utils import send_push_notification
 from .serializers import (
     AccountantClientProfileSerializer, TaxEngagementSerializer,
     DocumentRequestSerializer, ClientDocumentSerializer,
@@ -965,19 +966,48 @@ class PortalReminderView(APIView):
             channel="in_app",
             subject=SUBJECT[lang],
             body=body,
-            delivered=False,
+            delivered=True,
         )
+
+        # Deliver as an in-app message so the client sees it in their Messages tab
+        PortalMessage.objects.create(
+            engagement=eng,
+            client_profile=profile,
+            sender=request.user,
+            body=body,
+        )
+
+        # Send a Web Push notification if the client has a TaxWijs account and has subscribed
+        missing_count = len(missing)
+        if profile.client_user_id:
+            PUSH_TITLE = {
+                "nl": "Actie vereist — ontbrekende documenten",
+                "en": "Action required — missing documents",
+                "fa": "اقدام لازم — مدارک ناقص",
+            }
+            PUSH_BODY = {
+                "nl": f"{missing_count} document(en) nodig voor uw belastingaangifte {eng.tax_year}.",
+                "en": f"{missing_count} document(s) needed for your {eng.tax_year} tax file.",
+                "fa": f"{missing_count} سند برای پرونده مالیاتی {eng.tax_year} شما لازم است.",
+            }
+            send_push_notification(
+                user=profile.client_user,
+                title=PUSH_TITLE.get(lang, PUSH_TITLE["en"]),
+                body=PUSH_BODY.get(lang, PUSH_BODY["en"]),
+                url="/client/messages",
+            )
+
         _audit(request, "reminder_sent", "TaxEngagement", eng.id,
                client_profile=profile, engagement=eng,
-               after={"missing_count": len(missing), "lang": lang})
+               after={"missing_count": missing_count, "lang": lang})
 
         return Response({
             "subject": SUBJECT[lang],
             "body": body,
             "recipient": profile.email,
-            "missing_count": len(missing),
-            "sent": False,  # True once email integration is wired
-            "preview": True,
+            "missing_count": missing_count,
+            "sent": True,
+            "preview": False,
         })
 
 
