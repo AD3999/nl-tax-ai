@@ -3,9 +3,11 @@ import { useTranslation } from "react-i18next";
 import { Send } from "lucide-react";
 import type { PortalMessage } from "../api/portal/messages";
 import { fetchClientMessages, sendClientMessage } from "../api/portal/messages";
+import { useMobile } from "../hooks/useMobile";
 
 export default function ClientMessagesPage() {
   const { i18n } = useTranslation();
+  const isMobile = useMobile();
   const isFA = i18n.language?.startsWith("fa");
   const isNL = i18n.language?.startsWith("nl");
   const dir  = isFA ? "rtl" : "ltr";
@@ -95,7 +97,7 @@ export default function ClientMessagesPage() {
     >
       {/* ── Header ── */}
       <div style={{
-        padding: "var(--sp-4) var(--sp-6)",
+        padding: isMobile ? "var(--sp-4) var(--sp-3)" : "var(--sp-4) var(--sp-6)",
         borderBottom: "1px solid var(--border)",
         flexShrink: 0,
         background: "var(--bg)",
@@ -123,7 +125,7 @@ export default function ClientMessagesPage() {
       <div style={{
         flex: 1,
         overflowY: "auto",
-        padding: "var(--sp-5) var(--sp-6)",
+        padding: isMobile ? "var(--sp-3) var(--sp-3)" : "var(--sp-5) var(--sp-6)",
         display: "flex",
         flexDirection: "column",
         gap: 0,
@@ -221,7 +223,7 @@ export default function ClientMessagesPage() {
 
       {/* ── Input area ── */}
       <div style={{
-        padding: "var(--sp-3) var(--sp-6)",
+        padding: isMobile ? "var(--sp-3) var(--sp-3)" : "var(--sp-3) var(--sp-6)",
         borderTop: "1px solid var(--border)",
         flexShrink: 0,
         background: "var(--bg)",

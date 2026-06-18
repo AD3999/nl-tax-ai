@@ -7,6 +7,7 @@ import {
   fetchClientEngagement, uploadClientDocument,
 } from "../../api/portal/client";
 import type { TaxEngagement } from "../../api/portal/types";
+import { useMobile } from "../../hooks/useMobile";
 
 interface Task {
   id: string;
@@ -335,6 +336,7 @@ export default function ClientTasksPage() {
   const { i18n } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useMobile();
   const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as Lang;
   const tx = TX[lang];
 
@@ -511,7 +513,7 @@ export default function ClientTasksPage() {
   }
 
   if (loading) return (
-    <main style={{ flex: 1, padding: "var(--sp-8) var(--sp-6)", maxWidth: 740, margin: "0 auto", width: "100%" }}>
+    <main style={{ flex: 1, padding: isMobile ? "var(--sp-4) 0" : "var(--sp-8) var(--sp-6)", maxWidth: 740, margin: "0 auto", width: "100%" }}>
       <div className="skel" style={{ height: 14, width: 80, marginBottom: 20 }} />
       <div className="skel" style={{ height: 22, width: 180, marginBottom: 24 }} />
       <div className="skel" style={{ height: 6, marginBottom: 20, borderRadius: 3 }} />
@@ -533,7 +535,7 @@ export default function ClientTasksPage() {
     <main style={{ background: "var(--bg)", flex: 1 }}>
 
       {/* Title + back — scrolls with content */}
-      <div style={{ maxWidth: 740, margin: "0 auto", padding: "var(--sp-8) var(--sp-6) var(--sp-3)" }}>
+      <div style={{ maxWidth: 740, margin: "0 auto", padding: isMobile ? "var(--sp-4) 0 var(--sp-3)" : "var(--sp-8) var(--sp-6) var(--sp-3)" }}>
         <Link to="/client" style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", textDecoration: "none", fontWeight: 600 }}>{tx.back}</Link>
         <h1 style={{ fontSize: "var(--text-3xl)", fontWeight: 800, color: "var(--text)", margin: "var(--sp-3) 0 0", letterSpacing: "-0.03em" }}>{tx.title}</h1>
       </div>
@@ -546,7 +548,7 @@ export default function ClientTasksPage() {
         WebkitBackdropFilter: "blur(16px)",
         borderBottom: "1px solid var(--border)",
       }}>
-        <div style={{ maxWidth: 740, margin: "0 auto", padding: "var(--sp-2) var(--sp-6) var(--sp-3)" }}>
+        <div style={{ maxWidth: 740, margin: "0 auto", padding: isMobile ? "var(--sp-2) 0 var(--sp-3)" : "var(--sp-2) var(--sp-6) var(--sp-3)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--sp-2)" }}>
             <span style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", fontWeight: 600 }}>{completed} {tx.completed_of} {total}</span>
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -561,7 +563,7 @@ export default function ClientTasksPage() {
       </div>
 
       {/* Task list */}
-      <div style={{ maxWidth: 740, margin: "0 auto", padding: "var(--sp-5) var(--sp-6)" }}>
+      <div style={{ maxWidth: 740, margin: "0 auto", padding: isMobile ? "var(--sp-4) 0" : "var(--sp-5) var(--sp-6)" }}>
 
         {tasks.length === 0 && (
           <div className="card" style={{ padding: "var(--sp-6)", textAlign: "center", color: "var(--text-3)" }}>{tx.empty}</div>

@@ -5,6 +5,7 @@ import { MessageSquare } from "lucide-react";
 import { client as apiClient } from "../api/client";
 import { fetchEngagementMessages } from "../api/portal/messages";
 import { formatDate } from "../lib/utils";
+import { useMobile } from "../hooks/useMobile";
 
 interface InboxData {
   counts: {
@@ -21,6 +22,7 @@ interface InboxData {
 export default function AccountantInboxPage() {
   const { i18n } = useTranslation();
   const navigate = useNavigate();
+  const isMobile = useMobile();
   const isFA = i18n.language?.startsWith("fa");
   const isNL = i18n.language?.startsWith("nl");
 
@@ -78,7 +80,7 @@ export default function AccountantInboxPage() {
       <h1 style={{ fontWeight: 800, fontSize: "var(--text-2xl)", marginBottom: "var(--sp-6)", color: "var(--text)" }}>{T.title}</h1>
 
       {/* KPI row — always visible */}
-      <div style={{ display: "flex", gap: "var(--sp-3)", marginBottom: "var(--sp-6)", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: "var(--sp-2)", marginBottom: "var(--sp-6)", flexWrap: "wrap" }}>
         {[
           { label: T.unreadMsg,   count: counts.unread_messages, color: "var(--blue)" },
           { label: T.pendingDocs, count: counts.pending_docs,    color: "var(--warn)" },
@@ -86,12 +88,13 @@ export default function AccountantInboxPage() {
         ].map(({ label, count, color }) => (
           <div key={label} style={{
             display: "flex", alignItems: "center", gap: "var(--sp-3)",
-            padding: "var(--sp-3) var(--sp-5)",
+            padding: isMobile ? "var(--sp-3) var(--sp-3)" : "var(--sp-3) var(--sp-5)",
             background: "var(--bg)",
             border: "1px solid var(--border)",
             borderRadius: "var(--r-lg)",
             borderInlineStart: `3px solid ${color}`,
-            minWidth: 160,
+            flex: isMobile ? "1 1 0" : "0 0 auto",
+            minWidth: 0,
           }}>
             <span style={{ fontSize: "var(--text-2xl)", fontWeight: 900, color, lineHeight: 1 }}>{count}</span>
             <span style={{ fontSize: "var(--text-xs)", fontWeight: 600, color: "var(--text-2)" }}>{label}</span>
@@ -121,14 +124,14 @@ export default function AccountantInboxPage() {
 
       {/* Unread messages — shown only when there are messages */}
       {msgs.length > 0 && (
-        <Section title={T.unreadMsg} count={msgs.length} accent="var(--blue)">
+        <Section title={T.unreadMsg} count={msgs.length} accent="var(--blue)" isMobile={isMobile}>
           {msgs.map(m => (
             <button
               key={m.id}
               onClick={() => void handleOpenMessage(m)}
               style={{
                 display: "flex", alignItems: "center", gap: "var(--sp-3)",
-                width: "100%", padding: "var(--sp-3) var(--sp-4)",
+                width: "100%", padding: isMobile ? "var(--sp-3) var(--sp-3)" : "var(--sp-3) var(--sp-4)",
                 background: "transparent", border: "none",
                 borderBottom: "1px solid var(--border)",
                 cursor: "pointer", textAlign: "start",
@@ -168,9 +171,9 @@ export default function AccountantInboxPage() {
 
       {/* Pending documents — shown only when there are some */}
       {pendingDocs.length > 0 && (
-        <Section title={T.pendingDocs} count={pendingDocs.length} accent="var(--warn)">
+        <Section title={T.pendingDocs} count={pendingDocs.length} accent="var(--warn)" isMobile={isMobile}>
           {pendingDocs.map(d => (
-            <Row key={d.id}>
+            <Row key={d.id} isMobile={isMobile}>
               <Cell bold>{d.client_name}</Cell>
               <Cell>{d.file_name}</Cell>
               <Cell muted>{formatDate(d.uploaded_at)}</Cell>
@@ -182,9 +185,9 @@ export default function AccountantInboxPage() {
 
       {/* Open actions — shown only when there are some */}
       {openActions.length > 0 && (
-        <Section title={T.openActions} count={openActions.length} accent="var(--ok)">
+        <Section title={T.openActions} count={openActions.length} accent="var(--ok)" isMobile={isMobile}>
           {openActions.map(a => (
-            <Row key={a.id}>
+            <Row key={a.id} isMobile={isMobile}>
               <Cell bold>{a.client_name}</Cell>
               <Cell>{a.description}</Cell>
               <Cell muted>{a.due_date ? formatDate(a.due_date) : "—"}</Cell>
@@ -195,9 +198,9 @@ export default function AccountantInboxPage() {
 
       {/* Recent reminders — shown only when there are some */}
       {reminders.length > 0 && (
-        <Section title={T.reminders} count={reminders.length} accent="var(--text-4)">
+        <Section title={T.reminders} count={reminders.length} accent="var(--text-4)" isMobile={isMobile}>
           {reminders.map(r => (
-            <Row key={r.id}>
+            <Row key={r.id} isMobile={isMobile}>
               <Cell bold>{r.client_name}</Cell>
               <Cell>{r.reminder_type}</Cell>
               <Cell muted>{r.channel}</Cell>
@@ -215,14 +218,14 @@ export default function AccountantInboxPage() {
   );
 }
 
-function Section({ title, count, accent, children }: {
-  title: string; count: number; accent: string; children: React.ReactNode;
+function Section({ title, count, accent, children, isMobile }: {
+  title: string; count: number; accent: string; children: React.ReactNode; isMobile?: boolean;
 }) {
   return (
     <div className="card" style={{ marginBottom: "var(--sp-4)", overflow: "hidden" }}>
       <div style={{
         display: "flex", alignItems: "center", gap: "var(--sp-3)",
-        padding: "var(--sp-4) var(--sp-5)",
+        padding: isMobile ? "var(--sp-3) var(--sp-3)" : "var(--sp-4) var(--sp-5)",
         borderBottom: "1px solid var(--border)",
         background: "var(--bg-3)",
       }}>
@@ -238,13 +241,13 @@ function Section({ title, count, accent, children }: {
   );
 }
 
-function Row({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+function Row({ children, onClick, isMobile }: { children: React.ReactNode; onClick?: () => void; isMobile?: boolean }) {
   return (
     <div
       onClick={onClick}
       style={{
-        display: "flex", gap: "var(--sp-4)", alignItems: "center",
-        padding: "var(--sp-3) var(--sp-5)", borderBottom: "1px solid var(--border)",
+        display: "flex", gap: "var(--sp-3)", alignItems: "center", flexWrap: isMobile ? "wrap" : "nowrap",
+        padding: isMobile ? "var(--sp-3) var(--sp-3)" : "var(--sp-3) var(--sp-5)", borderBottom: "1px solid var(--border)",
         cursor: onClick ? "pointer" : "default",
         transition: "background 0.1s",
       }}

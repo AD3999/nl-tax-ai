@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import { useMobile } from "../../hooks/useMobile";
 import {
   fetchClientDocuments, fetchClientEngagement,
   uploadClientDocument, deleteClientDocument,
@@ -80,6 +81,7 @@ export default function ClientDocumentsPage() {
   const { i18n } = useTranslation();
   const { user } = useAuth();
   const { showToast } = useToast();
+  const isMobile = useMobile();
   const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as "nl"|"en"|"fa";
 
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
@@ -205,7 +207,7 @@ export default function ClientDocumentsPage() {
   }
 
   if (loading) return (
-    <main style={{ flex: 1, padding: "var(--sp-5) 0", maxWidth: 740, margin: "0 auto", width: "100%" }}>
+    <main style={{ flex: 1, padding: isMobile ? "var(--sp-4) 0" : "var(--sp-5) 0", maxWidth: 740, margin: "0 auto", width: "100%" }}>
       <div className="skel" style={{ height: 12, width: 60, marginBottom: 20 }} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <div className="skel" style={{ height: 28, width: 180 }} />
@@ -326,7 +328,7 @@ export default function ClientDocumentsPage() {
       )}
 
       <main style={{ background: "var(--bg)", flex: 1 }}>
-        <div style={{ maxWidth: 740, margin: "0 auto", padding: "var(--sp-5) 0" }}>
+        <div style={{ maxWidth: 740, margin: "0 auto", padding: isMobile ? "var(--sp-4) 0" : "var(--sp-5) 0" }}>
 
           <Link to="/client" style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", textDecoration: "none", fontWeight: 600 }}>{t("back", lang)}</Link>
 
