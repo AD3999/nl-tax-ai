@@ -204,7 +204,7 @@ export default function AccountantInboxPage() {
               <Cell bold>{r.client_name}</Cell>
               <Cell>{r.reminder_type}</Cell>
               <Cell muted>{r.channel}</Cell>
-              <Cell muted>{new Date(r.created_at).toLocaleDateString()}</Cell>
+              <Cell muted>{formatDate(r.created_at)}</Cell>
               <Cell>
                 <span style={{ color: r.delivered ? "var(--ok)" : "var(--text-3)", fontSize: "0.85rem" }}>
                   {r.delivered ? "✓" : "—"}

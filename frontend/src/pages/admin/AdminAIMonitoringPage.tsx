@@ -58,8 +58,8 @@ export default function AdminAIMonitoringPage() {
   useEffect(() => { loadMetrics(); }, []);
 
   const kpis = metrics ? [
-    { label: t("total_msgs"),  value: metrics.total_messages.toLocaleString(), icon: <MessageSquare size={16} />, color: "var(--blue)" },
-    { label: t("today"),       value: metrics.messages_today.toLocaleString(), icon: <TrendingUp size={16} />,    color: "var(--ok)" },
+    { label: t("total_msgs"),  value: metrics.total_messages.toLocaleString("nl-NL"), icon: <MessageSquare size={16} />, color: "var(--blue)" },
+    { label: t("today"),       value: metrics.messages_today.toLocaleString("nl-NL"), icon: <TrendingUp size={16} />,    color: "var(--ok)" },
     { label: t("avg_resp"),    value: metrics.avg_response_ms > 0 ? `${metrics.avg_response_ms}ms` : "—", icon: <Clock size={16} />, color: "var(--warn)" },
     { label: t("error_rate"),  value: `${(metrics.error_rate * 100).toFixed(2)}%`, icon: <AlertTriangle size={16} />, color: "var(--danger)" },
   ] : [];
@@ -177,7 +177,7 @@ export default function AdminAIMonitoringPage() {
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: "var(--text-xs)", color: "var(--danger)", fontWeight: 600, marginBottom: 2 }}>{err.error}</div>
                       <div style={{ display: "flex", gap: "var(--sp-3)", fontSize: "var(--text-xs)", color: "var(--text-4)" }}>
-                        <span>{new Date(err.created_at).toLocaleString()}</span>
+                        <span>{new Date(err.created_at).toLocaleString("nl-NL")}</span>
                         {err.model && <span>· {err.model}</span>}
                       </div>
                     </div>

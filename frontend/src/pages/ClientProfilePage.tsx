@@ -66,7 +66,7 @@ export default function ClientProfilePage() {
     exportData:       isFA ? "دانلود داده‌های من" : isNL ? "Mijn gegevens downloaden" : "Download my data",
     exportDataHint:   isFA ? "دریافت کپی JSON از تمام داده‌های ذخیره‌شده" : isNL ? "Ontvang een JSON-kopie van al uw opgeslagen gegevens" : "Receive a JSON copy of all your stored data",
     deleteAccount:    isFA ? "حذف حساب کاربری" : isNL ? "Account verwijderen" : "Delete account",
-    deleteAccountHint: isFA ? "تمام داده‌های شما پس از ۳۰ روز حذف می‌شوند" : isNL ? "Al uw gegevens worden na 30 dagen verwijderd" : "All your data will be deleted within 30 days",
+    deleteAccountHint: isFA ? "تمام داده‌های شما بلافاصله ناشناس می‌شوند (قابل بازگشت نیست)" : isNL ? "Al uw gegevens worden direct geanonimiseerd (onomkeerbaar)" : "All your data will be anonymized immediately (irreversible)",
     clearAIMemory:    isFA ? "پاک کردن حافظه هوش مصنوعی" : isNL ? "AI-geheugen wissen" : "Clear AI memory",
     clearAIMemoryHint: isFA ? "تاریخچه گفتگو و اولویت‌های AI حذف می‌شوند" : isNL ? "Chat-geschiedenis en AI-voorkeuren worden gewist" : "Chat history and AI preferences will be cleared",
     requestSent:      isFA ? "درخواست ارسال شد" : isNL ? "Verzoek verzonden" : "Request sent",

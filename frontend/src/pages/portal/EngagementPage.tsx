@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
+import { formatDate, formatEur } from "../../lib/utils";
 import { ChevronRight, FileText, RefreshCw, X, AlertTriangle, Bot } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
@@ -1066,7 +1067,7 @@ export default function EngagementPage() {
                           {doc.user_title || doc.original_filename}
                         </div>
                         <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: 1 }}>
-                          {(doc.file_size / 1024).toFixed(0)} KB · {new Date(doc.created_at).toLocaleDateString()}
+                          {(doc.file_size / 1024).toFixed(0)} KB · {formatDate(doc.created_at)}
                         </div>
                       </div>
                       <ChevronRight size={12} style={{ color: "var(--ink-4)", flexShrink: 0 }} />
@@ -1154,8 +1155,8 @@ export default function EngagementPage() {
                       <tr key={inc.id} style={{ borderBottom: "1px solid var(--hairline)" }}>
                         <td style={{ padding: "var(--sp-2) var(--sp-3)" }}><span className="pill" style={{ fontSize: "var(--text-2xs)" }}>{inc.income_type}</span></td>
                         <td style={{ padding: "var(--sp-2) var(--sp-3)", color: "var(--ink-3)" }}>{inc.description}</td>
-                        <td style={{ padding: "var(--sp-2) var(--sp-3)", fontWeight: 600 }}>€{parseFloat(inc.gross_amount).toLocaleString()}</td>
-                        <td style={{ padding: "var(--sp-2) var(--sp-3)", color: "var(--ink-3)" }}>{inc.tax_withheld ? `€${parseFloat(inc.tax_withheld).toLocaleString()}` : "—"}</td>
+                        <td style={{ padding: "var(--sp-2) var(--sp-3)", fontWeight: 600 }}>{formatEur(parseFloat(inc.gross_amount))}</td>
+                        <td style={{ padding: "var(--sp-2) var(--sp-3)", color: "var(--ink-3)" }}>{inc.tax_withheld ? formatEur(parseFloat(inc.tax_withheld)) : "—"}</td>
                         <td style={{ padding: "var(--sp-2) var(--sp-3)" }}>
                           <span style={{ fontSize: "var(--text-xs)", color: REVIEW_STATUS_COLOR[inc.review_status] }}>{inc.review_status}</span>
                         </td>
@@ -1194,7 +1195,7 @@ export default function EngagementPage() {
                   </div>
                   <div style={{ maxWidth: "70%" }}>
                     <div style={{ fontSize: "var(--text-xs)", color: "var(--text-3)", marginBottom: 4, textAlign: msg.is_own ? "right" : "left" }}>
-                      {msg.sender_name || msg.sender_email} · {new Date(msg.created_at).toLocaleString()}
+                      {msg.sender_name || msg.sender_email} · {new Date(msg.created_at).toLocaleString("nl-NL")}
                     </div>
                     <div style={{
                       background: msg.is_own ? "var(--blue)" : "var(--bg-3)",
@@ -1254,8 +1255,8 @@ export default function EngagementPage() {
                       <tr key={exp.id} style={{ borderBottom: "1px solid var(--hairline)" }}>
                         <td style={{ padding: "var(--sp-2) var(--sp-3)" }}><span className="pill" style={{ fontSize: "var(--text-2xs)" }}>{exp.expense_category}</span></td>
                         <td style={{ padding: "var(--sp-2) var(--sp-3)", color: "var(--ink-3)" }}>{exp.supplier_name || "—"}</td>
-                        <td style={{ padding: "var(--sp-2) var(--sp-3)", fontWeight: 600 }}>€{parseFloat(exp.amount_gross).toLocaleString()}</td>
-                        <td style={{ padding: "var(--sp-2) var(--sp-3)", color: "var(--ink-3)" }}>{exp.vat_amount ? `€${parseFloat(exp.vat_amount).toLocaleString()}` : "—"}</td>
+                        <td style={{ padding: "var(--sp-2) var(--sp-3)", fontWeight: 600 }}>{formatEur(parseFloat(exp.amount_gross))}</td>
+                        <td style={{ padding: "var(--sp-2) var(--sp-3)", color: "var(--ink-3)" }}>{exp.vat_amount ? formatEur(parseFloat(exp.vat_amount)) : "—"}</td>
                         <td style={{ padding: "var(--sp-2) var(--sp-3)" }}>
                           <span style={{ fontSize: "var(--text-xs)", color: REVIEW_STATUS_COLOR[exp.review_status] }}>{exp.review_status}</span>
                         </td>
@@ -1329,7 +1330,7 @@ export default function EngagementPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
                 {auditLog.map(log => (
                   <div key={log.id} style={{ display: "flex", gap: "var(--sp-3)", padding: "var(--sp-2) 0", borderBottom: "1px solid var(--hairline)", fontSize: "var(--text-xs)" }}>
-                    <span style={{ color: "var(--ink-4)", flexShrink: 0, width: 160 }}>{new Date(log.created_at).toLocaleString()}</span>
+                    <span style={{ color: "var(--ink-4)", flexShrink: 0, width: 160 }}>{new Date(log.created_at).toLocaleString("nl-NL")}</span>
                     <span style={{ color: "var(--ink-3)", flexShrink: 0 }}>{log.actor_email || "system"}</span>
                     <span style={{ color: "var(--ink)", fontWeight: 500 }}>{log.action}</span>
                     <span style={{ color: "var(--ink-4)" }}>{log.entity_type} #{log.entity_id}</span>

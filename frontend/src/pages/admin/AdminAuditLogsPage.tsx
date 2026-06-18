@@ -153,7 +153,7 @@ export default function AdminAuditLogsPage() {
               {filtered.map(log => (
                 <tr key={log.id} style={{ borderBottom: "1px solid var(--border-2)" }}>
                   <td style={{ padding: "var(--sp-2) var(--sp-4)", color: "var(--text-4)", fontSize: "var(--text-xs)", whiteSpace: "nowrap" }}>
-                    {new Date(log.created_at).toLocaleString()}
+                    {new Date(log.created_at).toLocaleString("nl-NL")}
                   </td>
                   <td style={{ padding: "var(--sp-2) var(--sp-4)", color: "var(--text-2)", fontWeight: 500, maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {log.actor_email || "system"}

@@ -60,9 +60,9 @@ export default function AdminCalculatorPreviewPage() {
         }
         if (c.hours_gte !== undefined && hours >= c.hours_gte) reasons.push(`hours (${hours}) ≥ ${c.hours_gte}`);
         if (c.hours_gte !== undefined && hours < c.hours_gte) continue;
-        if (c.income_lte !== undefined && income <= c.income_lte) reasons.push(`income ≤ €${c.income_lte.toLocaleString()}`);
+        if (c.income_lte !== undefined && income <= c.income_lte) reasons.push(`income ≤ €${c.income_lte.toLocaleString("nl-NL")}`);
         if (c.income_lte !== undefined && income > c.income_lte) continue;
-        if (c.income_gte !== undefined && income >= c.income_gte) reasons.push(`income ≥ €${c.income_gte.toLocaleString()}`);
+        if (c.income_gte !== undefined && income >= c.income_gte) reasons.push(`income ≥ €${c.income_gte.toLocaleString("nl-NL")}`);
         if (c.income_gte !== undefined && income < c.income_gte) continue;
         if (c.is_starter !== undefined && String(c.is_starter) === profile.is_starter) reasons.push("starter status matches");
         if (c.has_child_under_12 !== undefined && String(c.has_child_under_12) === profile.has_child_under_12) reasons.push("child under 12 matches");

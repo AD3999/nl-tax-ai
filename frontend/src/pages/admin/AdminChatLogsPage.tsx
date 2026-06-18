@@ -6,7 +6,7 @@ import type { AdminConversation } from "@/lib/admin/api";
 import { Search, RefreshCw, MessageSquare, ChevronDown, ChevronRight } from "lucide-react";
 
 function fmt(iso: string) {
-  return new Date(iso).toLocaleString("en-GB", {
+  return new Date(iso).toLocaleString("nl-NL", {
     day: "2-digit", month: "short", year: "numeric",
     hour: "2-digit", minute: "2-digit",
   });

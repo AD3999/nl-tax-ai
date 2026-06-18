@@ -356,24 +356,24 @@ function computeDeductions(answers: Answers, lang: Lang): DeductionResult[] {
     title: "Kleinschaligheidsinvesteringsaftrek (KIA)",
     reason: {
       nl: kiaStatus === "likely"
-        ? `Investering van ca. €${Math.round(assetAmt).toLocaleString("nl")} valt in de KIA-bandbreedte (€2.901–€70.602).`
+        ? `Investering van ca. €${Math.round(assetAmt).toLocaleString("nl-NL")} valt in de KIA-bandbreedte (€2.901–€70.602).`
         : kiaStatus === "not_likely"
           ? assetAmt > 0
-            ? `Investering van ca. €${Math.round(assetAmt).toLocaleString("nl")} valt buiten de KIA-drempel.`
+            ? `Investering van ca. €${Math.round(assetAmt).toLocaleString("nl-NL")} valt buiten de KIA-drempel.`
             : "Geen zakelijke investeringen boven €450 opgegeven."
           : "Geef het totale investeringsbedrag op voor een juiste beoordeling.",
       en: kiaStatus === "likely"
-        ? `Investment of approx. €${Math.round(assetAmt).toLocaleString("en")} falls within the KIA range (€2,901–€70,602).`
+        ? `Investment of approx. €${Math.round(assetAmt).toLocaleString("nl-NL")} falls within the KIA range (€2.901–€70.602).`
         : kiaStatus === "not_likely"
           ? assetAmt > 0
-            ? `Investment of approx. €${Math.round(assetAmt).toLocaleString("en")} is outside the KIA threshold.`
+            ? `Investment of approx. €${Math.round(assetAmt).toLocaleString("nl-NL")} is outside the KIA threshold.`
             : "No business assets above €450 reported."
           : "Enter your total investment amount for an accurate assessment.",
       fa: kiaStatus === "likely"
-        ? `سرمایه‌گذاری تقریباً €${Math.round(assetAmt).toLocaleString()} در محدوده KIA قرار دارد (€۲٬۹۰۱–€۷۰٬۶۰۲).`
+        ? `سرمایه‌گذاری تقریباً €${Math.round(assetAmt).toLocaleString("nl-NL")} در محدوده KIA قرار دارد (€۲٬۹۰۱–€۷۰٬۶۰۲).`
         : kiaStatus === "not_likely"
           ? assetAmt > 0
-            ? `سرمایه‌گذاری تقریباً €${Math.round(assetAmt).toLocaleString()} خارج از آستانه KIA است.`
+            ? `سرمایه‌گذاری تقریباً €${Math.round(assetAmt).toLocaleString("nl-NL")} خارج از آستانه KIA است.`
             : "هیچ دارایی تجاری بالای €۴۵۰ گزارش نشده است."
           : "مبلغ کل سرمایه‌گذاری را برای ارزیابی دقیق وارد کنید.",
     }[lang],
