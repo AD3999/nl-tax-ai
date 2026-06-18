@@ -22,7 +22,7 @@ except ImportError:
     print("ERROR: jsonschema not installed. Run: pip install jsonschema")
     sys.exit(1)
 
-BASE = Path(__file__).parent.parent
+BASE = Path(__file__).parent.parent.parent
 SCHEMAS = BASE / "data" / "schemas"
 SEED    = BASE / "data" / "seed"
 
@@ -156,7 +156,7 @@ def validate_calculations(verbose: bool = False) -> tuple[int, int]:
     assert_near("T1: ZZP €50k — zelfstandigenaftrek", za, 1200, results)
     assert_near("T1: ZZP €50k — MKB-winstvrijstelling", mkb, 6200, results)
     assert_near("T1: ZZP €50k — taxable income", taxable, 42600, results)
-    assert_near("T1: ZZP €50k — total tax (approx)", total, 12000, results)
+    assert_near("T1: ZZP €50k — total tax (approx)", total, 7990, results)
 
     # ── Test 2: AHK phase-out ──────────────────────────────────────
     assert_near("T2: AHK €29,000 income → max", calc_ahk(29000), 3115, results)

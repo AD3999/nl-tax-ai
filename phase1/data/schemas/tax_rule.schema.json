@@ -8,7 +8,7 @@
   "properties": {
     "id": {
       "type": "string",
-      "pattern": "^[A-Z]{2,6}-\\d{4}-\\d{3}$",
+      "pattern": "^[A-Z][A-Z0-9]{1,5}-\\d{4}-\\d{3}$",
       "description": "Rule ID: TOPIC-YEAR-SEQ, e.g. ZA-2026-001"
     },
     "year": { "type": "integer", "enum": [2024, 2025, 2026, 2027] },
