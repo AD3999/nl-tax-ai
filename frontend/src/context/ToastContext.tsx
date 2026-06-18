@@ -102,7 +102,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 color: "white",
                 display: "grid",
                 placeItems: "center",
-                fontSize: 11,
+                fontSize: "var(--text-xs)",
                 fontWeight: 700,
                 marginTop: 1,
               }}>
@@ -110,7 +110,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               </span>
 
               {/* Message — prefixed with visible label for screen readers (F10) */}
-              <span style={{ flex: 1, fontSize: 13.5, color: c.text, lineHeight: 1.4 }}>
+              <span style={{ flex: 1, fontSize: "var(--text-sm)", color: c.text, lineHeight: 1.4 }}>
                 <span style={{ fontWeight: 700, marginInlineEnd: 4 }}>{SR_LABELS[toast.type]}</span>
                 {toast.message}
               </span>

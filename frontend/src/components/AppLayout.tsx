@@ -85,7 +85,7 @@ export default function AppLayout() {
 
             <span style={{
               fontFamily: "var(--font)",
-              fontSize: 15,
+              fontSize: "var(--text-sm)",
               fontWeight: 800,
               letterSpacing: "-0.04em",
               color: "var(--text)",

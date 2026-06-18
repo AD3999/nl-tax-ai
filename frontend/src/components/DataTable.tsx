@@ -137,7 +137,7 @@ export function DataTable<T>({
       </div>
 
       {sorted.length > 0 && (
-        <div style={{ marginTop: "var(--sp-2)", fontSize: 11, color: "var(--ink-4)", textAlign: "end" }}>
+        <div style={{ marginTop: "var(--sp-2)", fontSize: "var(--text-xs)", color: "var(--ink-4)", textAlign: "end" }}>
           {sorted.length !== rows.length ? `${sorted.length} / ${rows.length}` : `${rows.length}`} rows
         </div>
       )}

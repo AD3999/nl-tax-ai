@@ -35,7 +35,7 @@ export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
     <span style={{
       padding: size === "sm" ? "2px 7px" : "3px 10px",
       borderRadius: 99,
-      fontSize: size === "sm" ? 10 : 11,
+      fontSize: size === "sm" ? "var(--text-2xs)" : "var(--text-xs)",
       fontWeight: 600,
       background: s.bg,
       color: s.color,

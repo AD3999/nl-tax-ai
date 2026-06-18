@@ -88,7 +88,7 @@ export default function ClientDocumentsPage() {
   const [engagement, setEngagement] = useState<TaxEngagement | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [, setLastUpdated] = useState<Date | null>(null);
 
   // Upload modal state
   const [showModal, setShowModal] = useState(false);
@@ -304,11 +304,11 @@ export default function ClientDocumentsPage() {
                   <div style={{ fontWeight: 700, color: "var(--danger-text)", fontSize: "var(--text-sm)", marginBottom: 2 }}>
                     {lang === "fa" ? "بارگذاری ناموفق" : lang === "nl" ? "Upload mislukt" : "Upload failed"}
                   </div>
-                  <div style={{ color: "var(--danger-text)", fontSize: "var(--text-xs)", fontWeight: 500, opacity: 0.85 }}>
+                  <div style={{ color: "var(--danger-text)", fontSize: "var(--text-xs)", fontWeight: 500 }}>
                     {uploadError}
                   </div>
                 </div>
-                <button onClick={() => setUploadError("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger-text)", fontSize: 16, padding: 0, flexShrink: 0, opacity: 0.7 }}>✕</button>
+                <button onClick={() => setUploadError("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", fontSize: 16, padding: 0, flexShrink: 0 }}>✕</button>
               </div>
             )}
 

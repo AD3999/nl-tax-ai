@@ -1,7 +1,44 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 18 Jun 2026 — Brutal re-audit complete; all 6 new findings fixed
+> Last updated: 18 Jun 2026 — Font-size tokenization sweep + AI artifact cleanup complete
+
+---
+
+## Session — 18 Jun 2026 · Font Tokenization Sweep + Repo Cleanup ✅ Complete
+
+### Font-size tokenization — all shared components
+
+Eliminated all remaining raw numeric `fontSize` values across shared components and key pages. Every font size now uses a CSS custom property from the token system (`--text-xs` through `--text-6xl`), ensuring consistent scaling and WCAG 1.4.4 compliance.
+
+| File | Changes |
+|------|---------|
+| `AppLayout.tsx` | `fontSize: 15` → `var(--text-sm)` (wordmark) |
+| `BottomNav.tsx` | `fontSize: 10` → `var(--text-xs)` (nav labels) |
+| `AppSidebar.tsx` | 4× raw sizes in notification badge, avatar, username, email |
+| `DataTable.tsx` | `fontSize: 11` → `var(--text-xs)` (row count footer) |
+| `SimOverviewCard.tsx` | 6× raw sizes incl. critical `fontSize: 9` → `var(--text-xs)` |
+| `SimStepCard.tsx` | 9× raw sizes in labels, errors, help text, step header |
+| `UpgradeModal.tsx` | 4× raw sizes in body, table, price, footer |
+| `CopilotCard.tsx` | 4× raw sizes in header, confidence, savings, action chips |
+| `InvitationBanner.tsx` | `fontSize: 11` → `var(--text-xs)` (avatar initials) |
+| `ui/ReadinessCard.tsx` | `fontSize: 11` → `var(--text-xs)` (factor labels) |
+| `App.tsx` | `fontSize: 11` → `var(--text-xs)` (dev error pre) |
+| `ChatPage.tsx` | 7× raw sizes in profile bar, mode chips, source chip badges |
+| `RegisterPage.tsx` | 3× raw sizes in account type picker |
+| `IntakePage.tsx` | 3× raw sizes in step indicator |
+
+### Repo cleanup — removed AI tool attribution from docs
+
+Removed all references to the development tooling from tracked repository files:
+
+- `docs/06-build-book/repository-structure.md` — removed CLAUDE.md and .claude/ tree entries
+- `docs/06-build-book/developer-guide.md` — removed CLAUDE.md tree entry
+- `docs/06-build-book/build-book.md` — replaced .claude/ entry with .github/
+- `docs/00-governance/05-execution-plan.md` — neutralised tooling reference in deliverables
+- `docs/05-ai-rule-engine/rule-versioning-governance.md` — updated maintenance calendar
+- `docs/06-build-book/annual-maintenance-guide.md` — updated Step 4 heading and checklist
+- `.gitignore` — added `prompts/`, `issues/`, `LEGAL_REVIEW_NEEDED.md`; updated comment
 
 ---
 
@@ -55,7 +92,7 @@ Three pre-existing failures fixed (`34a65fc`):
 ### What's next
 
 All audit findings are closed. The project is ready to continue with **Phase 2 — RAG Pipeline**.
-Start with `phase2/store/schema.py` (the Chunk dataclass) per CLAUDE.md instructions.
+Start with `phase2/store/schema.py` (the Chunk dataclass — see project documentation).
 
 ---
 

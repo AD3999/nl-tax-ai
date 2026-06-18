@@ -967,9 +967,9 @@ export default function EngagementPage() {
               <AlertTriangle size={18} style={{ color: "var(--danger-text)", flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, color: "var(--danger-text)", fontSize: "var(--text-sm)", marginBottom: 2 }}>Upload failed</div>
-                <div style={{ color: "var(--danger-text)", fontSize: "var(--text-xs)", fontWeight: 500, opacity: 0.85 }}>{uploadError}</div>
+                <div style={{ color: "var(--danger-text)", fontSize: "var(--text-xs)", fontWeight: 500 }}>{uploadError}</div>
               </div>
-              <button onClick={() => setUploadError("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--danger-text)", padding: 0, flexShrink: 0, opacity: 0.7, display: "flex" }}><X size={14} /></button>
+              <button onClick={() => setUploadError("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-3)", padding: 0, flexShrink: 0, display: "flex" }}><X size={14} /></button>
             </div>
           )}
 

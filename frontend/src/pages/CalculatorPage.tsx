@@ -45,10 +45,10 @@ function CalcField({ label, k, form, set, placeholder, unit, hint }: {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
         <span className="tw-label">{label}</span>
-        {hint && <span style={{ fontSize: 10.5, color: "var(--ink-4)" }}>{hint}</span>}
+        {hint && <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>{hint}</span>}
       </div>
       <div style={{ position: "relative" }}>
-        {unit && <span style={{ position: "absolute", insetInlineStart: 12, top: "50%", transform: "translateY(-50%)", color: "var(--ink-4)", fontSize: 13 }}>{unit}</span>}
+        {unit && <span style={{ position: "absolute", insetInlineStart: 12, top: "50%", transform: "translateY(-50%)", color: "var(--ink-4)", fontSize: "var(--text-sm)" }}>{unit}</span>}
         <input className="tw-input" type="number" min="0"
           value={form[k] as string} onChange={e => set(k, e.target.value)}
           placeholder={placeholder}
@@ -69,7 +69,7 @@ function Toggle({ label, k, form, set, yesNo = ["Yes", "No"] }: {
       <div style={{ display: "flex", border: "1px solid var(--hairline-2)", borderRadius: "var(--r-sm)", overflow: "hidden" }}>
         {([[yesNo[0], true], [yesNo[1], false]] as [string, boolean][]).map(([lbl, val]) => (
           <button key={lbl} type="button" onClick={() => set(k, val)} style={{
-            flex: 1, padding: "9px 0", fontSize: 13, border: "none", cursor: "pointer",
+            flex: 1, padding: "9px 0", fontSize: "var(--text-sm)", border: "none", cursor: "pointer",
             background: v === val ? "var(--accent-soft)" : "var(--paper)",
             color: v === val ? "var(--sage-700)" : "var(--ink-3)",
             fontWeight: v === val ? 600 : 400,
@@ -235,7 +235,7 @@ export default function CalculatorPage() {
         {/* Type selector */}
         <div style={{ marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: userType ? "var(--ink-4)" : "var(--sage-700)" }}>
+            <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: userType ? "var(--ink-4)" : "var(--sage-700)" }}>
               {userType
                 ? (lang === "nl" ? "Type gekozen" : lang === "fa" ? "نوع انتخاب شد" : "Type selected")
                 : (lang === "nl" ? "Kies uw belastingprofiel ✱" : lang === "fa" ? "نوع مالیاتی خود را انتخاب کنید ✱" : "Choose your tax profile ✱")}
@@ -244,7 +244,7 @@ export default function CalculatorPage() {
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             {(Object.entries(USER_TYPES) as [UserType, typeof USER_TYPES[UserType]][]).map(([k, v]) => (
               <button key={k} type="button" onClick={() => { setUserType(k); setError(null); }} style={{
-                padding: "8px 16px", borderRadius: 999, fontSize: 13, fontWeight: 500, cursor: "pointer",
+                padding: "8px 16px", borderRadius: 999, fontSize: "var(--text-sm)", fontWeight: 500, cursor: "pointer",
                 border: `1px solid ${userType === k ? "transparent" : "var(--hairline-2)"}`,
                 background: userType === k ? "var(--ink)" : "var(--paper)",
                 color: userType === k ? "var(--paper)" : "var(--ink-3)",
@@ -306,7 +306,7 @@ export default function CalculatorPage() {
               </div>
 
               {error && (
-                <div style={{ marginTop: 14, padding: 12, background: "var(--danger-soft)", borderRadius: "var(--r-sm)", fontSize: 13, color: "var(--danger)" }}>
+                <div style={{ marginTop: 14, padding: 12, background: "var(--danger-soft)", borderRadius: "var(--r-sm)", fontSize: "var(--text-sm)", color: "var(--danger)" }}>
                   {error}
                 </div>
               )}
@@ -339,7 +339,7 @@ export default function CalculatorPage() {
                     <div style={{ width: "35%", background: "var(--sage-600)" }} />
                     <div style={{ width: "5%", background: "var(--ink)" }} />
                   </div>
-                  <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 4, fontSize: 11.5, color: "var(--ink-3)" }}>
+                  <div style={{ marginTop: 10, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: 4, fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>
                     <span>35.75% · up to €38,883</span>
                     <span style={{ textAlign: "center" }}>37.56% · €38,883–€78,426</span>
                     <span style={{ textAlign: "end" }}>49.50% · €78,426+</span>
@@ -385,9 +385,9 @@ export default function CalculatorPage() {
                           background: ro.accent ? "var(--accent-soft)" : "transparent",
                           borderTop: ro.line ? "1px solid var(--hairline)" : "none",
                         }}>
-                          <span style={{ fontSize: 13.5, color: ro.muted ? "var(--ink-3)" : "var(--ink)", fontWeight: ro.bold ? 600 : 400 }}>{ro.label}</span>
+                          <span style={{ fontSize: "var(--text-sm)", color: ro.muted ? "var(--ink-3)" : "var(--ink)", fontWeight: ro.bold ? 600 : 400 }}>{ro.label}</span>
                           <span className="num" style={{
-                            fontSize: ro.big ? 22 : 13.5,
+                            fontSize: ro.big ? 22 : "var(--text-sm)",
                             fontFamily: ro.big ? "var(--serif)" : "var(--mono)",
                             color: ro.accent ? "var(--sage-700)" : ro.muted ? "var(--ink-3)" : "var(--ink)",
                             fontWeight: ro.bold ? 600 : 400,

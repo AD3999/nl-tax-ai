@@ -175,7 +175,7 @@ export default function InvitationBanner() {
                   width: 30, height: 30, borderRadius: 8,
                   background: "oklch(0.46 0.14 15)",
                   color: "white", display: "grid", placeItems: "center",
-                  fontSize: 11, fontWeight: 700, flexShrink: 0,
+                  fontSize: "var(--text-xs)", fontWeight: 700, flexShrink: 0,
                 }}>
                   AC
                 </span>

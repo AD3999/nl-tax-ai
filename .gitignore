@@ -1,4 +1,4 @@
-# Claude Code local memory (not project code)
+# Internal tooling — not for public repo
 .claude/
 
 # Internal docs — not for public repo
@@ -7,6 +7,11 @@ PROGRESS.md
 DESIGN_BRIEF.md
 design.md
 Design.md
+
+# Audit artifacts, screenshots, internal notes
+prompts/
+issues/
+LEGAL_REVIEW_NEEDED.md
 
 # Environment
 .env

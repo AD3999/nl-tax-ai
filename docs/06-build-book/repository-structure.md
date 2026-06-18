@@ -8,7 +8,6 @@
 
 ```
 nl-tax-ai/
-├── CLAUDE.md                    Project memory for Claude Code — read at session start
 ├── PROGRESS.md                  Phase completion log
 ├── .env.example                 Template for local environment variables
 ├── .gitignore                   Standard Python + Node + secrets ignores
@@ -27,8 +26,7 @@ nl-tax-ai/
 ├── events/                      AsyncAPI spec for domain events
 ├── wireframes/                  SVG wireframes for UI views
 │
-├── .github/workflows/           CI/CD pipelines
-└── .claude/                     Claude Code configuration (skills, hooks, rules)
+└── .github/workflows/           CI/CD pipelines
 ```
 
 ---

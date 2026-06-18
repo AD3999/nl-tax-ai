@@ -178,7 +178,7 @@ function SidebarContent({ onNav }: SidebarContentProps) {
                 borderRadius: 999,
                 background: "var(--danger)",
                 color: "#fff",
-                fontSize: 10,
+                fontSize: "var(--text-xs)",
                 fontWeight: 800,
                 display: "flex",
                 alignItems: "center",
@@ -235,15 +235,15 @@ function SidebarContent({ onNav }: SidebarContentProps) {
               width: 30, height: 30, borderRadius: "50%",
               background: "var(--blue)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 11, fontWeight: 800, color: "#fff", flexShrink: 0,
+              fontSize: "var(--text-xs)", fontWeight: 800, color: "#fff", flexShrink: 0,
             }}>
               {initials}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <div style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {user.username || user.email.split("@")[0]}
               </div>
-              <div style={{ fontSize: 10, color: "var(--text-4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <div style={{ fontSize: "var(--text-xs)", color: "var(--text-4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {user.email}
               </div>
             </div>

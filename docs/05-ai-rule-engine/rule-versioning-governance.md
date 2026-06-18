@@ -103,7 +103,7 @@ Dutch tax law is published by the Eerste Kamer each September for the following 
 | September | Prinsjesdag: annual Belastingplan published. Tax Analyst begins rule drafts for new year. |
 | October | Rule drafts created, test cases written, SME review initiated |
 | November | Shadow mode testing against anonymized engagement data |
-| December | Admin publishes new year rules; embedding re-index run; CLAUDE.md updated |
+| December | Admin publishes new year rules; embedding re-index run; project documentation updated |
 | January | New tax year active; prior year rules remain available for historical queries |
 
 ---

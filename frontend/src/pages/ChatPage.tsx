@@ -27,7 +27,7 @@ function ContextSourceChips({ sources }: { sources: string[] }) {
     <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--hairline)" }}>
       {sources.map(src => (
         <span key={src} style={{
-          fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 999,
+          fontSize: "var(--text-xs)", fontWeight: 600, padding: "2px 8px", borderRadius: 999,
           background: "var(--paper-3)",
           color: SOURCE_CHIP_COLORS[src] ?? "var(--ink-3)",
           border: `1px solid ${SOURCE_CHIP_COLORS[src] ?? "var(--hairline-2)"}`,
@@ -667,10 +667,10 @@ export default function ChatPage() {
       {profile && (
         <div style={{ padding: isMobile ? "10px 16px" : "12px 28px", background: "var(--accent-soft)", borderBottom: "1px solid var(--accent-line)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 14, flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ width: 30, height: 30, borderRadius: 8, background: meta.color, color: "white", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 700, letterSpacing: "0.04em" }}>
+            <span style={{ width: 30, height: 30, borderRadius: 8, background: meta.color, color: "white", display: "grid", placeItems: "center", fontSize: "var(--text-xs)", fontWeight: 700, letterSpacing: "0.04em" }}>
               {meta.glyph}
             </span>
-            <div style={{ fontSize: 13, color: "var(--ink)", fontWeight: 500 }}>
+            <div style={{ fontSize: "var(--text-sm)", color: "var(--ink)", fontWeight: 500 }}>
               {userType.toUpperCase()} <span style={{ color: "var(--ink-3)", fontWeight: 400 }}>· €{income}</span>
             </div>
           </div>
@@ -714,7 +714,7 @@ export default function ChatPage() {
           onClick={() => { if (!ibMode && !simMode) { setIbMode(true); void submit(IB_TRIGGER[lang] ?? IB_TRIGGER.en, false, true); } }}
           disabled={ibMode || simMode}
           style={{
-            padding: "5px 14px", borderRadius: 999, fontSize: 12, fontWeight: 500,
+            padding: "5px 14px", borderRadius: 999, fontSize: "var(--text-xs)", fontWeight: 500,
             border: ibMode ? "2px solid var(--sage-600)" : "1px solid var(--sage-600)",
             background: ibMode ? "var(--sage-100)" : "var(--accent-soft)",
             color: (!ibMode && simMode) ? "var(--ink-4)" : "var(--sage-700)",
@@ -726,7 +726,7 @@ export default function ChatPage() {
         >
           {IB_CHIP_LABEL[lang] ?? IB_CHIP_LABEL.en}
           {ibMode && (
-            <span style={{ fontSize: 10, background: "var(--sage-600)", color: "white", borderRadius: 999, padding: "1px 6px" }}>
+            <span style={{ fontSize: "var(--text-xs)", background: "var(--sage-600)", color: "white", borderRadius: 999, padding: "1px 6px" }}>
               {lang === "nl" ? "actief" : lang === "fa" ? "فعال" : "active"}
             </span>
           )}
@@ -735,7 +735,7 @@ export default function ChatPage() {
           onClick={() => { if (!simMode && !ibMode) startSimulation(); }}
           disabled={simMode || ibMode}
           style={{
-            padding: "5px 14px", borderRadius: 999, fontSize: 12, fontWeight: 500,
+            padding: "5px 14px", borderRadius: 999, fontSize: "var(--text-xs)", fontWeight: 500,
             border: simMode ? "2px solid var(--sage-600)" : "1px solid var(--sage-600)",
             background: simMode ? "var(--sage-100)" : "var(--accent-soft)",
             color: (!simMode && ibMode) ? "var(--ink-4)" : "var(--sage-700)",
@@ -747,7 +747,7 @@ export default function ChatPage() {
         >
           {SIM_CHIP_LABEL[lang] ?? SIM_CHIP_LABEL.en}
           {simMode && (
-            <span style={{ fontSize: 10, background: "var(--sage-600)", color: "white", borderRadius: 999, padding: "1px 6px" }}>
+            <span style={{ fontSize: "var(--text-xs)", background: "var(--sage-600)", color: "white", borderRadius: 999, padding: "1px 6px" }}>
               {lang === "nl" ? "actief" : lang === "fa" ? "فعال" : "active"}
             </span>
           )}
@@ -956,7 +956,7 @@ export default function ChatPage() {
                 onClick={() => { if (!ibMode && !simMode) { setIbMode(true); void submit(IB_TRIGGER[lang] ?? IB_TRIGGER.en, false, true); } }}
                 disabled={ibMode || simMode}
                 style={{
-                  padding: "6px 14px", borderRadius: 999, fontSize: 13, fontWeight: 500,
+                  padding: "6px 14px", borderRadius: 999, fontSize: "var(--text-sm)", fontWeight: 500,
                   border: ibMode ? "2px solid var(--sage-600)" : "1px solid var(--sage-600)",
                   background: ibMode ? "var(--sage-100)" : "var(--accent-soft)",
                   color: (!ibMode && simMode) ? "var(--ink-4)" : "var(--sage-700)",
@@ -968,7 +968,7 @@ export default function ChatPage() {
               >
                 {IB_CHIP_LABEL[lang] ?? IB_CHIP_LABEL.en}
                 {ibMode && (
-                  <span style={{ fontSize: 10, background: "var(--sage-600)", color: "white", borderRadius: 999, padding: "1px 6px" }}>
+                  <span style={{ fontSize: "var(--text-xs)", background: "var(--sage-600)", color: "white", borderRadius: 999, padding: "1px 6px" }}>
                     {lang === "nl" ? "actief" : lang === "fa" ? "فعال" : "active"}
                   </span>
                 )}
@@ -977,7 +977,7 @@ export default function ChatPage() {
                 onClick={() => { if (!simMode && !ibMode) startSimulation(); }}
                 disabled={simMode || ibMode}
                 style={{
-                  padding: "6px 14px", borderRadius: 999, fontSize: 13, fontWeight: 500,
+                  padding: "6px 14px", borderRadius: 999, fontSize: "var(--text-sm)", fontWeight: 500,
                   border: simMode ? "2px solid var(--sage-600)" : "1px solid var(--sage-600)",
                   background: simMode ? "var(--sage-100)" : "var(--accent-soft)",
                   color: (!simMode && ibMode) ? "var(--ink-4)" : "var(--sage-700)",
@@ -989,7 +989,7 @@ export default function ChatPage() {
               >
                 {SIM_CHIP_LABEL[lang] ?? SIM_CHIP_LABEL.en}
                 {simMode && (
-                  <span style={{ fontSize: 10, background: "var(--sage-600)", color: "white", borderRadius: 999, padding: "1px 6px" }}>
+                  <span style={{ fontSize: "var(--text-xs)", background: "var(--sage-600)", color: "white", borderRadius: 999, padding: "1px 6px" }}>
                     {lang === "nl" ? "actief" : lang === "fa" ? "فعال" : "active"}
                   </span>
                 )}

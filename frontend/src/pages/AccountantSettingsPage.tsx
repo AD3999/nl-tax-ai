@@ -93,7 +93,7 @@ export default function AccountantSettingsPage() {
 
   const field = (key: keyof AccountantSetup, label: string, type: string = "text") => (
     <div>
-      <label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 4 }}>{label}</label>
+      <label style={{ fontSize: "var(--text-xs)", fontWeight: 600, display: "block", marginBottom: 4 }}>{label}</label>
       <input
         className="input"
         type={type}
@@ -116,11 +116,11 @@ export default function AccountantSettingsPage() {
 
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: "var(--sp-6) var(--sp-4)" }}>
-      <h1 style={{ fontWeight: 800, fontSize: "1.8rem", marginBottom: "var(--sp-6)" }}>{T.title}</h1>
+      <h1 style={{ fontWeight: 800, fontSize: "var(--text-2xl)", marginBottom: "var(--sp-6)" }}>{T.title}</h1>
 
       {/* Contact info */}
       <div className="card" style={{ marginBottom: "var(--sp-5)" }}>
-        <h2 style={{ fontWeight: 700, fontSize: "1rem", marginBottom: "var(--sp-4)" }}>{T.contact}</h2>
+        <h2 style={{ fontWeight: 700, fontSize: "var(--text-base)", marginBottom: "var(--sp-4)" }}>{T.contact}</h2>
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-4)" }}>
           {field("firm_name", T.firmName)}
           {field("phone", T.phone)}
@@ -134,10 +134,10 @@ export default function AccountantSettingsPage() {
 
       {/* Branding */}
       <div className="card" style={{ marginBottom: "var(--sp-5)" }}>
-        <h2 style={{ fontWeight: 700, fontSize: "1rem", marginBottom: "var(--sp-4)" }}>{T.branding}</h2>
+        <h2 style={{ fontWeight: 700, fontSize: "var(--text-base)", marginBottom: "var(--sp-4)" }}>{T.branding}</h2>
         <div style={{ display: "grid", gap: "var(--sp-4)" }}>
           <div>
-            <label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 4 }}>{T.accentColor}</label>
+            <label style={{ fontSize: "var(--text-xs)", fontWeight: 600, display: "block", marginBottom: 4 }}>{T.accentColor}</label>
             <div style={{ display: "flex", gap: "var(--sp-3)", alignItems: "center" }}>
               <input type="color" value={form.accent_color ?? "#3b82f6"} onChange={e => setForm({ ...form, accent_color: e.target.value })} style={{ width: 44, height: 36, border: "1px solid var(--border)", borderRadius: 6, cursor: "pointer" }} />
               <input className="input" style={{ flex: 1 }} value={form.accent_color ?? "#3b82f6"} onChange={e => setForm({ ...form, accent_color: e.target.value })} />
@@ -162,7 +162,7 @@ export default function AccountantSettingsPage() {
             })()}
           </div>
           <div>
-            <label style={{ fontSize: "0.8rem", fontWeight: 600, display: "block", marginBottom: 4 }}>{T.signature}</label>
+            <label style={{ fontSize: "var(--text-xs)", fontWeight: 600, display: "block", marginBottom: 4 }}>{T.signature}</label>
             <textarea
               className="input"
               rows={4}
@@ -177,15 +177,15 @@ export default function AccountantSettingsPage() {
 
       {/* Subscription (read-only) */}
       <div className="card" style={{ marginBottom: "var(--sp-5)" }}>
-        <h2 style={{ fontWeight: 700, fontSize: "1rem", marginBottom: "var(--sp-4)" }}>{T.subscription}</h2>
+        <h2 style={{ fontWeight: 700, fontSize: "var(--text-base)", marginBottom: "var(--sp-4)" }}>{T.subscription}</h2>
         <div style={{ display: "flex", gap: "var(--sp-6)" }}>
           <div>
-            <div style={{ fontSize: "0.8rem", color: "var(--text-3)", fontWeight: 600 }}>{T.plan}</div>
-            <div style={{ fontWeight: 700, fontSize: "1.1rem", marginTop: 4 }}>{form.plan ?? "—"}</div>
+            <div style={{ fontSize: "var(--text-xs)", color: "var(--text-3)", fontWeight: 600 }}>{T.plan}</div>
+            <div style={{ fontWeight: 700, fontSize: "var(--text-md)", marginTop: 4 }}>{form.plan ?? "—"}</div>
           </div>
           <div>
-            <div style={{ fontSize: "0.8rem", color: "var(--text-3)", fontWeight: 600 }}>{T.maxClients}</div>
-            <div style={{ fontWeight: 700, fontSize: "1.1rem", marginTop: 4 }}>{form.max_clients ?? "—"}</div>
+            <div style={{ fontSize: "var(--text-xs)", color: "var(--text-3)", fontWeight: 600 }}>{T.maxClients}</div>
+            <div style={{ fontWeight: 700, fontSize: "var(--text-md)", marginTop: 4 }}>{form.max_clients ?? "—"}</div>
           </div>
         </div>
       </div>

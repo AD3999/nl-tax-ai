@@ -73,7 +73,7 @@ export default function UpgradeModal({ reason, onClose }: Props) {
         <h2 style={{ marginTop: 18, fontFamily: "var(--serif)", fontSize: 28, fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.015em", lineHeight: 1.15 }}>
           {headlineMap[reason] ?? headlineMap.session_limit}
         </h2>
-        <p style={{ marginTop: 8, color: "var(--ink-3)", fontSize: 13.5, lineHeight: 1.55 }}>
+        <p style={{ marginTop: 8, color: "var(--ink-3)", fontSize: "var(--text-sm)", lineHeight: 1.55 }}>
           {isRegisterPrompt
             ? t("upgrade.subheadline_register")
             : t("upgrade.subheadline_upgrade")}
@@ -81,13 +81,13 @@ export default function UpgradeModal({ reason, onClose }: Props) {
 
         {/* Comparison table */}
         <div style={{ marginTop: 18, padding: 14, background: "var(--paper-3)", borderRadius: "var(--r)" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", fontSize: 11, color: "var(--ink-3)", fontFamily: "var(--mono)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", fontSize: "var(--text-xs)", color: "var(--ink-3)", fontFamily: "var(--mono)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
             <span />
             <span style={{ textAlign: "center" }}>Free</span>
             <span style={{ textAlign: "center", color: "var(--sage-700)" }}>Premium</span>
           </div>
           {COMPARISON_ROWS.map(([k, a, b], i) => (
-            <div key={k} style={{ padding: "8px 0", borderTop: i === 0 ? "1px solid var(--hairline)" : "1px solid var(--hairline)", display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", alignItems: "center", fontSize: 13 }}>
+            <div key={k} style={{ padding: "8px 0", borderTop: i === 0 ? "1px solid var(--hairline)" : "1px solid var(--hairline)", display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", alignItems: "center", fontSize: "var(--text-sm)" }}>
               <span style={{ color: "var(--ink-2)" }}>{k}</span>
               <span className="num" style={{ textAlign: "center", color: "var(--ink-3)" }}>{a}</span>
               <span className="num" style={{ textAlign: "center", color: "var(--sage-700)", fontWeight: 600 }}>{b}</span>
@@ -99,7 +99,7 @@ export default function UpgradeModal({ reason, onClose }: Props) {
         {!isRegisterPrompt && (
           <div style={{ textAlign: "center", marginTop: 16 }}>
             <span className="font-serif" style={{ fontSize: 36, color: "var(--ink)" }}>€9.99</span>
-            <span style={{ fontSize: 14, color: "var(--ink-3)" }}> / month</span>
+            <span style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)" }}> / month</span>
           </div>
         )}
 
@@ -123,14 +123,14 @@ export default function UpgradeModal({ reason, onClose }: Props) {
           <button
             className="btn btn-ghost"
             type="button"
-            style={{ width: "100%", height: 36, fontSize: 13 }}
+            style={{ width: "100%", height: 36, fontSize: "var(--text-sm)" }}
             onClick={onClose}
           >
             {t("upgrade.maybe_later")}
           </button>
         </div>
 
-        <p style={{ marginTop: 12, fontSize: 11, color: "var(--ink-4)", textAlign: "center" }}>
+        <p style={{ marginTop: 12, fontSize: "var(--text-xs)", color: "var(--ink-4)", textAlign: "center" }}>
           Secure checkout · Stripe · Cancel anytime
         </p>
       </div>

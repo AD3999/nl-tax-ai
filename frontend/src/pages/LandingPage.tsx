@@ -612,14 +612,14 @@ export default function LandingPage() {
                   background: SUBTLE_MAP[c],
                   position: "relative", overflow: "hidden",
                 }}>
-                  {/* "Not X" strike-through label */}
+                  {/* Positioning label */}
                   <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 18,
-                    padding: "4px 10px", borderRadius: 999,
-                    background: "var(--bg-3)", border: "1px solid var(--border-2)" }}>
-                    <span style={{ fontSize: 11, color: "var(--text-4)", textDecoration: "line-through" }}>
+                    padding: "5px 12px", borderRadius: 999,
+                    background: "var(--bg)", border: "1px solid var(--border-2)" }}>
+                    <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-2)" }}>
                       {card.notLabel}
                     </span>
-                    <span style={{ color: "var(--text-4)" }}>→</span>
+                    <span style={{ color: "var(--text-3)", fontSize: "var(--text-sm)" }}>→</span>
                   </div>
                   <FeatureIcon icon={card.icon} color={c} />
                   <h3 style={{ fontSize: 18, fontWeight: 700, marginTop: 14, marginBottom: 10 }}>{card.title}</h3>

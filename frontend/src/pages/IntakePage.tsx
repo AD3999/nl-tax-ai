@@ -185,13 +185,13 @@ export default function IntakePage() {
                     width: 26, height: 26, borderRadius: 999, display: "grid", placeItems: "center",
                     background: done ? "var(--sage-600)" : active ? "var(--ink)" : "var(--paper-3)",
                     color: done || active ? "white" : "var(--ink-3)",
-                    fontSize: 11, fontWeight: 600, flexShrink: 0,
+                    fontSize: "var(--text-xs)", fontWeight: 600, flexShrink: 0,
                   }}>
                     {done ? <Icon.check style={{ width: 12, height: 12 }} /> : s.i}
                   </span>
                   <div>
-                    <div style={{ fontSize: 13.5, color: active || done ? "var(--ink)" : "var(--ink-3)", fontWeight: 500 }}>{s.t}</div>
-                    <div style={{ fontSize: 11.5, color: "var(--ink-4)" }}>{s.d}</div>
+                    <div style={{ fontSize: "var(--text-sm)", color: active || done ? "var(--ink)" : "var(--ink-3)", fontWeight: 500 }}>{s.t}</div>
+                    <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>{s.d}</div>
                   </div>
                 </button>
               );

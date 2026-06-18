@@ -84,13 +84,13 @@ export default function CopilotCard({
         gap: "var(--sp-2)",
       }}>
         <span style={{ color: cfg.color, display: "flex" }}>{cfg.icon}</span>
-        <span style={{ fontSize: 11, fontWeight: 700, color: cfg.color, letterSpacing: "0.04em", textTransform: "uppercase" }}>
+        <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: cfg.color, letterSpacing: "0.04em", textTransform: "uppercase" }}>
           {cfg.label}
         </span>
         {confidence && (
           <span style={{
             marginInlineStart: "auto",
-            fontSize: 10,
+            fontSize: "var(--text-xs)",
             color: CONFIDENCE_MAP[confidence].color,
             fontWeight: 600,
           }}>
@@ -127,7 +127,7 @@ export default function CopilotCard({
             color: "var(--ok-text)",
             borderRadius: "var(--r-sm)",
             padding: "2px 10px",
-            fontSize: 12,
+            fontSize: "var(--text-xs)",
             fontWeight: 700,
             marginBottom: "var(--sp-3)",
           }}>
@@ -140,7 +140,7 @@ export default function CopilotCard({
           <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--sp-1)", marginBottom: "var(--sp-3)" }}>
             {sources.map(src => (
               <span key={src} style={{
-                fontSize: 10,
+                fontSize: "var(--text-xs)",
                 fontWeight: 600,
                 padding: "2px 8px",
                 borderRadius: 999,
@@ -166,7 +166,7 @@ export default function CopilotCard({
                   border: `1px solid ${cfg.color}`,
                   borderRadius: "var(--r-sm)",
                   padding: "4px 12px",
-                  fontSize: 12,
+                  fontSize: "var(--text-xs)",
                   fontWeight: 700,
                   cursor: "pointer",
                 }}

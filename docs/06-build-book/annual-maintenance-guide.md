@@ -94,9 +94,9 @@ POST /api/admin/rules/
 }
 ```
 
-### Step 4: Update CLAUDE.md
+### Step 4: Update project documentation
 
-Update the key 2026 tax data table in `CLAUDE.md` with the new year's values. Every value in the "Key N tax data" section must be updated.
+Update the key tax data tables in the project documentation with the new year's values. Every value in the "Key N tax data" section must be updated.
 
 ### Step 5: Update Phase 1 Seed Data
 
@@ -201,7 +201,7 @@ For each of the 28 rules, verify:
 - [ ] `effective_from` = 2027-01-01
 - [ ] `effective_until` = null (unless abolition year)
 - [ ] Test case updated with new expected value
-- [ ] CLAUDE.md table updated
+- [ ] Project documentation updated
 
 ---
 

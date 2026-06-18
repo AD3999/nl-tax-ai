@@ -408,6 +408,8 @@ function TaxHealthScoreCard({
     title:  { nl: "Belasting­gezondheid", en: "Tax Health Score", fa: "امتیاز سلامت مالیاتی" },
     hide:   { nl: "Verberg ↑",     en: "Hide ↑",         fa: "پنهان ↑" },
     show:   { nl: "Zie factoren ↓",en: "See factors ↓",  fa: "مشاهده عوامل ↓" },
+    desc1:  { nl: "Profiel, naleving,", en: "Profile, compliance,", fa: "پروفایل، انطباق،" },
+    desc2:  { nl: "risico's, kansen",   en: "risks, opportunities", fa: "ریسک‌ها، فرصت‌ها" },
   } as const;
   type LangKey = "nl" | "en" | "fa";
   const L = (key: keyof typeof LABELS) => LABELS[key][(lang as LangKey) ?? "en"];
@@ -440,8 +442,8 @@ function TaxHealthScoreCard({
             <div>
               <div style={{ fontWeight: 600, color, fontSize: "var(--text-sm)" }}>{label}</div>
               <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: 3, lineHeight: 1.4 }}>
-                {L("Profiel, naleving,", "Profile, compliance,", "پروفایل، انطباق،")}<br />
-                {L("risico's, kansen", "risks, opportunities", "ریسک‌ها، فرصت‌ها")}
+                {L("desc1")}<br />
+                {L("desc2")}
               </div>
               {factors.length > 0 && (
                 <button onClick={() => setShowFactors(v => !v)}
@@ -455,7 +457,7 @@ function TaxHealthScoreCard({
             <div style={{ borderTop: "1px solid var(--hairline)", paddingTop: 10 }}>
               {factors.map((f, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "4px 0" }}>
-                  <span style={{ fontSize: 11.5, color: "var(--ink-3)", flex: 1, lineHeight: 1.3 }}>{f.label}</span>
+                  <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", flex: 1, lineHeight: 1.3 }}>{f.label}</span>
                   <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, color: f.positive ? "var(--ok)" : "var(--danger)", fontFamily: "var(--mono)" }}>
                     {f.positive ? `+${f.delta}` : f.delta}
                   </span>

@@ -145,7 +145,7 @@
 
 **Deliverables:**
 - `/docs/06-build-book/` — all 7 files
-- `.claude/CLAUDE.md` updated
+- project documentation updated
 - `master-prompt-pack.md`
 
 **Quality gate:** A new engineer can onboard from docs alone.

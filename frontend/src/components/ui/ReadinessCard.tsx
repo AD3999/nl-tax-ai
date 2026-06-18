@@ -111,7 +111,7 @@ export default function ReadinessCard({ score, factors, compact = false }: Readi
           {resolvedFactors.map(f => (
             <div key={f.label} style={{ display: "flex", alignItems: "center", gap: "var(--sp-2)" }}>
               <span style={{
-                fontSize: 11,
+                fontSize: "var(--text-xs)",
                 color: "var(--text-3)",
                 width: 120,
                 flexShrink: 0,

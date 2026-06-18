@@ -53,7 +53,7 @@ export default function BottomNav() {
             textDecoration: "none",
             color: isActive ? "var(--blue)" : "var(--text-3)",
             fontWeight: isActive ? 700 : 500,
-            fontSize: 10,
+            fontSize: "var(--text-xs)",
             letterSpacing: "0.02em",
             transition: "color 120ms",
             paddingBottom: 4,

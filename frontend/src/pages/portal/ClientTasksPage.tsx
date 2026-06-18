@@ -579,14 +579,13 @@ export default function ClientTasksPage() {
                 <div key={task.id} className="card" style={{
                   padding: "var(--sp-4)", marginBottom: "var(--sp-3)",
                   borderInlineStart: `3px solid ${task.rejection_note ? "var(--danger)" : task.required ? "var(--danger)" : "var(--border-2)"}`,
-                  opacity: isDone ? 0.75 : 1,
                   transition: "opacity 0.2s",
                 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--sp-3)" }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 700, fontSize: "var(--text-base)", color: "var(--text)", marginBottom: 4 }}>
                         {task.required && <span style={{ color: "var(--danger)", marginInlineEnd: 4 }}>*</span>}
-                        {isDone ? <s style={{ opacity: 0.7 }}>{task.title}</s> : task.title}
+                        {isDone ? <s style={{ color: "var(--text-3)" }}>{task.title}</s> : task.title}
                       </div>
                       {task.description && (
                         <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", marginBottom: 8, fontWeight: 500 }}>{task.description}</div>
@@ -609,7 +608,7 @@ export default function ClientTasksPage() {
                         }}>
                           <span>{tx.rejected_doc}</span>
                           {task.rejection_note !== "Document was rejected. Please re-upload." && (
-                            <span style={{ fontWeight: 400, opacity: 0.85 }}>{task.rejection_note}</span>
+                            <span style={{ fontWeight: 400, color: "var(--text-2)" }}>{task.rejection_note}</span>
                           )}
                         </div>
                       )}

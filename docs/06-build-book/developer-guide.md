@@ -74,7 +74,6 @@ nl-tax-ai/
 ├── infra/
 │   ├── terraform/           ← Infrastructure as Code (skeleton)
 │   └── k8s/                 ← Kubernetes manifests (skeleton)
-├── CLAUDE.md                ← Project memory for Claude Code
 └── PROGRESS.md              ← Session-by-session progress log
 ```
 

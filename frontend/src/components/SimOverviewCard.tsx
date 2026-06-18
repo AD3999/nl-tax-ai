@@ -51,7 +51,7 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
   if (loading) {
     return (
       <div className="card" style={{ padding: 24, textAlign: "center" }}>
-        <div style={{ fontSize: 14, color: "var(--ink-3)" }}>
+        <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)" }}>
           {lang === "nl" ? "Berekening…" : lang === "fa" ? "در حال محاسبه…" : "Calculating…"}
         </div>
       </div>
@@ -60,7 +60,7 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
 
   if (error) {
     return (
-      <div className="card" style={{ padding: 20, background: "var(--danger-soft)", color: "var(--danger)", fontSize: 14 }}>
+      <div className="card" style={{ padding: 20, background: "var(--danger-soft)", color: "var(--danger)", fontSize: "var(--text-sm)" }}>
         {error}
       </div>
     );
@@ -142,7 +142,7 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
               : `−${formatEur(Math.abs(netToPay))}`}
           </div>
           {hadVoorlopige && voorlopige > 0 && (
-            <div style={{ marginTop: 6, fontSize: 12, color: "oklch(0.82 0.01 95)" }}>
+            <div style={{ marginTop: 6, fontSize: "var(--text-xs)", color: "oklch(0.82 0.01 95)" }}>
               {t(
                 `na ${formatEur(voorlopige)} voorlopige aanslag`,
                 `after ${formatEur(voorlopige)} provisional assessment`,
@@ -155,8 +155,8 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
           {metricRows.map(([k, v]) => (
             <div key={k} style={{ padding: 10, background: "rgba(255,255,255,0.07)", borderRadius: "var(--r)" }}>
-              <div className="eyebrow" style={{ color: "var(--sage-300)", fontSize: 9 }}>{k}</div>
-              <div className="font-mono" style={{ marginTop: 3, fontSize: 15, color: "white" }}>{v}</div>
+              <div className="eyebrow" style={{ color: "var(--sage-300)", fontSize: "var(--text-xs)" }}>{k}</div>
+              <div className="font-mono" style={{ marginTop: 3, fontSize: "var(--text-sm)", color: "white" }}>{v}</div>
             </div>
           ))}
         </div>
@@ -174,8 +174,8 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
               padding: "8px 0", display: "flex", justifyContent: "space-between",
               borderBottom: i < breakdownRows.length - 1 ? "1px solid var(--hairline)" : "none",
             }}>
-              <span style={{ fontSize: 13, color: "var(--ink-2)" }}>{label}</span>
-              <span className="num" style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>
+              <span style={{ fontSize: "var(--text-sm)", color: "var(--ink-2)" }}>{label}</span>
+              <span className="num" style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--ink)" }}>
                 {val < 0
                   ? `−${formatEur(Math.abs(val))}`
                   : formatEur(val)}
@@ -198,7 +198,7 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
           </button>
         </div>
 
-        <p style={{ marginTop: 14, fontSize: 11, color: "var(--ink-4)", margin: "14px 0 0" }}>
+        <p style={{ marginTop: 14, fontSize: "var(--text-xs)", color: "var(--ink-4)", margin: "14px 0 0" }}>
           {lang === "nl"
             ? "Dit is een simulatie — geen officiële aangifte. Gebruik mijn.belastingdienst.nl voor de echte aangifte"
             : lang === "fa"

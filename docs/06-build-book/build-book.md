@@ -58,7 +58,7 @@ nl-tax-ai/
 ├── api/              OpenAPI spec (root copy) + examples
 ├── wireframes/       SVG wireframes for all key views
 ├── .github/          CI/CD workflows
-└── .claude/          AI assistant configuration
+└── .github/          CI/CD workflows
 ```
 
 ---

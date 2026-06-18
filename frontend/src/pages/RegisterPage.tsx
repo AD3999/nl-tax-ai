@@ -219,8 +219,8 @@ export default function RegisterPage() {
                         {v.glyph}
                       </span>
                       <div>
-                        <div style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>{USER_TYPE_TX[k]?.label[lang] ?? v.label}</div>
-                        <div style={{ fontSize: 11, color: "var(--ink-3)" }}>{USER_TYPE_TX[k]?.desc[lang] ?? v.desc}</div>
+                        <div style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--ink)" }}>{USER_TYPE_TX[k]?.label[lang] ?? v.label}</div>
+                        <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>{USER_TYPE_TX[k]?.desc[lang] ?? v.desc}</div>
                       </div>
                     </button>
                   );
@@ -238,14 +238,14 @@ export default function RegisterPage() {
                     background: on ? "var(--danger-subtle)" : "var(--paper)",
                     display: "flex", alignItems: "center", gap: 12, cursor: "pointer", transition: "all .15s",
                   }}>
-                    <span style={{ width: 32, height: 32, borderRadius: 8, background: acType.color, color: "#fff", display: "grid", placeItems: "center", fontSize: 11, fontWeight: 700, letterSpacing: "0.04em", flexShrink: 0 }}>
+                    <span style={{ width: 32, height: 32, borderRadius: 8, background: acType.color, color: "#fff", display: "grid", placeItems: "center", fontSize: "var(--text-xs)", fontWeight: 700, letterSpacing: "0.04em", flexShrink: 0 }}>
                       {acType.glyph}
                     </span>
                     <div>
-                      <div style={{ fontSize: 13.5, fontWeight: 500, color: "var(--ink)" }}>
+                      <div style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--ink)" }}>
                         {USER_TYPE_TX.accountant.label[lang]}
                       </div>
-                      <div style={{ fontSize: 11, color: "var(--ink-3)" }}>
+                      <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>
                         {USER_TYPE_TX.accountant.desc[lang]}
                       </div>
                     </div>

@@ -37,7 +37,7 @@ class ErrorBoundary extends Component<
             Refresh page
           </button>
           {import.meta.env.DEV && (
-            <pre style={{ fontSize: 11, color: "var(--danger)", textAlign: "left", maxWidth: 600, overflow: "auto" }}>
+            <pre style={{ fontSize: "var(--text-xs)", color: "var(--danger)", textAlign: "left", maxWidth: 600, overflow: "auto" }}>
               {this.state.message}
             </pre>
           )}

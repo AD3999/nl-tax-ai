@@ -41,13 +41,13 @@ function FieldRow({
           <Icon.info style={{ width: 10, height: 10 }} />
         </span>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 500, color: "var(--sage-800)", marginBottom: 3 }}>{label}</div>
-          <div style={{ fontSize: 12, color: "var(--sage-800)", lineHeight: 1.5 }}>{help}</div>
+          <div style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--sage-800)", marginBottom: 3 }}>{label}</div>
+          <div style={{ fontSize: "var(--text-xs)", color: "var(--sage-800)", lineHeight: 1.5 }}>{help}</div>
           <button
             type="button"
             className="btn btn-soft btn-sm"
             onClick={() => onAskClaude(t3(field.claudeQ, lang))}
-            style={{ marginTop: 8, fontSize: 11 }}
+            style={{ marginTop: 8, fontSize: "var(--text-xs)" }}
           >
             <Icon.spark style={{ width: 9, height: 9 }} />{" "}
             {lang === "nl" ? "Vraag TaxWijs" : lang === "fa" ? "از TaxWijs بپرسید" : "Ask TaxWijs"}
@@ -62,7 +62,7 @@ function FieldRow({
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-        <span className="tw-label" style={{ fontSize: 12 }}>
+        <span className="tw-label" style={{ fontSize: "var(--text-xs)" }}>
           {label}
           {field.required && (
             <span style={{ color: "var(--danger)", marginInlineStart: 3 }} title="Required">*</span>
@@ -73,7 +73,7 @@ function FieldRow({
           onClick={() => onAskClaude(t3(field.claudeQ, lang))}
           style={{
             background: "transparent", border: "none", color: "var(--sage-700)",
-            fontSize: 11, cursor: "pointer", display: "inline-flex", alignItems: "center",
+            fontSize: "var(--text-xs)", cursor: "pointer", display: "inline-flex", alignItems: "center",
             gap: 3, padding: 0,
           }}
         >
@@ -91,7 +91,7 @@ function FieldRow({
                 type="button"
                 onClick={() => onChange(field.id, opt)}
                 style={{
-                  padding: "7px 16px", borderRadius: 999, fontSize: 13, fontWeight: 500, cursor: "pointer",
+                  padding: "7px 16px", borderRadius: 999, fontSize: "var(--text-sm)", fontWeight: 500, cursor: "pointer",
                   border: `1px solid ${on ? "var(--sage-600)" : "var(--hairline-2)"}`,
                   background: on ? "var(--accent-soft)" : "var(--paper)",
                   color: on ? "var(--sage-700)" : "var(--ink-3)",
@@ -110,7 +110,7 @@ function FieldRow({
           {field.unit && (
             <span style={{
               position: "absolute", insetInlineStart: 10, top: "50%", transform: "translateY(-50%)",
-              color: "var(--ink-4)", fontSize: 13, pointerEvents: "none",
+              color: "var(--ink-4)", fontSize: "var(--text-sm)", pointerEvents: "none",
             }}>
               {field.unit}
             </span>
@@ -159,12 +159,12 @@ function FieldRow({
       )}
 
       {hasError ? (
-        <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--danger)", fontWeight: 500, lineHeight: 1.4 }}>
+        <p style={{ margin: "4px 0 0", fontSize: "var(--text-xs)", color: "var(--danger)", fontWeight: 500, lineHeight: 1.4 }}>
           ⚠ {error}
         </p>
       ) : (
         field.type !== "boolean" && help && (
-          <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--ink-4)", lineHeight: 1.4 }}>{help}</p>
+          <p style={{ margin: "4px 0 0", fontSize: "var(--text-xs)", color: "var(--ink-4)", lineHeight: 1.4 }}>{help}</p>
         )
       )}
 
@@ -173,7 +173,7 @@ function FieldRow({
           href={field.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ display: "inline-block", marginTop: 3, fontSize: 11, color: "var(--ink-4)", textDecoration: "none" }}
+          style={{ display: "inline-block", marginTop: 3, fontSize: "var(--text-xs)", color: "var(--ink-4)", textDecoration: "none" }}
         >
           Belastingdienst ↗
         </a>
@@ -287,7 +287,7 @@ export function SimStepCard({
       <div style={{
         display: "flex", alignItems: "center", gap: 8, padding: "8px 14px",
         borderRadius: "var(--r)", background: "var(--paper-2)", border: "1px solid var(--hairline)",
-        fontSize: 13,
+        fontSize: "var(--text-sm)",
       }}>
         <span style={{
           width: 18, height: 18, borderRadius: 5, background: "var(--sage-600)", color: "white",
@@ -297,7 +297,7 @@ export function SimStepCard({
         </span>
         <span style={{ fontWeight: 500, color: "var(--ink)" }}>{t3(step.title, lang)}</span>
         {parts.length > 0 && (
-          <span style={{ color: "var(--ink-4)", fontSize: 12 }}>— {parts.join(" · ")}</span>
+          <span style={{ color: "var(--ink-4)", fontSize: "var(--text-xs)" }}>— {parts.join(" · ")}</span>
         )}
       </div>
     );
@@ -318,7 +318,7 @@ export function SimStepCard({
         padding: "11px 18px", borderBottom: "1px solid var(--hairline)",
         background: "var(--accent-soft)", display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap",
       }}>
-        <span className="eyebrow eyebrow-accent" style={{ fontSize: 11 }}>
+        <span className="eyebrow eyebrow-accent" style={{ fontSize: "var(--text-xs)" }}>
           {lang === "nl" ? `Stap ${stepIndex + 1} van ${totalSteps}`
             : lang === "fa" ? `مرحله ${stepIndex + 1} از ${totalSteps}`
             : `Step ${stepIndex + 1} of ${totalSteps}`}
@@ -326,7 +326,7 @@ export function SimStepCard({
         <span style={{
           width: 3, height: 3, borderRadius: "50%", background: "var(--ink-4)", display: "inline-block",
         }} />
-        <span style={{ fontSize: 14, fontWeight: 500, color: "var(--ink)" }}>
+        <span style={{ fontSize: "var(--text-sm)", fontWeight: 500, color: "var(--ink)" }}>
           {t3(step.title, lang)}
         </span>
       </div>
@@ -368,7 +368,7 @@ export function SimStepCard({
         display: "flex", justifyContent: "space-between", alignItems: "center",
         background: "var(--paper-2)",
       }}>
-        <span style={{ fontSize: 11, color: hasStepError ? "var(--danger)" : "var(--ink-4)", fontWeight: hasStepError ? 500 : 400 }}>
+        <span style={{ fontSize: "var(--text-xs)", color: hasStepError ? "var(--danger)" : "var(--ink-4)", fontWeight: hasStepError ? 500 : 400 }}>
           {hasStepError
             ? `⚠ ${validationErrors["_step"]}`
             : (lang === "nl" ? "Velden overslaan is toegestaan"
