@@ -61,7 +61,6 @@ function clientNav(t: (k: string) => string): NavItem[] {
     { to: "/deduction-checker", label: t("nav.deduction_checker"), icon: <Search size={15} /> },
     { to: "/tax-calendar",      label: t("nav.tax_calendar"),      icon: <Calendar size={15} /> },
     { to: "/tax-history",       label: t("nav.tax_history"),       icon: <ClipboardList size={15} /> },
-    { to: "/calculator",        label: "Calculator",               icon: <Calculator size={15} /> },
   ];
 }
 

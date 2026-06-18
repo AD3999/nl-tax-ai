@@ -1,7 +1,93 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 18 Jun 2026 — Web Push fix: applicationServerKey Uint8Array conversion
+> Last updated: 18 Jun 2026 — Phase 7 (Testing) + Phase 9 (Annual Maintenance) complete
+
+---
+
+## Session — 18 Jun 2026 · Phase 7 + Phase 9 + Calculator Access Control ✅ Complete
+
+### Calculator page — admin only
+
+`/calculator` was accessible to all users via the sidebar nav. Users must access the tax calculator only through the AI chatbot, not directly.
+
+| File | Change |
+|------|--------|
+| `frontend/src/components/AppSidebar.tsx` | Removed `/calculator` from user nav items |
+| `frontend/src/App.tsx` | Wrapped `/calculator` route in `AdminRoute` — non-admins redirected to `/` |
+
+### Phase 7 — Testing & QA ✅ Complete
+
+#### New test suites
+
+**`backend/apps/portal/tests.py`** (3 test classes, 18 tests)
+
+| Class | What it tests |
+|-------|---------------|
+| `PortalReminderTests` | Reminder creates `ReminderLog` + `PortalMessage`; `delivered=True`; push called when client_user exists; push skipped when no linked account; unauthenticated blocked |
+| `AccountantInvitationTests` | Send invitation; status starts `pending`; client can list/accept/decline; duplicate pending invitation rejected |
+| `EngagementMessagesTests` | Accountant reads messages thread; reminder message appears in thread after send |
+
+**`backend/apps/users/tests.py`** (5 test classes, 18 tests)
+
+| Class | What it tests |
+|-------|---------------|
+| `RegisterTests` | Client + accountant registration; duplicate email rejected; response includes JWT tokens |
+| `JWTAuthTests` | Obtain token; wrong password → 401; refresh token works |
+| `ProfileTests` | GET profile; email in response; unauthenticated blocked |
+| `PushVapidKeyTests` | Endpoint is public; response has `public_key` field |
+| `PushSubscribeTests` | Subscribe saves to DB; duplicate upserts (not duplicates); missing fields → 400; unsubscribe removes record; unauthenticated blocked |
+| `AccountantSetupTests` | Setup creates `AccountantProfile`; non-accountant role rejected |
+
+All tests run offline — push notifications are mocked, no Anthropic API key needed.
+
+#### Unified test runner
+
+**`scripts/run_tests.sh`** — single command to run all suites:
+
+```bash
+./scripts/run_tests.sh            # everything
+./scripts/run_tests.sh django     # Django tests only
+./scripts/run_tests.sh phase1     # validate.py only
+./scripts/run_tests.sh phase2     # RAG retrieval (requires OPENAI_API_KEY)
+./scripts/run_tests.sh phase3     # calculator scenarios only
+```
+
+Phase 2 tests are automatically skipped if `OPENAI_API_KEY` is not set.
+
+### Phase 9 — Annual Maintenance ✅ Complete
+
+**`scripts/year_rollover.py`** — run each September to prepare the next tax year.
+
+```bash
+python3 scripts/year_rollover.py              # 2026 → 2027
+python3 scripts/year_rollover.py --from 2027 --to 2028
+python3 scripts/year_rollover.py --dry-run    # preview only
+```
+
+What it does:
+- Reads `phase1/data/seed/tax_rules_{year}.json`
+- Bumps all IDs (`ZA-2026-001` → `ZA-2027-001`), sets `supersedes` to old ID
+- Resets `verification_status` to `"draft"` (requires manual re-verification)
+- Excludes year-specific rules with `effective_until ≤ {year}-12-31`
+  (e.g. SA-2026-001 startersaftrek ends 2026-12-31; DL deadline rules reset each year)
+- Dry-run showed: 25 rules carry forward, 3 excluded (`SA-2026-001`, `DL-2026-001`, `DL-2026-002`)
+- Runs `validate.py` on the new file automatically
+- Prints a checklist of manual steps (update values, verify, rebuild Phase 2 index)
+
+### Phase status after this session
+
+| Phase | Status |
+|-------|--------|
+| Phase 1 — Knowledge Base | ✅ Complete |
+| Phase 2 — RAG Pipeline | ✅ Complete |
+| Phase 3 — Tax Calculator | ✅ Complete |
+| Phase 4 — AI Response Layer | ✅ Complete |
+| Phase 5 — User Intake System | ✅ Complete |
+| Phase 6 — IB Return Guide | ✅ Complete |
+| Phase 7 — Testing & QA | ✅ Complete |
+| Phase 8 — Product Layer (Stripe) | ⏳ Deferred |
+| Phase 9 — Annual Maintenance | ✅ Complete |
 
 ---
 

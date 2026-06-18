@@ -145,7 +145,8 @@ function App() {
               <Route path="/intake"                 element={<IntakePage />} />
               <Route path="/tax-history"            element={<TaxHistoryPage />} />
               <Route path="/tax-calendar"           element={<TaxCalendarPage />} />
-              <Route path="/calculator"             element={<CalculatorPage />} />
+              {/* /calculator is admin-only — redirect others to /chat */}
+              <Route path="/calculator"             element={<AdminRoute><CalculatorPage /></AdminRoute>} />
               <Route path="/accountant/portal"           element={<AccountantPortalPage />} />
               <Route path="/accountant/clients/:id"      element={<AccountantClientPage />} />
               <Route path="/accountant/engagements/:id"  element={<AccountantEngagementPage />} />
