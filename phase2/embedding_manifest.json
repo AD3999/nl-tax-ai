@@ -3,5 +3,6 @@
   "model": "paraphrase-multilingual-mpnet-base-v2",
   "dimensions": 768,
   "chunk_count": 103,
-  "built_at": "2026-06-13T14:18:51.734048+00:00"
+  "built_at": "2026-06-13T14:18:51.734048+00:00",
+  "_note": "DEV ONLY. Before production deploy run: python phase2/build_index.py --provider openai --reset. Provider must be 'openai' on production."
 }

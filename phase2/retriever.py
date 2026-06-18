@@ -44,6 +44,13 @@ def _get_embed_fn(manifest: dict):
         from phase2.embeddings.embed_openai import embed_query
         return embed_query
     elif provider == "local":
+        try:
+            import sentence_transformers  # noqa: F401
+        except ImportError:
+            raise RuntimeError(
+                "embedding_manifest.json says provider='local' but sentence-transformers is not installed. "
+                "Rebuild the index with OpenAI: python phase2/build_index.py --provider openai --reset"
+            )
         from phase2.embeddings.embed_local import embed_query
         return embed_query
     else:
