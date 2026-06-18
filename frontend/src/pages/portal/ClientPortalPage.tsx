@@ -30,7 +30,7 @@ const TX = {
   type:           { nl: "Type", en: "Type", fa: "نوع" },
   viewTasks:      { nl: "Bekijk taken", en: "View tasks", fa: "مشاهده وظایف" },
   viewDocs:       { nl: "Bekijk documenten", en: "View documents", fa: "مشاهده اسناد" },
-  noEng:          { nl: "Geen actieve aangifte gevonden. Neem contact op met uw accountant.", en: "No active engagement found. Contact your accountant.", fa: "هیچ تعاملی یافت نشد. با حسابدار خود تماس بگیرید." },
+  noEng:          { nl: "Geen actieve aangifte gevonden. Neem contact op met uw accountant", en: "No active engagement found. Contact your accountant", fa: "هیچ تعاملی یافت نشد. با حسابدار خود تماس بگیرید" },
   uploadView:     { nl: "Uploaden & bekijken", en: "Upload & view", fa: "بارگذاری و مشاهده" },
   settingUp:      { nl: "Portal instellen…", en: "Setting up your portal…", fa: "در حال راه‌اندازی پورتال…" },
   retry:          { nl: "Opnieuw proberen", en: "Retry", fa: "تلاش مجدد" },

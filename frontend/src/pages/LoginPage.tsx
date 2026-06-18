@@ -66,7 +66,7 @@ export default function LoginPage() {
       setUser(profile);
       if (profile?.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
       showToast(
-        lang === "nl" ? "Ingelogd! Welkom terug." : lang === "fa" ? "وارد شدید! خوش آمدید." : "Logged in! Welcome back.",
+        lang === "nl" ? "Ingelogd! Welkom terug" : lang === "fa" ? "وارد شدید! خوش آمدید" : "Logged in! Welcome back",
         "success",
       );
       navigate("/chat");

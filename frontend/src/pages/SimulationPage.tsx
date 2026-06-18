@@ -163,9 +163,9 @@ function OverviewStep({ answers, lang, onGoToChat }: {
     calculateTax(profile as Parameters<typeof calculateTax>[0])
       .then(setResult)
       .catch(() => setError(
-        lang === "nl" ? "Berekening niet beschikbaar — controleer uw gegevens."
-        : lang === "fa" ? "محاسبه در دسترس نیست — اطلاعات خود را بررسی کنید."
-        : "Calculation unavailable — check your data."
+        lang === "nl" ? "Berekening niet beschikbaar — controleer uw gegevens"
+        : lang === "fa" ? "محاسبه در دسترس نیست — اطلاعات خود را بررسی کنید"
+        : "Calculation unavailable — check your data"
       ))
       .finally(() => setLoading(false));
   }, [answers, lang]);

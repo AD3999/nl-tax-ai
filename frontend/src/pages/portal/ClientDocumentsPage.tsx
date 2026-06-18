@@ -42,7 +42,7 @@ const TX = {
   back:       { nl: "← Terug",              en: "← Back",              fa: "← بازگشت" },
   upload:     { nl: "Document uploaden",    en: "Upload document",     fa: "بارگذاری سند" },
   uploading:  { nl: "Bezig…",               en: "Uploading…",          fa: "در حال بارگذاری…" },
-  empty:      { nl: "Geen documenten geüpload.", en: "No documents uploaded yet.", fa: "هنوز سندی بارگذاری نشده." },
+  empty:      { nl: "Geen documenten geüpload", en: "No documents uploaded yet", fa: "هنوز سندی بارگذاری نشده" },
   accepted:   { nl: "Typen",                en: "Types accepted",      fa: "انواع قابل قبول" },
   view:       { nl: "Bekijken",             en: "View",                fa: "مشاهده" },
   delete:     { nl: "Verwijderen",          en: "Delete",              fa: "حذف" },

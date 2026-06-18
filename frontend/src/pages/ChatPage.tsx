@@ -431,9 +431,9 @@ export default function ChatPage() {
         "success",
       );
       const confirmText: Record<string, string> = {
-        nl: "✓ Uw belastingprofiel is opgeslagen. Bekijk uw dashboard voor het volledige overzicht.",
-        en: "✓ Your tax profile has been saved. Visit your dashboard to see the full overview.",
-        fa: "✓ پروفایل مالیاتی شما ذخیره شد. برای مشاهده خلاصه کامل به داشبورد مراجعه کنید.",
+        nl: "✓ Uw belastingprofiel is opgeslagen. Bekijk uw dashboard voor het volledige overzicht",
+        en: "✓ Your tax profile has been saved. Visit your dashboard to see the full overview",
+        fa: "✓ پروفایل مالیاتی شما ذخیره شد. برای مشاهده خلاصه کامل به داشبورد مراجعه کنید",
       };
       setMessages(prev => [...prev, {
         id: `save-confirmed-${Date.now()}`,
@@ -614,9 +614,9 @@ export default function ChatPage() {
         // Ask authenticated users if they want to persist data to their dashboard
         if (user) {
           const savePromptText: Record<string, string> = {
-            nl: "Wilt u uw belastingprofiel opslaan in uw dashboard? Dan heeft u het altijd bij de hand en kan ik uw situatie in toekomstige gesprekken onthouden.",
-            en: "Would you like to save your tax profile to your dashboard? This lets me remember your situation in future conversations.",
-            fa: "آیا می‌خواهید پروفایل مالیاتی خود را در داشبورد ذخیره کنید؟ این کار به من اجازه می‌دهد وضعیت شما را در مکالمات آینده به خاطر بسپارم.",
+            nl: "Wilt u uw belastingprofiel opslaan in uw dashboard? Dan heeft u het altijd bij de hand en kan ik uw situatie in toekomstige gesprekken onthouden",
+            en: "Would you like to save your tax profile to your dashboard? This lets me remember your situation in future conversations",
+            fa: "آیا می‌خواهید پروفایل مالیاتی خود را در داشبورد ذخیره کنید؟ این کار به من اجازه می‌دهد وضعیت شما را در مکالمات آینده به خاطر بسپارم",
           };
           setMessages(prev => [...prev, {
             id: `save-prompt-${Date.now()}`,

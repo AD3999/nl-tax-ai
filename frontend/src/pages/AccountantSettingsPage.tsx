@@ -192,9 +192,9 @@ export default function AccountantSettingsPage() {
 
       {contrastBlocked && (
         <p style={{ fontSize: "var(--text-xs)", color: "var(--danger)", marginBottom: "var(--sp-2)" }}>
-          {isFA ? "رنگ برند باید حداقل کنتراست ۴.۵:۱ را بر روی یک پس‌زمینه داشته باشد (WCAG AA)."
-                : isNL ? "Accentkleur moet minimaal 4,5:1 contrast hebben op één achtergrond (WCAG AA)."
-                : "Brand color must pass 4.5:1 contrast on at least one background (WCAG AA)."}
+          {isFA ? "رنگ برند باید حداقل کنتراست ۴.۵:۱ را بر روی یک پس‌زمینه داشته باشد (WCAG AA)"
+                : isNL ? "Accentkleur moet minimaal 4,5:1 contrast hebben op één achtergrond (WCAG AA)"
+                : "Brand color must pass 4.5:1 contrast on at least one background (WCAG AA)"}
         </p>
       )}
       <button

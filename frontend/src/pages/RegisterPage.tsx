@@ -120,14 +120,14 @@ export default function RegisterPage() {
   };
 
   const EMAIL_TAKEN: Record<string, string> = {
-    nl: "Er bestaat al een account met dit e-mailadres.",
-    en: "An account with this email address already exists.",
-    fa: "یک حساب با این آدرس ایمیل قبلاً ثبت شده است.",
+    nl: "Er bestaat al een account met dit e-mailadres",
+    en: "An account with this email address already exists",
+    fa: "یک حساب با این آدرس ایمیل قبلاً ثبت شده است",
   };
   const PW_WEAK: Record<string, string> = {
-    nl: "Wachtwoord is te zwak of te kort (min. 8 tekens).",
-    en: "Password is too weak or too short (min. 8 characters).",
-    fa: "رمز عبور خیلی ضعیف یا کوتاه است (حداقل ۸ کاراکتر).",
+    nl: "Wachtwoord is te zwak of te kort (min. 8 tekens)",
+    en: "Password is too weak or too short (min. 8 characters)",
+    fa: "رمز عبور خیلی ضعیف یا کوتاه است (حداقل ۸ کاراکتر)",
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -149,7 +149,7 @@ export default function RegisterPage() {
       setUser(result.user);
       if (result.user.id) localStorage.setItem("taxwijs_user_id", String(result.user.id));
       showToast(
-        lang === "nl" ? "Account aangemaakt! Welkom bij TaxWijs." : lang === "fa" ? "حساب ایجاد شد! به TaxWijs خوش آمدید." : "Account created! Welcome to TaxWijs.",
+        lang === "nl" ? "Account aangemaakt! Welkom bij TaxWijs" : lang === "fa" ? "حساب ایجاد شد! به TaxWijs خوش آمدید" : "Account created! Welcome to TaxWijs",
         "success",
       );
       navigate(isAccountant ? "/accountant/portal" : "/intake");
@@ -331,10 +331,10 @@ export default function RegisterPage() {
                   </div>
                   <p style={{ fontSize: 12, color: "var(--ink-4)", margin: 0 }}>
                     {lang === "nl"
-                      ? "Na registratie kunt u uw profiel voltooien in het accountantsportaal."
+                      ? "Na registratie kunt u uw profiel voltooien in het accountantsportaal"
                       : lang === "fa"
-                      ? "پس از ثبت‌نام، می‌توانید پروفایل خود را در پورتال حسابداران تکمیل کنید."
-                      : "After signing up you can complete your profile in the accountant portal."}
+                      ? "پس از ثبت‌نام، می‌توانید پروفایل خود را در پورتال حسابداران تکمیل کنید"
+                      : "After signing up you can complete your profile in the accountant portal"}
                   </p>
                 </>
               )}

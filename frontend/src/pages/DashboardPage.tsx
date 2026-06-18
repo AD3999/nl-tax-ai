@@ -374,9 +374,9 @@ function PDFDownloadCard({ lang }: { lang: "nl" | "en" | "fa" }) {
       </div>
       <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginBottom: 12, lineHeight: 1.5 }}>
         {L(
-          "Bevat: belastingberekening, aftrekposten, risico's, deadlines, optimalisatietips en bronvermelding.",
-          "Includes: tax calculation, deductions, risks, deadlines, optimization tips and source citations.",
-          "شامل: محاسبه مالیات، کسورات، ریسک‌ها، مهلت‌ها، نکات بهینه‌سازی و منابع.",
+          "Bevat: belastingberekening, aftrekposten, risico's, deadlines, optimalisatietips en bronvermelding",
+          "Includes: tax calculation, deductions, risks, deadlines, optimization tips and source citations",
+          "شامل: محاسبه مالیات، کسورات، ریسک‌ها، مهلت‌ها، نکات بهینه‌سازی و منابع",
         )}
       </div>
       {error && (

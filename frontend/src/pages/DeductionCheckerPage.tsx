@@ -43,7 +43,7 @@ const TX: Record<Lang, Record<string, string | ((n: number) => string)>> = {
   nl: {
     badge: "Gratis scan",
     title: "Welke belastingaftrekken mis ik?",
-    subtitle: "Beantwoord 10 vragen en ontdek welke Nederlandse belastingkansen voor u gelden.",
+    subtitle: "Beantwoord 10 vragen en ontdek welke Nederlandse belastingkansen voor u gelden",
     next: "Volgende →",
     back: "← Terug",
     see_results: "Bekijk resultaten →",
@@ -57,22 +57,22 @@ const TX: Record<Lang, Record<string, string | ((n: number) => string)>> = {
     cta_calc: "Bereken exacte belasting →",
     cta_chat: "Vraag de belasting-AI →",
     non_zzp_title: "Deze scanner is geoptimaliseerd voor ZZP'ers",
-    non_zzp_sub: "We bouwen flows voor werknemers, expats en DGA's. Laat uw e-mail achter om als eerste te weten wanneer dit beschikbaar is.",
+    non_zzp_sub: "We bouwen flows voor werknemers, expats en DGA's. Laat uw e-mail achter om als eerste te weten wanneer dit beschikbaar is",
     non_zzp_cta: "Stel mij op de hoogte",
-    waitlist_done: "Bedankt — we sturen u een bericht zodra uw profiel beschikbaar is.",
+    waitlist_done: "Bedankt — we sturen u een bericht zodra uw profiel beschikbaar is",
     email_placeholder: "uw@email.nl",
     // Step labels
     q_user_type: "Wat beschrijft uw situatie het beste?",
     q_profit: "Wat is uw geschatte jaarwinst na zakelijke kosten?",
-    q_profit_hint: "Een schatting is prima — dit hoeft niet exact te zijn.",
+    q_profit_hint: "Een schatting is prima — dit hoeft niet exact te zijn",
     q_profit_placeholder: "bijv. 45000",
     q_hours: "Hoeveel uur werkte u in 2026 aan uw bedrijf?",
-    q_hours_hint: "Het urencriterium (1.225 uur) is vereist voor de zelfstandigenaftrek.",
+    q_hours_hint: "Het urencriterium (1.225 uur) is vereist voor de zelfstandigenaftrek",
     q_starter: "Bent u een starter — is dit één van uw eerste 5 ondernemersjaren?",
-    q_starter_hint: "De startersaftrek is alleen beschikbaar in de eerste 3 jaar als ondernemer.",
+    q_starter_hint: "De startersaftrek is alleen beschikbaar in de eerste 3 jaar als ondernemer",
     q_starter_times: "Hoe vaak heeft u de startersaftrek al gebruikt?",
     q_expenses: "Welke zakelijke kosten had u in 2026?",
-    q_expenses_hint: "Selecteer alles wat van toepassing is. Klik Volgende als u klaar bent.",
+    q_expenses_hint: "Selecteer alles wat van toepassing is. Klik Volgende als u klaar bent",
     q_expenses_none: "Geen van bovenstaande",
     q_assets: "Kocht u zakelijke apparatuur of middelen boven €450?",
     q_assets_hint: "Laptop, camera, gereedschap, machines, meubilair — per aankoop boven €450.",
@@ -84,7 +84,7 @@ const TX: Record<Lang, Record<string, string | ((n: number) => string)>> = {
   en: {
     badge: "Free scan",
     title: "Which tax deductions am I missing?",
-    subtitle: "Answer 10 questions and discover which Dutch tax opportunities apply to you.",
+    subtitle: "Answer 10 questions and discover which Dutch tax opportunities apply to you",
     next: "Next →",
     back: "← Back",
     see_results: "See results →",
@@ -98,21 +98,21 @@ const TX: Record<Lang, Record<string, string | ((n: number) => string)>> = {
     cta_calc: "Calculate exact tax →",
     cta_chat: "Ask the tax AI →",
     non_zzp_title: "This checker is currently optimised for ZZP freelancers",
-    non_zzp_sub: "We are building flows for employees, expats, and DGA directors. Leave your email to be first to know when it launches.",
+    non_zzp_sub: "We are building flows for employees, expats, and DGA directors. Leave your email to be first to know when it launches",
     non_zzp_cta: "Notify me",
-    waitlist_done: "Thank you — we will notify you when your profile type is available.",
+    waitlist_done: "Thank you — we will notify you when your profile type is available",
     email_placeholder: "your@email.com",
     q_user_type: "What best describes your situation?",
     q_profit: "What is your estimated yearly profit after business expenses?",
-    q_profit_hint: "An estimate is fine — this does not need to be exact.",
+    q_profit_hint: "An estimate is fine — this does not need to be exact",
     q_profit_placeholder: "e.g. 45000",
     q_hours: "How many hours did you work on your business in 2026?",
-    q_hours_hint: "The 1,225-hour threshold (urencriterium) is required for the self-employed deduction.",
+    q_hours_hint: "The 1,225-hour threshold (urencriterium) is required for the self-employed deduction",
     q_starter: "Are you a starter — is this one of your first 5 years as an entrepreneur?",
-    q_starter_hint: "Startersaftrek is only available in the first 3 years of entrepreneurship.",
+    q_starter_hint: "Startersaftrek is only available in the first 3 years of entrepreneurship",
     q_starter_times: "How many times have you already claimed startersaftrek?",
     q_expenses: "Which business expenses did you have in 2026?",
-    q_expenses_hint: "Select all that apply. Click Next when done.",
+    q_expenses_hint: "Select all that apply. Click Next when done",
     q_expenses_none: "None of the above",
     q_assets: "Did you purchase business assets above €450?",
     q_assets_hint: "Laptop, camera, tools, machinery, furniture — per purchase above €450.",
@@ -124,7 +124,7 @@ const TX: Record<Lang, Record<string, string | ((n: number) => string)>> = {
   fa: {
     badge: "اسکن رایگان",
     title: "کدام کسورات مالیاتی را از دست می‌دهم؟",
-    subtitle: "۱۰ سوال پاسخ دهید تا بدانید کدام فرصت‌های مالیاتی هلند برای شما اعمال می‌شود.",
+    subtitle: "۱۰ سوال پاسخ دهید تا بدانید کدام فرصت‌های مالیاتی هلند برای شما اعمال می‌شود",
     next: "بعدی ←",
     back: "→ قبلی",
     see_results: "نتایج را ببین ←",
@@ -138,24 +138,24 @@ const TX: Record<Lang, Record<string, string | ((n: number) => string)>> = {
     cta_calc: "محاسبه مالیات دقیق ←",
     cta_chat: "از هوش مصنوعی بپرس ←",
     non_zzp_title: "این اسکنر در حال حاضر برای ZZP‌ها بهینه شده است",
-    non_zzp_sub: "در حال ساخت جریان‌هایی برای کارمندان، اکسپت‌ها و مدیران DGA هستیم. ایمیلتان را بگذارید.",
+    non_zzp_sub: "در حال ساخت جریان‌هایی برای کارمندان، اکسپت‌ها و مدیران DGA هستیم. ایمیلتان را بگذارید",
     non_zzp_cta: "اطلاع‌رسانی کنید",
-    waitlist_done: "ممنون — وقتی پروفایل شما در دسترس باشد اطلاع می‌دهیم.",
+    waitlist_done: "ممنون — وقتی پروفایل شما در دسترس باشد اطلاع می‌دهیم",
     email_placeholder: "ایمیل@شما.com",
     q_user_type: "وضعیت شما را بهتر توصیف می‌کند؟",
     q_profit: "سود سالانه تخمینی شما پس از هزینه‌های تجاری چقدر است؟",
-    q_profit_hint: "تخمین کافی است — لازم نیست دقیق باشد.",
+    q_profit_hint: "تخمین کافی است — لازم نیست دقیق باشد",
     q_profit_placeholder: "مثلاً ۴۵۰۰۰",
     q_hours: "در سال ۲۰۲۶ چند ساعت روی کسب‌وکارتان کار کردید؟",
-    q_hours_hint: "سقف ۱٬۲۲۵ ساعت (urencriterium) برای کسر zelfstandigenaftrek الزامی است.",
+    q_hours_hint: "سقف ۱٬۲۲۵ ساعت (urencriterium) برای کسر zelfstandigenaftrek الزامی است",
     q_starter: "آیا تازه‌کار هستید — آیا این یکی از پنج سال اول کارآفرینی شماست؟",
-    q_starter_hint: "startersaftrek فقط در سه سال اول کارآفرینی در دسترس است.",
+    q_starter_hint: "startersaftrek فقط در سه سال اول کارآفرینی در دسترس است",
     q_starter_times: "چند بار از startersaftrek استفاده کرده‌اید؟",
     q_expenses: "در سال ۲۰۲۶ چه هزینه‌های تجاری داشتید؟",
-    q_expenses_hint: "همه موارد مرتبط را انتخاب کنید. پس از اتمام روی بعدی کلیک کنید.",
+    q_expenses_hint: "همه موارد مرتبط را انتخاب کنید. پس از اتمام روی بعدی کلیک کنید",
     q_expenses_none: "هیچ‌کدام",
     q_assets: "آیا دارایی‌های تجاری بالای €۴۵۰ خریداری کردید؟",
-    q_assets_hint: "لپ‌تاپ، دوربین، ابزار، ماشین‌آلات، مبلمان — هر خرید بالای €۴۵۰.",
+    q_assets_hint: "لپ‌تاپ، دوربین، ابزار، ماشین‌آلات، مبلمان — هر خرید بالای €۴۵۰",
     q_asset_amount: "مبلغ تقریبی کل سرمایه‌گذاری چقدر است؟",
     q_asset_placeholder: "مثلاً ۳۵۰۰",
     q_btw: "وضعیت مالیات بر ارزش افزوده (BTW) شما چیست؟",
@@ -253,20 +253,20 @@ function computeDeductions(answers: Answers, lang: Lang): DeductionResult[] {
     id: "za", status: zaStatus,
     title: "Zelfstandigenaftrek — €1.200",
     reason: {
-      nl: zaStatus === "likely"    ? "U werkte 1.225+ uur — u voldoet aan het urencriterium."
-        : zaStatus === "not_likely"? "Minder dan 500 uur werken kwalificeert niet voor deze aftrek."
-        : "Bijhouden tot jaareinde kan nog. 1.225 uur vereist.",
-      en: zaStatus === "likely"    ? "You worked 1,225+ hours — you meet the urencriterium."
-        : zaStatus === "not_likely"? "Fewer than 500 hours does not qualify for this deduction."
-        : "You can still track hours until year-end. 1,225 required.",
-      fa: zaStatus === "likely"    ? "۱٬۲۲۵+ ساعت کار کردید — شرط ساعتی را برآورده می‌کنید."
-        : zaStatus === "not_likely"? "کمتر از ۵۰۰ ساعت برای این کسر واجد شرایط نیست."
-        : "هنوز می‌توانید ساعات را تا پایان سال ثبت کنید. ۱٬۲۲۵ ساعت لازم است.",
+      nl: zaStatus === "likely"    ? "U werkte 1.225+ uur — u voldoet aan het urencriterium"
+        : zaStatus === "not_likely"? "Minder dan 500 uur werken kwalificeert niet voor deze aftrek"
+        : "Bijhouden tot jaareinde kan nog. 1.225 uur vereist",
+      en: zaStatus === "likely"    ? "You worked 1,225+ hours — you meet the urencriterium"
+        : zaStatus === "not_likely"? "Fewer than 500 hours does not qualify for this deduction"
+        : "You can still track hours until year-end. 1,225 required",
+      fa: zaStatus === "likely"    ? "۱٬۲۲۵+ ساعت کار کردید — شرط ساعتی را برآورده می‌کنید"
+        : zaStatus === "not_likely"? "کمتر از ۵۰۰ ساعت برای این کسر واجد شرایط نیست"
+        : "هنوز می‌توانید ساعات را تا پایان سال ثبت کنید. ۱٬۲۲۵ ساعت لازم است",
     }[lang],
     action: {
-      nl: "Houd een urenregistratie bij. €1.200 aftrek verlaagt uw belastbare winst.",
-      en: "Keep a timesheet or diary. €1,200 deduction reduces your taxable profit.",
-      fa: "یک دفترچه ساعات نگه دارید. کسر €۱٬۲۰۰ سود مشمول مالیات شما را کاهش می‌دهد.",
+      nl: "Houd een urenregistratie bij. €1.200 aftrek verlaagt uw belastbare winst",
+      en: "Keep a timesheet or diary. €1,200 deduction reduces your taxable profit",
+      fa: "یک دفترچه ساعات نگه دارید. کسر €۱٬۲۰۰ سود مشمول مالیات شما را کاهش می‌دهد",
     }[lang],
   });
 
@@ -282,20 +282,20 @@ function computeDeductions(answers: Answers, lang: Lang): DeductionResult[] {
     id: "sa", status: saStatus,
     title: "Startersaftrek — €2.123 (laatste jaar!)",
     reason: {
-      nl: saStatus === "likely"    ? "U bent starter met nog startersaftrek-ruimte. Dit is het LAATSTE jaar — na 2026 vervalt de aftrek."
-        : saStatus === "not_likely"? "U bent geen starter of heeft de aftrek al 3× gebruikt."
-        : "Controleer of dit uw eerste 3 jaar als ondernemer is.",
-      en: saStatus === "likely"    ? "You are a starter with remaining claims. This is the LAST year — abolished from 2027."
-        : saStatus === "not_likely"? "You are not a starter or have already claimed it 3 times."
-        : "Verify whether this is within your first 3 years as an entrepreneur.",
-      fa: saStatus === "likely"    ? "تازه‌کار هستید و ظرفیت startersaftrek دارید. این آخرین سال است — از ۲۰۲۷ حذف می‌شود."
-        : saStatus === "not_likely"? "تازه‌کار نیستید یا سه بار از این کسر استفاده کرده‌اید."
-        : "بررسی کنید آیا در سه سال اول کارآفرینی هستید.",
+      nl: saStatus === "likely"    ? "U bent starter met nog startersaftrek-ruimte. Dit is het LAATSTE jaar — na 2026 vervalt de aftrek"
+        : saStatus === "not_likely"? "U bent geen starter of heeft de aftrek al 3× gebruikt"
+        : "Controleer of dit uw eerste 3 jaar als ondernemer is",
+      en: saStatus === "likely"    ? "You are a starter with remaining claims. This is the LAST year — abolished from 2027"
+        : saStatus === "not_likely"? "You are not a starter or have already claimed it 3 times"
+        : "Verify whether this is within your first 3 years as an entrepreneur",
+      fa: saStatus === "likely"    ? "تازه‌کار هستید و ظرفیت startersaftrek دارید. این آخرین سال است — از ۲۰۲۷ حذف می‌شود"
+        : saStatus === "not_likely"? "تازه‌کار نیستید یا سه بار از این کسر استفاده کرده‌اید"
+        : "بررسی کنید آیا در سه سال اول کارآفرینی هستید",
     }[lang],
     action: {
-      nl: "€2.123 bovenop zelfstandigenaftrek. Mis dit niet — dit is het laatste jaar.",
-      en: "€2,123 on top of zelfstandigenaftrek. Do not miss this — it is the last year.",
-      fa: "€۲٬۱۲۳ علاوه بر zelfstandigenaftrek. این را از دست ندهید — آخرین سال است.",
+      nl: "€2.123 bovenop zelfstandigenaftrek. Mis dit niet — dit is het laatste jaar",
+      en: "€2,123 on top of zelfstandigenaftrek. Do not miss this — it is the last year",
+      fa: "€۲٬۱۲۳ علاوه بر zelfstandigenaftrek. این را از دست ندهید — آخرین سال است",
     }[lang],
   });
 
@@ -304,14 +304,14 @@ function computeDeductions(answers: Answers, lang: Lang): DeductionResult[] {
     id: "mkb", status: "likely",
     title: "MKB-winstvrijstelling — 12,7%",
     reason: {
-      nl: "Geldt voor alle ZZP'ers — 12,7% van de winst na aftrekken. Geen uren vereist.",
-      en: "Applies to all ZZP — 12.7% of profit after deductions. No hour requirement.",
-      fa: "برای همه ZZP‌ها اعمال می‌شود — ۱۲٫۷٪ از سود پس از کسورات. بدون نیاز به ساعت.",
+      nl: "Geldt voor alle ZZP'ers — 12,7% van de winst na aftrekken. Geen uren vereist",
+      en: "Applies to all ZZP — 12.7% of profit after deductions. No hour requirement",
+      fa: "برای همه ZZP‌ها اعمال می‌شود — ۱۲٫۷٪ از سود پس از کسورات. بدون نیاز به ساعت",
     }[lang],
     action: {
-      nl: "Wordt automatisch verrekend. Zorg dat uw boekhouder het toepast.",
-      en: "Applied automatically. Confirm your accountant includes it.",
-      fa: "به طور خودکار اعمال می‌شود. مطمئن شوید حسابدارتان آن را لحاظ کرده است.",
+      nl: "Wordt automatisch verrekend. Zorg dat uw boekhouder het toepast",
+      en: "Applied automatically. Confirm your accountant includes it",
+      fa: "به طور خودکار اعمال می‌شود. مطمئن شوید حسابدارتان آن را لحاظ کرده است",
     }[lang],
   });
 
@@ -337,9 +337,9 @@ function computeDeductions(answers: Answers, lang: Lang): DeductionResult[] {
         : "هزینه‌های تجاری خود را مشخص کنید تا ارزیابی شود.",
     }[lang],
     action: {
-      nl: "Verzamel facturen en bonnetjes. Scheid zakelijk van privégebruik.",
-      en: "Collect invoices and receipts. Separate business from private use.",
-      fa: "فاکتورها و رسیدها را جمع‌آوری کنید. استفاده تجاری را از شخصی جدا کنید.",
+      nl: "Verzamel facturen en bonnetjes. Scheid zakelijk van privégebruik",
+      en: "Collect invoices and receipts. Separate business from private use",
+      fa: "فاکتورها و رسیدها را جمع‌آوری کنید. استفاده تجاری را از شخصی جدا کنید",
     }[lang],
   });
 
@@ -378,9 +378,9 @@ function computeDeductions(answers: Answers, lang: Lang): DeductionResult[] {
           : "مبلغ کل سرمایه‌گذاری را برای ارزیابی دقیق وارد کنید.",
     }[lang],
     action: {
-      nl: "28% aftrek op investeringsbedrag (€2.901–€70.602). Vraag uw boekhouder dit toe te passen.",
-      en: "28% deduction on investment amount (€2,901–€70,602). Ask your accountant to apply KIA.",
-      fa: "کسر ۲۸٪ از مبلغ سرمایه‌گذاری (€۲٬۹۰۱–€۷۰٬۶۰۲). از حسابدارتان بخواهید KIA را اعمال کند.",
+      nl: "28% aftrek op investeringsbedrag (€2.901–€70.602). Vraag uw boekhouder dit toe te passen",
+      en: "28% deduction on investment amount (€2,901–€70,602). Ask your accountant to apply KIA",
+      fa: "کسر ۲۸٪ از مبلغ سرمایه‌گذاری (€۲٬۹۰۱–€۷۰٬۶۰۲). از حسابدارتان بخواهید KIA را اعمال کند",
     }[lang],
   });
 
@@ -393,14 +393,14 @@ function computeDeductions(answers: Answers, lang: Lang): DeductionResult[] {
       fa: "مشارکت سلامت ZVW — ۴٫۸۵٪ (اجباری)",
     }[lang],
     reason: {
-      nl: "Elke ZZP'er betaalt 4,85% ZVW over de winst na aftrekken. Dit wordt vaak vergeten bij belastingreservering.",
-      en: "Every ZZP pays 4.85% ZVW on profit after deductions. Often forgotten when reserving for tax.",
-      fa: "هر ZZP باید ۴٫۸۵٪ ZVW از سود پس از کسورات بپردازد. اغلب در زمان ذخیره‌سازی مالیات فراموش می‌شود.",
+      nl: "Elke ZZP'er betaalt 4,85% ZVW over de winst na aftrekken. Dit wordt vaak vergeten bij belastingreservering",
+      en: "Every ZZP pays 4.85% ZVW on profit after deductions. Often forgotten when reserving for tax",
+      fa: "هر ZZP باید ۴٫۸۵٪ ZVW از سود پس از کسورات بپردازد. اغلب در زمان ذخیره‌سازی مالیات فراموش می‌شود",
     }[lang],
     action: {
-      nl: "Reserveer apart voor ZVW. Maximum €3.851/jaar (plafond bij €79.409 winst).",
-      en: "Reserve separately for ZVW. Maximum €3,851/year (ceiling at €79,409 profit).",
-      fa: "جداگانه برای ZVW ذخیره کنید. حداکثر €۳٬۸۵۱/سال (سقف €۷۹٬۴۰۹ سود).",
+      nl: "Reserveer apart voor ZVW. Maximum €3.851/jaar (plafond bij €79.409 winst)",
+      en: "Reserve separately for ZVW. Maximum €3,851/year (ceiling at €79,409 profit)",
+      fa: "جداگانه برای ZVW ذخیره کنید. حداکثر €۳٬۸۵۱/سال (سقف €۷۹٬۴۰۹ سود)",
     }[lang],
   });
 
@@ -427,9 +427,9 @@ function computeDeductions(answers: Answers, lang: Lang): DeductionResult[] {
         : "jaarruimte خود را بررسی کنید. به عنوان ZZP بازنشستگی کارفرمایی ندارید — این بسیار مهم است.",
     }[lang],
     action: {
-      nl: "Jaarruimte = 30% × (winst − €19.172). Stort vóór 31 december bij een erkende verzekeraar.",
-      en: "Jaarruimte = 30% × (profit − €19,172). Deposit before 31 December at a recognised insurer.",
-      fa: "jaarruimte = ۳۰٪ × (سود − €۱۹٬۱۷۲). قبل از ۳۱ دسامبر نزد یک بیمه‌گر معتبر واریز کنید.",
+      nl: "Jaarruimte = 30% × (winst − €19.172). Stort vóór 31 december bij een erkende verzekeraar",
+      en: "Jaarruimte = 30% × (profit − €19,172). Deposit before 31 December at a recognised insurer",
+      fa: "jaarruimte = ۳۰٪ × (سود − €۱۹٬۱۷۲). قبل از ۳۱ دسامبر نزد یک بیمه‌گر معتبر واریز کنید",
     }[lang],
   });
 

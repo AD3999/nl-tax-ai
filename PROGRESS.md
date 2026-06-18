@@ -1,7 +1,47 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 18 Jun 2026 — Phase 7 (Testing) + Phase 9 (Annual Maintenance) complete
+> Last updated: 18 Jun 2026 — Trailing dot removal sweep + Persian RTL mini card fix
+
+---
+
+## Session — 18 Jun 2026 · UI String Polish — Trailing Dots + Persian RTL Fix ✅ Complete
+
+### Trailing dot removal — all UI strings across all pages
+
+Removed all sentence-ending trailing dots from UI strings across 14 files in 3 languages (NL/EN/FA). Stylistic dot-separators in short taglines were replaced with ` · ` (middle dot with spaces) for visual rhythm without sentence-end punctuation.
+
+| File | Changes |
+|------|---------|
+| `LandingPage.tsx` | ~50 string values cleaned: hero, positioning, features, howItWorks, accountant, safety, FAQ, finalCta sections. Trust tagline and accountant h2 separators changed from `". "` to `" · "` |
+| `DeductionCheckerPage.tsx` | subtitle, hints, and all computed deduction reason/action strings |
+| `DashboardPage.tsx` | Report description strings (nl/en/fa) |
+| `RegisterPage.tsx` | EMAIL_TAKEN/PW_WEAK errors, welcome toast, accountant portal note |
+| `LoginPage.tsx` | Login success toast message |
+| `AccountantSettingsPage.tsx` | WCAG contrast warning message |
+| `ClientProfilePage.tsx` | confirmDeleteBody, cookieHint |
+| `SimulationPage.tsx` | Calculation error message |
+| `ChatPage.tsx` | Profile save confirmation + save prompt messages |
+| `portal/ClientDocumentsPage.tsx` | Empty state message |
+| `portal/ClientPortalPage.tsx` | No engagement notice |
+| `i18n/locales/en.json` | subheadline |
+| `i18n/locales/nl.json` | subheadline |
+| `i18n/locales/fa.json` | subheadline |
+
+Long-form article pages (`ZZPTaxPage.tsx`, `ExpatTaxPage.tsx`) intentionally left unchanged — trailing dots are legitimate sentence endings in prose content.
+
+### Persian RTL mini card positioning fix
+
+Hero section floating cards were positioned using `left`/`right` CSS properties which don't auto-flip in RTL, causing them to overflow or misalign in the Persian layout.
+
+**Fix**: replaced physical properties with CSS logical properties that respect the inherited `dir` attribute from `<main dir="rtl">`:
+
+| Card | Before | After |
+|------|--------|-------|
+| "Documents / 2 missing" chip | `left: -28` | `insetInlineStart: -28` |
+| "€14,736 / Box 1 · 2026" chip | `right: -24` | `insetInlineEnd: -24` |
+
+`insetInlineStart` maps to `left` in LTR and `right` in RTL; `insetInlineEnd` maps to `right` in LTR and `left` in RTL — no JS conditionals needed.
 
 ---
 
