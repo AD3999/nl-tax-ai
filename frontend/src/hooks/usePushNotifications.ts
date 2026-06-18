@@ -1,8 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiBase, authHeader } from "../api/client";
 
-
 export type PushPermission = "default" | "granted" | "denied" | "unsupported";
+
+// Safari and some Android browsers reject a bare base64url string as applicationServerKey.
+// All browsers accept a Uint8Array, so we always convert.
+function urlBase64ToUint8Array(base64Url: string): Uint8Array {
+  const padding = "=".repeat((4 - (base64Url.length % 4)) % 4);
+  const base64 = (base64Url + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
 
 export function usePushNotifications() {
   const [permission, setPermission] = useState<PushPermission>("default");
@@ -50,9 +60,12 @@ export function usePushNotifications() {
     try {
       sub = await reg.pushManager.subscribe({
         userVisibleOnly:      true,
-        applicationServerKey: vapidPublicKey,
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
       });
-    } catch { return false; }
+    } catch (err) {
+      console.error("pushManager.subscribe() failed:", err);
+      return false;
+    }
 
     // Send subscription to backend
     const subJson = sub.toJSON();

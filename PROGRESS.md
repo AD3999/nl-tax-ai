@@ -1,7 +1,29 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 18 Jun 2026 — Font-size tokenization sweep + AI artifact cleanup complete
+> Last updated: 18 Jun 2026 — Web Push fix: applicationServerKey Uint8Array conversion
+
+---
+
+## Session — 18 Jun 2026 · Web Push Notification Fix ✅ Complete
+
+### Root cause
+
+`pushManager.subscribe()` was silently failing on mobile (iOS Safari, some Android browsers) because `applicationServerKey` was passed as a raw base64url string. The Web Push spec accepts a DOMString in Chrome desktop, but all mobile browsers require a `Uint8Array`. The subscription was never created, so the backend had no endpoint to deliver to.
+
+### Changes
+
+| File | Change |
+|------|--------|
+| `frontend/src/hooks/usePushNotifications.ts` | Added `urlBase64ToUint8Array()` helper; applied it to `applicationServerKey`; improved error logging on subscribe failure |
+| `frontend/src/main.tsx` | Added SW pre-registration at app startup (independent of user clicking "Enable") |
+
+### How to re-test
+
+1. User must **re-subscribe** — any previous subscription registered with the old string key may be stale.
+2. App must be served over **HTTPS** (push fails on plain HTTP).
+3. On **iOS**: user must first "Add to Home Screen" (PWA install), then open from Home Screen and enable notifications. Regular Safari browser tabs do not support Web Push on iOS.
+4. Backend diagnostic: `python manage.py test_push --email user@example.com` — reports VAPID config, subscription count, and delivery result.
 
 ---
 
