@@ -50,6 +50,7 @@ function UnitInput({ label, unit, value, onChange, placeholder, hint }: { label:
           type="number"
           inputMode="decimal"
           min="0"
+          autoComplete="off"
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
@@ -296,7 +297,7 @@ export default function IntakePage() {
                   <UnitInput label={t("intake.salary")} unit="€" value={salary} onChange={setSalary} placeholder="90000" />
                   <div>
                     <label htmlFor="intake-ruling-year" className="tw-label">{t("intake.ruling_year")}</label>
-                    <select id="intake-ruling-year" className="tw-input" value={rulingYear} onChange={e => setRulingYear(e.target.value)} style={{ fontSize: 16 }}>
+                    <select id="intake-ruling-year" className="tw-input" autoComplete="off" value={rulingYear} onChange={e => setRulingYear(e.target.value)} style={{ fontSize: 16 }}>
                       {[1, 2, 3, 4, 5].map(y => <option key={y} value={y}>{t("intake.year_n", { n: y })}</option>)}
                     </select>
                   </div>
@@ -333,7 +334,7 @@ export default function IntakePage() {
                 )}
                 <div>
                   <label htmlFor="intake-children" className="tw-label">{t("intake.children")}</label>
-                  <select id="intake-children" className="tw-input" value={children} onChange={e => setChildren(e.target.value)} style={{ fontSize: 16 }}>
+                  <select id="intake-children" className="tw-input" autoComplete="off" value={children} onChange={e => setChildren(e.target.value)} style={{ fontSize: 16 }}>
                     <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3+</option>
                   </select>
                 </div>
