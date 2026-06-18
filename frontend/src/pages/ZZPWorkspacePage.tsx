@@ -510,7 +510,8 @@ function VATTab({ t, summary }: { t: T; summary: ZZPSummary | null }) {
     <div>
       <div className="card" style={{ marginBottom: "var(--sp-4)" }}>
         <div style={{ fontWeight: 800, fontSize: "1.1rem", marginBottom: "var(--sp-4)" }}>{t.quarterlyVat} {summary.year}</div>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 520 }}>
           <thead>
             <tr style={{ borderBottom: "2px solid var(--border)" }}>
               <th style={{ padding: "var(--sp-3)", textAlign: "left", fontSize: "0.85rem", color: "var(--text-3)" }}>Kwartaal</th>
@@ -547,6 +548,7 @@ function VATTab({ t, summary }: { t: T; summary: ZZPSummary | null }) {
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
