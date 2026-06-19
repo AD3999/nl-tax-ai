@@ -64,67 +64,69 @@
   --leading-relaxed: 1.65;
 }
 
-/* ─── Dark theme (default) ───────────────────────────────────── */
+/* ─── Dark theme (default) — Deep Navy Professional ──────────── */
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* Slightly lighter dark backgrounds for less eye strain */
-  --bg:          oklch(0.22 0.022 265);
-  --bg-2:        oklch(0.25 0.025 265);
-  --bg-3:        oklch(0.29 0.027 265);
-  --bg-4:        oklch(0.33 0.030 265);
-  --bg-hover:    oklch(0.36 0.032 265);
-  --surface:     oklch(0.26 0.026 265);
+  /* Deep navy — financial-institution palette, hue 243 */
+  --bg:          oklch(0.13 0.048 243);
+  --bg-2:        oklch(0.16 0.050 243);
+  --bg-3:        oklch(0.20 0.052 243);
+  --bg-4:        oklch(0.25 0.054 243);
+  --bg-hover:    oklch(0.28 0.050 243);
+  --surface:     oklch(0.17 0.051 243);
 
-  --border:      oklch(0.33 0.026 265);
-  --border-2:    oklch(0.42 0.030 265);
-  --border-3:    oklch(0.52 0.034 265);
+  --border:      oklch(0.26 0.042 243);
+  --border-2:    oklch(0.36 0.046 243);
+  --border-3:    oklch(0.46 0.048 243);
 
-  --blue:        oklch(0.62 0.22 265);
-  --blue-hover:  oklch(0.58 0.22 265);
-  --blue-subtle: oklch(0.20 0.07 265);
-  --blue-border: oklch(0.34 0.10 265);
-  --blue-text:   oklch(0.76 0.18 265);
-  --link:        oklch(0.80 0.20 265);
+  /* Electric blue — glows against deep navy */
+  --blue:        oklch(0.65 0.22 265);
+  --blue-hover:  oklch(0.60 0.22 265);
+  --blue-subtle: oklch(0.17 0.08 255);
+  --blue-border: oklch(0.30 0.11 258);
+  --blue-text:   oklch(0.78 0.18 265);
+  --link:        oklch(0.82 0.20 265);
 
   --text:        oklch(0.96 0.008 265);
-  --text-2:      oklch(0.76 0.018 265);
-  --text-3:      oklch(0.58 0.014 265);
-  --text-4:      oklch(0.42 0.010 265);
+  --text-2:      oklch(0.78 0.018 265);
+  --text-3:      oklch(0.60 0.014 265);
+  --text-4:      oklch(0.44 0.010 265);
 
   --ok:           oklch(0.67 0.18 165);
-  --ok-subtle:    oklch(0.16 0.050 165);
-  --ok-border:    oklch(0.30 0.08 165);
+  --ok-subtle:    oklch(0.14 0.055 165);
+  --ok-border:    oklch(0.28 0.08 165);
   --ok-text:      oklch(0.76 0.15 165);
 
   --warn:         oklch(0.74 0.17 82);
-  --warn-subtle:  oklch(0.16 0.046 82);
-  --warn-border:  oklch(0.30 0.08 82);
+  --warn-subtle:  oklch(0.14 0.050 82);
+  --warn-border:  oklch(0.28 0.08 82);
   --warn-text:    oklch(0.82 0.14 82);
 
   --danger:        oklch(0.60 0.22 25);
-  --danger-subtle: oklch(0.16 0.060 25);
-  --danger-border: oklch(0.30 0.10 25);
+  --danger-subtle: oklch(0.14 0.065 25);
+  --danger-border: oklch(0.28 0.10 25);
   --danger-text:   oklch(0.74 0.18 25);
 
   --purple:        oklch(0.60 0.22 290);
-  --purple-subtle: oklch(0.16 0.058 290);
+  --purple-subtle: oklch(0.14 0.060 290);
   --purple-text:   oklch(0.74 0.18 290);
 
-  --sh-sm:    0 1px 3px oklch(0 0 0 / 0.40), 0 1px 2px oklch(0 0 0 / 0.28);
-  --sh-md:    0 4px 14px oklch(0 0 0 / 0.50), 0 2px 6px oklch(0 0 0 / 0.32);
-  --sh-lg:    0 10px 36px oklch(0 0 0 / 0.60), 0 4px 16px oklch(0 0 0 / 0.38);
-  --sh-focus: 0 0 0 2px var(--bg), 0 0 0 5px oklch(0.60 0.22 265);
-  --sh-blue:  0 0 0 1px var(--blue-border), 0 4px 20px oklch(0.60 0.22 265 / 0.18);
+  /* Deeper shadows suit the darker backgrounds */
+  --sh-sm:    0 1px 3px oklch(0 0 0 / 0.50), 0 1px 2px oklch(0 0 0 / 0.35);
+  --sh-md:    0 4px 16px oklch(0 0 0 / 0.60), 0 2px 6px oklch(0 0 0 / 0.42);
+  --sh-lg:    0 12px 40px oklch(0 0 0 / 0.70), 0 4px 18px oklch(0 0 0 / 0.48);
+  --sh-focus: 0 0 0 2px var(--bg), 0 0 0 5px oklch(0.62 0.22 265);
+  --sh-blue:  0 0 0 1px var(--blue-border), 0 4px 22px oklch(0.62 0.22 265 / 0.22);
 
   /* ── Legacy aliases (existing code keeps working) ── */
   --paper:       var(--bg);
   --paper-2:     var(--bg-2);
   --paper-3:     var(--bg-3);
   --paper-tint:  var(--bg-hover);
-  --paper-glass: oklch(0.22 0.022 265 / 0.90);
-  --glass-heavy: oklch(0.22 0.022 265 / 0.55);
+  --paper-glass: oklch(0.13 0.048 243 / 0.88);
+  --glass-heavy: oklch(0.13 0.048 243 / 0.55);
 
   --ink:         var(--text);
   --ink-2:       var(--text-2);
@@ -139,17 +141,17 @@
   --accent-soft: var(--blue-subtle);
   --accent-line: var(--blue-border);
 
-  /* sage-* → blue equivalents */
-  --sage-50:  oklch(0.13 0.045 265);
-  --sage-100: oklch(0.16 0.060 265);
-  --sage-200: oklch(0.20 0.080 265);
-  --sage-300: oklch(0.28 0.120 265);
-  --sage-400: oklch(0.38 0.160 265);
-  --sage-500: oklch(0.50 0.200 265);
+  /* sage-* — navy-anchored blue scale */
+  --sage-50:  oklch(0.10 0.052 243);
+  --sage-100: oklch(0.14 0.068 243);
+  --sage-200: oklch(0.19 0.090 248);
+  --sage-300: oklch(0.28 0.130 252);
+  --sage-400: oklch(0.38 0.170 258);
+  --sage-500: oklch(0.50 0.205 262);
   --sage-600: var(--blue);
   --sage-700: var(--blue-hover);
-  --sage-800: oklch(0.44 0.190 265);
-  --sage-900: oklch(0.36 0.160 265);
+  --sage-800: oklch(0.44 0.195 262);
+  --sage-900: oklch(0.36 0.165 258);
 
   --shadow-sm: var(--sh-sm);
   --shadow:    var(--sh-md);
@@ -158,10 +160,10 @@
   --ok-soft:     var(--ok-subtle);
   --warn-soft:   var(--warn-subtle);
   --danger-soft: var(--danger-subtle);
-  --info:        oklch(0.60 0.18 240);
-  --info-subtle: oklch(0.16 0.05 240);
-  --info-border: oklch(0.34 0.10 240);
-  --info-text:   oklch(0.76 0.15 240);
+  --info:        oklch(0.62 0.18 240);
+  --info-subtle: oklch(0.14 0.055 240);
+  --info-border: oklch(0.30 0.10 240);
+  --info-text:   oklch(0.78 0.15 240);
   --info-soft:   var(--info-subtle);
 }
 

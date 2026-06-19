@@ -1,7 +1,43 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 19 Jun 2026 — Hamburger menu glass effect
+> Last updated: 19 Jun 2026 — Deep Navy dark theme
+
+---
+
+## Session — 19 Jun 2026 · Dark Theme Overhaul — Deep Navy Professional ✅ Complete
+
+### Motivation
+
+The previous dark theme used a generic blue-gray palette (hue 265, L=0.22–0.36, chroma 0.022–0.030) that looked like a default programmer dark mode. For a financial product targeting ZZP workers, expats, and DGA directors, the aesthetic needed to signal trust, depth, and professional authority.
+
+### What changed
+
+**File:** `frontend/src/index.css` — entire `[data-theme="dark"]` block rewritten.
+
+| Property | Before | After |
+|----------|--------|-------|
+| Base hue | 265 (blue-violet, generic) | 243 (true navy) |
+| Background lightness | L=0.22 (too light) | L=0.13 (deep) |
+| Background chroma | 0.022–0.030 (flat) | 0.048–0.054 (rich) |
+| `--paper-glass` | `oklch(0.22 … 265 / 0.90)` | `oklch(0.13 … 243 / 0.88)` |
+| `--glass-heavy` | `oklch(0.22 … 265 / 0.55)` | `oklch(0.13 … 243 / 0.55)` |
+| Shadows | moderate | deeper (`0.50–0.70` alpha) |
+| sage-* scale | hue 265 | navy-anchored, hue 243→262 |
+
+### Palette summary
+
+```
+--bg:      oklch(0.13 0.048 243)  — deep ink navy     (#0c1220 range)
+--bg-2:    oklch(0.16 0.050 243)  — steel navy
+--bg-3:    oklch(0.20 0.052 243)  — navy panel
+--bg-4:    oklch(0.25 0.054 243)  — raised card
+--border:  oklch(0.26 0.042 243)  — subtle edge
+--border-2:oklch(0.36 0.046 243)  — visible edge
+--blue:    oklch(0.65 0.22 265)   — electric blue (unchanged — glows on navy)
+```
+
+All semantic colours (ok/warn/danger/purple), text scale, and light theme untouched.
 
 ---
 
