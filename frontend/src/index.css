@@ -124,6 +124,7 @@
   --paper-3:     var(--bg-3);
   --paper-tint:  var(--bg-hover);
   --paper-glass: oklch(0.22 0.022 265 / 0.90);
+  --glass-heavy: oklch(0.22 0.022 265 / 0.55);
 
   --ink:         var(--text);
   --ink-2:       var(--text-2);
@@ -225,6 +226,7 @@
 
   /* Legacy aliases */
   --paper-glass: oklch(0.97 0.006 265 / 0.92);
+  --glass-heavy: oklch(0.97 0.006 265 / 0.70);
   --paper-tint:  var(--blue-subtle);
 
   --accent-soft: var(--blue-subtle);
