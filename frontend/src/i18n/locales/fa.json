@@ -15,7 +15,12 @@
     "zzp_guide": "راهنمای مالیات ZZP",
     "expat_guide": "راهنمای مالیات مهاجران",
     "tax_calendar": "تقویم مالیاتی",
-    "history": "سوابق"
+    "history": "سوابق",
+    "my_portal": "پرتال من",
+    "messages": "پیام‌ها",
+    "my_profile": "پروفایل من",
+    "zzp_workspace": "فضای کار ZZP",
+    "help": "راهنما و پشتیبانی"
   },
   "chat": {
     "placeholder": "سؤال مالیاتی خود را بنویسید... (Enter برای ارسال)",

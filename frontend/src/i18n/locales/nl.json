@@ -15,7 +15,12 @@
     "zzp_guide": "ZZP Belastinggids",
     "expat_guide": "Expat Belastinggids",
     "tax_calendar": "Belastingkalender",
-    "history": "Geschiedenis"
+    "history": "Geschiedenis",
+    "my_portal": "Mijn Portaal",
+    "messages": "Berichten",
+    "my_profile": "Mijn Profiel",
+    "zzp_workspace": "ZZP Werkruimte",
+    "help": "Help & Ondersteuning"
   },
   "chat": {
     "placeholder": "Stel uw belastingvraag... (Enter om te verzenden)",

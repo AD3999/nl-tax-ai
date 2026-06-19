@@ -15,7 +15,12 @@
     "zzp_guide": "ZZP Tax Guide",
     "expat_guide": "Expat Tax Guide",
     "tax_calendar": "Tax Calendar",
-    "history": "History"
+    "history": "History",
+    "my_portal": "My Portal",
+    "messages": "Messages",
+    "my_profile": "My Profile",
+    "zzp_workspace": "ZZP Workspace",
+    "help": "Help & Support"
   },
   "chat": {
     "placeholder": "Ask your tax question... (Enter to send)",

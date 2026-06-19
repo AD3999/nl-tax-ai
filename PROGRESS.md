@@ -1,7 +1,28 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 19 Jun 2026 — Light mode pass: theme-aware sidebar + hero glow
+> Last updated: 19 Jun 2026 — Full visual audit + Persian sidebar i18n fix
+
+---
+
+## Session — 19 Jun 2026 · Full Visual Audit + Persian i18n Fix ✅ Complete
+
+### Changes
+
+**Audit scope:** All pages × 5 configs (nl-light, nl-dark, en-light, fa-light, fa-dark). 50 screenshots taken. Overall quality: good. One actionable issue found.
+
+**Finding: Persian sidebar showed 4 English hardcoded nav labels**
+
+`clientNav()` in `AppSidebar.tsx` used hardcoded English strings for "My Portal", "Messages", "My Profile", and "ZZP Workspace" instead of `t()` calls. These nav items appeared in English even when the UI language was set to Persian (or Dutch).
+
+**Fix:**
+- Added 5 missing translation keys (`my_portal`, `messages`, `my_profile`, `zzp_workspace`, `help`) to all three locale files: `nl.json`, `en.json`, `fa.json`.
+- Updated `clientNav()` to use `t("nav.my_portal")` etc. for all 4 previously hardcoded items.
+
+**Font assessment:**
+- Plus Jakarta Sans (NL/EN) — excellent for fintech: clean, geometric, highly legible at small sizes. Professional and modern.
+- JetBrains Mono — correct choice for numeric values and code blocks.
+- IranSans (FA) — renders correctly throughout all Persian pages. RTL layout is consistent across all pages.
 
 ---
 
