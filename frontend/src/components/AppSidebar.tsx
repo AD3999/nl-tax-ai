@@ -8,6 +8,7 @@ import {
   ListChecks, Building2, Activity,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import { client as apiClient } from "../api/client";
 import Wordmark from "./Wordmark";
 import LangSwitch from "./LangSwitch";
@@ -97,6 +98,7 @@ interface SidebarContentProps { onNav?: () => void }
 function SidebarContent({ onNav }: SidebarContentProps) {
   const { t } = useTranslation();
   const { user, logout } = useAuth();
+  const { theme } = useTheme();
   const navigate = useNavigate();
 
   const isAdmin      = !!user?.is_admin;
@@ -126,7 +128,7 @@ function SidebarContent({ onNav }: SidebarContentProps) {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        background: "oklch(0.10 0.044 243)",
+        background: theme === "dark" ? "oklch(0.10 0.044 243)" : "oklch(0.30 0.060 243)",
         borderInlineEnd: "1px solid var(--border)",
         colorScheme: "dark",
         overflow: "hidden",

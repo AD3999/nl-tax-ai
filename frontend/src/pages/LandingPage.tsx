@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "../context/ThemeContext";
 import {
   Bot, Calculator, Shield, Users, CheckCircle,
   Building2, Globe, Zap, ChevronDown, ArrowRight,
@@ -343,6 +344,7 @@ export default function LandingPage() {
   const { i18n } = useTranslation();
   const navigate  = useNavigate();
   const isMobile  = useMobile();
+  const { theme } = useTheme();
   const lang      = i18n.language as Lang;
   const isRtl     = lang === "fa";
 
@@ -377,16 +379,19 @@ export default function LandingPage() {
       <section style={{
         padding: isMobile ? "72px 20px 60px" : "100px 64px 88px",
         borderBottom: "1px solid var(--border)",
-        background: "var(--bg)",
+        background: theme === "light" ? "oklch(0.95 0.014 248)" : "var(--bg)",
         position: "relative",
         overflow: "hidden",
       }}>
-        {/* Radial glow background */}
+        {/* Radial glow — dark: vivid blue bloom; light: warm top-centre fill */}
         <div aria-hidden style={{
           position: "absolute", inset: 0, pointerEvents: "none",
-          background: [
+          background: theme === "dark" ? [
             "radial-gradient(ellipse 38% 32% at 48% 26%, oklch(0.68 0.22 265 / 0.10) 0%, transparent 60%)",
             "radial-gradient(ellipse 72% 56% at 56% 32%, oklch(0.58 0.20 265 / 0.18) 0%, transparent 70%)",
+          ].join(", ") : [
+            "radial-gradient(ellipse 80% 60% at 50% 0%, oklch(0.88 0.030 248 / 0.70) 0%, transparent 70%)",
+            "radial-gradient(ellipse 40% 35% at 70% 55%, oklch(0.91 0.025 265 / 0.50) 0%, transparent 60%)",
           ].join(", "),
           zIndex: 0,
         }} />

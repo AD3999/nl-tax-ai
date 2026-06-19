@@ -1,7 +1,41 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 19 Jun 2026 — Navy theme polish: sidebar depth + CTA glow + hero glow
+> Last updated: 19 Jun 2026 — Light mode pass: theme-aware sidebar + hero glow
+
+---
+
+## Session — 19 Jun 2026 · Light Mode Pass — Theme-Aware Sidebar + Hero ✅ Complete
+
+### Changes
+
+#### Fix 1 — Sidebar is now theme-aware (dark navy regardless of mode, but correct shade)
+
+**Problem:** Sidebar was hardcoded to `oklch(0.10 0.044 243)` — the dark-mode value — even in light mode. In light mode it appeared nearly black against the white content area.
+
+**Fix (`frontend/src/components/AppSidebar.tsx`):**
+- Added `useTheme` import and `const { theme } = useTheme()` inside `SidebarContent`.
+- Background is now: `theme === "dark" ? "oklch(0.10 0.044 243)" : "oklch(0.30 0.060 243)"`.
+- Light mode gets a rich medium navy (L=0.30) — deliberate dark-sidebar-in-light-mode pattern (common in financial tools like Linear, Notion, Xero).
+- `data-theme="dark"` attribute stays on the wrapper so nav item text/icons remain white (correct for both shades).
+
+#### Fix 2 — Landing page hero is theme-aware (background + glow)
+
+**Problem:** The hero's radial blue glow bloom was invisible on the near-white light-mode background. Hero `background: "var(--bg)"` resolved to the same light gray as every other section — no depth.
+
+**Fix (`frontend/src/pages/LandingPage.tsx`):**
+- Hero section background: `theme === "light" ? "oklch(0.95 0.014 248)" : "var(--bg)"` — gives the hero a very slightly cooler tint than the rest of the page, creating depth.
+- Glow div is now conditional:
+  - **Dark mode**: two vivid navy-blue blooms (`oklch(0.68 0.22 265)`, `oklch(0.58 0.20 265)`) — the existing electric blue look.
+  - **Light mode**: two subtle cool-tinted halos (`oklch(0.88 0.030 248)`, `oklch(0.91 0.025 265)`) — barely-visible depth that doesn't look like a shadow.
+
+#### Pages verified in light mode (screenshots)
+- `/` Landing page — clean hero, subtle cool glow, proper nav
+- `/zzp-tax-netherlands` — clean typography, blue CTA buttons, TOC box
+- `/expat-tax-netherlands` — same layout, renders correctly
+- `/login` — two-panel form, tip card on right
+- `/register` — role selector cards, feature callout panel
+- `/chat` — dark navy sidebar visible alongside white content area (design intent confirmed)
 
 ---
 
