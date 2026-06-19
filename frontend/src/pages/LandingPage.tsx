@@ -384,7 +384,10 @@ export default function LandingPage() {
         {/* Radial glow background */}
         <div aria-hidden style={{
           position: "absolute", inset: 0, pointerEvents: "none",
-          background: "radial-gradient(ellipse 70% 55% at 55% 30%, oklch(0.48 0.15 265 / 0.10) 0%, transparent 70%)",
+          background: [
+            "radial-gradient(ellipse 38% 32% at 48% 26%, oklch(0.68 0.22 265 / 0.10) 0%, transparent 60%)",
+            "radial-gradient(ellipse 72% 56% at 56% 32%, oklch(0.58 0.20 265 / 0.18) 0%, transparent 70%)",
+          ].join(", "),
           zIndex: 0,
         }} />
 
@@ -882,8 +885,18 @@ export default function LandingPage() {
       {/* ══════════════════════════════════════════════════════════════
           FINAL DUAL CTA
       ══════════════════════════════════════════════════════════════ */}
-      <section style={{ padding: isMobile ? "64px 20px 80px" : "96px 64px 108px" }}>
-        <div style={{ maxWidth: W, margin: "0 auto" }}>
+      <section style={{
+        padding: isMobile ? "64px 20px 80px" : "96px 64px 108px",
+        position: "relative",
+        overflow: "hidden",
+      }}>
+        {/* Subtle top glow — draws eye to the CTA heading */}
+        <div aria-hidden style={{
+          position: "absolute", inset: 0, pointerEvents: "none",
+          background: "radial-gradient(ellipse 60% 45% at 50% 0%, oklch(0.58 0.20 265 / 0.13) 0%, transparent 70%)",
+          zIndex: 0,
+        }} />
+        <div style={{ maxWidth: W, margin: "0 auto", position: "relative", zIndex: 1 }}>
           <div style={{ textAlign: "center", marginBottom: 48 }}>
             <h2 style={{ fontSize: isMobile ? 28 : 38, fontWeight: 800, letterSpacing: "-0.035em" }}>
               {t(TX.finalCta.h2, lang)}

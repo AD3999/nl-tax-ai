@@ -1,7 +1,28 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 19 Jun 2026 — Deep Navy dark theme
+> Last updated: 19 Jun 2026 — Navy theme polish: sidebar depth + CTA glow + hero glow
+
+---
+
+## Session — 19 Jun 2026 · Navy Theme Polish — Cross-page Visual Fixes ✅ Complete
+
+### Changes
+
+Full visual tour of all public pages revealed three improvements needed after the navy theme switch.
+
+| File | Fix |
+|------|-----|
+| `frontend/src/components/AppSidebar.tsx` | Hardcoded sidebar background was `oklch(0.13 0.018 265)` — same lightness as the new `--bg` but wrong hue/chroma. Updated to `oklch(0.10 0.044 243)` — properly navy, noticeably darker than content area. Restores the sidebar→content depth gradient. |
+| `frontend/src/pages/LandingPage.tsx` | Hero radial glow was `oklch(0.48 0.15 265 / 0.10)` — too dim on deep navy. Replaced with two-layer glow: tight inner bloom `oklch(0.68 0.22 265 / 0.10)` + broad outer `oklch(0.58 0.20 265 / 0.18)`. |
+| `frontend/src/pages/LandingPage.tsx` | Final CTA section had no background — flat on navy. Added subtle top glow `oklch(0.58 0.20 265 / 0.13)` to draw the eye to the conversion section. |
+
+### Visual result
+
+Three visible depth layers on app pages (deduction checker, chat):
+1. Sidebar — `oklch(0.10 0.044 243)` — darkest
+2. Page canvas — `oklch(0.13 0.048 243)` — base
+3. Cards/panels — `oklch(0.20 0.052 243)` — elevated
 
 ---
 

@@ -126,7 +126,7 @@ function SidebarContent({ onNav }: SidebarContentProps) {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        background: "oklch(0.13 0.018 265)",
+        background: "oklch(0.10 0.044 243)",
         borderInlineEnd: "1px solid var(--border)",
         colorScheme: "dark",
         overflow: "hidden",
