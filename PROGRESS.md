@@ -1,7 +1,28 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 18 Jun 2026 — Trailing dot removal sweep + Persian RTL mini card fix
+> Last updated: 19 Jun 2026 — Hamburger menu glass effect
+
+---
+
+## Session — 19 Jun 2026 · UI Polish — Hamburger Menu Glass Effect ✅ Complete
+
+### Hamburger button + mobile nav — glassmorphism background
+
+Both the hamburger toggle button and the mobile navigation dropdown now use the same glass-like treatment as the scrolled `TopNav` header.
+
+| Element | Before | After |
+|---------|--------|-------|
+| Hamburger button | `background: none` | `background: var(--paper-glass)` + `backdrop-filter: blur(12px) saturate(160%)` |
+| Mobile nav dropdown | `background: var(--bg-2)` | `background: var(--paper-glass)` + `backdrop-filter: blur(20px) saturate(180%)` |
+
+Both light and dark mode handled via the existing `--paper-glass` CSS variable:
+- Dark: `oklch(0.22 0.022 265 / 0.90)` (90% opacity)
+- Light: `oklch(0.97 0.006 265 / 0.92)` (92% opacity)
+
+`-webkit-backdrop-filter` added alongside `backdrop-filter` for Safari compatibility.
+
+**File changed:** `frontend/src/components/TopNav.tsx`
 
 ---
 

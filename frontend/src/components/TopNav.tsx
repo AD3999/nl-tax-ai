@@ -224,7 +224,9 @@ export default function TopNav() {
               aria-expanded={menuOpen}
               aria-controls="mobile-nav"
               style={{
-                background: "none",
+                background: "var(--paper-glass)",
+                backdropFilter: "blur(12px) saturate(160%)",
+                WebkitBackdropFilter: "blur(12px) saturate(160%)",
                 border: "1px solid var(--border-2)",
                 borderRadius: "var(--r-sm)",
                 width: 40,
@@ -271,7 +273,9 @@ export default function TopNav() {
               left: 0,
               right: 0,
               zIndex: 26,
-              background: "var(--bg-2)",
+              background: "var(--paper-glass)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
               borderBottom: "1px solid var(--border)",
               paddingBottom: 16,
               boxShadow: "var(--shadow)",
