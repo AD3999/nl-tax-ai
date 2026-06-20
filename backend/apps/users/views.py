@@ -1161,7 +1161,10 @@ class InAppNotificationReadAllView(APIView):
 
 
 class InAppNotificationDetailView(APIView):
-    """PATCH /api/users/inapp-notifications/<id>/read/ — mark one as read"""
+    """
+    PATCH /api/users/inapp-notifications/<id>/read/   — mark one as read
+    DELETE /api/users/inapp-notifications/<id>/        — permanently clear one
+    """
     authentication_classes = [SoftJWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
@@ -1175,6 +1178,13 @@ class InAppNotificationDetailView(APIView):
             notif.read_at = timezone.now()
             notif.save(update_fields=["is_read", "read_at"])
         return Response({"ok": True})
+
+    def delete(self, request, pk):
+        from .models import Notification
+        from django.shortcuts import get_object_or_404
+        notif = get_object_or_404(Notification, pk=pk, user=request.user)
+        notif.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class InAppUnreadCountView(APIView):

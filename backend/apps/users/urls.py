@@ -51,6 +51,7 @@ urlpatterns = [
     path("inapp-notifications/read-all/",     InAppNotificationReadAllView.as_view(), name="inapp-notifications-read-all"),
     path("inapp-notifications/unread-count/", InAppUnreadCountView.as_view(),         name="inapp-notifications-count"),
     path("inapp-notifications/<int:pk>/read/", InAppNotificationDetailView.as_view(), name="inapp-notification-read"),
+    path("inapp-notifications/<int:pk>/",      InAppNotificationDetailView.as_view(), name="inapp-notification-detail"),
     # GDPR
     path("me/",             AccountDeletionView.as_view(), name="account-deletion"),
     path("me/data-export/", DataExportView.as_view(),      name="data-export"),

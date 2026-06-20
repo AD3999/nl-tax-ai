@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import {
-  getNotifications, getUnreadCount, markRead, markAllRead,
+  getNotifications, getUnreadCount, markRead, markAllRead, clearNotification,
   type AppNotification,
 } from "../api/notifications";
 
@@ -124,16 +124,17 @@ export default function NotificationBell() {
   }
 
   function handleClick(notif: AppNotification) {
-    // 1. Optimistically remove from list so the panel looks cleared
+    // 1. Optimistically remove from list so the panel looks cleared instantly
     setItems(prev => prev.filter(n => n.id !== notif.id));
 
     // 2. Close panel
     setOpen(false);
 
-    // 3. Mark as read on the server (fire-and-forget)
-    if (!notif.is_read) {
-      markRead(notif.id).catch(() => null);
-    }
+    // 3. Permanently delete the notification from the server (fire-and-forget)
+    clearNotification(notif.id).catch(() => {
+      // Fallback: if delete fails, at least mark it read
+      if (!notif.is_read) markRead(notif.id).catch(() => null);
+    });
 
     // 4. Navigate to the relevant page
     if (notif.action_url) {
