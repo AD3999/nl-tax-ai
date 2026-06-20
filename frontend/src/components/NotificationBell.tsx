@@ -24,47 +24,63 @@ const TYPE_ICONS: Record<string, string> = {
 
 function timeAgo(iso: string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (diff < 60)  return "just now";
+  if (diff < 60)   return "just now";
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
+// Strip an absolute origin from action_url so react-router navigate() gets a path.
+// Backend stores "/client/messages" (relative) but guard against full URLs too.
+function toRelativePath(url: string): string {
+  try {
+    const parsed = new URL(url, window.location.origin);
+    if (parsed.origin === window.location.origin) {
+      return parsed.pathname + parsed.search + parsed.hash;
+    }
+  } catch { /* already relative */ }
+  return url.startsWith("/") ? url : `/${url}`;
+}
+
 export default function NotificationBell() {
-  const { user } = useAuth();
+  const { user }      = useAuth();
   const { showToast } = useToast();
-  const navigate = useNavigate();
+  const navigate      = useNavigate();
 
-  const [open, setOpen]           = useState(false);
-  const [count, setCount]         = useState(0);
-  const [items, setItems]         = useState<AppNotification[]>([]);
-  const [loading, setLoading]     = useState(false);
-  const prevCountRef              = useRef(0);
-  const initializedRef            = useRef(false); // skip toast on first mount poll
-  const panelRef                  = useRef<HTMLDivElement>(null);
+  const [open, setOpen]       = useState(false);
+  const [count, setCount]     = useState(0);
+  const [items, setItems]     = useState<AppNotification[]>([]);
+  const [loading, setLoading] = useState(false);
 
+  const prevCountRef    = useRef(0);
+  const initializedRef  = useRef(false);
+  // Two refs: one for the bell button, one for the portal panel.
+  // The outside-click handler must check BOTH — without this, every click
+  // inside the portal looks like an "outside click" and fires before onClick.
+  const bellRef     = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // ── Polling ──────────────────────────────────────────────────────
   const fetchCount = useCallback(async () => {
     if (!user) return;
     try {
       const n = await getUnreadCount();
-      // Show toast when count increases during the session (not on first mount)
       if (initializedRef.current && n > prevCountRef.current) {
         showToast("You have a new notification", "success");
       }
       initializedRef.current = true;
-      prevCountRef.current = n;
+      prevCountRef.current   = n;
       setCount(n);
     } catch { /* silent */ }
   }, [user, showToast]);
 
-  // Poll unread count every 30s
   useEffect(() => {
     fetchCount();
     const id = setInterval(fetchCount, 30_000);
     return () => clearInterval(id);
   }, [fetchCount]);
 
-  // Load full list when panel opens
+  // ── Load list when panel opens ────────────────────────────────────
   useEffect(() => {
     if (!open || !user) return;
     setLoading(true);
@@ -74,17 +90,31 @@ export default function NotificationBell() {
       .finally(() => setLoading(false));
   }, [open, user]);
 
-  // Close panel on outside click
+  // ── Outside-click: close panel ───────────────────────────────────
+  // Must check BOTH the bell wrapper AND the portal dropdown, because
+  // the portal renders to document.body and is outside bellRef's subtree.
   useEffect(() => {
     if (!open) return;
     function handler(e: MouseEvent) {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      const target = e.target as Node;
+      const insideBell     = bellRef.current?.contains(target)     ?? false;
+      const insideDropdown = dropdownRef.current?.contains(target) ?? false;
+      if (!insideBell && !insideDropdown) setOpen(false);
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
+
+  // ── Handlers ─────────────────────────────────────────────────────
+  function handleOpen() {
+    const opening = !open;
+    setOpen(o => !o);
+    // Clear badge immediately when panel opens
+    if (opening && count > 0) {
+      setCount(0);
+      prevCountRef.current = 0;
+    }
+  }
 
   async function handleMarkAllRead() {
     await markAllRead();
@@ -93,34 +123,28 @@ export default function NotificationBell() {
     prevCountRef.current = 0;
   }
 
-  async function handleClick(notif: AppNotification) {
-    // Close panel first so navigation feels instant
+  function handleClick(notif: AppNotification) {
+    // 1. Optimistically remove from list so the panel looks cleared
+    setItems(prev => prev.filter(n => n.id !== notif.id));
+
+    // 2. Close panel
     setOpen(false);
-    // Mark as read (fire-and-forget — don't block navigation)
+
+    // 3. Mark as read on the server (fire-and-forget)
     if (!notif.is_read) {
       markRead(notif.id).catch(() => null);
-      setItems(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
     }
-    // Navigate to the relevant page
-    if (notif.action_url) {
-      navigate(notif.action_url);
-    }
-  }
 
-  function handleOpen() {
-    const opening = !open;
-    setOpen(o => !o);
-    // Clear badge the moment user opens the panel
-    if (opening && count > 0) {
-      setCount(0);
-      prevCountRef.current = 0;
+    // 4. Navigate to the relevant page
+    if (notif.action_url) {
+      navigate(toRelativePath(notif.action_url));
     }
   }
 
   if (!user) return null;
 
   return (
-    <div ref={panelRef} style={{ position: "relative" }}>
+    <div ref={bellRef} style={{ position: "relative" }}>
       {/* ── Bell button ── */}
       <button
         onClick={handleOpen}
@@ -158,23 +182,26 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* ── Dropdown panel — rendered in a portal so it escapes sidebar overflow/stacking ── */}
+      {/* ── Dropdown panel (portal to escape sidebar stacking context) ── */}
       {open && createPortal(
-        <div style={{
-          position: "fixed",
-          top: 52,
-          right: 12,
-          width: 340,
-          maxHeight: 480,
-          background: "var(--bg)",
-          border: "1px solid var(--border-2)",
-          borderRadius: "var(--r-xl)",
-          boxShadow: "var(--sh-lg)",
-          zIndex: 9999,
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}>
+        <div
+          ref={dropdownRef}
+          style={{
+            position: "fixed",
+            top: 52,
+            right: 12,
+            width: 340,
+            maxHeight: 480,
+            background: "var(--bg)",
+            border: "1px solid var(--border-2)",
+            borderRadius: "var(--r-xl)",
+            boxShadow: "var(--sh-lg)",
+            zIndex: 9999,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+        >
           {/* Header */}
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -183,10 +210,10 @@ export default function NotificationBell() {
             flexShrink: 0,
           }}>
             <span style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--text)" }}>
-              Notifications {count > 0 && <span style={{ color: "var(--danger)" }}>({count})</span>}
+              Notifications
             </span>
             <div style={{ display: "flex", gap: 6 }}>
-              {count > 0 && (
+              {items.some(n => !n.is_read) && (
                 <button
                   onClick={handleMarkAllRead}
                   title="Mark all as read"
@@ -218,13 +245,13 @@ export default function NotificationBell() {
             {!loading && items.length === 0 && (
               <div style={{ padding: "32px 16px", textAlign: "center", color: "var(--text-4)", fontSize: "var(--text-sm)" }}>
                 <Bell size={28} style={{ opacity: 0.25, display: "block", margin: "0 auto 8px" }} />
-                No notifications yet
+                No notifications
               </div>
             )}
             {!loading && items.map(notif => (
               <button
                 key={notif.id}
-                onClick={() => void handleClick(notif)}
+                onClick={() => handleClick(notif)}
                 style={{
                   width: "100%", textAlign: "left",
                   border: "none", borderBottom: "1px solid var(--border)",
