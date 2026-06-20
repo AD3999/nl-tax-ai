@@ -620,17 +620,9 @@ export default function LandingPage() {
                   background: SUBTLE_MAP[c],
                   position: "relative", overflow: "hidden",
                 }}>
-                  {/* Positioning label */}
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 18,
-                    padding: "5px 12px", borderRadius: 999,
-                    background: "var(--bg)", border: "1px solid var(--border-2)" }}>
-                    <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--text-2)" }}>
-                      {card.notLabel}
-                    </span>
-                    <span style={{ color: "var(--text-3)", fontSize: "var(--text-sm)" }}>→</span>
-                  </div>
                   <FeatureIcon icon={card.icon} color={c} iconSize={28} boxSize={64} />
-                  <p style={{ fontSize: 14, color: "var(--text-3)", lineHeight: 1.65, margin: 0, marginTop: 18 }}>{card.body}</p>
+                  <h3 style={{ fontSize: 18, fontWeight: 700, marginTop: 14, marginBottom: 10 }}>{card.title}</h3>
+                  <p style={{ fontSize: 14, color: "var(--text-3)", lineHeight: 1.65, margin: 0 }}>{card.body}</p>
                 </div>
               );
             })}
