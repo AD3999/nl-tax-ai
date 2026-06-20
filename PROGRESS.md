@@ -1,7 +1,75 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 19 Jun 2026 — Full visual audit + Persian sidebar i18n fix
+> Last updated: 20 Jun 2026 — Notification clear-on-click + prior UX session
+
+---
+
+## Session — 20 Jun 2026 · Notification Clear-on-Click ✅ Complete
+
+### Changes
+
+**Goal:** When a user clicks a notification and is redirected to the relevant page, that specific notification is permanently cleared (not just marked read).
+
+#### Backend (`backend/apps/users/views.py`)
+- Added `def delete(self, request, pk)` to `InAppNotificationDetailView`.
+- Scoped to `request.user` via `get_object_or_404(Notification, pk=pk, user=request.user)` — no cross-user access possible.
+- Returns HTTP 204 No Content on success.
+
+#### Backend (`backend/apps/users/urls.py`)
+- Added route: `DELETE /api/users/inapp-notifications/<pk>/`
+
+#### Frontend (`frontend/src/api/notifications.ts`)
+- Added `clearNotification(id: number)` — calls `DELETE /users/inapp-notifications/{id}/`.
+
+#### Frontend (`frontend/src/components/NotificationBell.tsx`)
+- `handleClick` now calls `clearNotification()` instead of `markRead()`.
+- Optimistic UI: notification removed from list instantly before the API call.
+- Graceful fallback: if DELETE fails, falls back to `markRead()` so the notification at least doesn't stay unread.
+
+**Branch:** `feat/notif-clear-on-click` → merged to `master`.
+
+---
+
+## Session — 19–20 Jun 2026 · UX Polish Sprint ✅ Complete
+
+### Changes
+
+A multi-task UX sprint covering AccountantSettingsPage redesign and full notification system improvements.
+
+#### AccountantSettingsPage redesign (`frontend/src/pages/AccountantSettingsPage.tsx`)
+- Full form redesign with proper UI/UX standards.
+- `Section` wrapper component: icon + title + description card layout.
+- `FieldGroup` component: label with icon + helper text.
+- `TextInput` component with consistent styling.
+- 4 sections: Contact Information, Branding, Preferences, Subscription.
+- Color picker with live preview badge.
+- WCAG 2.1 contrast ratio chips (✓/✗) on brand color.
+
+#### Notification badge clears on panel open
+- Badge count resets to 0 immediately when the panel is opened (before API call returns).
+
+#### Notification click routing fix (portal dual-ref bug)
+- Root cause: `createPortal` renders to `document.body`, outside `panelRef`'s subtree. The `mousedown` outside-click handler was firing before `onClick`, closing the panel and unmounting the button.
+- Fix: Added `bellRef` (bell button wrapper) + `dropdownRef` (portal panel). Outside-click handler checks both refs — click is only treated as "outside" if it's outside BOTH.
+- Added `toRelativePath()` helper to strip absolute origins from `action_url` before passing to `navigate()`.
+
+#### Glassy notification panel
+- Panel background: `var(--glass-heavy)` + `backdropFilter: blur(36px) saturate(220%)` — matches the TopNav and sidebar glass aesthetic in both dark and light mode.
+- `boxShadow`: `inset 0 1px 0 oklch(1 0 0 / 0.08), var(--sh-lg)`.
+
+#### Smooth notification panel open animation
+- Panel now uses `animation: "fadeDown 0.18s cubic-bezier(0.4,0,0.2,1)"` with `transformOrigin: "top right"`.
+- Reuses existing `@keyframes fadeDown` from `index.css` — no new CSS added.
+
+#### Structured reminder formatting (`frontend/src/components/ReminderBody.tsx`)
+- New `ReminderBody` component parses the backend's plain-text reminder format (greeting + `\n\n` blocks + `•` bullet lists) into typed blocks.
+- Renders: greeting (semibold), intro paragraph (muted), numbered-badge bullet list (inset box), closing (divider + signature).
+- Two variants: `"preview"` (confirmation card) and `"bubble"` (chat bubble).
+- `isReminderBody(body)` helper detects reminder-formatted messages.
+- Wired into `EngagementPage.tsx` (reminder preview card + messages tab) and `ClientMessagesPage.tsx` (chat bubble).
+
+**Branch:** All merged to `master`.
 
 ---
 
