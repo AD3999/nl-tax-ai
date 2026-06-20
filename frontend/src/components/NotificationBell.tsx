@@ -192,10 +192,12 @@ export default function NotificationBell() {
             right: 12,
             width: 340,
             maxHeight: 480,
-            background: "var(--bg)",
+            background: "var(--glass-heavy)",
+            backdropFilter: "blur(36px) saturate(220%)",
+            WebkitBackdropFilter: "blur(36px) saturate(220%)",
             border: "1px solid var(--border-2)",
             borderRadius: "var(--r-xl)",
-            boxShadow: "var(--sh-lg)",
+            boxShadow: "inset 0 1px 0 oklch(1 0 0 / 0.08), var(--sh-lg)",
             zIndex: 9999,
             display: "flex",
             flexDirection: "column",
@@ -258,11 +260,11 @@ export default function NotificationBell() {
                   cursor: "pointer",
                   padding: "12px 16px",
                   display: "flex", gap: 10, alignItems: "flex-start",
-                  background: notif.is_read ? "transparent" : "var(--blue-subtle, oklch(0.97 0.01 243))",
+                  background: notif.is_read ? "transparent" : "oklch(0.55 0.18 243 / 0.12)",
                   transition: "background 0.15s",
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = "var(--bg-2)")}
-                onMouseLeave={e => (e.currentTarget.style.background = notif.is_read ? "transparent" : "var(--blue-subtle, oklch(0.97 0.01 243))")}
+                onMouseEnter={e => (e.currentTarget.style.background = "oklch(0.55 0.18 243 / 0.18)")}
+                onMouseLeave={e => (e.currentTarget.style.background = notif.is_read ? "transparent" : "oklch(0.55 0.18 243 / 0.12)")}
               >
                 <span style={{ fontSize: 18, flexShrink: 0, lineHeight: 1.2 }}>
                   {TYPE_ICONS[notif.notification_type] ?? "🔔"}
