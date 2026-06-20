@@ -9,6 +9,7 @@ import { useMobile } from "../../hooks/useMobile";
 import Modal from "../../components/ui/Modal";
 import ReadinessCard from "../../components/ui/ReadinessCard";
 import CopilotCard from "../../components/ui/CopilotCard";
+import ReminderBody, { isReminderBody } from "../../components/ReminderBody";
 import {
   fetchEngagement, fetchChecklist, fetchDocuments,
   fetchIncome, fetchExpenses, fetchActions, generateActions, fetchRisks,
@@ -705,8 +706,10 @@ export default function EngagementPage() {
               </strong>
               <button className="btn btn-ghost btn-sm" onClick={() => setReminderPreview(null)} style={{ padding: "0 6px" }}><X size={12} /></button>
             </div>
-            <div style={{ fontWeight: 600, marginBottom: 4, fontSize: "var(--text-xs)", color: "var(--ink-2)" }}>{reminderPreview.subject}</div>
-            <pre style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", whiteSpace: "pre-wrap", margin: 0 }}>{reminderPreview.body}</pre>
+            <div style={{ fontWeight: 700, marginBottom: 8, fontSize: "var(--text-xs)", color: "var(--ok-text)", letterSpacing: "0.01em" }}>
+              {reminderPreview.subject}
+            </div>
+            <ReminderBody body={reminderPreview.body} variant="preview" />
           </div>
         )}
 
@@ -1224,7 +1227,13 @@ export default function EngagementPage() {
                       borderRadius: "var(--r-md)", padding: "var(--sp-3) var(--sp-4)",
                       fontSize: "var(--text-sm)", lineHeight: 1.55,
                     }}>
-                      {msg.body}
+                      {isReminderBody(msg.body) ? (
+                        <ReminderBody
+                          body={msg.body}
+                          variant="bubble"
+                          textColor={msg.is_own ? "#fff" : "var(--text)"}
+                        />
+                      ) : msg.body}
                     </div>
                   </div>
                 </div>

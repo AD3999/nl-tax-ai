@@ -202,6 +202,8 @@ export default function NotificationBell() {
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
+            animation: "fadeDown 0.18s cubic-bezier(0.4,0,0.2,1)",
+            transformOrigin: "top right",
           }}
         >
           {/* Header */}
