@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+
+# Public SEO pages
+Allow: /zzp-tax-netherlands
+Allow: /expat-tax-netherlands
+Allow: /dga-tax-netherlands
+
+# Block authenticated app routes (no SEO value)
+Disallow: /dashboard
+Disallow: /chat
+Disallow: /intake
+Disallow: /calculator
+Disallow: /tax-history
+Disallow: /tax-calendar
+Disallow: /deduction-checker
+Disallow: /zzp-workspace
+Disallow: /accountant/
+Disallow: /client/
+Disallow: /admin/
+Disallow: /auth/
+
+Sitemap: https://taxwijs.nl/sitemap.xml

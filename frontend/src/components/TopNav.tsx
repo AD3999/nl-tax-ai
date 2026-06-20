@@ -10,19 +10,22 @@ import { useMobile } from "../hooks/useMobile";
 // Landing page marketing nav (shown only on /)
 const LANDING_NAV: Record<string, { to: string; label: string }[]> = {
   nl: [
-    { to: "/deduction-checker", label: "Aftrekken" },
-    { to: "/chat",              label: "AI Assistent" },
-    { to: "/pricing",           label: "Prijzen" },
+    { to: "/zzp-tax-netherlands",   label: "ZZP Gids" },
+    { to: "/expat-tax-netherlands", label: "Expat Gids" },
+    { to: "/dga-tax-netherlands",   label: "DGA Gids" },
+    { to: "/chat",                  label: "AI Assistent" },
   ],
   en: [
-    { to: "/deduction-checker", label: "Deductions" },
-    { to: "/chat",              label: "AI Assistant" },
-    { to: "/pricing",           label: "Pricing" },
+    { to: "/zzp-tax-netherlands",   label: "ZZP Guide" },
+    { to: "/expat-tax-netherlands", label: "Expat Guide" },
+    { to: "/dga-tax-netherlands",   label: "DGA Guide" },
+    { to: "/chat",                  label: "AI Assistant" },
   ],
   fa: [
-    { to: "/deduction-checker", label: "کسورات" },
-    { to: "/chat",              label: "دستیار هوش مصنوعی" },
-    { to: "/pricing",           label: "قیمت‌ها" },
+    { to: "/zzp-tax-netherlands",   label: "راهنمای ZZP" },
+    { to: "/expat-tax-netherlands", label: "راهنمای اکسپت" },
+    { to: "/dga-tax-netherlands",   label: "راهنمای DGA" },
+    { to: "/chat",                  label: "دستیار هوش مصنوعی" },
   ],
 };
 

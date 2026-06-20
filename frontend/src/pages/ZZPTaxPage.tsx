@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useMobile } from "../hooks/useMobile";
+import SEOHead from "../components/SEOHead";
 
 const SECTIONS = [
   {
@@ -119,13 +120,53 @@ const FAQ = [
   { q: "What is startersaftrek and is it still available?", a: "Startersaftrek is an extra €2,123 deduction for ZZP in their first three years as entrepreneur. 2026 is the LAST year this deduction exists — it is abolished from 2027. If you qualify, claim it now." },
 ];
 
+const ZZP_JSON_LD = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "ZZP Tax in the Netherlands — Complete 2026 Guide",
+    "description": "Everything a Dutch freelancer needs to know about income tax, BTW, deductions and deadlines in 2026. Zelfstandigenaftrek, MKB, ZVW explained.",
+    "author": { "@type": "Organization", "name": "TaxWijs" },
+    "publisher": { "@type": "Organization", "name": "TaxWijs", "url": "https://taxwijs.nl" },
+    "datePublished": "2026-01-01",
+    "dateModified": "2026-06-20",
+    "url": "https://taxwijs.nl/zzp-tax-netherlands",
+    "inLanguage": "en",
+    "about": { "@type": "Thing", "name": "Dutch ZZP Freelancer Tax 2026" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": FAQ.map(f => ({
+      "@type": "Question",
+      "name": f.q,
+      "acceptedAnswer": { "@type": "Answer", "text": f.a },
+    })),
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "TaxWijs", "item": "https://taxwijs.nl" },
+      { "@type": "ListItem", "position": 2, "name": "ZZP Tax Netherlands 2026", "item": "https://taxwijs.nl/zzp-tax-netherlands" },
+    ],
+  },
+];
+
 export default function ZZPTaxPage() {
   const navigate = useNavigate();
   const isMobile = useMobile();
 
   return (
     <main style={{ background: "var(--paper)", flex: 1 }}>
-      {/* Meta handled by index.html — for a full solution use react-helmet */}
+      <SEOHead
+        title="ZZP Belasting 2026 — Complete Gids | Zelfstandigenaftrek, MKB & ZVW"
+        description="Alles over belasting als ZZP'er in Nederland 2026. Zelfstandigenaftrek €1.200, MKB-winstvrijstelling 12.7%, ZVW 4.85%, BTW-deadlines. Met voorbeeldberekeningen."
+        canonical="/zzp-tax-netherlands"
+        lang="nl"
+        ogType="article"
+        jsonLd={ZZP_JSON_LD}
+      />
 
       <div style={{ maxWidth: 820, margin: "0 auto", padding: isMobile ? "var(--sp-8) var(--sp-4)" : "var(--sp-12) var(--sp-8)" }}>
 

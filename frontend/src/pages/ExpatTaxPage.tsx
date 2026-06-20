@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useMobile } from "../hooks/useMobile";
+import SEOHead from "../components/SEOHead";
 
 const SECTIONS = [
   {
@@ -123,12 +124,53 @@ const FAQ = [
   { q: "Can I use the 30% ruling as a freelancer (ZZP)?", a: "No. The 30% ruling requires a Dutch employer who withholds payroll tax. Self-employed ZZP workers cannot use it. However, if you were an employee under the ruling and later become ZZP, the ruling period simply stops." },
 ];
 
+const EXPAT_JSON_LD = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Expat Tax in the Netherlands — Complete 2026 Guide",
+    "description": "30% ruling phase-down, M-form, Box 3 foreign assets and toeslagen eligibility for expats in the Netherlands 2026.",
+    "author": { "@type": "Organization", "name": "TaxWijs" },
+    "publisher": { "@type": "Organization", "name": "TaxWijs", "url": "https://taxwijs.nl" },
+    "datePublished": "2026-01-01",
+    "dateModified": "2026-06-20",
+    "url": "https://taxwijs.nl/expat-tax-netherlands",
+    "inLanguage": "en",
+    "about": { "@type": "Thing", "name": "Dutch Expat Tax 30% Ruling 2026" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": FAQ.map(f => ({
+      "@type": "Question",
+      "name": f.q,
+      "acceptedAnswer": { "@type": "Answer", "text": f.a },
+    })),
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "TaxWijs", "item": "https://taxwijs.nl" },
+      { "@type": "ListItem", "position": 2, "name": "Expat Tax Netherlands 2026", "item": "https://taxwijs.nl/expat-tax-netherlands" },
+    ],
+  },
+];
+
 export default function ExpatTaxPage() {
   const navigate = useNavigate();
   const isMobile = useMobile();
 
   return (
     <main style={{ background: "var(--paper)", flex: 1 }}>
+      <SEOHead
+        title="Expat Tax Netherlands 2026 — 30% Ruling, M-Form & Box 3 Guide"
+        description="Complete expat tax guide for the Netherlands 2026. 30% ruling phase-down (30/20/10%), M-form filing, Box 3 foreign assets, zorgtoeslag eligibility. All figures verified."
+        canonical="/expat-tax-netherlands"
+        lang="en"
+        ogType="article"
+        jsonLd={EXPAT_JSON_LD}
+      />
 
       <div style={{ maxWidth: 820, margin: "0 auto", padding: isMobile ? "var(--sp-8) var(--sp-4)" : "var(--sp-12) var(--sp-8)" }}>
 

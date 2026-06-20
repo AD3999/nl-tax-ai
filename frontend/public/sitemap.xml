@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+
+  <!-- Homepage -->
+  <url>
+    <loc>https://taxwijs.nl/</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://taxwijs.nl/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://taxwijs.nl/"/>
+    <xhtml:link rel="alternate" hreflang="fa" href="https://taxwijs.nl/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://taxwijs.nl/"/>
+  </url>
+
+  <!-- ZZP Tax Guide -->
+  <url>
+    <loc>https://taxwijs.nl/zzp-tax-netherlands</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://taxwijs.nl/zzp-tax-netherlands"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://taxwijs.nl/zzp-tax-netherlands"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://taxwijs.nl/zzp-tax-netherlands"/>
+  </url>
+
+  <!-- Expat Tax Guide -->
+  <url>
+    <loc>https://taxwijs.nl/expat-tax-netherlands</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://taxwijs.nl/expat-tax-netherlands"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://taxwijs.nl/expat-tax-netherlands"/>
+  </url>
+
+  <!-- DGA Tax Guide -->
+  <url>
+    <loc>https://taxwijs.nl/dga-tax-netherlands</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="nl" href="https://taxwijs.nl/dga-tax-netherlands"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://taxwijs.nl/dga-tax-netherlands"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://taxwijs.nl/dga-tax-netherlands"/>
+  </url>
+
+  <!-- Login / Register (low priority, no index value) -->
+  <url>
+    <loc>https://taxwijs.nl/login</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <url>
+    <loc>https://taxwijs.nl/register</loc>
+    <lastmod>2026-06-20</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+</urlset>

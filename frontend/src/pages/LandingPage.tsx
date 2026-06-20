@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import SEOHead from "../components/SEOHead";
 import { useTheme } from "../context/ThemeContext";
 import {
   Bot, Calculator, Shield, Users, CheckCircle,
@@ -370,8 +371,71 @@ export default function LandingPage() {
   const steps         = t(TX.howItWorks.steps, lang);
   const activeType    = userItems[tabIdx];
 
+  const seoTitle = lang === "nl"
+    ? "TaxWijs — AI Belastingassistent voor ZZP, Expat & DGA | Nederland 2026"
+    : lang === "fa"
+    ? "TaxWijs — دستیار مالیاتی هوشمند برای هلند ۲۰۲۶"
+    : "TaxWijs — Dutch Tax AI for ZZP, Expat & DGA | Netherlands 2026";
+
+  const seoDesc = lang === "nl"
+    ? "AI-begeleiding en geverifieerde belastingregels voor ZZP, expat en DGA. Bereken uw belasting 2026 in minuten — in het Nederlands, Engels of Farsi."
+    : lang === "fa"
+    ? "دستیار مالیاتی هوشمند برای هلند. محاسبه مالیات ZZP، اکسپت و DGA با قوانین تأییدشده ۲۰۲۶."
+    : "AI-powered Dutch tax assistant. Calculate ZZP, expat or DGA tax in minutes with verified 2026 rules. In Dutch, English and Persian.";
+
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "TaxWijs",
+      "url": "https://taxwijs.nl",
+      "description": "AI-powered Dutch tax assistant for ZZP, expats, employees and DGA directors",
+      "inLanguage": ["nl", "en", "fa"],
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://taxwijs.nl/chat?q={search_term_string}",
+        "query-input": "required name=search_term_string",
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "TaxWijs",
+      "url": "https://taxwijs.nl",
+      "logo": "https://taxwijs.nl/favicon.svg",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "support@taxwijs.nl",
+        "contactType": "customer support",
+        "availableLanguage": ["Dutch", "English", "Persian"],
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "TaxWijs",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web",
+      "url": "https://taxwijs.nl",
+      "description": "AI-powered Dutch income tax assistant for ZZP freelancers, employees, expats and DGA directors. Supports Dutch, English and Persian.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR",
+      },
+      "inLanguage": ["nl", "en", "fa"],
+    },
+  ];
+
   return (
     <main dir={isRtl ? "rtl" : "ltr"} style={{ overflowX: "hidden" }}>
+      <SEOHead
+        title={seoTitle}
+        description={seoDesc}
+        canonical="/"
+        lang={lang}
+        jsonLd={jsonLd}
+      />
 
       {/* ══════════════════════════════════════════════════════════════
           HERO

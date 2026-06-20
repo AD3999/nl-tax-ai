@@ -73,6 +73,7 @@ const AccountantSettingsPage  = lazy(() => import("./pages/AccountantSettingsPag
 const ClientMessagesPage      = lazy(() => import("./pages/ClientMessagesPage"));
 const ClientProfilePage       = lazy(() => import("./pages/ClientProfilePage"));
 const ZZPWorkspacePage        = lazy(() => import("./pages/ZZPWorkspacePage"));
+const DGATaxPage              = lazy(() => import("./pages/DGATaxPage"));
 
 const AdminDashboard          = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminUsersPage          = lazy(() => import("./pages/admin/AdminUsersPage"));
@@ -135,6 +136,7 @@ function App() {
               <Route path="/auth/google/callback"    element={<GoogleCallbackPage />} />
               <Route path="/zzp-tax-netherlands"     element={<ZZPTaxPage />} />
               <Route path="/expat-tax-netherlands"   element={<ExpatTaxPage />} />
+              <Route path="/dga-tax-netherlands"     element={<DGATaxPage />} />
             </Route>
 
             {/* ── App routes: Sidebar layout ── */}

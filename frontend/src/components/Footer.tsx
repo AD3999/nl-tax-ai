@@ -5,6 +5,10 @@ const L = {
   privacy:     { nl: "Privacybeleid",          en: "Privacy Policy",   fa: "سیاست حریم خصوصی" },
   terms:       { nl: "Algemene voorwaarden",    en: "Terms of Service", fa: "شرایط خدمات" },
   contact:     { nl: "Contact",                 en: "Contact",          fa: "تماس" },
+  guides:      { nl: "Belastinggidsen",         en: "Tax Guides",       fa: "راهنمای مالیاتی" },
+  zzpGuide:    { nl: "ZZP Belasting 2026",      en: "ZZP Tax Guide",    fa: "راهنمای مالیات ZZP" },
+  expatGuide:  { nl: "Expat Belasting 2026",    en: "Expat Tax Guide",  fa: "راهنمای مالیات اکسپت" },
+  dgaGuide:    { nl: "DGA Belasting 2026",      en: "DGA Tax Guide",    fa: "راهنمای مالیات DGA" },
   disclaimer:  {
     nl: "TaxWijs geeft geen officieel belastingadvies — raadpleeg altijd een belastingadviseur voor uw persoonlijke situatie",
     en: "TaxWijs does not provide official tax advice — always consult a qualified tax advisor for your personal situation",
@@ -67,7 +71,7 @@ export default function Footer() {
     >
       {/* Main footer content */}
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "var(--sp-10) var(--sp-8) var(--sp-8)" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "var(--sp-10)", alignItems: "flex-start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr auto auto auto", gap: "var(--sp-10)", alignItems: "flex-start" }}>
 
           {/* Brand + disclaimer */}
           <div style={{ maxWidth: 320 }}>
@@ -78,6 +82,16 @@ export default function Footer() {
             <p style={{ marginTop: "var(--sp-2)", fontSize: "var(--text-xs)", color: "var(--ink-4)", lineHeight: "var(--leading-relaxed)" }}>
               {get(L.gdpr, lang)}
             </p>
+          </div>
+
+          {/* Tax guides — SEO links */}
+          <div>
+            <span className="eyebrow" style={{ display: "block", marginBottom: "var(--sp-3)", color: "var(--ink-3)" }}>
+              {get(L.guides, lang)}
+            </span>
+            <FooterLink href="/zzp-tax-netherlands">{get(L.zzpGuide, lang)}</FooterLink>
+            <FooterLink href="/expat-tax-netherlands">{get(L.expatGuide, lang)}</FooterLink>
+            <FooterLink href="/dga-tax-netherlands">{get(L.dgaGuide, lang)}</FooterLink>
           </div>
 
           {/* Legal links */}

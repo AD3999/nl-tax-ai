@@ -1,29 +1,41 @@
 <!doctype html>
-<html lang="en">
+<html lang="nl">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TaxWijs — Dutch Tax AI for ZZP, Employee, Expat & DGA</title>
-    <meta name="description" content="TaxWijs answers your Dutch tax questions in plain language — personalised to your situation. ZZP, employee, expat and DGA. In Dutch, English and Persian." />
-    <!-- Open Graph -->
+
+    <!-- Default title + description — overridden per-page by react-helmet-async -->
+    <title>TaxWijs — Dutch Tax AI for ZZP, Expat &amp; DGA | Nederland 2026</title>
+    <meta name="description" content="AI-powered Dutch tax assistant. Calculate ZZP, expat or DGA tax in minutes. Verified 2026 rules in Dutch, English and Persian." />
+
+    <!-- Default Open Graph — overridden per-page by react-helmet-async -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="TaxWijs" />
-    <meta property="og:title" content="TaxWijs — Dutch Tax AI for ZZP, Employee, Expat & DGA" />
-    <meta property="og:description" content="AI-powered Dutch tax assistant. Accurate calculations, plain-language explanations, and step-by-step IB return guidance in Dutch, English, and Persian." />
-    <meta property="og:image" content="/og-image.png" />
-    <!-- Twitter / X card -->
+    <meta property="og:title" content="TaxWijs — Dutch Tax AI for ZZP, Expat &amp; DGA" />
+    <meta property="og:description" content="AI-powered Dutch tax assistant. Verified 2026 rules. In Dutch, English and Persian." />
+    <meta property="og:image" content="https://taxwijs.nl/og-image.png" />
+    <meta property="og:url" content="https://taxwijs.nl/" />
+
+    <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="TaxWijs — Dutch Tax AI" />
     <meta name="twitter:description" content="AI-powered Dutch tax assistant for ZZP, employees, expats and DGA directors. Dutch, English and Persian." />
-    <meta name="twitter:image" content="/og-image.png" />
-    <!-- Fonts: Plus Jakarta Sans (primary), JetBrains Mono (numbers), IranSans (Persian) -->
+    <meta name="twitter:image" content="https://taxwijs.nl/og-image.png" />
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://taxwijs.nl/" />
+
+    <!-- Sitemap reference -->
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+
+    <!-- Fonts: preconnect first, then load -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <!-- IranSans — official Persian font from @rastikerdar -->
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <!-- IranSans — Persian font -->
     <link href="https://cdn.jsdelivr.net/npm/@rastikerdar/iran-sans@6.0.0/dist/IranSans.css" rel="stylesheet" />
   </head>
   <body>
@@ -37,6 +49,6 @@
       })();
     </script>
     <div id="root"></div>
-<script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
