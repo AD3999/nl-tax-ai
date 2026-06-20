@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
@@ -129,30 +130,43 @@ export default function ClientDocumentsPage() {
     if (!silent) setLoading(false);
   }
 
-  async function openDocumentFile(fileUrl: string, filename: string) {
+  async function fetchDocumentBlob(fileUrl: string): Promise<string | null> {
     const token = localStorage.getItem("access_token") ?? "";
+    const res = await fetch(fileUrl, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({})) as { detail?: string };
+      showToast(data.detail ?? "File not found. Please re-upload.", "error");
+      return null;
+    }
+    return URL.createObjectURL(await res.blob());
+  }
+
+  async function viewDocumentFile(fileUrl: string) {
     try {
-      const res = await fetch(fileUrl, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({})) as { detail?: string };
-        showToast(data.detail ?? "File not found. Please re-upload.", "error");
-        return;
-      }
-      const blob = await res.blob();
-      const blobUrl = URL.createObjectURL(blob);
+      const blobUrl = await fetchDocumentBlob(fileUrl);
+      if (!blobUrl) return;
+      window.open(blobUrl, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } catch {
+      showToast("Could not open document.", "error");
+    }
+  }
+
+  async function downloadDocumentFile(fileUrl: string, filename: string) {
+    try {
+      const blobUrl = await fetchDocumentBlob(fileUrl);
+      if (!blobUrl) return;
       const a = document.createElement("a");
       a.href = blobUrl;
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
       a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
     } catch {
-      showToast("Could not open document.", "error");
+      showToast("Could not download document.", "error");
     }
   }
 
@@ -388,9 +402,14 @@ export default function ClientDocumentsPage() {
                     </span>
 
                     {doc.file_url && (
-                      <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-xs)", fontWeight: 700 }} onClick={() => void openDocumentFile(doc.file_url!, doc.original_filename)}>
-                        {t("view", lang)}
-                      </button>
+                      <>
+                        <button className="btn btn-ghost btn-sm" style={{ fontSize: "var(--text-xs)", fontWeight: 700 }} onClick={() => void viewDocumentFile(doc.file_url!)}>
+                          {t("view", lang)} ↗
+                        </button>
+                        <button className="btn btn-ghost btn-sm" style={{ padding: "0 8px" }} title="Download" onClick={() => void downloadDocumentFile(doc.file_url!, doc.original_filename)}>
+                          <Download size={13} />
+                        </button>
+                      </>
                     )}
 
                     {/* Delete */}
