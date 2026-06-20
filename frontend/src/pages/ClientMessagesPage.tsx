@@ -4,6 +4,7 @@ import { Send } from "lucide-react";
 import type { PortalMessage } from "../api/portal/messages";
 import { fetchClientMessages, sendClientMessage } from "../api/portal/messages";
 import { useMobile } from "../hooks/useMobile";
+import ReminderBody, { isReminderBody } from "../components/ReminderBody";
 
 export default function ClientMessagesPage() {
   const { i18n } = useTranslation();
@@ -209,7 +210,13 @@ export default function ClientMessagesPage() {
                         wordBreak: "break-word",
                         boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
                       }}>
-                        {m.body}
+                        {isReminderBody(m.body) ? (
+                          <ReminderBody
+                            body={m.body}
+                            variant="bubble"
+                            textColor={isOwn ? "#fff" : "var(--text)"}
+                          />
+                        ) : m.body}
                       </div>
                     </div>
                   );
