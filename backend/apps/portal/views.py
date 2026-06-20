@@ -413,7 +413,7 @@ class ClientDocumentUploadView(APIView):
                 user=engagement.accountant,
                 notif_type="document_uploaded",
                 title="New document uploaded",
-                body=f"{client_name} uploaded "{doc.user_title or doc.original_filename}".",
+                body=f'{client_name} uploaded "{doc.user_title or doc.original_filename}".',
                 action_url=f"/accountant/engagements/{engagement.id}",
                 metadata={"engagement_id": engagement.id, "document_id": doc.id},
             )
