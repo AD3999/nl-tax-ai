@@ -27,3 +27,7 @@ export async function markRead(id: number): Promise<void> {
 export async function markAllRead(): Promise<void> {
   await client.post("/users/inapp-notifications/read-all/");
 }
+
+export async function clearNotification(id: number): Promise<void> {
+  await client.delete(`/users/inapp-notifications/${id}/`);
+}
