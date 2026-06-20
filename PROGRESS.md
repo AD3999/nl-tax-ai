@@ -5342,3 +5342,18 @@ Added **Rule 7 — PORTAL TASK PROTOCOL**:
 - [x] "Take Action" for hours tasks routes to `/zzp-workspace`
 - [x] "Ask AI" prepends correct language instruction so AI responds in UI language
 - [x] AI explains tasks, guides to correct page/tab, explains KVK/BTW when encountered
+
+---
+
+### Session — 2026-06-20 — Landing Page: Remove positioning card titles + upsize icons
+
+**Change:** Removed the `<h3>` title ("AI Tax Assistent", "Slimme Rekenmotor", "Accountantssamenwerking") from the three positioning cards in the "Wat is TaxWijs?" section.
+
+**Icon resize:** `FeatureIcon` now accepts optional `iconSize` and `boxSize` props (defaults remain 18/40 for all other usages). The positioning cards now use `iconSize={28} boxSize={64}` for a larger, cleaner visual without the title.
+
+**Files changed:**
+- `frontend/src/pages/LandingPage.tsx` — `FeatureIcon` component signature updated; positioning card render removes `<h3>` and uses larger icon.
+
+- [x] Positioning card titles removed (all 3 languages — data keys still present, just not rendered)
+- [x] Icons enlarged to 64×28 in positioning section
+- [x] All other `FeatureIcon` usages unaffected (default size unchanged)

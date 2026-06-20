@@ -289,10 +289,10 @@ function SectionLabel({ text, color = "var(--blue)" }: { text: string; color?: s
   );
 }
 
-function FeatureIcon({ icon, color }: { icon: string; color: string }) {
+function FeatureIcon({ icon, color, iconSize = 18, boxSize = 40 }: { icon: string; color: string; iconSize?: number; boxSize?: number }) {
   const c = COLOR_MAP[color] ?? color;
   const s = SUBTLE_MAP[color] ?? "var(--bg-2)";
-  const props = { size: 18, color: c };
+  const props = { size: iconSize, color: c };
   const el = icon === "bot"      ? <Bot {...props} />
            : icon === "search"   ? <Search {...props} />
            : icon === "upload"   ? <Upload {...props} />
@@ -306,7 +306,7 @@ function FeatureIcon({ icon, color }: { icon: string; color: string }) {
            : icon === "msg"      ? <MessageSquare {...props} />
            : <Zap {...props} />;
   return (
-    <span style={{ width: 40, height: 40, borderRadius: "var(--r-md)", background: s, border: `1px solid ${c}22`, display: "grid", placeItems: "center", flexShrink: 0 }}>
+    <span style={{ width: boxSize, height: boxSize, borderRadius: "var(--r-md)", background: s, border: `1px solid ${c}22`, display: "grid", placeItems: "center", flexShrink: 0 }}>
       {el}
     </span>
   );
@@ -629,9 +629,8 @@ export default function LandingPage() {
                     </span>
                     <span style={{ color: "var(--text-3)", fontSize: "var(--text-sm)" }}>→</span>
                   </div>
-                  <FeatureIcon icon={card.icon} color={c} />
-                  <h3 style={{ fontSize: 18, fontWeight: 700, marginTop: 14, marginBottom: 10 }}>{card.title}</h3>
-                  <p style={{ fontSize: 14, color: "var(--text-3)", lineHeight: 1.65, margin: 0 }}>{card.body}</p>
+                  <FeatureIcon icon={card.icon} color={c} iconSize={28} boxSize={64} />
+                  <p style={{ fontSize: 14, color: "var(--text-3)", lineHeight: 1.65, margin: 0, marginTop: 18 }}>{card.body}</p>
                 </div>
               );
             })}
