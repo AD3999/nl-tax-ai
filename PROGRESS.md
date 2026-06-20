@@ -5345,15 +5345,35 @@ Added **Rule 7 — PORTAL TASK PROTOCOL**:
 
 ---
 
-### Session — 2026-06-20 — Landing Page: Remove positioning card titles + upsize icons
+### Session — 2026-06-20 — Landing Page: Remove notLabel badges + upsize icons
 
-**Change:** Removed the `<h3>` title ("AI Tax Assistent", "Slimme Rekenmotor", "Accountantssamenwerking") from the three positioning cards in the "Wat is TaxWijs?" section.
+**Change:** Removed the pill-shaped `notLabel` badges ("Geen chatbot →", "Geen rekenmachine →", "Vervangt niet →") from the three positioning cards in the "Wat is TaxWijs?" section. Card titles ("AI Tax Assistent", "Slimme Rekenmotor", "Accountantssamenwerking") remain.
 
-**Icon resize:** `FeatureIcon` now accepts optional `iconSize` and `boxSize` props (defaults remain 18/40 for all other usages). The positioning cards now use `iconSize={28} boxSize={64}` for a larger, cleaner visual without the title.
+**Icon resize:** `FeatureIcon` now accepts optional `iconSize` and `boxSize` props (defaults remain 18/40 for all other usages). The positioning cards now use `iconSize={28} boxSize={64}` for a stronger visual without the badge above.
 
 **Files changed:**
-- `frontend/src/pages/LandingPage.tsx` — `FeatureIcon` component signature updated; positioning card render removes `<h3>` and uses larger icon.
+- `frontend/src/pages/LandingPage.tsx` — `FeatureIcon` signature updated; notLabel badge block removed from positioning card render.
 
-- [x] Positioning card titles removed (all 3 languages — data keys still present, just not rendered)
-- [x] Icons enlarged to 64×28 in positioning section
+- [x] notLabel pill badges removed from all 3 positioning cards
+- [x] Card titles and body text unchanged
+- [x] Icons enlarged to 64×28 in positioning section only
 - [x] All other `FeatureIcon` usages unaffected (default size unchanged)
+
+---
+
+### Session — 2026-06-20 — Documents: View in new tab + separate download button
+
+**Change:** Replaced the auto-download behaviour on document links with two separate actions.
+
+- **"View ↗"** — opens the file in a new browser tab. The browser's native viewer handles PDFs and images. User decides whether to save from there.
+- **Download icon button (⬇)** — sits next to "View", triggers the file save directly.
+
+**Files changed:**
+- `frontend/src/pages/portal/ClientDocumentsPage.tsx` — shared `fetchDocumentBlob()` helper, `viewDocumentFile()`, `downloadDocumentFile()`; two-button render.
+- `frontend/src/pages/portal/EngagementPage.tsx` — same pattern for the accountant-side document panel.
+
+- [x] View opens in new tab (no forced download)
+- [x] Download button still available for direct save
+- [x] Applies to both client portal and accountant engagement page
+- [x] Auth token preserved in both actions
+- [x] Blob URL cleanup unchanged (60s for view, 30s for download)
