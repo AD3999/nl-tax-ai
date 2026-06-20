@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Bell, X, CheckCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -39,16 +40,18 @@ export default function NotificationBell() {
   const [items, setItems]         = useState<AppNotification[]>([]);
   const [loading, setLoading]     = useState(false);
   const prevCountRef              = useRef(0);
+  const initializedRef            = useRef(false); // skip toast on first mount poll
   const panelRef                  = useRef<HTMLDivElement>(null);
 
   const fetchCount = useCallback(async () => {
     if (!user) return;
     try {
       const n = await getUnreadCount();
-      // Toast on new notification (count increased since last poll)
-      if (n > prevCountRef.current && prevCountRef.current !== 0) {
+      // Show toast when count increases during the session (not on first mount)
+      if (initializedRef.current && n > prevCountRef.current) {
         showToast("You have a new notification", "success");
       }
+      initializedRef.current = true;
       prevCountRef.current = n;
       setCount(n);
     } catch { /* silent */ }
@@ -142,8 +145,8 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {/* ── Dropdown panel ── */}
-      {open && (
+      {/* ── Dropdown panel — rendered in a portal so it escapes sidebar overflow/stacking ── */}
+      {open && createPortal(
         <div style={{
           position: "fixed",
           top: 52,
@@ -254,7 +257,8 @@ export default function NotificationBell() {
               </button>
             ))}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
