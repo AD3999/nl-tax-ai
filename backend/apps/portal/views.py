@@ -30,6 +30,7 @@ from .models import (
     ReminderLog, PortalMessage,
 )
 from apps.users.push_utils import send_push_notification
+from apps.users.notification_utils import create_notification
 from .serializers import (
     AccountantClientProfileSerializer, TaxEngagementSerializer,
     DocumentRequestSerializer, ClientDocumentSerializer,
@@ -405,6 +406,18 @@ class ClientDocumentUploadView(APIView):
                client_profile=client_profile, engagement=engagement,
                after={"filename": doc.original_filename, "size": doc.file_size})
 
+        # Notify accountant that a new document has been uploaded
+        if engagement.accountant_id and engagement.accountant_id != request.user.pk:
+            client_name = client_profile.first_name or client_profile.email or "Your client"
+            create_notification(
+                user=engagement.accountant,
+                notif_type="document_uploaded",
+                title="New document uploaded",
+                body=f"{client_name} uploaded "{doc.user_title or doc.original_filename}".",
+                action_url=f"/accountant/engagements/{engagement.id}",
+                metadata={"engagement_id": engagement.id, "document_id": doc.id},
+            )
+
         # Update any linked document_request status
         if doc.document_request:
             req = doc.document_request
@@ -503,6 +516,16 @@ class DocumentReviewView(APIView):
                         sender=request.user,
                         body=body,
                     )
+                    # In-app notification for the client
+                    if doc.client_profile.client_user_id:
+                        create_notification(
+                            user=doc.client_profile.client_user,
+                            notif_type="document_rejected",
+                            title="Document rejected",
+                            body=body,
+                            action_url="/client/tasks",
+                            metadata={"engagement_id": doc.engagement_id, "document_id": doc.id},
+                        )
                 except Exception:
                     pass  # Notification failure must never block the review action
 
@@ -516,6 +539,28 @@ class DocumentReviewView(APIView):
                 if linked_item and linked_item.status not in ("accepted", "waived"):
                     linked_item.status = "accepted"
                     linked_item.save(update_fields=["status"])
+
+                # Notify client that document was approved
+                if doc.client_profile.client_user_id:
+                    doc_title = doc.user_title or doc.original_filename or "document"
+                    lang = doc.client_profile.preferred_language or "nl"
+                    APPROVED_TITLE = {"nl": "Document goedgekeurd", "en": "Document approved", "fa": "سند تأیید شد"}
+                    APPROVED_BODY = {
+                        "nl": f"Uw document '{doc_title}' is goedgekeurd door uw accountant.",
+                        "en": f"Your document '{doc_title}' has been approved by your accountant.",
+                        "fa": f"سند '{doc_title}' شما توسط حسابدارتان تأیید شد.",
+                    }
+                    try:
+                        create_notification(
+                            user=doc.client_profile.client_user,
+                            notif_type="document_approved",
+                            title=APPROVED_TITLE.get(lang, APPROVED_TITLE["en"]),
+                            body=APPROVED_BODY.get(lang, APPROVED_BODY["en"]),
+                            action_url="/client/tasks",
+                            metadata={"engagement_id": doc.engagement_id, "document_id": doc.id},
+                        )
+                    except Exception:
+                        pass
 
         return Response(ClientDocumentSerializer(doc, context={"request": request}).data)
 
@@ -684,6 +729,25 @@ class AccountantActionsView(APIView):
         from apps.portal.services.accountant_actions import generate_accountant_actions
         result = generate_accountant_actions(eng)
         _audit(request, "actions_generated", "TaxEngagement", eng.id, engagement=eng)
+
+        # Notify client that new tasks are available
+        if eng.client_profile.client_user_id:
+            lang = eng.client_profile.preferred_language or "nl"
+            TITLES = {"nl": "Nieuwe taken beschikbaar", "en": "New tasks available", "fa": "وظایف جدید در دسترس است"}
+            BODIES = {
+                "nl": "Uw accountant heeft nieuwe taken gegenereerd voor uw belastingdossier.",
+                "en": "Your accountant has generated new tasks for your tax file.",
+                "fa": "حسابدار شما وظایف جدیدی برای پرونده مالیاتی شما ایجاد کرده است.",
+            }
+            create_notification(
+                user=eng.client_profile.client_user,
+                notif_type="checklist_update",
+                title=TITLES.get(lang, TITLES["en"]),
+                body=BODIES.get(lang, BODIES["en"]),
+                action_url="/client/tasks",
+                metadata={"engagement_id": eng.id},
+            )
+
         return Response(result)
 
 
@@ -990,11 +1054,22 @@ class PortalReminderView(APIView):
                 "en": f"{missing_count} document(s) needed for your {eng.tax_year} tax file.",
                 "fa": f"{missing_count} سند برای پرونده مالیاتی {eng.tax_year} شما لازم است.",
             }
+            push_title = PUSH_TITLE.get(lang, PUSH_TITLE["en"])
+            push_body  = PUSH_BODY.get(lang, PUSH_BODY["en"])
             send_push_notification(
                 user=profile.client_user,
-                title=PUSH_TITLE.get(lang, PUSH_TITLE["en"]),
-                body=PUSH_BODY.get(lang, PUSH_BODY["en"]),
+                title=push_title,
+                body=push_body,
                 url="/client/messages",
+            )
+            # Also create an in-app notification record
+            create_notification(
+                user=profile.client_user,
+                notif_type="system",
+                title=push_title,
+                body=push_body,
+                action_url="/client/messages",
+                metadata={"engagement_id": eng.id, "missing_count": missing_count},
             )
 
         _audit(request, "reminder_sent", "TaxEngagement", eng.id,
@@ -1394,6 +1469,33 @@ class EngagementMessagesView(APIView):
         )
         _audit(request, "message_sent", "PortalMessage", msg.id,
                client_profile=eng.client_profile, engagement=eng)
+
+        # Notify the other party: if accountant sent → notify client; if client sent → notify accountant
+        sender_name = request.user.get_full_name() or request.user.email
+        body_preview = body[:120] + ("…" if len(body) > 120 else "")
+        if request.user.role == "accountant":
+            if eng.client_profile.client_user_id:
+                lang = eng.client_profile.preferred_language or "nl"
+                TITLES = {"nl": "Nieuw bericht van uw accountant", "en": "New message from your accountant", "fa": "پیام جدید از حسابدار شما"}
+                create_notification(
+                    user=eng.client_profile.client_user,
+                    notif_type="message_received",
+                    title=TITLES.get(lang, TITLES["en"]),
+                    body=body_preview,
+                    action_url="/client/messages",
+                    metadata={"engagement_id": eng.id},
+                )
+        else:
+            if eng.accountant_id:
+                create_notification(
+                    user=eng.accountant,
+                    notif_type="message_received",
+                    title=f"New message from {sender_name}",
+                    body=body_preview,
+                    action_url=f"/accountant/engagements/{eng.id}",
+                    metadata={"engagement_id": eng.id},
+                )
+
         return Response(
             PortalMessageSerializer(msg, context={"request": request}).data,
             status=201,
@@ -1446,6 +1548,18 @@ class ClientMessagesView(APIView):
             sender=request.user,
             body=body,
         )
+        # Notify accountant of new client message
+        if eng and eng.accountant_id:
+            sender_name = request.user.get_full_name() or profile.first_name or request.user.email
+            body_preview = body[:120] + ("…" if len(body) > 120 else "")
+            create_notification(
+                user=eng.accountant,
+                notif_type="message_received",
+                title=f"New message from {sender_name}",
+                body=body_preview,
+                action_url=f"/accountant/engagements/{eng.id}",
+                metadata={"engagement_id": eng.id},
+            )
         return Response(
             PortalMessageSerializer(msg, context={"request": request}).data,
             status=201,

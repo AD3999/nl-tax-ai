@@ -1112,3 +1112,77 @@ class DataExportView(APIView):
             "portal_document_count": ClientDocument.objects.filter(uploaded_by=user).count(),
             "conversation_count":  Conversation.objects.filter(user=user).count(),
         })
+
+
+# ── In-app Notifications ──────────────────────────────────────────────────────
+
+class InAppNotificationsView(APIView):
+    """
+    GET  /api/users/inapp-notifications/          — list (newest first, max 50)
+    POST /api/users/inapp-notifications/read-all/ — mark all as read
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from .models import Notification
+        notifs = (
+            Notification.objects
+            .filter(user=request.user)
+            .order_by("-created_at")[:50]
+        )
+        data = [
+            {
+                "id":                n.id,
+                "notification_type": n.notification_type,
+                "title":             n.title,
+                "body":              n.body,
+                "is_read":           n.is_read,
+                "action_url":        n.action_url,
+                "created_at":        n.created_at.isoformat(),
+            }
+            for n in notifs
+        ]
+        return Response(data)
+
+
+class InAppNotificationReadAllView(APIView):
+    """POST /api/users/inapp-notifications/read-all/"""
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from .models import Notification
+        from django.utils import timezone
+        Notification.objects.filter(user=request.user, is_read=False).update(
+            is_read=True, read_at=timezone.now()
+        )
+        return Response({"ok": True})
+
+
+class InAppNotificationDetailView(APIView):
+    """PATCH /api/users/inapp-notifications/<id>/read/ — mark one as read"""
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        from .models import Notification
+        from django.utils import timezone
+        from django.shortcuts import get_object_or_404
+        notif = get_object_or_404(Notification, pk=pk, user=request.user)
+        if not notif.is_read:
+            notif.is_read = True
+            notif.read_at = timezone.now()
+            notif.save(update_fields=["is_read", "read_at"])
+        return Response({"ok": True})
+
+
+class InAppUnreadCountView(APIView):
+    """GET /api/users/inapp-notifications/unread-count/ — lightweight badge poll"""
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from .models import Notification
+        count = Notification.objects.filter(user=request.user, is_read=False).count()
+        return Response({"count": count})

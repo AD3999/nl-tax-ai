@@ -10,6 +10,8 @@ from .views import (
     PushVapidKeyView, PushSubscribeView,
     ClientMyAccountantView,
     AccountDeletionView, DataExportView,
+    InAppNotificationsView, InAppNotificationReadAllView,
+    InAppNotificationDetailView, InAppUnreadCountView,
 )
 from .admin_views import AdminUserListView, AdminUserDetailView
 
@@ -44,6 +46,11 @@ urlpatterns = [
     # Web Push
     path("push/vapid-key/",  PushVapidKeyView.as_view(),   name="push-vapid-key"),
     path("push/subscribe/",  PushSubscribeView.as_view(),  name="push-subscribe"),
+    # In-app notifications
+    path("inapp-notifications/",              InAppNotificationsView.as_view(),      name="inapp-notifications"),
+    path("inapp-notifications/read-all/",     InAppNotificationReadAllView.as_view(), name="inapp-notifications-read-all"),
+    path("inapp-notifications/unread-count/", InAppUnreadCountView.as_view(),         name="inapp-notifications-count"),
+    path("inapp-notifications/<int:pk>/read/", InAppNotificationDetailView.as_view(), name="inapp-notification-read"),
     # GDPR
     path("me/",             AccountDeletionView.as_view(), name="account-deletion"),
     path("me/data-export/", DataExportView.as_view(),      name="data-export"),

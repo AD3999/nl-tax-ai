@@ -4,6 +4,7 @@ import { Menu } from "lucide-react";
 import { useMobile } from "../hooks/useMobile";
 import { AppSidebarDesktop, AppSidebarMobileDrawer } from "./AppSidebar";
 import BottomNav from "./BottomNav";
+import NotificationBell from "./NotificationBell";
 import { useAuth } from "../context/AuthContext";
 
 // Pages that should fill the content area without padding (full-bleed)
@@ -89,9 +90,11 @@ export default function AppLayout() {
               fontWeight: 800,
               letterSpacing: "-0.04em",
               color: "var(--text)",
+              flex: 1,
             }}>
               Tax<span style={{ color: "var(--blue)" }}>Wijs</span>
             </span>
+            <NotificationBell />
           </div>
         )}
 

@@ -5377,3 +5377,45 @@ Added **Rule 7 — PORTAL TASK PROTOCOL**:
 - [x] Applies to both client portal and accountant engagement page
 - [x] Auth token preserved in both actions
 - [x] Blob URL cleanup unchanged (60s for view, 30s for download)
+
+---
+
+### Session — 2026-06-20 — Full Notification System (both sides)
+
+**What was built:** End-to-end in-app notification system + Web Push for both clients and accountants.
+
+**Backend — new files:**
+- `backend/apps/users/notification_utils.py` — `create_notification()` helper: writes `Notification` DB record + fires Web Push in one call. Errors never propagate to callers.
+
+**Backend — modified files:**
+- `backend/apps/users/views.py` — 4 new views: `InAppNotificationsView` (GET list), `InAppNotificationReadAllView` (POST mark-all-read), `InAppNotificationDetailView` (PATCH mark-one-read), `InAppUnreadCountView` (GET count for polling).
+- `backend/apps/users/urls.py` — 4 new routes under `/api/users/inapp-notifications/`.
+- `backend/apps/portal/views.py` — `create_notification()` calls injected at every key event:
+  - Document uploaded → notify accountant
+  - Document approved → notify client (trilingual title/body)
+  - Document rejected → notify client (trilingual, in addition to existing in-app message)
+  - Reminder sent → add in-app `Notification` record (Web Push already existed)
+  - Accountant sends message → notify client
+  - Client sends message → notify accountant
+  - Actions generated (tasks) → notify client
+
+**Frontend — new files:**
+- `frontend/src/api/notifications.ts` — typed API calls: `getNotifications`, `getUnreadCount`, `markRead`, `markAllRead`.
+- `frontend/src/components/NotificationBell.tsx` — Bell icon with red badge (unread count), click → dropdown panel with full list, emoji type icons, unread dot, "Mark all as read", time-ago stamps, click navigates to `action_url`. Polls count every 30s; toasts when count increases.
+
+**Frontend — modified files:**
+- `frontend/src/components/AppSidebar.tsx` — `NotificationBell` in sidebar logo row (desktop).
+- `frontend/src/components/AppLayout.tsx` — `NotificationBell` in mobile topbar (right of TaxWijs wordmark).
+
+**Web Push:** Already wired (`sw.js`, `usePushNotifications`, VAPID). `create_notification()` calls `send_push_notification()` automatically so every in-app notification also fires a push to the user's registered devices.
+
+- [x] Bell icon with numeric unread badge — both sidebar (desktop) and topbar (mobile)
+- [x] Dropdown panel: list of 50 most recent notifications, type emoji, unread dot, time-ago
+- [x] Mark single notification as read on click (navigates to action_url)
+- [x] Mark all as read button
+- [x] 30s polling for unread count
+- [x] Toast on new notification (count increased since last poll)
+- [x] Web Push fired for every notification event
+- [x] Triggers: message received (both sides), document uploaded, approved, rejected, tasks generated, reminder sent
+- [x] Trilingual notification text (NL/EN/FA) for client-facing events
+- [x] TypeScript clean (0 errors)

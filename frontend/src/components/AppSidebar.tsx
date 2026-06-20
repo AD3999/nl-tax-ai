@@ -13,6 +13,7 @@ import { client as apiClient } from "../api/client";
 import Wordmark from "./Wordmark";
 import LangSwitch from "./LangSwitch";
 import ThemeToggle from "./ThemeToggle";
+import NotificationBell from "./NotificationBell";
 
 export const SIDEBAR_W = 280;
 
@@ -135,10 +136,16 @@ function SidebarContent({ onNav }: SidebarContentProps) {
       }}
     >
       {/* ── Logo ─────────────────────────────────────────────────────────── */}
-      <div style={{ padding: "20px 16px 16px", borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
+      <div style={{
+        padding: "16px 16px 14px",
+        borderBottom: "1px solid var(--border)",
+        flexShrink: 0,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
         <NavLink to={user ? "/dashboard" : "/"} onClick={onNav} style={{ textDecoration: "none", display: "inline-block" }}>
           <Wordmark size={15} dark />
         </NavLink>
+        <NotificationBell />
       </div>
 
       {/* ── Nav items ────────────────────────────────────────────────────── */}
