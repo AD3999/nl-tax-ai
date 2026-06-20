@@ -213,7 +213,7 @@ export default function NotificationBell() {
                 key={notif.id}
                 onClick={() => void handleClick(notif)}
                 style={{
-                  width: "100%", textAlign: "left", background: "none",
+                  width: "100%", textAlign: "left",
                   border: "none", borderBottom: "1px solid var(--border)",
                   cursor: "pointer",
                   padding: "12px 16px",
