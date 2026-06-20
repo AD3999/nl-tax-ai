@@ -94,14 +94,27 @@ export default function NotificationBell() {
   }
 
   async function handleClick(notif: AppNotification) {
-    if (!notif.is_read) {
-      await markRead(notif.id);
-      setItems(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
-      setCount(prev => Math.max(0, prev - 1));
-      prevCountRef.current = Math.max(0, prevCountRef.current - 1);
-    }
+    // Close panel first so navigation feels instant
     setOpen(false);
-    if (notif.action_url) navigate(notif.action_url);
+    // Mark as read (fire-and-forget — don't block navigation)
+    if (!notif.is_read) {
+      markRead(notif.id).catch(() => null);
+      setItems(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
+    }
+    // Navigate to the relevant page
+    if (notif.action_url) {
+      navigate(notif.action_url);
+    }
+  }
+
+  function handleOpen() {
+    const opening = !open;
+    setOpen(o => !o);
+    // Clear badge the moment user opens the panel
+    if (opening && count > 0) {
+      setCount(0);
+      prevCountRef.current = 0;
+    }
   }
 
   if (!user) return null;
@@ -110,7 +123,7 @@ export default function NotificationBell() {
     <div ref={panelRef} style={{ position: "relative" }}>
       {/* ── Bell button ── */}
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={handleOpen}
         title="Notifications"
         style={{
           position: "relative",
