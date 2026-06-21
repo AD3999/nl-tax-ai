@@ -1,7 +1,47 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 20 Jun 2026 — Notification clear-on-click + prior UX session
+> Last updated: 21 Jun 2026 — P0/P1/P2 sprint complete
+
+---
+
+## Session — 21 Jun 2026 · P0/P1/P2 Sprint ✅ Complete
+
+### What was implemented
+
+#### P0 — Critical (must ship)
+
+**1. RAG wired into chat** — Already integrated at  (lines 430–438). Confirmed intact. Falls back gracefully if phase2 not imported.
+
+**2. Paywall enforcement** — Limits corrected:  and  (both env-configurable). New  hook () gates premium features. New  component () shows blur + lock overlay. PDF download in  gated behind premium. Tax history page gated behind premium.
+
+**3. SMTP/email** — Full SMTP settings added to : , , , , , . All env-driven.
+
+**4. Celery beat reminder tasks** — Added 4 tasks to : send-btw-reminders (08:15 daily), send-ib-reminder (08:20 daily), send-monthly-reserve-reminder (1st of month 09:00), send-rule-change-notifications (09:30 daily).  fixed to create  DB records. Email delivery wired into all 4 task functions.
+
+#### P1 — Important (this sprint)
+
+**5. Persian translation audit** — All 3 locale files confirmed in sync at 176 keys each.  sidebar items fixed in prior session.
+
+**6. Structured error logging** — Sentry already configured at . Confirmed intact.
+
+**7. Load test** —  created. Two user classes:  (anonymous) and . Tasks: health (x5), reminders (x4), alerts (x3), calculator (x3), chat SSE stream (x2), email capture (x1). CI fail hooks: error rate >1% or p95 >5000ms.
+
+**8. Admin/portal testing** — Confirmed all admin pages routed correctly. Portal (accountant + client) routes verified in .
+
+#### P2 — Next tier (this sprint)
+
+**11. Conversation resume** —  URL param now restores full conversation history. Backend:  extended with  param. Frontend:  reads  and fetches history on mount.
+
+**12. Accountant marketplace** —  endpoint added (). Supports , ,  filters. Frontend:  with trilingual UI, specialization filter pills, rating/booking CTA. Route: . No auth required.
+
+**13. Google Calendar push sync** — Already implemented via  subscription and per-event Google Calendar links in . Confirmed intact.
+
+**Skipped by user request:**
+- #9 AI Tax Memory — already implemented in prior session (chat/views.py + User.tax_memory JSONField)
+- #10 WhatsApp/SMS — user explicitly excluded this
+
+**Branch:**  → merged to .
 
 ---
 
