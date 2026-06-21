@@ -204,3 +204,102 @@ class AccountantSetupTests(TestCase):
             "firm_name": "Fake Firm",
         }, format="json")
         self.assertIn(resp.status_code, (400, 403))
+
+
+# ── Admin user management endpoint tests ─────────────────────────────────────
+
+class AdminUserListTests(TestCase):
+    """GET /api/users/admin/list/ — staff-only user list."""
+
+    def setUp(self):
+        self.staff = _make_user("staff@test.com", is_staff=True)
+        self.regular = _make_user("regular@test.com")
+        _make_user("alice@test.com", user_type="zzp", plan="premium")
+        _make_user("bob@test.com",   user_type="employee", plan="free")
+
+    def test_anonymous_returns_401(self):
+        r = APIClient().get("/api/users/admin/list/")
+        self.assertEqual(r.status_code, 401)
+
+    def test_non_staff_returns_403(self):
+        r = _auth(self.regular).get("/api/users/admin/list/")
+        self.assertEqual(r.status_code, 403)
+
+    def test_staff_gets_200_with_users_key(self):
+        r = _auth(self.staff).get("/api/users/admin/list/")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("users", r.data)
+        self.assertIn("total", r.data)
+
+    def test_all_created_users_appear(self):
+        r = _auth(self.staff).get("/api/users/admin/list/")
+        emails = {u["email"] for u in r.data["users"]}
+        self.assertIn("alice@test.com", emails)
+        self.assertIn("bob@test.com", emails)
+
+    def test_search_filter(self):
+        r = _auth(self.staff).get("/api/users/admin/list/?search=alice")
+        self.assertEqual(r.status_code, 200)
+        emails = [u["email"] for u in r.data["users"]]
+        self.assertIn("alice@test.com", emails)
+        self.assertNotIn("bob@test.com", emails)
+
+    def test_plan_filter(self):
+        r = _auth(self.staff).get("/api/users/admin/list/?plan=premium")
+        self.assertEqual(r.status_code, 200)
+        for u in r.data["users"]:
+            self.assertEqual(u["plan"], "premium")
+
+    def test_user_type_filter(self):
+        r = _auth(self.staff).get("/api/users/admin/list/?user_type=zzp")
+        self.assertEqual(r.status_code, 200)
+        for u in r.data["users"]:
+            self.assertEqual(u["user_type"], "zzp")
+
+
+class AdminUserDetailTests(TestCase):
+    """GET/PATCH /api/users/admin/<pk>/ — staff-only user detail & edit."""
+
+    def setUp(self):
+        self.staff = _make_user("staff2@test.com", is_staff=True)
+        self.target = _make_user("target@test.com", plan="free")
+
+    def test_anonymous_returns_401(self):
+        r = APIClient().get(f"/api/users/admin/{self.target.pk}/")
+        self.assertEqual(r.status_code, 401)
+
+    def test_non_staff_returns_403(self):
+        regular = _make_user("reg2@test.com")
+        r = _auth(regular).get(f"/api/users/admin/{self.target.pk}/")
+        self.assertEqual(r.status_code, 403)
+
+    def test_staff_gets_user_detail(self):
+        r = _auth(self.staff).get(f"/api/users/admin/{self.target.pk}/")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data["email"], "target@test.com")
+        self.assertIn("intake_profile", r.data)
+
+    def test_staff_can_upgrade_plan(self):
+        r = _auth(self.staff).patch(
+            f"/api/users/admin/{self.target.pk}/",
+            {"plan": "premium"},
+            format="json",
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data["plan"], "premium")
+        self.target.refresh_from_db()
+        self.assertEqual(self.target.plan, "premium")
+
+    def test_patch_unknown_user_returns_404(self):
+        r = _auth(self.staff).patch("/api/users/admin/999999/", {"plan": "premium"}, format="json")
+        self.assertEqual(r.status_code, 404)
+
+    def test_staff_can_deactivate_user(self):
+        r = _auth(self.staff).patch(
+            f"/api/users/admin/{self.target.pk}/",
+            {"is_active": False},
+            format="json",
+        )
+        self.assertEqual(r.status_code, 200)
+        self.target.refresh_from_db()
+        self.assertFalse(self.target.is_active)

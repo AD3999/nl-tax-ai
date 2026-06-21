@@ -9,6 +9,19 @@ from unittest import mock
 
 from django.test import TestCase
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
+def _make_user(email, password="testpass", **kw):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    return User.objects.create_user(username=email, email=email, password=password, **kw)
+
+
+def _auth(user):
+    c = APIClient()
+    c.credentials(HTTP_AUTHORIZATION=f"Bearer {str(RefreshToken.for_user(user).access_token)}")
+    return c
 
 
 def _stream_content(resp):
@@ -123,3 +136,105 @@ class IBFieldsAPITests(TestCase):
         total = len(self.client.get("/api/tax/ib/fields/").json())
         dga = len(self.client.get("/api/tax/ib/fields/?user_type=dga").json())
         self.assertLessEqual(dga, total)
+
+
+# ── Admin chat log endpoint tests ─────────────────────────────────────────────
+
+class AdminChatLogsTests(TestCase):
+    """GET /api/chat/admin/logs/ — staff-only chat log access."""
+
+    def setUp(self):
+        from apps.chat.models import Conversation, Message
+        self.staff = _make_user("staff@chat.test", is_staff=True)
+        self.regular = _make_user("user@chat.test")
+
+        self.conv = Conversation.objects.create(
+            user=self.regular,
+            language="nl",
+            tax_year=2026,
+            summary="Test conversation about ZZP taxes",
+        )
+        Message.objects.create(
+            conversation=self.conv, role="user",
+            content="Hoeveel belasting betaal ik?",
+        )
+        Message.objects.create(
+            conversation=self.conv, role="assistant",
+            content="Dat hangt af van uw inkomen.",
+        )
+
+    def test_anonymous_returns_401(self):
+        r = APIClient().get("/api/chat/admin/logs/")
+        self.assertEqual(r.status_code, 401)
+
+    def test_non_staff_returns_403(self):
+        r = _auth(self.regular).get("/api/chat/admin/logs/")
+        self.assertEqual(r.status_code, 403)
+
+    def test_staff_gets_200_with_conversations_key(self):
+        r = _auth(self.staff).get("/api/chat/admin/logs/")
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("conversations", r.data)
+        self.assertIn("total", r.data)
+
+    def test_conversation_appears_in_list(self):
+        r = _auth(self.staff).get("/api/chat/admin/logs/")
+        ids = [c["id"] for c in r.data["conversations"]]
+        self.assertIn(self.conv.id, ids)
+
+    def test_search_by_summary(self):
+        r = _auth(self.staff).get("/api/chat/admin/logs/?search=ZZP")
+        self.assertEqual(r.status_code, 200)
+        self.assertGreater(len(r.data["conversations"]), 0)
+
+    def test_search_no_match_returns_empty(self):
+        r = _auth(self.staff).get("/api/chat/admin/logs/?search=XYZNOTFOUND999")
+        self.assertEqual(len(r.data["conversations"]), 0)
+
+    def test_lang_filter(self):
+        r = _auth(self.staff).get("/api/chat/admin/logs/?lang=nl")
+        self.assertEqual(r.status_code, 200)
+        for c in r.data["conversations"]:
+            self.assertEqual(c["language"], "nl")
+
+
+class AdminChatDetailTests(TestCase):
+    """GET /api/chat/admin/logs/<pk>/ — staff-only conversation detail with messages."""
+
+    def setUp(self):
+        from apps.chat.models import Conversation, Message
+        self.staff = _make_user("staff2@chat.test", is_staff=True)
+        self.regular = _make_user("user2@chat.test")
+
+        self.conv = Conversation.objects.create(
+            user=self.regular, language="en", tax_year=2026,
+        )
+        Message.objects.create(conversation=self.conv, role="user", content="Hello")
+        Message.objects.create(conversation=self.conv, role="assistant", content="Hi there")
+
+    def test_anonymous_returns_401(self):
+        r = APIClient().get(f"/api/chat/admin/logs/{self.conv.pk}/")
+        self.assertEqual(r.status_code, 401)
+
+    def test_non_staff_returns_403(self):
+        r = _auth(self.regular).get(f"/api/chat/admin/logs/{self.conv.pk}/")
+        self.assertEqual(r.status_code, 403)
+
+    def test_staff_gets_conversation_with_messages(self):
+        r = _auth(self.staff).get(f"/api/chat/admin/logs/{self.conv.pk}/")
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.data["id"], self.conv.pk)
+        self.assertIn("messages", r.data)
+        self.assertEqual(len(r.data["messages"]), 2)
+
+    def test_messages_have_required_fields(self):
+        r = _auth(self.staff).get(f"/api/chat/admin/logs/{self.conv.pk}/")
+        for msg in r.data["messages"]:
+            self.assertIn("id", msg)
+            self.assertIn("role", msg)
+            self.assertIn("content", msg)
+            self.assertIn("created_at", msg)
+
+    def test_unknown_conv_returns_404(self):
+        r = _auth(self.staff).get("/api/chat/admin/logs/999999/")
+        self.assertEqual(r.status_code, 404)
