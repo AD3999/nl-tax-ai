@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
  * - Authenticated premium users: always true
  * - Free / anonymous users: false
  */
-export function useAccess(feature: "simulation" | "pdf_report" | "tax_history" | "unlimited_chat"): {
+export function useAccess(_feature: "simulation" | "pdf_report" | "tax_history" | "unlimited_chat"): {
   allowed: boolean;
   isPremium: boolean;
   isLoggedIn: boolean;
