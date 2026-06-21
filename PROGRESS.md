@@ -5,6 +5,44 @@
 
 ---
 
+## Session — 21 Jun 2026 · Issues Sprint ✅ Complete
+
+### What was fixed
+
+Three remaining items from the issues/tables.txt audit:
+
+#### 1. Portal AI extraction → Async Celery task
+- `process_document_task` already existed in `portal/tasks.py` with retry logic.
+- `portal/views.py` was calling `extract_from_document()` synchronously, blocking uploads for up to ~3s.
+- Fixed: now calls `process_document_task.delay(doc.id)` — upload returns immediately.
+
+#### 2. Admin pages → Tests written
+- `backend/apps/users/tests.py`: `AdminUserListTests` + `AdminUserDetailTests`
+  - Tests: anon→401, non-staff→403, staff gets list+detail, search/plan/user_type filters, PATCH plan+deactivate, 404 on unknown
+- `backend/apps/chat/tests.py`: `AdminChatLogsTests` + `AdminChatDetailTests`
+  - Tests: anon→401, non-staff→403, staff sees all convs, search by summary, lang filter, detail includes messages array with required fields
+
+#### 3. Google Calendar 2-way push sync
+**Backend:**
+- `User` model: `google_calendar_enabled` + `google_calendar_refresh_token` fields
+- Migration `0012_google_calendar_sync`
+- `services/google_calendar.py`: OAuth flow, token exchange/refresh, event upsert via Calendar REST API, revoke
+- `push_google_calendar_task` (per-user Celery task, 3 retries)
+- `sync_all_google_calendars_task` (daily 07:00 Celery beat for all connected users)
+- 5 new endpoints: `auth-url`, `callback` (OAuth redirect target), `disconnect`, `sync`, `status`
+- Refresh token encrypted at rest via `django.core.signing` (uses SECRET_KEY — no extra dependency)
+- GDPR: `anonymize()` clears calendar token
+- Settings: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALENDAR_REDIRECT_URI`
+
+**Frontend (`TaxCalendarPage.tsx`):**
+- Push sync card shown to logged-in users
+- Status fetched on mount, OAuth callback result handled via `?gcal=` URL param
+- Connect → redirect to Google consent; Connected state: Sync Now + Disconnect
+- Trilingual NL/EN/FA labels for all states
+
+**Branch:** `master` (direct commits).
+
+---
 ## Session — 21 Jun 2026 · P0/P1/P2 Sprint ✅ Complete
 
 ### What was implemented
