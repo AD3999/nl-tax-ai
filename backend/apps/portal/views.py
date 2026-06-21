@@ -425,12 +425,12 @@ class ClientDocumentUploadView(APIView):
                 req.status = "uploaded"
                 req.save(update_fields=["status"])
 
-        # Async extraction — run inline for now (Celery can be added later)
+        # Queue async AI extraction — never blocks the upload response
         try:
-            from apps.portal.services.document_extraction import extract_from_document
-            extract_from_document(doc)
+            from apps.portal.tasks import process_document_task
+            process_document_task.delay(doc.id)
         except Exception:
-            pass  # Extraction failure must never block the upload
+            pass
 
         return Response(ClientDocumentSerializer(doc, context={"request": request}).data, status=status.HTTP_201_CREATED)
 
