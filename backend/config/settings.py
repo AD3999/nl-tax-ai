@@ -195,6 +195,11 @@ CELERY_BEAT_SCHEDULE = {
         "task": "users.send_rule_change_notifications",
         "schedule": crontab(hour=9, minute=30),
     },
+    # Google Calendar: push deadline events to all connected users — daily at 07:00
+    "sync-google-calendars": {
+        "task": "apps.users.tasks.sync_all_google_calendars_task",
+        "schedule": crontab(hour=7, minute=0),
+    },
 }
 
 # ── Stripe ────────────────────────────────────────────────────────────────────
@@ -209,6 +214,14 @@ FREE_DAILY_LIMIT  = env.int("FREE_DAILY_LIMIT",  default=10)   # free accounts: 
 ANON_SESSION_LIMIT = env.int("ANON_SESSION_LIMIT", default=5)   # anonymous: 5 messages per browser session
 
 # ── Email (SMTP) ───────────────────────────────────────────────────────────────
+# ── Google OAuth (shared for login + Calendar sync) ───────────────────────────
+GOOGLE_CLIENT_ID     = env("GOOGLE_CLIENT_ID", default=env("VITE_GOOGLE_CLIENT_ID", default=""))
+GOOGLE_CLIENT_SECRET = env("GOOGLE_CLIENT_SECRET", default="")
+GOOGLE_CALENDAR_REDIRECT_URI = env(
+    "GOOGLE_CALENDAR_REDIRECT_URI",
+    default="http://localhost:8000/api/users/google-calendar/callback/",
+)
+
 EMAIL_BACKEND     = env("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
 EMAIL_HOST        = env("EMAIL_HOST", default="")
 EMAIL_PORT        = env.int("EMAIL_PORT", default=587)

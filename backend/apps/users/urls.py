@@ -13,6 +13,9 @@ from .views import (
     InAppNotificationsView, InAppNotificationReadAllView,
     InAppNotificationDetailView, InAppUnreadCountView,
     AccountantMarketplaceView,
+    GoogleCalendarAuthUrlView, GoogleCalendarCallbackView,
+    GoogleCalendarDisconnectView, GoogleCalendarSyncNowView,
+    GoogleCalendarStatusView,
 )
 from .admin_views import AdminUserListView, AdminUserDetailView
 
@@ -58,6 +61,12 @@ urlpatterns = [
     path("me/data-export/", DataExportView.as_view(),      name="data-export"),
     # Accountant marketplace (public browse)
     path("marketplace/",             AccountantMarketplaceView.as_view(), name="accountant-marketplace"),
+    # Google Calendar 2-way push sync
+    path("google-calendar/auth-url/",  GoogleCalendarAuthUrlView.as_view(),   name="gcal-auth-url"),
+    path("google-calendar/callback/",  GoogleCalendarCallbackView.as_view(),  name="gcal-callback"),
+    path("google-calendar/disconnect/", GoogleCalendarDisconnectView.as_view(), name="gcal-disconnect"),
+    path("google-calendar/sync/",      GoogleCalendarSyncNowView.as_view(),   name="gcal-sync"),
+    path("google-calendar/status/",    GoogleCalendarStatusView.as_view(),    name="gcal-status"),
     # Admin-only user management
     path("admin/list/",              AdminUserListView.as_view(),   name="admin-user-list"),
     path("admin/<int:pk>/",          AdminUserDetailView.as_view(), name="admin-user-detail"),

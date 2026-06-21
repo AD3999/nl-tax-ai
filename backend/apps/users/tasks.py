@@ -252,3 +252,47 @@ def send_rule_change_notifications():
 
     logger.info("[RULE CHANGES] rules=%d notified=%d", len(new_rules), notified)
     return {"new_rules": len(new_rules), "notified": notified}
+
+
+# ── Google Calendar push sync ─────────────────────────────────────────────────
+
+@shared_task(bind=True, max_retries=3)
+def push_google_calendar_task(self, user_id: int):
+    """Push all 2026 tax deadline events to the user's Google Calendar."""
+    from django.contrib.auth import get_user_model
+    from apps.users.services.google_calendar import push_deadlines_to_calendar
+
+    User = get_user_model()
+    try:
+        user = User.objects.get(pk=user_id)
+    except User.DoesNotExist:
+        logger.warning("[GCAL] User %d not found", user_id)
+        return
+
+    try:
+        count = push_deadlines_to_calendar(user)
+        logger.info("[GCAL] Pushed %d events for user %d", count, user_id)
+        return {"pushed": count}
+    except Exception as exc:
+        logger.error("[GCAL] Failed for user %d: %s", user_id, exc)
+        self.retry(exc=exc, countdown=120)
+
+
+@shared_task
+def sync_all_google_calendars_task():
+    """Daily task: push events for all users who have Google Calendar sync enabled."""
+    from django.contrib.auth import get_user_model
+    from apps.users.services.google_calendar import push_deadlines_to_calendar
+
+    User = get_user_model()
+    users = User.objects.filter(google_calendar_enabled=True, is_active=True)
+    total = 0
+    for user in users:
+        try:
+            push_deadlines_to_calendar(user)
+            total += 1
+        except Exception as exc:
+            logger.warning("[GCAL] Sync failed for user %d: %s", user.pk, exc)
+
+    logger.info("[GCAL] Daily sync complete — %d users synced", total)
+    return {"synced": total}

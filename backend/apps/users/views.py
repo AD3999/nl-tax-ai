@@ -1,5 +1,5 @@
 import requests as http_requests
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -1246,3 +1246,108 @@ class AccountantMarketplaceView(APIView):
             })
 
         return Response(data)
+
+
+# ── Google Calendar OAuth 2-way sync ─────────────────────────────────────────
+
+class GoogleCalendarAuthUrlView(APIView):
+    """GET /api/users/google-calendar/auth-url/ — returns the OAuth consent URL."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        from django.conf import settings
+        from apps.users.services.google_calendar import get_auth_url
+        if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
+            return Response(
+                {"error": "Google Calendar sync not configured on this server."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        redirect_uri = settings.GOOGLE_CALENDAR_REDIRECT_URI
+        url = get_auth_url(redirect_uri=redirect_uri, state=str(request.user.pk))
+        return Response({"auth_url": url})
+
+
+class GoogleCalendarCallbackView(APIView):
+    """GET /api/users/google-calendar/callback/ — OAuth redirect target from Google."""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from django.conf import settings
+        from django.shortcuts import redirect as django_redirect
+        from apps.users.services.google_calendar import exchange_code, _encrypt
+
+        code  = request.query_params.get("code")
+        state = request.query_params.get("state")   # encoded user_id
+        error = request.query_params.get("error")
+
+        frontend_base = getattr(settings, "FRONTEND_URL", "")
+
+        if error or not code or not state:
+            return django_redirect(f"{frontend_base}/tax-calendar?gcal=denied")
+
+        try:
+            user_id = int(state)
+            user = User.objects.get(pk=user_id)
+        except (ValueError, User.DoesNotExist):
+            return django_redirect(f"{frontend_base}/tax-calendar?gcal=error")
+
+        try:
+            tokens = exchange_code(code, settings.GOOGLE_CALENDAR_REDIRECT_URI)
+            refresh_token = tokens.get("refresh_token")
+            if not refresh_token:
+                return django_redirect(f"{frontend_base}/tax-calendar?gcal=no_refresh_token")
+
+            user.google_calendar_refresh_token = _encrypt(refresh_token)
+            user.google_calendar_enabled = True
+            user.save(update_fields=["google_calendar_refresh_token", "google_calendar_enabled"])
+
+            from apps.users.tasks import push_google_calendar_task
+            push_google_calendar_task.delay(user.pk)
+
+        except Exception:
+            return django_redirect(f"{frontend_base}/tax-calendar?gcal=error")
+
+        return django_redirect(f"{frontend_base}/tax-calendar?gcal=connected")
+
+
+class GoogleCalendarDisconnectView(APIView):
+    """DELETE /api/users/google-calendar/disconnect/ — revoke token and disable sync."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request):
+        from apps.users.services.google_calendar import revoke_token, _decrypt
+        user = request.user
+        if user.google_calendar_refresh_token:
+            try:
+                raw = _decrypt(user.google_calendar_refresh_token)
+                revoke_token(raw)
+            except Exception:
+                pass
+        user.google_calendar_refresh_token = None
+        user.google_calendar_enabled = False
+        user.save(update_fields=["google_calendar_refresh_token", "google_calendar_enabled"])
+        return Response({"status": "disconnected"})
+
+
+class GoogleCalendarSyncNowView(APIView):
+    """POST /api/users/google-calendar/sync/ — trigger an immediate push."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        if not user.google_calendar_enabled:
+            return Response({"error": "Google Calendar sync not connected."}, status=400)
+        from apps.users.tasks import push_google_calendar_task
+        push_google_calendar_task.delay(user.pk)
+        return Response({"status": "queued"})
+
+
+class GoogleCalendarStatusView(APIView):
+    """GET /api/users/google-calendar/status/ — returns sync status for the current user."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        return Response({
+            "enabled": request.user.google_calendar_enabled,
+            "connected": bool(request.user.google_calendar_refresh_token),
+        })

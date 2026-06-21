@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useMobile } from "../hooks/useMobile";
+import { useAuth } from "../context/AuthContext";
 import { apiBase, authHeader } from "../api/client";
 
 type Reminder = {
@@ -51,6 +52,16 @@ const TX: Record<Lang, {
   categories: string;
   add_event: string;
   no_reminders_to_sync: string;
+  gcal_push_title: string;
+  gcal_connect: string;
+  gcal_connected: string;
+  gcal_disconnect: string;
+  gcal_sync_now: string;
+  gcal_syncing: string;
+  gcal_queued: string;
+  gcal_denied: string;
+  gcal_error: string;
+  gcal_desc: string;
 }> = {
   nl: {
     title: "Belastingkalender 2026",
@@ -70,6 +81,16 @@ const TX: Record<Lang, {
     categories: "Categorieën",
     add_event: "📅 Toevoegen",
     no_reminders_to_sync: "Geen reminders om te synchroniseren",
+    gcal_push_title: "Google Calendar synchroniseren",
+    gcal_connect: "Verbinden met Google Calendar",
+    gcal_connected: "✓ Verbonden",
+    gcal_disconnect: "Verbreken",
+    gcal_sync_now: "Nu synchroniseren",
+    gcal_syncing: "Synchroniseren...",
+    gcal_queued: "Synchronisatie gestart",
+    gcal_denied: "Toegang geweigerd door Google",
+    gcal_error: "Synchronisatiefout — probeer het opnieuw",
+    gcal_desc: "Stuur alle belastingdeadlines automatisch naar uw Google Agenda.",
   },
   en: {
     title: "Tax Calendar 2026",
@@ -89,6 +110,16 @@ const TX: Record<Lang, {
     categories: "Categories",
     add_event: "📅 Add event",
     no_reminders_to_sync: "No reminders to sync",
+    gcal_push_title: "Google Calendar Sync",
+    gcal_connect: "Connect Google Calendar",
+    gcal_connected: "✓ Connected",
+    gcal_disconnect: "Disconnect",
+    gcal_sync_now: "Sync Now",
+    gcal_syncing: "Syncing...",
+    gcal_queued: "Sync queued",
+    gcal_denied: "Access denied by Google",
+    gcal_error: "Sync error — please try again",
+    gcal_desc: "Automatically push all tax deadlines to your Google Calendar.",
   },
   fa: {
     title: "تقویم مالیاتی ۲۰۲۶",
@@ -108,6 +139,16 @@ const TX: Record<Lang, {
     categories: "دسته‌بندی‌ها",
     add_event: "📅 افزودن رویداد",
     no_reminders_to_sync: "یادآوری‌ای برای همگام‌سازی وجود ندارد",
+    gcal_push_title: "همگام‌سازی با Google Calendar",
+    gcal_connect: "اتصال به Google Calendar",
+    gcal_connected: "✓ متصل",
+    gcal_disconnect: "قطع اتصال",
+    gcal_sync_now: "همگام‌سازی اکنون",
+    gcal_syncing: "در حال همگام‌سازی...",
+    gcal_queued: "همگام‌سازی در صف قرار گرفت",
+    gcal_denied: "دسترسی توسط Google رد شد",
+    gcal_error: "خطای همگام‌سازی — دوباره امتحان کنید",
+    gcal_desc: "تمام مهلت‌های مالیاتی را به‌صورت خودکار به Google Calendar خود ارسال کنید.",
   },
 };
 
@@ -135,7 +176,9 @@ function googleEventUrl(r: Reminder): string {
 export default function TaxCalendarPage() {
   const { i18n } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isMobile = useMobile();
+  const { user } = useAuth();
   const lang = (i18n.language === "nl" || i18n.language === "fa") ? i18n.language as Lang : "en";
   const tx = TX[lang];
   const isRtl = lang === "fa";
@@ -144,6 +187,65 @@ export default function TaxCalendarPage() {
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState(false);
   const [filter, setFilter]       = useState("all");
+
+  // Google Calendar 2-way push sync state
+  const [gcalConnected, setGcalConnected] = useState(false);
+  const [gcalLoading, setGcalLoading]     = useState(false);
+  const [gcalMsg, setGcalMsg]             = useState<string | null>(null);
+
+  // Fetch sync status for logged-in users
+  useEffect(() => {
+    if (!user) return;
+    fetch(`${apiBase}/users/google-calendar/status/`, { headers: authHeader() })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data?.connected) setGcalConnected(true); })
+      .catch(() => null);
+  }, [user]);
+
+  // Handle OAuth callback result (?gcal=connected|denied|error)
+  useEffect(() => {
+    const gcalParam = searchParams.get("gcal");
+    if (!gcalParam) return;
+    if (gcalParam === "connected") {
+      setGcalConnected(true);
+      setGcalMsg(tx.gcal_queued);
+    } else if (gcalParam === "denied") {
+      setGcalMsg(tx.gcal_denied);
+    } else if (gcalParam === "error" || gcalParam === "no_refresh_token") {
+      setGcalMsg(tx.gcal_error);
+    }
+  }, [searchParams, tx.gcal_queued, tx.gcal_denied, tx.gcal_error]);
+
+  const connectGcal = useCallback(async () => {
+    setGcalLoading(true);
+    try {
+      const r = await fetch(`${apiBase}/users/google-calendar/auth-url/`, { headers: authHeader() });
+      if (!r.ok) { setGcalMsg(tx.gcal_error); return; }
+      const { auth_url } = await r.json() as { auth_url: string };
+      window.location.href = auth_url;
+    } catch { setGcalMsg(tx.gcal_error); }
+    finally { setGcalLoading(false); }
+  }, [tx.gcal_error]);
+
+  const disconnectGcal = useCallback(async () => {
+    setGcalLoading(true);
+    try {
+      await fetch(`${apiBase}/users/google-calendar/disconnect/`, { method: "DELETE", headers: authHeader() });
+      setGcalConnected(false);
+      setGcalMsg(null);
+    } catch { setGcalMsg(tx.gcal_error); }
+    finally { setGcalLoading(false); }
+  }, [tx.gcal_error]);
+
+  const syncNowGcal = useCallback(async () => {
+    setGcalLoading(true);
+    setGcalMsg(tx.gcal_syncing);
+    try {
+      await fetch(`${apiBase}/users/google-calendar/sync/`, { method: "POST", headers: authHeader() });
+      setGcalMsg(tx.gcal_queued);
+    } catch { setGcalMsg(tx.gcal_error); }
+    finally { setGcalLoading(false); }
+  }, [tx.gcal_syncing, tx.gcal_queued, tx.gcal_error]);
 
   useEffect(() => {
     setLoading(true);
@@ -226,6 +328,40 @@ export default function TaxCalendarPage() {
             </div>
           </div>
         </div>
+
+        {/* Google Calendar 2-way push sync card — only shown to logged-in users */}
+        {user && (
+          <div className="card" style={{ padding: "var(--sp-4) var(--sp-5)", marginBottom: "var(--sp-5)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "var(--sp-3)" }}>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ink)", marginBottom: 2 }}>
+                🔄 {tx.gcal_push_title}
+              </div>
+              <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>{tx.gcal_desc}</div>
+              {gcalMsg && (
+                <div style={{ marginTop: 4, fontSize: "var(--text-xs)", color: gcalMsg.includes("fout") || gcalMsg.includes("error") || gcalMsg.includes("خطا") || gcalMsg.includes("denied") || gcalMsg.includes("geweigerd") || gcalMsg.includes("رد") ? "var(--danger)" : "var(--ok)" }}>
+                  {gcalMsg}
+                </div>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: "var(--sp-2)", flexShrink: 0 }}>
+              {gcalConnected ? (
+                <>
+                  <span className="pill pill-ok" style={{ fontSize: "var(--text-xs)", alignSelf: "center" }}>{tx.gcal_connected}</span>
+                  <button className="btn btn-ghost btn-sm" onClick={syncNowGcal} disabled={gcalLoading}>
+                    {gcalLoading ? tx.gcal_syncing : tx.gcal_sync_now}
+                  </button>
+                  <button className="btn btn-ghost btn-sm" onClick={disconnectGcal} disabled={gcalLoading} style={{ color: "var(--danger)" }}>
+                    {tx.gcal_disconnect}
+                  </button>
+                </>
+              ) : (
+                <button className="btn btn-accent btn-sm" onClick={connectGcal} disabled={gcalLoading}>
+                  {gcalLoading ? tx.gcal_syncing : tx.gcal_connect}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Category filter pills */}
         {!loading && !error && reminders.length > 0 && (

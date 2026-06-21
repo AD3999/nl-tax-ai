@@ -45,6 +45,10 @@ class User(AbstractUser):
     # Keys: user_type, income, hours_worked, known_deductions, last_calc_result, open_questions
     tax_memory          = models.JSONField(null=True, blank=True)
 
+    # Google Calendar push sync
+    google_calendar_enabled       = models.BooleanField(default=False)
+    google_calendar_refresh_token = models.TextField(null=True, blank=True)
+
     # GDPR fields
     deletion_requested_at = models.DateTimeField(null=True, blank=True)
     anonymized_at         = models.DateTimeField(null=True, blank=True)
@@ -59,20 +63,23 @@ class User(AbstractUser):
         Actual deletion of linked data is handled by cascade deletes.
         """
         from django.utils import timezone
-        self.first_name           = ""
-        self.last_name            = ""
-        self.email                = f"deleted_{self.pk}@anonymized.invalid"
-        self.username             = f"deleted_{self.pk}"
-        self.intake_profile       = None
-        self.tax_memory           = None
-        self.ib_guide_answers     = None
-        self.simulation_state     = None
-        self.is_active            = False
-        self.anonymized_at        = timezone.now()
+        self.first_name                    = ""
+        self.last_name                     = ""
+        self.email                         = f"deleted_{self.pk}@anonymized.invalid"
+        self.username                      = f"deleted_{self.pk}"
+        self.intake_profile                = None
+        self.tax_memory                    = None
+        self.ib_guide_answers              = None
+        self.simulation_state              = None
+        self.google_calendar_refresh_token = None
+        self.google_calendar_enabled       = False
+        self.is_active                     = False
+        self.anonymized_at                 = timezone.now()
         self.save(update_fields=[
             "first_name", "last_name", "email", "username",
             "intake_profile", "tax_memory", "ib_guide_answers",
-            "simulation_state", "is_active", "anonymized_at",
+            "simulation_state", "google_calendar_refresh_token",
+            "google_calendar_enabled", "is_active", "anonymized_at",
         ])
 
 
