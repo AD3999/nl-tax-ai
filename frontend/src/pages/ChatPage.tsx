@@ -257,8 +257,32 @@ export default function ChatPage() {
     const locState = location.state as { question?: string; explain_alert?: ExplainAlert; ibReturn?: boolean; simulation?: boolean } | null;
     const q = locState?.question;
 
-    // Auto-start IB return mode if URL param or location state requests it
     const params = new URLSearchParams(location.search);
+
+    // Resume a specific conversation by ID: /chat?session=<id>
+    const sessionId = params.get("session");
+    if (sessionId && user) {
+      const token = localStorage.getItem("access_token");
+      fetch(`/api/chat/history/${sessionId}/`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+        .then(r => r.ok ? r.json() as Promise<{ messages: Array<{ id: string; role: string; content: string }>; summary: string }> : null)
+        .then(data => {
+          if (!data?.messages?.length) return;
+          const msgs: ChatMsg[] = data.messages
+            .filter(m => (m.role === "user" || m.role === "assistant") && m.content.trim())
+            .map(m => ({ id: m.id, role: m.role as "user" | "assistant", content: m.content, streaming: false }));
+          setMessages(msgs);
+          setSessionCount(msgs.filter(m => m.role === "user").length);
+          setAskedSet(new Set(msgs.filter(m => m.role === "user").map(m => m.content)));
+          if (profile) setIntakeComplete(true);
+          setShowCards(false);
+        })
+        .catch(() => null);
+      return;
+    }
+
+    // Auto-start IB return mode if URL param or location state requests it
     if (params.get("mode") === "ib-return" || locState?.ibReturn) {
       setIbMode(true);
       // Clear history and start the IB return flow fresh

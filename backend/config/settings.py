@@ -165,15 +165,35 @@ CELERY_TIMEZONE = "Europe/Amsterdam"
 from celery.schedules import crontab  # noqa: E402
 
 CELERY_BEAT_SCHEDULE = {
-    # Check for engagements that need reminders — runs daily at 08:00 Amsterdam time
+    # Portal: engagement checklist reminders — daily at 08:00 Amsterdam
     "send-pending-reminders": {
         "task": "apps.portal.tasks.send_pending_reminders_task",
         "schedule": crontab(hour=8, minute=0),
     },
-    # GDPR document purge — runs daily at 02:00
+    # Portal: GDPR document purge — daily at 02:00
     "purge-expired-documents": {
         "task": "apps.portal.tasks.purge_expired_documents_task",
         "schedule": crontab(hour=2, minute=0),
+    },
+    # User reminders: BTW quarterly deadlines — daily at 08:15
+    "send-btw-reminders": {
+        "task": "users.send_btw_reminders",
+        "schedule": crontab(hour=8, minute=15),
+    },
+    # User reminders: IB return deadline — daily at 08:20
+    "send-ib-reminder": {
+        "task": "users.send_ib_reminder",
+        "schedule": crontab(hour=8, minute=20),
+    },
+    # User reminders: monthly tax reserve — 1st of each month at 09:00
+    "send-monthly-reserve-reminder": {
+        "task": "users.send_monthly_reserve_reminder",
+        "schedule": crontab(hour=9, minute=0, day_of_month=1),
+    },
+    # User reminders: tax rule change notifications — daily at 09:30
+    "send-rule-change-notifications": {
+        "task": "users.send_rule_change_notifications",
+        "schedule": crontab(hour=9, minute=30),
     },
 }
 
@@ -184,9 +204,19 @@ STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 STRIPE_PRICE_ID = env("STRIPE_PRICE_ID", default="")   # monthly premium price ID
 FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
 
-# ── Chat limits — fully disabled (site is free, no premium gates) ─────────────
-FREE_DAILY_LIMIT = 9999
-ANON_SESSION_LIMIT = 9999
+# ── Chat limits ───────────────────────────────────────────────────────────────
+FREE_DAILY_LIMIT  = env.int("FREE_DAILY_LIMIT",  default=10)   # free accounts: 10 AI messages/day
+ANON_SESSION_LIMIT = env.int("ANON_SESSION_LIMIT", default=5)   # anonymous: 5 messages per browser session
+
+# ── Email (SMTP) ───────────────────────────────────────────────────────────────
+EMAIL_BACKEND     = env("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST        = env("EMAIL_HOST", default="")
+EMAIL_PORT        = env.int("EMAIL_PORT", default=587)
+EMAIL_HOST_USER   = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS     = env.bool("EMAIL_USE_TLS", default=True)
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="TaxWijs <noreply@taxwijs.nl>")
+
 
 # ── Internationalisation ──────────────────────────────────────────────────────
 

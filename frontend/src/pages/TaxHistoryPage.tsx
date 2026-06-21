@@ -5,6 +5,8 @@ import { useAuth } from "../context/AuthContext";
 import { fetchSnapshots, saveSnapshot, type YearSnapshot } from "../api/snapshots";
 import { useMobile } from "../hooks/useMobile";
 import { formatEur, formatDate } from "../lib/utils";
+import GateCard from "../components/GateCard";
+import { useAccess } from "../hooks/useAccess";
 
 function delta(curr: number | null, prev: number | null): { abs: number; pct: number } | null {
   if (curr == null || prev == null || prev === 0) return null;
@@ -121,6 +123,8 @@ export default function TaxHistoryPage() {
   const { user } = useAuth();
   const isMobile = useMobile();
 
+  const { allowed } = useAccess("tax_history");
+
   const [snapshots, setSnapshots] = useState<YearSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -204,6 +208,16 @@ export default function TaxHistoryPage() {
           <div style={{ fontFamily: "var(--serif)", fontSize: 20, color: "var(--ink)" }}>{L("login_title")}</div>
           <button className="btn btn-accent" onClick={() => navigate("/login")}>{L("login_cta")}</button>
         </div>
+      ) : !allowed ? (
+        /* Logged in but not premium */
+        <GateCard
+          featureLabel={L("title")}
+          teaserText={{
+            nl: "Vergelijk uw belastinggeschiedenis over meerdere jaren — alleen beschikbaar voor Premium-leden.",
+            en: "Compare your tax history across multiple years — available to Premium members only.",
+            fa: "تاریخچه مالیاتی چند ساله‌تان را مقایسه کنید — فقط برای اعضای پریمیوم.",
+          }[lang]}
+        />
       ) : loading ? (
         <div style={{ color: "var(--ink-3)", fontSize: 14 }}>Loading...</div>
       ) : error ? (

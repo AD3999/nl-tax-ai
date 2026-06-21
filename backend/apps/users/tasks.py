@@ -28,12 +28,27 @@ logger = logging.getLogger("taxwijs.reminders")
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _send_inapp(user, title: str, body: str, category: str = "deadline") -> None:
-    """Placeholder in-app notification — logs for now. Replace with DB model when needed."""
+    """Create an in-app Notification DB record and log it."""
+    from .models import Notification
+    try:
+        notif_type_map = {
+            "deadline": "system",
+            "cashflow": "system",
+            "rule_change": "system",
+        }
+        Notification.objects.create(
+            user=user,
+            notification_type=notif_type_map.get(category, "system"),
+            title=title,
+            body=body,
+        )
+    except Exception as exc:
+        logger.warning("[IN-APP FAILED] user=%s error=%s", user.pk, exc)
     logger.info("[IN-APP] user=%s category=%s title=%s", user.pk, category, title)
 
 
 def _send_email(user, subject: str, body: str) -> None:
-    """Phase A: email delivery. Requires EMAIL_HOST / EMAIL_HOST_USER in settings."""
+    """Phase A: email delivery via SMTP. Requires EMAIL_HOST in settings."""
     from django.conf import settings
     if not getattr(settings, "EMAIL_HOST", ""):
         logger.debug("[EMAIL SKIPPED — no EMAIL_HOST] user=%s subject=%s", user.pk, subject)
@@ -45,7 +60,7 @@ def _send_email(user, subject: str, body: str) -> None:
             message=body,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
-            fail_silently=True,
+            fail_silently=False,
         )
         logger.info("[EMAIL SENT] user=%s subject=%s", user.pk, subject)
     except Exception as exc:

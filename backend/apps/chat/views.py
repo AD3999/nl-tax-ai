@@ -630,12 +630,34 @@ class ConversationDetailView(generics.RetrieveAPIView):
 
 class ChatHistoryView(APIView):
     """
-    GET    /api/chat/history/  — return last 80 messages for authenticated user
-    DELETE /api/chat/history/  — delete all conversations and messages for this user
+    GET    /api/chat/history/         — return last 80 messages for authenticated user (flat list)
+    GET    /api/chat/history/<pk>/    — return messages for a specific conversation (resume flow)
+    DELETE /api/chat/history/         — delete all conversations and messages for this user
     """
     permission_classes = [permissions.IsAuthenticated]
 
-    def get(self, request):
+    def get(self, request, pk: int | None = None):
+        if pk is not None:
+            # Resume flow: return messages for a specific conversation owned by this user
+            from django.shortcuts import get_object_or_404
+            conv = get_object_or_404(Conversation, pk=pk, user=request.user)
+            msgs = Message.objects.filter(conversation=conv).order_by("created_at")
+            return Response({
+                "id": conv.id,
+                "summary": conv.summary,
+                "language": conv.language,
+                "messages": [
+                    {
+                        "id": f"db-{m.id}",
+                        "role": m.role,
+                        "content": m.content,
+                        "created_at": m.created_at.isoformat(),
+                    }
+                    for m in msgs
+                ],
+            })
+
+        # Default: return last 80 messages across all conversations
         messages = (
             Message.objects
             .filter(conversation__user=request.user)
@@ -652,7 +674,7 @@ class ChatHistoryView(APIView):
             for m in messages
         ])
 
-    def delete(self, request):
+    def delete(self, request, pk: int | None = None):
         Conversation.objects.filter(user=request.user).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 

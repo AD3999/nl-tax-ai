@@ -11,8 +11,10 @@ import {
   type Lang,
 } from "../data/simulationSteps";
 import { calculateTax, type CalcResult } from "../api/calculator";
-import { authHeader } from "../api/client";
+import { authHeader, apiBase } from "../api/client";
 import { Icon } from "../components/Icon";
+import { useAccess } from "../hooks/useAccess";
+import UpgradeModal from "../components/UpgradeModal";
 
 function t3(field: { nl: string; en: string; fa: string }, lang: Lang) {
   return field[lang] || field.nl;
@@ -273,9 +275,7 @@ function OverviewStep({ answers, lang, onGoToChat }: {
                 <Icon.spark style={{ width: 12, height: 12 }} />
                 {lang === "nl" ? "Bespreek met TaxWijs" : lang === "fa" ? "بحث با TaxWijs" : "Discuss with TaxWijs"}
               </button>
-              <button className="btn btn-ghost" type="button" style={{ flex: 1 }}>
-                Download PDF
-              </button>
+              <PDFGateButton lang={lang} />
             </div>
           </div>
         </div>
@@ -289,6 +289,39 @@ function OverviewStep({ answers, lang, onGoToChat }: {
           : "This is a simulation — not an official return. Use the real return at mijn.belastingdienst.nl."}
       </p>
     </div>
+  );
+}
+
+// ─── Premium-gated PDF download button ───────────────────────────────────────
+
+function PDFGateButton({ lang }: { lang: Lang }) {
+  const { allowed } = useAccess("pdf_report");
+  const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
+  async function handleClick() {
+    if (!allowed) { setShowModal(true); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(`${apiBase}/users/report/`, { headers: authHeader() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = "taxwijs-report-2026.pdf"; a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* silently fail */ } finally { setLoading(false); }
+  }
+
+  const label = lang === "nl" ? "Download PDF rapport" : lang === "fa" ? "دانلود گزارش PDF" : "Download PDF report";
+
+  return (
+    <>
+      <button className="btn btn-ghost" type="button" style={{ flex: 1 }} onClick={handleClick} disabled={loading}>
+        {loading ? "…" : (allowed ? label : `🔒 ${label}`)}
+      </button>
+      {showModal && <UpgradeModal reason="daily_limit" onClose={() => setShowModal(false)} />}
+    </>
   );
 }
 

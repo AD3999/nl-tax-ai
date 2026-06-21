@@ -1196,3 +1196,53 @@ class InAppUnreadCountView(APIView):
         from .models import Notification
         count = Notification.objects.filter(user=request.user, is_read=False).count()
         return Response({"count": count})
+
+
+class AccountantMarketplaceView(APIView):
+    """
+    GET /api/users/marketplace/ — list verified, active accountant listings.
+
+    Supports optional filters via query params:
+      ?lang=nl|en|fa            — language preference (affects bio returned)
+      ?specialization=zzp|expat|dga|employee  — filter by specialization
+      ?languages=nl,fa          — comma-separated: accountant must speak these
+    Returns up to 20 results ordered by rating desc.
+    """
+    authentication_classes = [SoftJWTAuthentication]
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from .models import AccountantListing
+        lang = request.query_params.get("lang", "en")
+        spec = request.query_params.get("specialization", "")
+        langs_filter = request.query_params.get("languages", "")
+
+        qs = AccountantListing.objects.filter(is_active=True, verified_accountant=True)
+
+        if spec:
+            qs = [l for l in qs if spec in (l.specializations or [])]
+        else:
+            qs = list(qs)
+
+        if langs_filter:
+            needed = [x.strip() for x in langs_filter.split(",") if x.strip()]
+            qs = [l for l in qs if all(n in (l.languages or []) for n in needed)]
+
+        bio_field = f"bio_{lang}" if lang in ("nl", "en", "fa") else "bio_en"
+
+        data = []
+        for l in qs[:20]:
+            data.append({
+                "id": l.id,
+                "display_name": l.display_name,
+                "bio": getattr(l, bio_field, "") or l.bio_en or "",
+                "specializations": l.specializations or [],
+                "languages": l.languages or [],
+                "hourly_rate_display": l.hourly_rate_display,
+                "accepts_new_clients": l.accepts_new_clients,
+                "calendly_url": l.calendly_url,
+                "rating": l.rating,
+                "review_count": l.review_count,
+            })
+
+        return Response(data)

@@ -12,6 +12,7 @@ from .views import (
     AccountDeletionView, DataExportView,
     InAppNotificationsView, InAppNotificationReadAllView,
     InAppNotificationDetailView, InAppUnreadCountView,
+    AccountantMarketplaceView,
 )
 from .admin_views import AdminUserListView, AdminUserDetailView
 
@@ -55,6 +56,8 @@ urlpatterns = [
     # GDPR
     path("me/",             AccountDeletionView.as_view(), name="account-deletion"),
     path("me/data-export/", DataExportView.as_view(),      name="data-export"),
+    # Accountant marketplace (public browse)
+    path("marketplace/",             AccountantMarketplaceView.as_view(), name="accountant-marketplace"),
     # Admin-only user management
     path("admin/list/",              AdminUserListView.as_view(),   name="admin-user-list"),
     path("admin/<int:pk>/",          AdminUserDetailView.as_view(), name="admin-user-detail"),

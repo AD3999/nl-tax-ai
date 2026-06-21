@@ -73,6 +73,8 @@ const AccountantSettingsPage  = lazy(() => import("./pages/AccountantSettingsPag
 const ClientMessagesPage      = lazy(() => import("./pages/ClientMessagesPage"));
 const ClientProfilePage       = lazy(() => import("./pages/ClientProfilePage"));
 const ZZPWorkspacePage        = lazy(() => import("./pages/ZZPWorkspacePage"));
+const FindAccountantPage      = lazy(() => import("./pages/FindAccountantPage"));
+const PricingPage             = lazy(() => import("./pages/PricingPage"));
 
 const AdminDashboard          = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminUsersPage          = lazy(() => import("./pages/admin/AdminUsersPage"));
@@ -159,6 +161,7 @@ function App() {
               <Route path="/accountant/inbox"       element={<AccountantInboxPage />} />
               <Route path="/accountant/settings"    element={<AccountantSettingsPage />} />
               <Route path="/zzp-workspace"          element={<ZZPWorkspacePage />} />
+              <Route path="/find-accountant"        element={<FindAccountantPage />} />
 
             </Route>
 
@@ -179,7 +182,7 @@ function App() {
             {/* ── Redirects ── */}
             <Route path="/ib-guide"    element={<Navigate to="/chat?mode=ib-return" replace />} />
             <Route path="/simulation"  element={<Navigate to="/chat?mode=simulation" replace />} />
-            <Route path="/pricing"     element={<Navigate to="/" replace />} />
+            <Route path="/pricing"     element={<PricingPage />} />
             <Route path="/accountant"  element={<Navigate to="/accountant/portal" replace />} />
             <Route path="*"            element={<Navigate to="/" replace />} />
 
