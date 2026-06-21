@@ -507,12 +507,13 @@ export default function ClientProfilePage() {
       {/* Bottom save bar */}
       <div style={{
         position: "sticky", bottom: "var(--sp-5)",
+        marginTop: "var(--sp-6)",
         display: "flex", justifyContent: "flex-end",
         padding: "var(--sp-4) var(--sp-6)",
         background: "var(--bg-2)",
         border: "1px solid var(--border)",
         borderRadius: "var(--r-lg)",
-        boxShadow: "var(--sh-md)",
+        boxShadow: "0 -2px 24px oklch(0 0 0 / 0.12), var(--sh-md)",
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
       }}>

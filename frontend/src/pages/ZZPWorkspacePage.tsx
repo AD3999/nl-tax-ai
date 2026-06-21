@@ -180,18 +180,18 @@ function OverviewTab({ summary, t }: { summary: ZZPSummary | null; t: T }) {
       </div>
 
       {/* Quarterly VAT */}
-      <div className="card">
-        <div style={{ fontWeight: 700, marginBottom: "var(--sp-4)" }}>{t.quarterlyVat}</div>
+      <div className="card" style={{ padding: "var(--sp-5)" }}>
+        <div style={{ fontWeight: 700, marginBottom: "var(--sp-4)", fontSize: "var(--text-sm)", color: "var(--text)" }}>{t.quarterlyVat}</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(140px,1fr))", gap: "var(--sp-3)" }}>
           {summary.quarters.map(q => (
-            <div key={q.quarter} style={{ textAlign: "center", padding: "var(--sp-3)", background: "var(--bg-2)", borderRadius: 8 }}>
-              <div style={{ fontWeight: 700, color: "var(--text-3)", fontSize: "0.8rem" }}>{t.q}{q.quarter}</div>
-              <div style={{ fontSize: "0.6rem", color: "var(--text-4)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "var(--sp-2)" }}>BTW</div>
-              <div style={{ fontWeight: 800, color: q.vat_payable > 0 ? "var(--danger)" : "var(--text-3)", fontSize: "0.9rem" }}>
+            <div key={q.quarter} style={{ textAlign: "center", padding: "var(--sp-4) var(--sp-3)", background: "var(--bg-2)", borderRadius: 10, border: "1px solid var(--border)" }}>
+              <div style={{ fontWeight: 800, color: "var(--text-2)", fontSize: "var(--text-sm)", marginBottom: "var(--sp-2)" }}>{t.q}{q.quarter}</div>
+              <div style={{ fontSize: "0.62rem", color: "var(--text-4)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>BTW</div>
+              <div style={{ fontWeight: 800, color: q.vat_payable > 0 ? "var(--danger)" : "var(--text-3)", fontSize: "var(--text-base)", lineHeight: 1.1, marginBottom: "var(--sp-3)" }}>
                 {fmt(q.vat_payable)}
               </div>
-              <div style={{ fontSize: "0.6rem", color: "var(--text-4)", textTransform: "uppercase", letterSpacing: "0.05em", marginTop: "var(--sp-2)" }}>{t.revenue}</div>
-              <div style={{ fontSize: "0.8rem", color: "var(--text-3)", fontWeight: 600 }}>{fmt(q.revenue)}</div>
+              <div style={{ fontSize: "0.62rem", color: "var(--text-4)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{t.revenue}</div>
+              <div style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", fontWeight: 600 }}>{fmt(q.revenue)}</div>
             </div>
           ))}
         </div>

@@ -61,6 +61,7 @@ const TX: Record<Lang, {
   gcal_queued: string;
   gcal_denied: string;
   gcal_error: string;
+  gcal_not_configured: string;
   gcal_desc: string;
 }> = {
   nl: {
@@ -90,6 +91,7 @@ const TX: Record<Lang, {
     gcal_queued: "Synchronisatie gestart",
     gcal_denied: "Toegang geweigerd door Google",
     gcal_error: "Synchronisatiefout — probeer het opnieuw",
+    gcal_not_configured: "Google Calendar nog niet geconfigureerd op deze server.",
     gcal_desc: "Stuur alle belastingdeadlines automatisch naar uw Google Agenda.",
   },
   en: {
@@ -119,6 +121,7 @@ const TX: Record<Lang, {
     gcal_queued: "Sync queued",
     gcal_denied: "Access denied by Google",
     gcal_error: "Sync error — please try again",
+    gcal_not_configured: "Google Calendar not configured on this server yet.",
     gcal_desc: "Automatically push all tax deadlines to your Google Calendar.",
   },
   fa: {
@@ -148,6 +151,7 @@ const TX: Record<Lang, {
     gcal_queued: "همگام‌سازی در صف قرار گرفت",
     gcal_denied: "دسترسی توسط Google رد شد",
     gcal_error: "خطای همگام‌سازی — دوباره امتحان کنید",
+    gcal_not_configured: "Google Calendar هنوز روی این سرور پیکربندی نشده است.",
     gcal_desc: "تمام مهلت‌های مالیاتی را به‌صورت خودکار به Google Calendar خود ارسال کنید.",
   },
 };
@@ -220,12 +224,15 @@ export default function TaxCalendarPage() {
     setGcalLoading(true);
     try {
       const r = await fetch(`${apiBase}/users/google-calendar/auth-url/`, { headers: authHeader() });
-      if (!r.ok) { setGcalMsg(tx.gcal_error); return; }
+      if (!r.ok) {
+        setGcalMsg(r.status === 503 ? tx.gcal_not_configured : tx.gcal_error);
+        return;
+      }
       const { auth_url } = await r.json() as { auth_url: string };
       window.location.href = auth_url;
     } catch { setGcalMsg(tx.gcal_error); }
     finally { setGcalLoading(false); }
-  }, [tx.gcal_error]);
+  }, [tx.gcal_error, tx.gcal_not_configured]);
 
   const disconnectGcal = useCallback(async () => {
     setGcalLoading(true);
@@ -338,7 +345,10 @@ export default function TaxCalendarPage() {
               </div>
               <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>{tx.gcal_desc}</div>
               {gcalMsg && (
-                <div style={{ marginTop: 4, fontSize: "var(--text-xs)", color: gcalMsg.includes("fout") || gcalMsg.includes("error") || gcalMsg.includes("خطا") || gcalMsg.includes("denied") || gcalMsg.includes("geweigerd") || gcalMsg.includes("رد") ? "var(--danger)" : "var(--ok)" }}>
+                <div style={{ marginTop: 4, fontSize: "var(--text-xs)", color:
+                  gcalMsg === tx.gcal_not_configured ? "var(--warn-text, #92400e)"
+                  : gcalMsg.includes("fout") || gcalMsg.includes("error") || gcalMsg.includes("خطا") || gcalMsg.includes("denied") || gcalMsg.includes("geweigerd") || gcalMsg.includes("رد") ? "var(--danger)"
+                  : "var(--ok)" }}>
                   {gcalMsg}
                 </div>
               )}
