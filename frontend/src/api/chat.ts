@@ -40,6 +40,8 @@ export interface ExplainAlert {
   title: string;
   body: string;
   category: string;
+  action_url?: string;
+  action_label?: string;
 }
 
 export async function sendMessage(

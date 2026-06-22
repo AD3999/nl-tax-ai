@@ -48,6 +48,8 @@ interface ChatMsg {
   isIBResult?: boolean;
   isSavePrompt?: boolean;
   saveProfileData?: Record<string, unknown>;
+  actionUrl?: string;
+  actionLabel?: string;
 }
 
 const SIM_CHIP_LABEL: Record<string, string> = {
@@ -219,6 +221,11 @@ export default function ChatPage() {
   // Holds the structured alert context passed from Dashboard "Ask AI" button
   const pendingAlertRef = useRef<ExplainAlert | null>(
     (location.state as { explain_alert?: ExplainAlert } | null)?.explain_alert ?? null
+  );
+  // Holds the action URL/label to attach to the first AI response (from alert "Ask AI")
+  const _initAlert = (location.state as { explain_alert?: ExplainAlert } | null)?.explain_alert;
+  const pendingActionRef = useRef<{ url: string; label: string } | null>(
+    _initAlert?.action_url ? { url: _initAlert.action_url, label: _initAlert.action_label ?? "" } : null
   );
 
   // Per-user history key: logged-in users get their own slot so history survives
@@ -658,7 +665,13 @@ export default function ChatPage() {
         showToast(errMsg, "error");
       }
     } finally {
-      setMessages(prev => prev.map(m => m.id === aid ? { ...m, streaming: false } : m));
+      const pendingAction = pendingActionRef.current;
+      pendingActionRef.current = null;
+      setMessages(prev => prev.map(m =>
+        m.id === aid
+          ? { ...m, streaming: false, ...(pendingAction ? { actionUrl: pendingAction.url, actionLabel: pendingAction.label } : {}) }
+          : m
+      ));
       setLoading(false);
       setTimeout(() => setShowCards(true), 300);
     }
@@ -874,6 +887,19 @@ export default function ChatPage() {
                       ...(profile ? ["Profile"] : []),
                       ...(ibMode && !msg.isIntake ? ["Engagement"] : []),
                     ]} />
+                  )}
+                  {!msg.streaming && msg.actionUrl && (
+                    <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--hairline)" }}>
+                      <a
+                        href={msg.actionUrl}
+                        target={msg.actionUrl.startsWith("http") ? "_blank" : "_self"}
+                        rel="noopener noreferrer"
+                        className="btn btn-accent btn-sm"
+                        style={{ display: "inline-flex", alignItems: "center", gap: 6, textDecoration: "none" }}
+                      >
+                        {msg.actionLabel || (lang === "nl" ? "Ga naar pagina" : lang === "fa" ? "رفتن به صفحه" : "Go to page")} →
+                      </a>
+                    </div>
                   )}
                   {msg.isIBResult && ibAnswers && (
                     <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid var(--hairline)", display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>

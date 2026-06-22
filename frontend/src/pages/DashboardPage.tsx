@@ -652,7 +652,7 @@ function AlertCard({
 }: {
   alert: Alert;
   onDismiss: (id: string) => void;
-  onExplain: (title: string, body: string, alertId?: string, category?: string) => void;
+  onExplain: (title: string, body: string, alertId?: string, category?: string, actionUrl?: string, actionLabel?: string) => void;
   onSnooze: (id: string, days: number) => void;
   onMarkDone: (id: string) => void;
   isDone: boolean;
@@ -703,7 +703,7 @@ function AlertCard({
               color: isDone ? "var(--ok)" : "var(--ink-3)", cursor: "pointer", padding: 0, fontWeight: isDone ? 600 : 400 }}>
             {isDone ? T.done[lk] : T.markDone[lk]}
           </button>
-          <button onClick={() => onExplain(alert.title, alert.body, alert.id, alert.category)}
+          <button onClick={() => onExplain(alert.title, alert.body, alert.id, alert.category, alert.action_url, alert.action_label)}
             style={{ background: "none", border: "none", fontSize: 11.5, color: "var(--ink-3)", cursor: "pointer", padding: 0 }}>
             {T.askAI[lk]}
           </button>
@@ -935,14 +935,13 @@ export default function DashboardPage() {
 
   // authHeader imported from api/client.ts — do not re-declare here
 
-  const explainAlert = useCallback((title: string, body: string, alertId?: string, category?: string) => {
+  const explainAlert = useCallback((title: string, body: string, alertId?: string, category?: string, actionUrl?: string, actionLabel?: string) => {
     const q = lang === "nl"
       ? `Kun je uitleggen wat dit betekent voor mij: "${title}"`
       : lang === "fa"
       ? `می‌توانی توضیح دهی که این برای من چه معنایی دارد: "${title}"`
       : `Can you explain what this means for me: "${title}"`;
-    // Pass structured alert so the backend injects it into the system prompt
-    navigate("/chat", { state: { question: q, explain_alert: { id: alertId ?? "", title, body, category: category ?? "" } } });
+    navigate("/chat", { state: { question: q, explain_alert: { id: alertId ?? "", title, body, category: category ?? "", action_url: actionUrl, action_label: actionLabel } } });
   }, [lang, navigate]);
 
   // ── Data loading ───────────────────────────────────────────────────────────
