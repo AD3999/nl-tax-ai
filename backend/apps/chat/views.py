@@ -1,7 +1,5 @@
 import json
 import os
-from datetime import date
-
 from django.conf import settings
 from django.http import StreamingHttpResponse
 from rest_framework import generics, permissions, status
@@ -14,8 +12,6 @@ import rest_framework.throttling
 from .models import Conversation, Message
 from .serializers import ChatMessageSerializer, ConversationSerializer
 
-ANON_SESSION_LIMIT = getattr(settings, "ANON_SESSION_LIMIT", 5)
-FREE_DAILY_LIMIT = getattr(settings, "FREE_DAILY_LIMIT", 10)
 
 # Language instruction strings — injected into both prompts
 _LANG_RULE = {
@@ -341,28 +337,6 @@ class ChatMessageView(APIView):
                 yield f"data: {json.dumps({'done': True})}\n\n"
             return StreamingHttpResponse(stream_no_profile(), content_type="text/event-stream")
 
-        # Guard 2: Usage limits — differs by auth state and plan
-        if request.user.is_authenticated:
-            user = request.user
-            if user.plan != "premium":
-                today = date.today()
-                if user.daily_message_date != today:
-                    user.daily_message_count = 0
-                    user.daily_message_date = today
-                if user.daily_message_count >= FREE_DAILY_LIMIT:
-                    def stream_daily_limit():
-                        yield f"data: {json.dumps({'upgrade_required': True, 'reason': 'daily_limit', 'limit': FREE_DAILY_LIMIT})}\n\n"
-                        yield f"data: {json.dumps({'done': True})}\n\n"
-                    return StreamingHttpResponse(stream_daily_limit(), content_type="text/event-stream")
-                user.daily_message_count += 1
-                user.save(update_fields=["daily_message_count", "daily_message_date"])
-        else:
-            # Anonymous users: session-based limit enforced by frontend count
-            if session_count >= ANON_SESSION_LIMIT:
-                def stream_anon_limit():
-                    yield f"data: {json.dumps({'upgrade_required': True, 'reason': 'session_limit', 'limit': ANON_SESSION_LIMIT})}\n\n"
-                    yield f"data: {json.dumps({'done': True})}\n\n"
-                return StreamingHttpResponse(stream_anon_limit(), content_type="text/event-stream")
 
         # Persist conversation + user message to DB for authenticated users
         _conv = None

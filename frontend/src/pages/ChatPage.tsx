@@ -3,9 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import { useTranslation } from "react-i18next";
 import { sendMessage, type ExplainAlert } from "../api/chat";
-import { ANON_SESSION_LIMIT } from "../api/client";
 import { useAuth } from "../context/AuthContext";
-import UpgradeModal from "../components/UpgradeModal";
 import { Icon } from "../components/Icon";
 import { useMobile } from "../hooks/useMobile";
 import { useToast } from "../context/ToastContext";
@@ -199,10 +197,8 @@ export default function ChatPage() {
   const [messages, setMessages]           = useState<ChatMsg[]>([]);
   const [inputText, setInputText]         = useState("");
   const [loading, setLoading]             = useState(false);
-  const [sessionCount, setSessionCount]   = useState(0);
   const [askedSet, setAskedSet]           = useState<Set<string>>(new Set());
   const [showCards, setShowCards]         = useState(true);
-  const [upgradeModal, setUpgradeModal]   = useState<{ reason: "session_limit" | "daily_limit" | "register" } | null>(null);
   const [intakeComplete, setIntakeComplete] = useState(false);
   const [ibMode, setIbMode]               = useState(false);
   const [ibAnswers, setIbAnswers]         = useState<IBAnswers | null>(null);
@@ -280,7 +276,7 @@ export default function ChatPage() {
             .filter(m => (m.role === "user" || m.role === "assistant") && m.content.trim())
             .map(m => ({ id: m.id, role: m.role as "user" | "assistant", content: m.content, streaming: false }));
           setMessages(msgs);
-          setSessionCount(msgs.filter(m => m.role === "user").length);
+          // session count tracking removed
           setAskedSet(new Set(msgs.filter(m => m.role === "user").map(m => m.content)));
           if (profile) setIntakeComplete(true);
           setShowCards(false);
@@ -316,7 +312,6 @@ export default function ChatPage() {
           setMessages(saved);
           // Rebuild session count and asked-set from the saved messages
           const userMsgs = saved.filter(m => m.role === "user");
-          setSessionCount(userMsgs.length);
           setAskedSet(new Set(userMsgs.map(m => m.content)));
           if (profile) setIntakeComplete(true);
           // An incoming question (e.g. from IB Guide "Ask TaxWijs") must still be
@@ -384,7 +379,6 @@ export default function ChatPage() {
         if (msgs.length === 0) return;
         setMessages(msgs);
         const userMsgs = msgs.filter(m => m.role === "user");
-        setSessionCount(userMsgs.length);
         setAskedSet(new Set(userMsgs.map(m => m.content)));
         if (profile) setIntakeComplete(true);
         setShowCards(false);
@@ -497,8 +491,6 @@ export default function ChatPage() {
       { id: aid, role: "assistant", content: "", streaming: true },
     ]);
     setLoading(true);
-    const newCount = sessionCount + 1;
-    setSessionCount(newCount);
     setInputText("");
     if (inputRef.current) {
       inputRef.current.style.height = "auto";
@@ -524,12 +516,6 @@ export default function ChatPage() {
         question,
         history,
         (token, meta) => {
-          if (meta?.upgrade_required) {
-            const reason = meta.reason === "daily_limit" ? "daily_limit" : meta.reason === "session_limit" ? "session_limit" : "register";
-            setUpgradeModal({ reason });
-            setMessages(prev => prev.filter(m => m.id !== aid));
-            return;
-          }
           // Profile update collected by AI mid-conversation — merge silently
           if (meta?.profile_update) {
             const updates = meta.profile_update;
@@ -685,20 +671,12 @@ export default function ChatPage() {
   const hasRealMessages = messages.some(m => m.id !== "intake-greeting");
   const showResultCards = !!profile && showCards && !sessionLimitReached && cardsToShow.length > 0 && !loading;
 
-  // Single counter value — show what's left, not two different numbers
-  const counterLabel = user?.plan === "premium"
-    ? null
-    : user
-      ? `${user.daily_message_count ?? 0} / 10`
-      : `${sessionCount} / ${ANON_SESSION_LIMIT}`;
-
   return (
     <div
       style={{ flex: 1, display: "flex", flexDirection: "column", height: "100%", minHeight: 0, overflow: "hidden" }}
       dir={isRtl ? "rtl" : "ltr"}
     >
       <TrustStrip />
-      {upgradeModal && <UpgradeModal reason={upgradeModal.reason} onClose={() => setUpgradeModal(null)} />}
 
       {/* Profile bar — only when profile exists */}
       {profile && (
@@ -712,22 +690,9 @@ export default function ChatPage() {
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {user?.plan === "premium" ? (
+            {user?.plan === "premium" && (
               <span className="pill pill-accent">⚡ Premium</span>
-            ) : counterLabel ? (
-              <>
-                <span style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>
-                  <span className="font-mono" style={{ color: "var(--ink)" }}>{counterLabel}</span>
-                  {" "}{lang === "nl" ? "vragen" : lang === "fa" ? "سؤال" : "questions"}
-                </span>
-                <button
-                  onClick={() => user ? navigate("/pricing") : setUpgradeModal({ reason: "register" })}
-                  style={{ background: "none", border: "none", fontSize: "var(--text-xs)", color: "var(--sage-700)", fontWeight: 500, cursor: "pointer", padding: 0 }}
-                >
-                  {t("chat.upgrade_cta")} →
-                </button>
-              </>
-            ) : null}
+            )}
             <button
               onClick={() => navigate("/intake")}
               title="Update profile"
@@ -1047,14 +1012,7 @@ export default function ChatPage() {
             </div>
           )}
 
-          {sessionLimitReached ? (
-            <div style={{ textAlign: "center", padding: "10px 0" }}>
-              <button className="btn btn-accent btn-sm" onClick={() => setUpgradeModal({ reason: "session_limit" })}>
-                {t("chat.upgrade_cta")} →
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "flex-end" }}>
               <textarea
                 ref={inputRef}
                 value={inputText}
@@ -1099,8 +1057,7 @@ export default function ChatPage() {
               >
                 {loading ? "···" : <Icon.arrow />}
               </button>
-            </div>
-          )}
+          </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
             {messages.length > 1 ? (
               <button
@@ -1108,7 +1065,6 @@ export default function ChatPage() {
                 style={{ color: "var(--ink-3)", gap: 6 }}
                 onClick={() => {
                   setMessages([]);
-                  setSessionCount(0);
                   setAskedSet(new Set());
                   setShowCards(true);
                   setIntakeComplete(false);
