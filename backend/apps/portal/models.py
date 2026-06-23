@@ -84,6 +84,14 @@ class AccountantClientProfile(models.Model):
     status       = models.CharField(max_length=20, choices=STATUS_CHOICES, default="invited")
     tax_year     = models.PositiveIntegerField(default=2026)
     notes        = models.TextField(blank=True)
+    # Client self-service profile fields
+    address_street   = models.CharField(max_length=200, blank=True)
+    address_city     = models.CharField(max_length=100, blank=True)
+    address_postcode = models.CharField(max_length=20,  blank=True)
+    bsn              = models.CharField(max_length=200, blank=True)  # TODO: encrypt AES-256-GCM
+    kvk_number       = models.CharField(max_length=20,  blank=True)
+    btw_number       = models.CharField(max_length=30,  blank=True)
+    birth_date       = models.DateField(null=True, blank=True)
     created_at   = models.DateTimeField(auto_now_add=True)
     updated_at   = models.DateTimeField(auto_now=True)
 
