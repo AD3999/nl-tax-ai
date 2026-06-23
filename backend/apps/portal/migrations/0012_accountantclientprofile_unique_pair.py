@@ -22,6 +22,10 @@ def deduplicate_profiles(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
+    # Must run outside a single transaction so RunPython (which fires row-level
+    # triggers on delete) commits before AlterUniqueTogether issues ALTER TABLE.
+    # PostgreSQL raises ObjectInUse if pending trigger events exist when ALTER TABLE runs.
+    atomic = False
 
     dependencies = [
         ("portal", "0011_encrypt_bsn_field"),
