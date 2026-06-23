@@ -1168,7 +1168,12 @@ class ClientPortalProfileView(APIView):
 
     def patch(self, request):
         profile = _get_or_create_self_service_profile(request.user)
-        allowed = {"preferred_language", "first_name", "last_name", "phone"}
+        allowed = {
+            "preferred_language", "first_name", "last_name", "full_name", "phone",
+            "address_street", "address_city", "address_postcode",
+            "bsn", "kvk_number", "btw_number", "birth_date",
+            "tax_type", "notes",
+        }
         data = {k: v for k, v in request.data.items() if k in allowed}
         if not data:
             return Response({"detail": "No updatable fields."}, status=status.HTTP_400_BAD_REQUEST)

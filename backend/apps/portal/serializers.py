@@ -8,9 +8,13 @@ from .models import (
 
 
 class AccountantClientProfileSerializer(serializers.ModelSerializer):
-    display_name = serializers.ReadOnlyField()
+    display_name     = serializers.ReadOnlyField()
     engagement_count = serializers.SerializerMethodField()
     latest_readiness = serializers.SerializerMethodField()
+    # full_name is a virtual field: read = first_name + last_name, write = split on first space
+    full_name        = serializers.SerializerMethodField()
+    # tax_type is the client-facing alias for client_type
+    tax_type         = serializers.SerializerMethodField()
 
     def get_engagement_count(self, obj):
         return obj.engagements.count()
@@ -19,15 +23,41 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
         eng = obj.engagements.order_by("-created_at").first()
         return eng.readiness_score if eng else None
 
+    def get_full_name(self, obj):
+        return f"{obj.first_name} {obj.last_name}".strip()
+
+    def get_tax_type(self, obj):
+        return obj.client_type
+
+    def update(self, instance, validated_data):
+        # full_name → first_name + last_name (split on first space)
+        full_name = self.initial_data.get("full_name")
+        if full_name is not None:
+            parts = full_name.strip().split(" ", 1)
+            instance.first_name = parts[0]
+            instance.last_name  = parts[1] if len(parts) > 1 else ""
+
+        # tax_type → client_type
+        tax_type = self.initial_data.get("tax_type")
+        if tax_type is not None:
+            instance.client_type = tax_type
+
+        return super().update(instance, validated_data)
+
     class Meta:
         model = AccountantClientProfile
         fields = [
-            "id", "email", "first_name", "last_name", "company_name",
-            "client_type", "preferred_language", "phone", "status",
-            "tax_year", "notes", "display_name", "engagement_count",
-            "latest_readiness", "created_at", "updated_at",
+            "id", "email", "first_name", "last_name", "full_name", "company_name",
+            "client_type", "tax_type", "preferred_language", "phone", "status",
+            "tax_year", "notes", "display_name", "engagement_count", "latest_readiness",
+            "address_street", "address_city", "address_postcode",
+            "bsn", "kvk_number", "btw_number", "birth_date",
+            "created_at", "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at", "display_name", "engagement_count", "latest_readiness"]
+        read_only_fields = [
+            "id", "created_at", "updated_at", "display_name",
+            "engagement_count", "latest_readiness", "full_name", "tax_type",
+        ]
 
 
 class TaxEngagementSerializer(serializers.ModelSerializer):

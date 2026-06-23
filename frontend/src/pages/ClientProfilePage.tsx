@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { User, MapPin, CreditCard, Globe, FileText, Check, Shield } from "lucide-react";
+import { User, MapPin, CreditCard, Globe, FileText, Shield } from "lucide-react";
 import { client as apiClient } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { useMobile } from "../hooks/useMobile";
+import { useToast } from "../context/ToastContext";
 import { getStoredConsent, saveConsent, type ConsentDecision } from "../components/CookieConsentBanner";
 
 interface ClientProfile {
   id: number;
-  full_name: string;
   email: string;
+  full_name: string;       // virtual: first_name + last_name from backend
+  tax_type: string;        // alias for client_type from backend
   phone: string;
   address_street: string;
   address_city: string;
@@ -19,7 +21,6 @@ interface ClientProfile {
   kvk_number: string;
   btw_number: string;
   birth_date: string;
-  tax_type: string;
   preferred_language: string;
   notes: string;
 }
@@ -39,7 +40,8 @@ export default function ClientProfilePage() {
   const { i18n } = useTranslation();
   const { logout } = useAuth();
   const navigate   = useNavigate();
-  const isMobile = useMobile();
+  const isMobile   = useMobile();
+  const { showToast } = useToast();
   const isFA = i18n.language?.startsWith("fa");
   const isNL = i18n.language?.startsWith("nl");
   const dir  = isFA ? "rtl" : "ltr";
@@ -93,7 +95,6 @@ export default function ClientProfilePage() {
   const [form, setForm]   = useState<Partial<ClientProfile>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving]   = useState(false);
-  const [saved, setSaved]     = useState(false);
   const [showBsn, setShowBsn] = useState(false);
   const [gdprStatus, setGdprStatus]   = useState<Record<string, boolean>>({});
   const [gdprLoading, setGdprLoading] = useState<string | null>(null);
@@ -120,8 +121,16 @@ export default function ClientProfilePage() {
     setSaving(true);
     try {
       await apiClient.patch("/portal/client/profile/", form);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
+      const msg = isFA ? "اطلاعات با موفقیت ذخیره شد ✓"
+                : isNL ? "Gegevens opgeslagen ✓"
+                : "Profile saved successfully ✓";
+      showToast(msg, "success");
+      navigate("/dashboard");
+    } catch {
+      const errMsg = isFA ? "ذخیره‌سازی ناموفق بود — دوباره تلاش کنید"
+                  : isNL ? "Opslaan mislukt — probeer het opnieuw"
+                  : "Save failed — please try again";
+      showToast(errMsg, "error");
     } finally {
       setSaving(false);
     }
@@ -230,12 +239,12 @@ export default function ClientProfilePage() {
           <p style={{ margin: 0, color: "var(--text-3)", fontSize: "var(--text-sm)" }}>{T.subtitle}</p>
         </div>
         <button
-          className={saved ? "btn btn-ghost" : "btn btn-accent"}
+          className="btn btn-accent"
           onClick={handleSave}
           disabled={saving}
           style={{ flex: isMobile ? "0 0 100%" : "0 0 auto", minWidth: isMobile ? "auto" : 140, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
         >
-          {saved ? <><Check size={14} /> {T.saved}</> : saving ? "…" : T.save}
+          {saving ? "…" : T.save}
         </button>
       </div>
 
@@ -518,12 +527,12 @@ export default function ClientProfilePage() {
         WebkitBackdropFilter: "blur(12px)",
       }}>
         <button
-          className={saved ? "btn btn-ghost" : "btn btn-accent"}
+          className="btn btn-accent"
           onClick={handleSave}
           disabled={saving}
           style={{ minWidth: 160, display: "flex", alignItems: "center", gap: 6 }}
         >
-          {saved ? <><Check size={14} /> {T.saved}</> : saving ? "…" : T.save}
+          {saving ? "…" : T.save}
         </button>
       </div>
 
