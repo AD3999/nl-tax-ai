@@ -333,7 +333,7 @@ class ChatMessageView(APIView):
         ib_return_mode = serializer.validated_data.get("ib_return_mode", False)
         language = serializer.validated_data.get("language", "nl")
         # Structured alert context: { id, title, body, category } passed from "Ask AI" button
-        explain_alert = request.data.get("explain_alert") or {}
+        explain_alert = serializer.validated_data.get("explain_alert") or {}
         user_type = user_profile.get("user_type", "zzp") if user_profile else "zzp"
 
         # IB return mode is always allowed — no profile required

@@ -8,6 +8,31 @@ from .models import (
 )
 
 
+def _detect_mime_from_bytes(file) -> str | None:
+    """Detect MIME type from file magic bytes. Returns None if undetermined (e.g. CSV)."""
+    header = file.read(16)
+    file.seek(0)
+    if header[:4] == b'%PDF':
+        return 'application/pdf'
+    if header[:3] == b'\xff\xd8\xff':
+        return 'image/jpeg'
+    if header[:8] == b'\x89PNG\r\n\x1a\n':
+        return 'image/png'
+    if header[:4] == b'RIFF' and header[8:12] == b'WEBP':
+        return 'image/webp'
+    if header[:4] == b'PK\x03\x04':
+        return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    if header[:8] == b'\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1':
+        return 'application/vnd.ms-excel'
+    if header[4:8] == b'ftyp':
+        brand = header[8:12]
+        if brand in (b'heic', b'heis', b'heim', b'heix', b'hevc', b'hevx', b'mif1', b'msf1'):
+            return 'image/heic'
+        if brand in (b'heif', b'avif'):
+            return 'image/heif'
+    return None
+
+
 class AccountantClientProfileSerializer(serializers.ModelSerializer):
     display_name       = serializers.ReadOnlyField()
     engagement_count   = serializers.SerializerMethodField()
@@ -166,12 +191,17 @@ class ClientDocumentUploadSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f"File too large. Maximum size is {ClientDocument.MAX_FILE_SIZE // (1024*1024)} MB."
             )
+        detected_mime = _detect_mime_from_bytes(value)
+        # Use server-detected MIME; fall back to client-declared type only for formats
+        # without reliable magic bytes (CSV). This prevents MIME-type spoofing.
+        mime_to_use = detected_mime or value.content_type
         allowed = ClientDocument.ALLOWED_MIME_TYPES
-        if value.content_type not in allowed:
+        if mime_to_use not in allowed:
             raise serializers.ValidationError(
-                f"File type '{value.content_type}' is not allowed. "
-                f"Allowed types: PDF, JPEG, PNG, HEIC, CSV, XLSX."
+                "File type is not allowed. Allowed types: PDF, JPEG, PNG, HEIC, WEBP, CSV, XLSX."
             )
+        # Override with server-detected value so the view never stores client-supplied type
+        value.content_type = mime_to_use
         return value
 
 

@@ -102,6 +102,7 @@ class AccountantClientProfile(models.Model):
     class Meta:
         db_table = "portal_client_profiles"
         ordering = ["-created_at"]
+        unique_together = [("accountant_user", "client_user")]
 
     def __str__(self):
         name = f"{self.first_name} {self.last_name}".strip() or self.email

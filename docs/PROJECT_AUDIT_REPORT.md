@@ -37,9 +37,12 @@
 
 ### What is broken / risky (remaining after all fixes)
 
-1. **MEDIUM**: `explain_alert` read from `request.data` directly — bypasses serializer, injected into AI prompt
-2. **LOW**: `ClientDocument.mime_type` from client `Content-Type` header — MIME spoofing possible
-3. **LOW**: `AccountantClientProfile` missing `unique_together(accountant_user, client_user)`
+All 3 previously remaining code issues have been fixed (commit after 5bcc3c3):
+- `explain_alert` now reads from `serializer.validated_data` — no longer bypasses `ChatMessageSerializer`
+- `ClientDocument.mime_type` now detected server-side via magic bytes in `_detect_mime_from_bytes()` — no longer taken from client header
+- `AccountantClientProfile` now has `unique_together = [("accountant_user", "client_user")]` + migration 0012
+
+**Only operator configuration step remains:**
 
 ### What blocks launch
 
@@ -211,7 +214,7 @@ Logout: clear 14 localStorage keys
 | ISSUE-011 | Medium | DevOps | `nginx.conf` | `/media/` not proxied — document downloads returned index.html | **FIXED** |
 | ISSUE-012 | Medium | Security | `users/views.py:138` | `RegisterView` had no rate limiting | **FIXED** |
 | ISSUE-013 | Medium | DevOps | `.env.example` | 10+ required env vars missing from documentation | **FIXED** |
-| ISSUE-014 | Medium | Security | `chat/views.py:335` | `explain_alert` read from raw `request.data` — injected into AI system prompt | **REMAINING** |
+| ISSUE-014 | Medium | Security | `chat/views.py:335` | `explain_alert` read from raw `request.data` — injected into AI system prompt | **FIXED** |
 | ISSUE-015 | Medium | API | `tax/views.py:200` | `int()` on `?days=` → `ValueError` → 500 on non-numeric input | **FIXED** |
 | ISSUE-016 | Low | Testing | `portal/tests/test_invitations_messages.py` | Broken model refs: `Firm.owner`, `AccountantClientProfile.firm`, `status="active"` | **FIXED** |
 | ISSUE-017 | Low | Testing | `backend/apps/portal/` | `tests.py` + `tests/` coexisted — test discovery crash | **FIXED** |
@@ -219,11 +222,11 @@ Logout: clear 14 localStorage keys
 | ISSUE-019 | Low | Frontend | `AccountantPortalPage.tsx:8` | Unused `archiveClient` import (TypeScript error) | **FIXED** |
 | ISSUE-020 | Low | Frontend | `ClientProfilePage.tsx:42` | `user` not in `useAuth()` destructure but referenced at line 469 | **FIXED** |
 | ISSUE-021 | Low | Security | `users/views.py:196` | Google auth username collision only tried once → `IntegrityError` on second collision | **FIXED** |
-| ISSUE-022 | Low | Database | `portal/models.py:46` | No `unique_together(accountant_user, client_user)` on `AccountantClientProfile` | **REMAINING** |
-| ISSUE-023 | Low | Security | `portal/models.py:231` | `ClientDocument.mime_type` from client-supplied `Content-Type` | **REMAINING** |
+| ISSUE-022 | Low | Database | `portal/models.py:46` | No `unique_together(accountant_user, client_user)` on `AccountantClientProfile` | **FIXED** |
+| ISSUE-023 | Low | Security | `portal/models.py:231` | `ClientDocument.mime_type` from client-supplied `Content-Type` | **FIXED** |
 | ISSUE-024 | Low | Config | `settings.py:33` | `ALLOWED_HOSTS = ["*"]` on Railway | **REMAINING** (low risk) |
 
-**FIXED: 20 issues. REMAINING: 4 issues. MANUAL STEP: 1 issue.**
+**FIXED: 23 issues. REMAINING: 1 issue (operator config). MANUAL STEP: 1 issue.**
 
 ---
 
