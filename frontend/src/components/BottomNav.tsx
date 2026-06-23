@@ -12,20 +12,21 @@ export default function BottomNav() {
   const L = (nl: string, en: string, fa: string) =>
     lang === "nl" ? nl : lang === "fa" ? fa : en;
 
-  const baseItems = [
-    { to: "/dashboard",        icon: <LayoutDashboard size={20} />, label: L("Home",       "Home",       "خانه") },
-    { to: "/chat",             icon: <MessageSquare size={20} />,   label: L("AI",         "AI",         "هوش مصنوعی") },
-  ];
-
-  const accountantItems = [
-    { to: "/client/tasks",     icon: <CheckSquare size={20} />,     label: L("Taken",      "Tasks",      "کارها") },
-    { to: "/client/documents", icon: <FolderOpen size={20} />,      label: L("Documenten", "Documents",  "اسناد") },
-    { to: "/client/profile",   icon: <User size={20} />,            label: L("Profiel",    "Profile",    "پروفایل") },
-  ];
+  const profileItem = { to: "/client/profile", icon: <User size={20} />, label: L("Profiel", "Profile", "پروفایل") };
 
   const items = hasAccountant
-    ? [baseItems[0], ...accountantItems, baseItems[1]]
-    : baseItems;
+    ? [
+        { to: "/dashboard",        icon: <LayoutDashboard size={20} />, label: L("Home",       "Home",       "خانه") },
+        { to: "/client/tasks",     icon: <CheckSquare size={20} />,     label: L("Taken",      "Tasks",      "کارها") },
+        { to: "/client/documents", icon: <FolderOpen size={20} />,      label: L("Documenten", "Documents",  "اسناد") },
+        profileItem,
+        { to: "/chat",             icon: <MessageSquare size={20} />,   label: L("AI",         "AI",         "هوش مصنوعی") },
+      ]
+    : [
+        { to: "/dashboard",        icon: <LayoutDashboard size={20} />, label: L("Home",       "Home",       "خانه") },
+        profileItem,
+        { to: "/chat",             icon: <MessageSquare size={20} />,   label: L("AI",         "AI",         "هوش مصنوعی") },
+      ];
 
   return (
     <nav

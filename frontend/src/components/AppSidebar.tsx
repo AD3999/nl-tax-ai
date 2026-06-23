@@ -56,6 +56,7 @@ function clientNav(t: (k: string) => string, hasAccountant: boolean): NavItem[] 
   const items: NavItem[] = [
     { to: "/dashboard",         label: t("nav.dashboard"),         icon: <LayoutDashboard size={15} />, end: true },
     { to: "/chat",              label: t("nav.chat"),              icon: <MessageSquare size={15} /> },
+    { to: "/client/profile",    label: t("nav.my_profile"),        icon: <User size={15} />, end: true },
     { to: "/zzp-workspace",     label: t("nav.zzp_workspace"),     icon: <Truck size={15} /> },
     { to: "/deduction-checker", label: t("nav.deduction_checker"), icon: <Search size={15} /> },
     { to: "/tax-calendar",      label: t("nav.tax_calendar"),      icon: <Calendar size={15} /> },
@@ -65,7 +66,6 @@ function clientNav(t: (k: string) => string, hasAccountant: boolean): NavItem[] 
     items.splice(2, 0,
       { to: "/client",          label: t("nav.my_portal"),         icon: <Briefcase size={15} />, end: true },
       { to: "/client/messages", label: t("nav.messages"),          icon: <MessageSquare size={15} />, end: true },
-      { to: "/client/profile",  label: t("nav.my_profile"),        icon: <User size={15} />, end: true },
     );
   }
   return items;

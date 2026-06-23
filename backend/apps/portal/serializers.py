@@ -29,20 +29,19 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
     def get_tax_type(self, obj):
         return obj.client_type
 
-    def update(self, instance, validated_data):
-        # full_name → first_name + last_name (split on first space)
-        full_name = self.initial_data.get("full_name")
+    def to_internal_value(self, data):
+        data = data.copy()
+        # full_name → first_name + last_name before DRF validation
+        full_name = data.pop("full_name", None)
         if full_name is not None:
-            parts = full_name.strip().split(" ", 1)
-            instance.first_name = parts[0]
-            instance.last_name  = parts[1] if len(parts) > 1 else ""
-
-        # tax_type → client_type
-        tax_type = self.initial_data.get("tax_type")
+            parts = str(full_name).strip().split(" ", 1)
+            data["first_name"] = parts[0]
+            data["last_name"]  = parts[1] if len(parts) > 1 else ""
+        # tax_type → client_type before DRF validation
+        tax_type = data.pop("tax_type", None)
         if tax_type is not None:
-            instance.client_type = tax_type
-
-        return super().update(instance, validated_data)
+            data["client_type"] = tax_type
+        return super().to_internal_value(data)
 
     class Meta:
         model = AccountantClientProfile
