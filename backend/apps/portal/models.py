@@ -89,7 +89,7 @@ class AccountantClientProfile(models.Model):
     address_street   = models.CharField(max_length=200, blank=True)
     address_city     = models.CharField(max_length=100, blank=True)
     address_postcode = models.CharField(max_length=20,  blank=True)
-    bsn              = models.CharField(max_length=200, blank=True)  # TODO: encrypt AES-256-GCM
+    bsn_enc          = models.TextField(blank=True, help_text="AES-256-GCM encrypted BSN. Use encryption.encrypt_bsn() to write.")
     kvk_number       = models.CharField(max_length=20,  blank=True)
     btw_number       = models.CharField(max_length=30,  blank=True)
     birth_date       = models.DateField(null=True, blank=True)

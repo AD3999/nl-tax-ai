@@ -44,23 +44,22 @@ def _make_accountant_setup():
     """Create accountant user + profile + firm + client profile + engagement."""
     acc_user = _make_user("accountant@test.com", role="accountant")
     acc_profile = AccountantProfile.objects.create(user=acc_user, firm_name="Test Firm")
-    firm = Firm.objects.create(name="Test Firm", owner=acc_user)
+    firm = Firm.objects.create(name="Test Firm")
 
     client_user = _make_user("client@test.com", role="client")
     profile = AccountantClientProfile.objects.create(
         accountant_user=acc_user,
-        nickname="Test Client",
         email="client@test.com",
         client_user=client_user,
-        firm=firm,
         tax_year=2026,
     )
     engagement = TaxEngagement.objects.create(
         client_profile=profile,
-        accountant=acc_profile,
+        accountant=acc_user,
         firm=firm,
         tax_year=2026,
-        status="active",
+        status="draft",
+        engagement_type="income_tax",
     )
     return acc_user, acc_profile, firm, client_user, profile, engagement
 

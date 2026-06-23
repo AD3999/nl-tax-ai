@@ -18,7 +18,7 @@ interface ClientProfile {
   address_street: string;
   address_city: string;
   address_postcode: string;
-  bsn: string;
+  bsn_is_set: boolean;     // true if an encrypted BSN is stored; BSN itself is never returned
   kvk_number: string;
   btw_number: string;
   birth_date: string;
@@ -39,7 +39,7 @@ const LABEL_STYLE: React.CSSProperties = {
 
 export default function ClientProfilePage() {
   const { i18n } = useTranslation();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate   = useNavigate();
   const isMobile   = useMobile();
   const { showToast } = useToast();
@@ -94,6 +94,7 @@ export default function ClientProfilePage() {
   };
 
   const [form, setForm]   = useState<Partial<ClientProfile>>({});
+  const [bsnInput, setBsnInput] = useState(""); // plain BSN entered by user — never pre-filled from API
   const [loading, setLoading] = useState(true);
   const [saving, setSaving]             = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
@@ -108,11 +109,6 @@ export default function ClientProfilePage() {
     setCookieConsent(getStoredConsent()?.decision ?? null);
   }, []);
 
-  const maskBsn = (raw: string) => {
-    if (!raw || raw.length < 4) return raw;
-    return "•".repeat(raw.length - 4) + raw.slice(-4);
-  };
-
   useEffect(() => {
     apiClient.get<ClientProfile>("/portal/client/profile/")
       .then(r => { setForm(r.data); setLoading(false); })
@@ -122,7 +118,12 @@ export default function ClientProfilePage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await apiClient.patch("/portal/client/profile/", form);
+      const payload: Record<string, unknown> = { ...form };
+      delete payload["bsn_is_set"]; // read-only, not a writable API field
+      if (bsnInput.trim()) {
+        payload["bsn"] = bsnInput.trim(); // send plain BSN only when user explicitly typed one
+      }
+      await apiClient.patch("/portal/client/profile/", payload);
       const msg = isFA ? "اطلاعات با موفقیت ذخیره شد ✓"
                 : isNL ? "Gegevens opgeslagen ✓"
                 : "Profile saved successfully ✓";
@@ -374,9 +375,13 @@ export default function ClientProfilePage() {
               <input
                 className="tw-input"
                 type={showBsn ? "text" : "password"}
-                value={(form.bsn ?? "") as string}
-                placeholder={showBsn ? "123456789" : "•••••••••"}
-                onChange={set("bsn")}
+                value={bsnInput}
+                placeholder={
+                  form.bsn_is_set
+                    ? (isNL ? "BSN opgeslagen — typ om te wijzigen" : isFA ? "BSN ذخیره شده — برای تغییر وارد کنید" : "BSN stored — type to update")
+                    : (showBsn ? "123456789" : "•••••••••")
+                }
+                onChange={e => setBsnInput(e.target.value)}
                 autoComplete="off"
                 style={{ paddingInlineEnd: 80 }}
               />
@@ -387,8 +392,10 @@ export default function ClientProfilePage() {
                 <Shield size={13} style={{ color: "var(--text-4)" }} />
               </div>
             </div>
-            {form.bsn && !showBsn && (
-              <span style={{ fontSize: "var(--text-xs)", color: "var(--text-4)", marginTop: 4, display: "block" }}>{maskBsn(form.bsn as string)}</span>
+            {form.bsn_is_set && !bsnInput && (
+              <span style={{ fontSize: "var(--text-xs)", color: "var(--ok)", marginTop: 4, display: "block" }}>
+                {isNL ? "✓ BSN veilig opgeslagen" : isFA ? "✓ BSN به‌صورت امن ذخیره شده" : "✓ BSN stored securely"}
+              </span>
             )}
             <span style={{ fontSize: "var(--text-xs)", color: "var(--text-4)", marginTop: 4, display: "block" }}>{T.bsnHint}</span>
           </div>

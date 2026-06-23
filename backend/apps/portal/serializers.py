@@ -18,6 +18,10 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
     tax_type           = serializers.SerializerMethodField()
     # days remaining before deactivated profile is permanently deleted
     days_until_deletion = serializers.SerializerMethodField()
+    # Write-only: accepts plain BSN, encrypts it. Never returns decrypted value.
+    bsn        = serializers.CharField(write_only=True, required=False, allow_blank=True)
+    # Read-only: tells frontend whether a BSN has been stored (without exposing the value).
+    bsn_is_set = serializers.SerializerMethodField()
 
     def get_engagement_count(self, obj):
         return obj.engagements.count()
@@ -38,6 +42,9 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
         delta = obj.scheduled_deletion_at - timezone.now()
         return max(0, delta.days)
 
+    def get_bsn_is_set(self, obj):
+        return bool(obj.bsn_enc)
+
     def to_internal_value(self, data):
         data = data.copy()
         # full_name → first_name + last_name before DRF validation
@@ -50,6 +57,19 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
         tax_type = data.pop("tax_type", None)
         if tax_type is not None:
             data["client_type"] = tax_type
+        # bsn → bsn_enc (encrypt before storing)
+        bsn_plain = data.pop("bsn", None)
+        if bsn_plain is not None and str(bsn_plain).strip():
+            try:
+                from .encryption import encrypt_bsn
+                data["bsn_enc"] = encrypt_bsn(str(bsn_plain))
+            except EnvironmentError:
+                # BSN_ENCRYPTION_KEY not configured — refuse to store plaintext
+                raise serializers.ValidationError(
+                    {"bsn": "BSN storage is not configured on this server. Contact your administrator."}
+                )
+        elif bsn_plain == "":
+            data["bsn_enc"] = ""
         return super().to_internal_value(data)
 
     class Meta:
@@ -59,7 +79,7 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
             "client_type", "tax_type", "preferred_language", "phone", "status",
             "tax_year", "notes", "display_name", "engagement_count", "latest_readiness",
             "address_street", "address_city", "address_postcode",
-            "bsn", "kvk_number", "btw_number", "birth_date",
+            "bsn", "bsn_is_set", "kvk_number", "btw_number", "birth_date",
             "deactivated_at", "scheduled_deletion_at", "days_until_deletion",
             "created_at", "updated_at",
         ]
@@ -67,6 +87,7 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
             "id", "created_at", "updated_at", "display_name",
             "engagement_count", "latest_readiness", "full_name", "tax_type",
             "deactivated_at", "scheduled_deletion_at", "days_until_deletion",
+            "bsn_enc", "bsn_is_set",
         ]
 
 

@@ -24,7 +24,7 @@ _env_file = BASE_DIR.parent / ".env"
 if _env_file.exists():
     environ.Env.read_env(_env_file)
 
-SECRET_KEY = env("DJANGO_SECRET_KEY", default="dev-secret-key-change-in-production")
+SECRET_KEY = env("DJANGO_SECRET_KEY", default="dev-secret-key-UNSAFE-change-before-production")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 # Railway injects RAILWAY_ENVIRONMENT at runtime. When present, health checks arrive
@@ -364,6 +364,10 @@ if SENTRY_DSN:
 
 OPENAI_API_KEY = env("OPENAI_API_KEY", default="")
 ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
+
+# BSN encryption key — 32 bytes, base64-encoded
+# Generate: python -c "import os,base64; print(base64.b64encode(os.urandom(32)).decode())"
+BSN_ENCRYPTION_KEY = env("BSN_ENCRYPTION_KEY", default="")
 
 # ── Production security (activated when DEBUG=False) ──────────────────────────
 
