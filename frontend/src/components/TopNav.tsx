@@ -154,7 +154,7 @@ export default function TopNav() {
                 textDecoration: "none", transition: "all .15s",
               })}>Accountant</NavLink>
             )}
-            {user && user.role !== "accountant" && !user.is_admin && (
+            {user && user.role !== "accountant" && !user.is_admin && user.has_accountant && (
               <NavLink to="/client" style={({ isActive }) => ({
                 display: "inline-flex", alignItems: "center", height: 32, padding: "0 14px",
                 fontSize: "var(--text-sm)", fontWeight: isActive ? 700 : 500,
@@ -179,8 +179,8 @@ export default function TopNav() {
 
         {/* Right: controls + auth */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <ThemeToggle />
           <LangSwitch />
+          <ThemeToggle />
 
           {!isMobile && (
             <div style={{ width: 1, height: 20, background: "var(--border)", margin: "0 4px" }} />
@@ -323,7 +323,7 @@ export default function TopNav() {
                 Accountant
               </NavLink>
             )}
-            {user && user.role !== "accountant" && !user.is_admin && (
+            {user && user.role !== "accountant" && !user.is_admin && user.has_accountant && (
               <NavLink
                 to="/client"
                 onClick={closeMenu}

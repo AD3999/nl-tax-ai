@@ -12,9 +12,13 @@ class AccountantProfileSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     is_admin           = serializers.SerializerMethodField()
     accountant_profile = AccountantProfileSerializer(read_only=True)
+    has_accountant     = serializers.SerializerMethodField()
 
     def get_is_admin(self, obj):
         return obj.is_staff or obj.is_superuser
+
+    def get_has_accountant(self, obj):
+        return obj.accountant_links.exists()
 
     class Meta:
         model = User
@@ -22,7 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
             "id", "email", "username", "user_type", "role", "preferred_language",
             "tax_year", "plan", "daily_message_count", "daily_message_date", "is_admin",
             "intake_profile", "ib_guide_answers", "simulation_state",
-            "accountant_profile",
+            "accountant_profile", "has_accountant",
         ]
         read_only_fields = ["id", "email", "plan", "daily_message_count", "daily_message_date", "is_admin", "role"]
 

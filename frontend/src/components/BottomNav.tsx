@@ -1,26 +1,31 @@
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { LayoutDashboard, FolderOpen, CheckSquare, MessageSquare, User } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
-/**
- * Mobile bottom navigation bar — shown only to client role users.
- * Spec (Ch 5 + Ch 18): "Use bottom navigation for client users:
- * Home, Tasks, Documents, AI, Profile."
- */
 export default function BottomNav() {
   const { i18n } = useTranslation();
+  const { user } = useAuth();
   const lang = i18n.language;
+  const hasAccountant = !!user?.has_accountant;
 
   const L = (nl: string, en: string, fa: string) =>
     lang === "nl" ? nl : lang === "fa" ? fa : en;
 
-  const items = [
+  const baseItems = [
     { to: "/dashboard",        icon: <LayoutDashboard size={20} />, label: L("Home",       "Home",       "خانه") },
+    { to: "/chat",             icon: <MessageSquare size={20} />,   label: L("AI",         "AI",         "هوش مصنوعی") },
+  ];
+
+  const accountantItems = [
     { to: "/client/tasks",     icon: <CheckSquare size={20} />,     label: L("Taken",      "Tasks",      "کارها") },
     { to: "/client/documents", icon: <FolderOpen size={20} />,      label: L("Documenten", "Documents",  "اسناد") },
-    { to: "/chat",             icon: <MessageSquare size={20} />,   label: L("AI",         "AI",         "هوش مصنوعی") },
     { to: "/client/profile",   icon: <User size={20} />,            label: L("Profiel",    "Profile",    "پروفایل") },
   ];
+
+  const items = hasAccountant
+    ? [baseItems[0], ...accountantItems, baseItems[1]]
+    : baseItems;
 
   return (
     <nav

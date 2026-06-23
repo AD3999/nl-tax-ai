@@ -52,18 +52,23 @@ function useUnreadCount(isAccountant: boolean, isClient: boolean) {
 
 interface NavItem { to: string; label: string; icon: React.ReactNode; end?: boolean }
 
-function clientNav(t: (k: string) => string): NavItem[] {
-  return [
+function clientNav(t: (k: string) => string, hasAccountant: boolean): NavItem[] {
+  const items: NavItem[] = [
     { to: "/dashboard",         label: t("nav.dashboard"),         icon: <LayoutDashboard size={15} />, end: true },
     { to: "/chat",              label: t("nav.chat"),              icon: <MessageSquare size={15} /> },
-    { to: "/client",            label: t("nav.my_portal"),         icon: <Briefcase size={15} />, end: true },
-    { to: "/client/messages",   label: t("nav.messages"),          icon: <MessageSquare size={15} />, end: true },
-    { to: "/client/profile",    label: t("nav.my_profile"),        icon: <User size={15} />, end: true },
     { to: "/zzp-workspace",     label: t("nav.zzp_workspace"),     icon: <Truck size={15} /> },
     { to: "/deduction-checker", label: t("nav.deduction_checker"), icon: <Search size={15} /> },
     { to: "/tax-calendar",      label: t("nav.tax_calendar"),      icon: <Calendar size={15} /> },
     { to: "/tax-history",       label: t("nav.tax_history"),       icon: <ClipboardList size={15} /> },
   ];
+  if (hasAccountant) {
+    items.splice(2, 0,
+      { to: "/client",          label: t("nav.my_portal"),         icon: <Briefcase size={15} />, end: true },
+      { to: "/client/messages", label: t("nav.messages"),          icon: <MessageSquare size={15} />, end: true },
+      { to: "/client/profile",  label: t("nav.my_profile"),        icon: <User size={15} />, end: true },
+    );
+  }
+  return items;
 }
 
 function accountantNav(): NavItem[] {
@@ -105,7 +110,8 @@ function SidebarContent({ onNav }: SidebarContentProps) {
   const isAdmin      = !!user?.is_admin;
   const isAccountant = user?.role === "accountant";
   const isClient     = !!user && !isAdmin && !isAccountant;
-  const items        = isAdmin ? adminNav() : isAccountant ? accountantNav() : clientNav(t);
+  const hasAccountant = !!user?.has_accountant;
+  const items        = isAdmin ? adminNav() : isAccountant ? accountantNav() : clientNav(t, hasAccountant);
   const sectionLabel = isAdmin ? "Admin" : isAccountant ? "Accountant" : "Menu";
   const unreadCount  = useUnreadCount(isAccountant, isClient);
 
