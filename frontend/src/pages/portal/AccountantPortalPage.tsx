@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useMobile } from "../../hooks/useMobile";
 import {
-  fetchClients, fetchEngagements, archiveClient,
+  fetchClients, fetchEngagements, archiveClient, disconnectClient,
 } from "../../api/portal/client";
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
 import {
@@ -179,6 +179,7 @@ const STATUS_COLOR: Record<string, string> = {
   filed: "var(--ok)",
   completed: "var(--ok)",
   blocked: "var(--danger)",
+  deactivated: "var(--ink-4)",
 };
 
 const STATUS_CHIP: Record<string, { bg: string; color: string }> = {
@@ -400,46 +401,55 @@ export default function AccountantPortalPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {clients.map(c => (
-                    <tr key={c.id} style={{ borderBottom: "1px solid var(--hairline)" }}>
-                      <td style={{ padding: "var(--sp-3)", fontWeight: 500 }}>
-                        <div style={{ color: "var(--ink)" }}>{c.display_name}</div>
-                        <div style={{ color: "var(--ink-4)", fontSize: "var(--text-xs)" }}>{c.email}</div>
-                      </td>
-                      <td style={{ padding: "var(--sp-3)" }}>
-                        <span className="pill" style={{ fontSize: "var(--text-2xs)" }}>{c.client_type.toUpperCase()}</span>
-                      </td>
-                      <td style={{ padding: "var(--sp-3)", color: "var(--ink-3)" }}>{c.preferred_language.toUpperCase()}</td>
-                      <td style={{ padding: "var(--sp-3)" }}>
-                        <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[c.status] || "var(--ink-3)" }}>{c.status}</span>
-                      </td>
-                      <td style={{ padding: "var(--sp-3)", textAlign: "center" }}>
-                        {c.latest_readiness !== null ? (
-                          <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: c.latest_readiness >= 85 ? "var(--ok)" : c.latest_readiness >= 50 ? "var(--warn)" : "var(--danger)" }}>
-                            {c.latest_readiness}%
-                          </span>
-                        ) : "—"}
-                      </td>
-                      <td style={{ padding: "var(--sp-3)", textAlign: "center", color: "var(--ink-3)" }}>
-                        {c.engagement_count > 0 ? "—" : "—"}
-                      </td>
-                      <td style={{ padding: "var(--sp-3)" }}>—</td>
-                      <td style={{ padding: "var(--sp-3)" }}>
-                        <div style={{ display: "flex", gap: "var(--sp-2)" }}>
-                          <Link to={`/accountant/clients/${c.id}`} className="btn btn-ghost btn-sm">{tx.view_client} →</Link>
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            style={{ color: "var(--danger)", display: "inline-flex", alignItems: "center" }}
-                            onClick={async () => {
-                              if (!window.confirm(`Remove ${c.display_name}?`)) return;
-                              await archiveClient(c.id);
-                              setClients(prev => prev.filter(x => x.id !== c.id));
-                            }}
-                          ><X size={13} /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {clients.map(c => {
+                    const isDeactivated = c.status === "deactivated";
+                    return (
+                      <tr key={c.id} style={{ borderBottom: "1px solid var(--hairline)", opacity: isDeactivated ? 0.65 : 1 }}>
+                        <td style={{ padding: "var(--sp-3)", fontWeight: 500 }}>
+                          <div style={{ color: "var(--ink)" }}>{c.display_name}</div>
+                          <div style={{ color: "var(--ink-4)", fontSize: "var(--text-xs)" }}>{c.email}</div>
+                          {isDeactivated && c.days_until_deletion !== null && (
+                            <div style={{ color: "var(--warn-text, #7a5a00)", fontSize: "var(--text-2xs)", marginTop: 2 }}>
+                              Deleted in {c.days_until_deletion}d
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ padding: "var(--sp-3)" }}>
+                          <span className="pill" style={{ fontSize: "var(--text-2xs)" }}>{c.client_type.toUpperCase()}</span>
+                        </td>
+                        <td style={{ padding: "var(--sp-3)", color: "var(--ink-3)" }}>{c.preferred_language.toUpperCase()}</td>
+                        <td style={{ padding: "var(--sp-3)" }}>
+                          <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[c.status] || "var(--ink-3)" }}>{c.status}</span>
+                        </td>
+                        <td style={{ padding: "var(--sp-3)", textAlign: "center" }}>
+                          {!isDeactivated && c.latest_readiness !== null ? (
+                            <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: c.latest_readiness >= 85 ? "var(--ok)" : c.latest_readiness >= 50 ? "var(--warn)" : "var(--danger)" }}>
+                              {c.latest_readiness}%
+                            </span>
+                          ) : "—"}
+                        </td>
+                        <td style={{ padding: "var(--sp-3)", textAlign: "center", color: "var(--ink-3)" }}>—</td>
+                        <td style={{ padding: "var(--sp-3)" }}>—</td>
+                        <td style={{ padding: "var(--sp-3)" }}>
+                          <div style={{ display: "flex", gap: "var(--sp-2)" }}>
+                            <Link to={`/accountant/clients/${c.id}`} className="btn btn-ghost btn-sm">{tx.view_client} →</Link>
+                            {!isDeactivated && (
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                style={{ color: "var(--warn-text, #7a5a00)", display: "inline-flex", alignItems: "center" }}
+                                title="Disconnect client (30-day grace period)"
+                                onClick={async () => {
+                                  if (!window.confirm(`Disconnect ${c.display_name}? Their data is kept for 30 days.`)) return;
+                                  const updated = await disconnectClient(c.id);
+                                  setClients(prev => prev.map(x => x.id === c.id ? updated : x));
+                                }}
+                              ><X size={13} /></button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

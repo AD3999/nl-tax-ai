@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 from .models import (
     AccountantClientProfile, TaxEngagement, DocumentRequest,
@@ -8,13 +9,15 @@ from .models import (
 
 
 class AccountantClientProfileSerializer(serializers.ModelSerializer):
-    display_name     = serializers.ReadOnlyField()
-    engagement_count = serializers.SerializerMethodField()
-    latest_readiness = serializers.SerializerMethodField()
+    display_name       = serializers.ReadOnlyField()
+    engagement_count   = serializers.SerializerMethodField()
+    latest_readiness   = serializers.SerializerMethodField()
     # full_name is a virtual field: read = first_name + last_name, write = split on first space
-    full_name        = serializers.SerializerMethodField()
+    full_name          = serializers.SerializerMethodField()
     # tax_type is the client-facing alias for client_type
-    tax_type         = serializers.SerializerMethodField()
+    tax_type           = serializers.SerializerMethodField()
+    # days remaining before deactivated profile is permanently deleted
+    days_until_deletion = serializers.SerializerMethodField()
 
     def get_engagement_count(self, obj):
         return obj.engagements.count()
@@ -28,6 +31,12 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
 
     def get_tax_type(self, obj):
         return obj.client_type
+
+    def get_days_until_deletion(self, obj):
+        if obj.scheduled_deletion_at is None:
+            return None
+        delta = obj.scheduled_deletion_at - timezone.now()
+        return max(0, delta.days)
 
     def to_internal_value(self, data):
         data = data.copy()
@@ -51,11 +60,13 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
             "tax_year", "notes", "display_name", "engagement_count", "latest_readiness",
             "address_street", "address_city", "address_postcode",
             "bsn", "kvk_number", "btw_number", "birth_date",
+            "deactivated_at", "scheduled_deletion_at", "days_until_deletion",
             "created_at", "updated_at",
         ]
         read_only_fields = [
             "id", "created_at", "updated_at", "display_name",
             "engagement_count", "latest_readiness", "full_name", "tax_type",
+            "deactivated_at", "scheduled_deletion_at", "days_until_deletion",
         ]
 
 

@@ -215,17 +215,24 @@ class AccountantProfile(models.Model):
 
 class AccountantClient(models.Model):
     """Relationship between an accountant and a client user."""
-    accountant = models.ForeignKey("users.AccountantProfile", on_delete=models.CASCADE, related_name="clients")
+    STATUS_CHOICES = [
+        ("active",      "Active"),
+        ("deactivated", "Deactivated"),
+    ]
+
+    accountant  = models.ForeignKey("users.AccountantProfile", on_delete=models.CASCADE, related_name="clients")
     client_user = models.ForeignKey("users.User", on_delete=models.CASCADE, related_name="accountant_links", null=True, blank=True)
-    nickname = models.CharField(max_length=100, blank=True)
-    notes = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    nickname       = models.CharField(max_length=100, blank=True)
+    notes          = models.TextField(blank=True)
+    status         = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
+    deactivated_at = models.DateTimeField(null=True, blank=True)
+    created_at     = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "accountant_clients"
 
     def __str__(self):
-        return f"{self.accountant_id} → {self.nickname or self.client_user_id}"
+        return f"{self.accountant_id} → {self.nickname or self.client_user_id} [{self.status}]"
 
 
 class AccountantInvitation(models.Model):

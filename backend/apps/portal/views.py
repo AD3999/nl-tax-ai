@@ -181,6 +181,137 @@ class AccountantClientDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+DISCONNECT_GRACE_DAYS = 30
+
+
+def _deactivate_client_link(profile):
+    """Deactivate the AccountantClient link so the client loses has_accountant."""
+    if profile.client_user_id:
+        try:
+            from apps.users.models import AccountantProfile, AccountantClient
+            acc_profile = AccountantProfile.objects.get(user=profile.accountant_user)
+            AccountantClient.objects.filter(
+                accountant=acc_profile,
+                client_user_id=profile.client_user_id,
+                status="active",
+            ).update(status="deactivated", deactivated_at=timezone.now())
+        except Exception:
+            pass
+
+
+def _reactivate_client_link(profile):
+    """Restore the AccountantClient link so the client regains has_accountant."""
+    if profile.client_user_id:
+        try:
+            from apps.users.models import AccountantProfile, AccountantClient
+            acc_profile = AccountantProfile.objects.get(user=profile.accountant_user)
+            AccountantClient.objects.filter(
+                accountant=acc_profile,
+                client_user_id=profile.client_user_id,
+                status="deactivated",
+            ).update(status="active", deactivated_at=None)
+        except Exception:
+            pass
+
+
+class AccountantClientDisconnectView(APIView):
+    """
+    POST /api/portal/clients/<pk>/disconnect/
+
+    Accountant deactivates a client. The profile is kept for 30 days
+    with status='deactivated' so it can be reactivated if needed.
+    After 30 days the purge_expired_client_data management command removes it.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        profile = get_object_or_404(AccountantClientProfile, pk=pk)
+        if not _is_accountant_of_client(request.user, profile) and not request.user.is_staff:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        if profile.status == "deactivated":
+            return Response({"detail": "Client is already deactivated."}, status=status.HTTP_400_BAD_REQUEST)
+
+        now = timezone.now()
+        profile.status               = "deactivated"
+        profile.deactivated_at       = now
+        profile.scheduled_deletion_at = now + timezone.timedelta(days=DISCONNECT_GRACE_DAYS)
+        profile.save(update_fields=["status", "deactivated_at", "scheduled_deletion_at", "updated_at"])
+
+        _deactivate_client_link(profile)
+        _audit(request, "client_deactivated", "AccountantClientProfile", profile.id, client_profile=profile)
+
+        return Response(
+            AccountantClientProfileSerializer(profile, context={"request": request}).data
+        )
+
+
+class AccountantClientReactivateView(APIView):
+    """
+    POST /api/portal/clients/<pk>/reactivate/
+
+    Accountant reactivates a deactivated client within the 30-day window.
+    Restores status to 'active' and clears the scheduled deletion date.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        profile = get_object_or_404(AccountantClientProfile, pk=pk)
+        if not _is_accountant_of_client(request.user, profile) and not request.user.is_staff:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        if profile.status != "deactivated":
+            return Response({"detail": "Client is not deactivated."}, status=status.HTTP_400_BAD_REQUEST)
+        if profile.scheduled_deletion_at and profile.scheduled_deletion_at <= timezone.now():
+            return Response(
+                {"detail": "Grace period has expired. Client data has been scheduled for deletion."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        profile.status                = "active"
+        profile.deactivated_at        = None
+        profile.scheduled_deletion_at = None
+        profile.save(update_fields=["status", "deactivated_at", "scheduled_deletion_at", "updated_at"])
+
+        _reactivate_client_link(profile)
+        _audit(request, "client_reactivated", "AccountantClientProfile", profile.id, client_profile=profile)
+
+        return Response(
+            AccountantClientProfileSerializer(profile, context={"request": request}).data
+        )
+
+
+class ClientSelfDisconnectView(APIView):
+    """
+    POST /api/portal/client/disconnect/
+
+    Allows the client to sever the connection from their side.
+    Same 30-day grace-period logic applies — the accountant can still
+    reactivate within that window.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        profile = _get_or_create_self_service_profile(request.user)
+        if profile.status == "deactivated":
+            return Response({"detail": "Already disconnected."}, status=status.HTTP_400_BAD_REQUEST)
+        # Self-service profiles (accountant_user == client_user) have no external accountant
+        if profile.accountant_user_id == profile.client_user_id:
+            return Response(
+                {"detail": "No accountant connection to disconnect."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        now = timezone.now()
+        profile.status                = "deactivated"
+        profile.deactivated_at        = now
+        profile.scheduled_deletion_at = now + timezone.timedelta(days=DISCONNECT_GRACE_DAYS)
+        profile.save(update_fields=["status", "deactivated_at", "scheduled_deletion_at", "updated_at"])
+
+        _deactivate_client_link(profile)
+        _audit(request, "client_self_disconnected", "AccountantClientProfile", profile.id, client_profile=profile)
+
+        return Response({"detail": "Disconnected. Your data will be retained for 30 days."})
+
+
 # ── Engagement CRUD ───────────────────────────────────────────────────────────
 
 class EngagementListView(APIView):

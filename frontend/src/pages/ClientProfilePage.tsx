@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { User, MapPin, CreditCard, Globe, FileText, Shield } from "lucide-react";
 import { client as apiClient } from "../api/client";
+import { selfDisconnect } from "../api/portal/client";
 import { useAuth } from "../context/AuthContext";
 import { useMobile } from "../hooks/useMobile";
 import { useToast } from "../context/ToastContext";
@@ -94,8 +95,9 @@ export default function ClientProfilePage() {
 
   const [form, setForm]   = useState<Partial<ClientProfile>>({});
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving]   = useState(false);
-  const [showBsn, setShowBsn] = useState(false);
+  const [saving, setSaving]             = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [showBsn, setShowBsn]           = useState(false);
   const [gdprStatus, setGdprStatus]   = useState<Record<string, boolean>>({});
   const [gdprLoading, setGdprLoading] = useState<string | null>(null);
   const [gdprError, setGdprError]     = useState<string | null>(null);
@@ -133,6 +135,31 @@ export default function ClientProfilePage() {
       showToast(errMsg, "error");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDisconnectAccountant = async () => {
+    const confirm_msg = isFA
+      ? "آیا مطمئنید که می‌خواهید از حسابدار خود قطع ارتباط کنید؟ اطلاعات شما ۳۰ روز حفظ می‌شود."
+      : isNL
+      ? "Weet u zeker dat u de verbinding met uw accountant wilt verbreken? Uw gegevens worden 30 dagen bewaard."
+      : "Are you sure you want to disconnect from your accountant? Your data will be kept for 30 days.";
+    if (!window.confirm(confirm_msg)) return;
+    setDisconnecting(true);
+    try {
+      await selfDisconnect();
+      const msg = isFA ? "ارتباط با حسابدار قطع شد. داده‌ها ۳۰ روز نگه‌داری می‌شوند."
+                : isNL ? "Verbinding met accountant verbroken. Gegevens worden 30 dagen bewaard."
+                : "Disconnected from accountant. Data retained for 30 days.";
+      showToast(msg, "info");
+      navigate("/dashboard");
+    } catch {
+      const errMsg = isFA ? "خطا در قطع ارتباط — دوباره تلاش کنید"
+                  : isNL ? "Verbreken mislukt — probeer het opnieuw"
+                  : "Disconnect failed — please try again";
+      showToast(errMsg, "error");
+    } finally {
+      setDisconnecting(false);
     }
   };
 
@@ -437,6 +464,41 @@ export default function ClientProfilePage() {
           />
         </div>
       </div>
+
+      {/* ── Accountant connection (only if connected) ── */}
+      {user?.has_accountant && (
+        <div className="card" style={{ marginBottom: "var(--sp-5)", overflow: "hidden" }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: "var(--sp-3)",
+            padding: "var(--sp-4) var(--sp-6)",
+            borderBottom: "1px solid var(--border)",
+            background: "var(--bg-3)",
+          }}>
+            <div>
+              <span style={{ fontWeight: 700, fontSize: "var(--text-sm)", color: "var(--text)", display: "block" }}>
+                {isFA ? "ارتباط با حسابدار" : isNL ? "Accountantsverbinding" : "Accountant connection"}
+              </span>
+              <span style={{ fontSize: "var(--text-xs)", color: "var(--text-4)" }}>
+                {isFA ? "قطع ارتباط: داده‌ها ۳۰ روز باقی می‌مانند"
+                : isNL ? "Verbinding verbreken: gegevens blijven 30 dagen bewaard"
+                : "Disconnecting keeps your data for 30 days so the accountant can reactivate you"}
+              </span>
+            </div>
+          </div>
+          <div style={{ padding: "var(--sp-4) var(--sp-6)" }}>
+            <button
+              className="btn btn-ghost btn-sm"
+              style={{ color: "var(--warn-text, #7a5a00)" }}
+              onClick={handleDisconnectAccountant}
+              disabled={disconnecting}
+            >
+              {disconnecting
+                ? (isFA ? "در حال قطع ارتباط…" : isNL ? "Verbreken…" : "Disconnecting…")
+                : (isFA ? "قطع ارتباط با حسابدار" : isNL ? "Verbinding met accountant verbreken" : "Disconnect from accountant")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Privacy & Data (GDPR / AVG self-service) ── */}
       <div className="card" style={{ marginBottom: "var(--sp-5)", overflow: "hidden" }}>

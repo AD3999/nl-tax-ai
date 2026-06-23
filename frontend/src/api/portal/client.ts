@@ -45,11 +45,14 @@ async function del(path: string): Promise<void> {
 }
 
 // ── Clients ──────────────────────────────────────────────────────────────────
-export const fetchClients = () => get<ClientProfile[]>("/clients/");
-export const createClient = (data: Partial<ClientProfile>) => post<ClientProfile>("/clients/", data);
-export const fetchClient  = (id: number) => get<ClientProfile>(`/clients/${id}/`);
-export const updateClient = (id: number, data: Partial<ClientProfile>) => patch<ClientProfile>(`/clients/${id}/`, data);
-export const archiveClient = (id: number) => del(`/clients/${id}/`);
+export const fetchClients      = () => get<ClientProfile[]>("/clients/");
+export const createClient      = (data: Partial<ClientProfile>) => post<ClientProfile>("/clients/", data);
+export const fetchClient       = (id: number) => get<ClientProfile>(`/clients/${id}/`);
+export const updateClient      = (id: number, data: Partial<ClientProfile>) => patch<ClientProfile>(`/clients/${id}/`, data);
+export const archiveClient     = (id: number) => del(`/clients/${id}/`);
+export const disconnectClient  = (id: number) => post<ClientProfile>(`/clients/${id}/disconnect/`, {});
+export const reactivateClient  = (id: number) => post<ClientProfile>(`/clients/${id}/reactivate/`, {});
+export const selfDisconnect    = () => post<{ detail: string }>("/client/disconnect/", {});
 
 // ── Engagements ───────────────────────────────────────────────────────────────
 export const fetchEngagements = () => get<TaxEngagement[]>("/engagements/");

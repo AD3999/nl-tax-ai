@@ -18,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
         return obj.is_staff or obj.is_superuser
 
     def get_has_accountant(self, obj):
-        return obj.accountant_links.exists()
+        return obj.accountant_links.filter(status="active").exists()
 
     class Meta:
         model = User

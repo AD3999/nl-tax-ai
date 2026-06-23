@@ -1,5 +1,5 @@
 export type ClientType = "employee" | "zzp" | "expat" | "dga" | "other";
-export type ClientStatus = "invited" | "active" | "collecting" | "in_review" | "ready" | "completed" | "archived";
+export type ClientStatus = "invited" | "active" | "collecting" | "in_review" | "ready" | "completed" | "archived" | "deactivated";
 export type EngagementStatus = "draft" | "collecting" | "waiting_client" | "needs_review" | "ready_to_file" | "filed" | "completed" | "blocked";
 export type RiskLevel = "low" | "medium" | "high";
 export type ReviewStatus = "candidate" | "approved" | "rejected" | "manual";
@@ -21,6 +21,9 @@ export interface ClientProfile {
   display_name: string;
   engagement_count: number;
   latest_readiness: number | null;
+  deactivated_at: string | null;
+  scheduled_deletion_at: string | null;
+  days_until_deletion: number | null;
   created_at: string;
   updated_at: string;
 }

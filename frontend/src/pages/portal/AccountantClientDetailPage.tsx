@@ -5,6 +5,7 @@ import { useToast } from "../../context/ToastContext";
 import { useMobile } from "../../hooks/useMobile";
 import {
   fetchClient, updateClient, fetchEngagements, createEngagement, archiveClient,
+  disconnectClient, reactivateClient,
 } from "../../api/portal/client";
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
 
@@ -29,6 +30,8 @@ export default function AccountantClientDetailPage() {
   const [engForm, setEngForm] = useState({ tax_year: 2026, engagement_type: "income_tax" });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [reactivating, setReactivating] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -65,16 +68,45 @@ export default function AccountantClientDetailPage() {
 
   async function handleDeleteClient() {
     if (!profile) return;
-    if (!window.confirm(`Remove ${profile.display_name} from your clients? This cannot be undone.`)) return;
+    if (!window.confirm(`Permanently delete ${profile.display_name}? This cannot be undone.`)) return;
     setDeleting(true);
     try {
       await archiveClient(profile.id);
-      showToast("Client removed.", "info");
+      showToast("Client permanently removed.", "info");
       navigate("/accountant/portal");
     } catch {
       showToast("Failed to remove client.", "error");
     }
     setDeleting(false);
+  }
+
+  async function handleDisconnect() {
+    if (!profile) return;
+    if (!window.confirm(
+      `Disconnect ${profile.display_name}? Their data will be kept for 30 days and can be restored.`
+    )) return;
+    setDisconnecting(true);
+    try {
+      const updated = await disconnectClient(profile.id);
+      setProfile(updated);
+      showToast("Client disconnected. Data retained for 30 days.", "info");
+    } catch {
+      showToast("Failed to disconnect client.", "error");
+    }
+    setDisconnecting(false);
+  }
+
+  async function handleReactivate() {
+    if (!profile) return;
+    setReactivating(true);
+    try {
+      const updated = await reactivateClient(profile.id);
+      setProfile(updated);
+      showToast("Client reactivated successfully.", "success");
+    } catch {
+      showToast("Failed to reactivate client.", "error");
+    }
+    setReactivating(false);
   }
 
   async function handleCreateEngagement(e: React.FormEvent) {
@@ -114,6 +146,22 @@ export default function AccountantClientDetailPage() {
           <span style={{ color: "var(--ink)" }}>{profile.display_name}</span>
         </div>
 
+        {profile.status === "deactivated" && (
+          <div className="card" style={{ padding: "var(--sp-4)", background: "var(--warn-subtle, #fff8e1)", border: "1px solid var(--warn)", color: "var(--warn-text, #7a5a00)", marginBottom: "var(--sp-4)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--sp-3)", flexWrap: "wrap" }}>
+            <div>
+              <strong>Client disconnected</strong>
+              {profile.days_until_deletion !== null && (
+                <span style={{ marginLeft: 8, fontSize: "var(--text-xs)" }}>
+                  — data will be permanently deleted in <strong>{profile.days_until_deletion}</strong> day{profile.days_until_deletion !== 1 ? "s" : ""}
+                </span>
+              )}
+            </div>
+            <button className="btn btn-accent btn-sm" onClick={handleReactivate} disabled={reactivating}>
+              {reactivating ? "Restoring…" : "Reactivate client"}
+            </button>
+          </div>
+        )}
+
         {error && (
           <div className="card" style={{ padding: "var(--sp-3)", background: "var(--danger-subtle)", color: "var(--danger-text)", marginBottom: "var(--sp-4)", fontSize: "var(--text-sm)" }}>
             {error}
@@ -149,10 +197,17 @@ export default function AccountantClientDetailPage() {
 
             <div style={{ marginTop: "var(--sp-4)" }}>
               <label className="tw-label">Status</label>
-              <select className="tw-input" style={{ width: "100%", fontSize: 14 }} value={profile.status} onChange={e => handleStatusChange(e.target.value)} disabled={saving}>
+              <select
+                className="tw-input"
+                style={{ width: "100%", fontSize: 14 }}
+                value={profile.status}
+                onChange={e => handleStatusChange(e.target.value)}
+                disabled={saving || profile.status === "deactivated"}
+              >
                 {["invited","active","collecting","in_review","ready","completed","archived"].map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
+                {profile.status === "deactivated" && <option value="deactivated">deactivated</option>}
               </select>
             </div>
 
@@ -164,14 +219,25 @@ export default function AccountantClientDetailPage() {
 
             <div style={{ marginTop: "var(--sp-4)", display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
               <Link to="/accountant/portal" className="btn btn-ghost btn-sm" style={{ width: "100%", justifyContent: "center" }}>← Back to portal</Link>
-              <button
-                className="btn btn-ghost btn-sm"
-                style={{ width: "100%", justifyContent: "center", color: "var(--danger)" }}
-                onClick={handleDeleteClient}
-                disabled={deleting}
-              >
-                {deleting ? "Removing…" : "Remove client"}
-              </button>
+              {profile.status !== "deactivated" ? (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  style={{ width: "100%", justifyContent: "center", color: "var(--warn-text, #7a5a00)" }}
+                  onClick={handleDisconnect}
+                  disabled={disconnecting}
+                >
+                  {disconnecting ? "Disconnecting…" : "Disconnect client"}
+                </button>
+              ) : (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  style={{ width: "100%", justifyContent: "center", color: "var(--danger)" }}
+                  onClick={handleDeleteClient}
+                  disabled={deleting}
+                >
+                  {deleting ? "Deleting…" : "Delete permanently"}
+                </button>
+              )}
             </div>
           </div>
 

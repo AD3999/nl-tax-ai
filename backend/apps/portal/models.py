@@ -57,13 +57,14 @@ class AccountantClientProfile(models.Model):
         ("fa", "فارسی"),
     ]
     STATUS_CHOICES = [
-        ("invited",    "Invited"),
-        ("active",     "Active"),
-        ("collecting", "Collecting documents"),
-        ("in_review",  "In review"),
-        ("ready",      "Ready to file"),
-        ("completed",  "Completed"),
-        ("archived",   "Archived"),
+        ("invited",      "Invited"),
+        ("active",       "Active"),
+        ("collecting",   "Collecting documents"),
+        ("in_review",    "In review"),
+        ("ready",        "Ready to file"),
+        ("completed",    "Completed"),
+        ("archived",     "Archived"),
+        ("deactivated",  "Deactivated"),
     ]
 
     accountant_user  = models.ForeignKey(
@@ -92,6 +93,9 @@ class AccountantClientProfile(models.Model):
     kvk_number       = models.CharField(max_length=20,  blank=True)
     btw_number       = models.CharField(max_length=30,  blank=True)
     birth_date       = models.DateField(null=True, blank=True)
+    # Disconnect / 30-day grace period
+    deactivated_at       = models.DateTimeField(null=True, blank=True)
+    scheduled_deletion_at = models.DateTimeField(null=True, blank=True)
     created_at   = models.DateTimeField(auto_now_add=True)
     updated_at   = models.DateTimeField(auto_now=True)
 

@@ -1,6 +1,8 @@
 from django.urls import path
 from .views import (
     AccountantClientListView, AccountantClientDetailView,
+    AccountantClientDisconnectView, AccountantClientReactivateView,
+    ClientSelfDisconnectView,
     EngagementListView, EngagementDetailView,
     ChecklistView, ChecklistItemDetailView,
     DocumentRequestListView, DocumentRequestDetailView,
@@ -21,6 +23,8 @@ urlpatterns = [
     # ── Accountant — Clients ────────────────────────────────────────────────
     path("clients/",                        AccountantClientListView.as_view(),        name="portal-clients"),
     path("clients/<int:pk>/",               AccountantClientDetailView.as_view(),      name="portal-client-detail"),
+    path("clients/<int:pk>/disconnect/",    AccountantClientDisconnectView.as_view(),  name="portal-client-disconnect"),
+    path("clients/<int:pk>/reactivate/",    AccountantClientReactivateView.as_view(),  name="portal-client-reactivate"),
 
     # ── Accountant — Engagements ────────────────────────────────────────────
     path("engagements/",                    EngagementListView.as_view(),              name="portal-engagements"),
@@ -58,6 +62,7 @@ urlpatterns = [
 
     # ── Client self-service ─────────────────────────────────────────────────────
     path("client/profile/",                ClientPortalProfileView.as_view(),           name="portal-client-profile"),
+    path("client/disconnect/",             ClientSelfDisconnectView.as_view(),          name="portal-client-self-disconnect"),
     path("client/engagement/",             ClientPortalEngagementView.as_view(),        name="portal-client-engagement"),
     path("client/tasks/",                  ClientPortalTasksView.as_view(),             name="portal-client-tasks"),
     path("client/tasks/<int:pk>/",         ClientPortalTaskUpdateView.as_view(),        name="portal-client-task-update"),
