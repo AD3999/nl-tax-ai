@@ -123,17 +123,6 @@ export async function sendMessage(
   }
 }
 
-export interface AskPayload {
-  question: string;
-  conversation_id?: number | null;
-  language?: "nl" | "en" | "fa";
-}
-
-export interface AskResponse {
-  task_id: string;
-  conversation_id: number;
-}
-
 export interface Message {
   id: number;
   role: "user" | "assistant";
@@ -150,11 +139,6 @@ export interface Conversation {
   updated_at: string;
   messages: Message[];
 }
-
-export const ask = async (payload: AskPayload): Promise<AskResponse> => {
-  const { data } = await client.post<AskResponse>("/chat/ask/", payload);
-  return data;
-};
 
 export const getConversation = async (id: number): Promise<Conversation> => {
   const { data } = await client.get<Conversation>(`/chat/conversations/${id}/`);

@@ -191,10 +191,16 @@ class GoogleAuthView(APIView):
         if user:
             created = False
         else:
-            # Ensure username is unique even if email is already taken as username
+            # Ensure username is unique — try base, then base_g, then base_g2, etc.
+            base = email.split("@")[0]
             username = email
             if User.objects.filter(username=username).exists():
-                username = email.split("@")[0] + "_g"
+                suffix = 1
+                candidate = f"{base}_g"
+                while User.objects.filter(username=candidate).exists():
+                    candidate = f"{base}_g{suffix}"
+                    suffix += 1
+                username = candidate
             user = User.objects.create_user(
                 email=email,
                 username=username,
@@ -1264,8 +1270,11 @@ class GoogleCalendarAuthUrlView(APIView):
                 {"error": "Google Calendar sync not configured on this server."},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
+        from django.core import signing
         redirect_uri = settings.GOOGLE_CALENDAR_REDIRECT_URI
-        url = get_auth_url(redirect_uri=redirect_uri, state=str(request.user.pk))
+        # Sign the state so it cannot be forged (prevents OAuth CSRF)
+        signed_state = signing.dumps(request.user.pk, salt="gcal_oauth")
+        url = get_auth_url(redirect_uri=redirect_uri, state=signed_state)
         return Response({"auth_url": url})
 
 
@@ -1288,9 +1297,10 @@ class GoogleCalendarCallbackView(APIView):
             return django_redirect(f"{frontend_base}/tax-calendar?gcal=denied")
 
         try:
-            user_id = int(state)
+            from django.core import signing
+            user_id = signing.loads(state, salt="gcal_oauth", max_age=3600)
             user = User.objects.get(pk=user_id)
-        except (ValueError, User.DoesNotExist):
+        except (signing.BadSignature, signing.SignatureExpired, ValueError, User.DoesNotExist):
             return django_redirect(f"{frontend_base}/tax-calendar?gcal=error")
 
         try:

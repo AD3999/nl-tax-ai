@@ -197,7 +197,10 @@ class RecentRuleChangesView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        days = min(int(request.query_params.get("days", 30)), 90)
+        try:
+            days = min(int(request.query_params.get("days", 30)), 90)
+        except (ValueError, TypeError):
+            days = 30
         user_type = request.query_params.get("user_type", "")
         since = timezone.now() - timedelta(days=days)
 

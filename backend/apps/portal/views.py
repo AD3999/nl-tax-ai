@@ -112,6 +112,8 @@ class AccountantClientListView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        if not _is_portal_user(request.user):
+            return Response({"error": "Portal access requires an accountant account."}, status=403)
         data = request.data.copy()
         serializer = AccountantClientProfileSerializer(data=data, context={"request": request})
         if not serializer.is_valid():
