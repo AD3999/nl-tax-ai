@@ -548,7 +548,7 @@ export default function ChatPage() {
         },
         abortRef.current.signal,
         profile ?? undefined,
-        newCount,
+        0,
         isIntakeMode,
         lang,
         alertCtx,
