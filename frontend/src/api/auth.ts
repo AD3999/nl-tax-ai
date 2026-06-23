@@ -35,6 +35,7 @@ export interface AuthUser {
   daily_message_date: string | null;
   is_admin?: boolean;
   accountant_profile?: AccountantProfileData | null;
+  has_accountant?: boolean;
 }
 
 export const login = async (payload: LoginPayload): Promise<TokenPair> => {
