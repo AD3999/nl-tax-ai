@@ -1,1 +1,23 @@
-backend/requirements.txt
+django>=5.0,<6.0
+djangorestframework>=3.15,<4.0
+django-cors-headers>=4.3,<5.0
+djangorestframework-simplejwt>=5.3,<6.0
+django-allauth>=0.63,<1.0
+celery>=5.3,<6.0
+redis>=5.0,<6.0
+psycopg2-binary>=2.9,<3.0
+django-environ>=0.11,<1.0
+Pillow>=10.0,<11.0
+anthropic>=0.28,<1.0
+openai>=1.0,<2.0
+gunicorn>=22.0,<23.0
+whitenoise>=6.6,<7.0
+stripe>=7.0.0
+reportlab>=4.0.0
+pywebpush>=2.0.0
+django-storages[s3]>=1.14,<2.0
+cryptography>=42.0,<46.0
+channels>=4.1.0,<5.0
+channels-redis>=4.2.0,<5.0
+
+# cache-bust: 20260624213248
