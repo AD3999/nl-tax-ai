@@ -75,6 +75,13 @@ export default function ClientPortalPage() {
   const isMobile = useMobile();
   const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as "nl" | "en" | "fa";
 
+  useEffect(() => {
+    if (!user) return;
+    if (user.role === "accountant" || user.is_admin) {
+      navigate("/accountant/portal", { replace: true });
+    }
+  }, [user, navigate]);
+
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [engagement, setEngagement] = useState<TaxEngagement | null>(null);
   const [taskSummary, setTaskSummary] = useState<{ tasks: PortalTask[]; total: number; completed: number; readiness_score: number } | null>(null);
@@ -289,9 +296,11 @@ export default function ClientPortalPage() {
               </div>
               <div>
                 <div style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--text)" }}>
-                  {lang === "nl" ? "Uw adviseur" : lang === "fa" ? "مشاور شما" : "Your advisor"}
+                  {(profile as ClientProfile & { accountant_display?: { name: string; email: string } | null }).accountant_display?.name ?? (lang === "nl" ? "Uw adviseur" : lang === "fa" ? "مشاور شما" : "Your advisor")}
                 </div>
-                <div style={{ fontSize: 12, color: "var(--text-3)" }}>TaxWijs</div>
+                <div style={{ fontSize: 12, color: "var(--text-3)" }}>
+                  {(profile as ClientProfile & { accountant_display?: { name: string; email: string } | null }).accountant_display?.email ?? "TaxWijs"}
+                </div>
               </div>
             </div>
             <Link to="/client/messages" style={{ textDecoration: "none" }}>

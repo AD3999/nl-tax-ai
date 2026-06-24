@@ -21,6 +21,9 @@ export interface ClientProfile {
   display_name: string;
   engagement_count: number;
   latest_readiness: number | null;
+  latest_missing_count: number;
+  latest_risk_level: "low" | "medium" | "high";
+  accountant_display?: { name: string; email: string } | null;
   deactivated_at: string | null;
   scheduled_deletion_at: string | null;
   days_until_deletion: number | null;

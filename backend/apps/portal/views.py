@@ -386,7 +386,45 @@ class EngagementDetailView(APIView):
         eng = serializer.save()
         _audit(request, "engagement_updated", "TaxEngagement", eng.id,
                client_profile=eng.client_profile, engagement=eng)
+
+        if eng.status == "ready_to_file" and eng.client_profile.client_user_id:
+            lang = eng.client_profile.preferred_language or "nl"
+            TITLES = {
+                "nl": "Uw aangifte is klaar voor indiening",
+                "en": "Your tax return is ready to file",
+                "fa": "اظهارنامه مالیاتی شما آماده ارسال است",
+            }
+            create_notification(
+                user=eng.client_profile.client_user,
+                notif_type="engagement_ready",
+                title=TITLES.get(lang, TITLES["en"]),
+                body="",
+                action_url="/client",
+                metadata={"engagement_id": eng.id},
+            )
+
         return Response(TaxEngagementSerializer(eng, context={"request": request}).data)
+
+    def delete(self, request, pk):
+        eng, err = self._get_engagement(request, pk)
+        if err:
+            return err
+        if not _is_accountant_of_client(request.user, eng.client_profile) and not request.user.is_staff:
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        if eng.status != "draft":
+            return Response(
+                {"detail": "Only draft engagements can be deleted. Archive or complete the engagement first."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if eng.documents.exists():
+            return Response(
+                {"detail": "Cannot delete engagement with uploaded documents."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        _audit(request, "engagement_deleted", "TaxEngagement", eng.id,
+               client_profile=eng.client_profile, engagement=eng)
+        eng.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 # ── Checklist ─────────────────────────────────────────────────────────────────
@@ -420,10 +458,28 @@ class ChecklistItemDetailView(APIView):
     """PATCH /api/portal/checklist/<id>/"""
     permission_classes = [permissions.IsAuthenticated]
 
+    ACCOUNTANT_ALLOWED_TRANSITIONS = {
+        "todo":           ["todo", "waiting_client", "waived"],
+        "waiting_client": ["waiting_client", "waived"],
+        "uploaded":       ["uploaded", "needs_review", "accepted", "rejected", "waived"],
+        "needs_review":   ["needs_review", "accepted", "rejected", "waived"],
+        "accepted":       ["accepted", "waived"],
+        "rejected":       ["rejected", "todo"],
+        "waived":         ["waived", "todo"],
+    }
+
     def patch(self, request, pk):
         item = get_object_or_404(ChecklistItem, pk=pk)
         if not _can_access_engagement(request.user, item.engagement):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        new_status = request.data.get("status")
+        if new_status and new_status != item.status:
+            allowed = self.ACCOUNTANT_ALLOWED_TRANSITIONS.get(item.status, [])
+            if new_status not in allowed:
+                return Response(
+                    {"detail": f"Cannot transition from '{item.status}' to '{new_status}'."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
         before_status = item.status
         serializer = ChecklistItemSerializer(item, data=request.data, partial=True)
         if not serializer.is_valid():
@@ -535,6 +591,23 @@ class ClientDocumentUploadView(APIView):
         except Exception as exc:
             return Response({"detail": f"Upload failed: {exc}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+        # Auto-link to checklist item via stable_key if not already linked
+        if checklist_item_obj is None and doc.document_request:
+            stable_key = doc.document_request.stable_key
+            if stable_key:
+                linked = ChecklistItem.objects.filter(
+                    engagement=engagement,
+                    stable_key=stable_key,
+                ).first()
+                if linked:
+                    doc.checklist_item = linked
+                    doc.save(update_fields=["checklist_item"])
+                    checklist_item_obj = linked
+
+        if checklist_item_obj and checklist_item_obj.status in ("todo", "waiting_client"):
+            checklist_item_obj.status = "uploaded"
+            checklist_item_obj.save(update_fields=["status", "updated_at"])
+
         _audit(request, "document_uploaded", "ClientDocument", doc.id,
                client_profile=client_profile, engagement=engagement,
                after={"filename": doc.original_filename, "size": doc.file_size})
@@ -598,6 +671,12 @@ class DocumentReviewView(APIView):
 
         new_status = request.data.get("processing_status")
         review_notes = request.data.get("review_notes", doc.review_notes)
+
+        if new_status == "rejected" and not (review_notes or "").strip():
+            return Response(
+                {"detail": "A rejection reason (review_notes) is required when rejecting a document."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if new_status:
             allowed = [c[0] for c in ClientDocument.PROCESSING_STATUS_CHOICES]
@@ -723,14 +802,18 @@ class DocumentFileView(APIView):
             return Response({"detail": "No file attached to this document."}, status=status.HTTP_404_NOT_FOUND)
 
         try:
+            INLINE_TYPES = {
+                "application/pdf", "image/jpeg", "image/jpg", "image/png",
+                "image/webp", "image/heic", "image/heif",
+            }
+            as_attachment = doc.mime_type not in INLINE_TYPES
             fh = doc.file.open("rb")
             response = FileResponse(
                 fh,
                 content_type=doc.mime_type or "application/octet-stream",
-                as_attachment=False,
+                as_attachment=as_attachment,
+                filename=doc.original_filename or "document",
             )
-            safe_name = (doc.original_filename or "document").replace('"', "")
-            response["Content-Disposition"] = f'inline; filename="{safe_name}"'
             return response
         except Exception as exc:
             # Broad on purpose: FileSystemStorage raises FileNotFoundError/OSError,

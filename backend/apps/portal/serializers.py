@@ -34,19 +34,22 @@ def _detect_mime_from_bytes(file) -> str | None:
 
 
 class AccountantClientProfileSerializer(serializers.ModelSerializer):
-    display_name       = serializers.ReadOnlyField()
-    engagement_count   = serializers.SerializerMethodField()
-    latest_readiness   = serializers.SerializerMethodField()
+    display_name        = serializers.ReadOnlyField()
+    engagement_count    = serializers.SerializerMethodField()
+    latest_readiness    = serializers.SerializerMethodField()
+    latest_missing_count = serializers.SerializerMethodField()
+    latest_risk_level   = serializers.SerializerMethodField()
     # full_name is a virtual field: read = first_name + last_name, write = split on first space
-    full_name          = serializers.SerializerMethodField()
+    full_name           = serializers.SerializerMethodField()
     # tax_type is the client-facing alias for client_type
-    tax_type           = serializers.SerializerMethodField()
+    tax_type            = serializers.SerializerMethodField()
     # days remaining before deactivated profile is permanently deleted
     days_until_deletion = serializers.SerializerMethodField()
     # Write-only: accepts plain BSN, encrypts it. Never returns decrypted value.
     bsn        = serializers.CharField(write_only=True, required=False, allow_blank=True)
     # Read-only: tells frontend whether a BSN has been stored (without exposing the value).
     bsn_is_set = serializers.SerializerMethodField()
+    accountant_display  = serializers.SerializerMethodField()
 
     def get_engagement_count(self, obj):
         return obj.engagements.count()
@@ -69,6 +72,35 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
 
     def get_bsn_is_set(self, obj):
         return bool(obj.bsn_enc)
+
+    def get_latest_missing_count(self, obj):
+        eng = obj.engagements.order_by("-created_at").first()
+        return eng.missing_items_count if eng else 0
+
+    def get_latest_risk_level(self, obj):
+        eng = obj.engagements.order_by("-created_at").first()
+        return eng.risk_level if eng else "low"
+
+    def get_accountant_display(self, obj):
+        user = obj.accountant_user
+        if user and (not obj.client_user_id or user.id != obj.client_user_id):
+            return {
+                "name": user.get_full_name() or user.email,
+                "email": user.email,
+            }
+        return None
+
+    def validate(self, data):
+        request = self.context.get("request")
+        email = data.get("email", "")
+        if request and email and not self.instance:
+            if AccountantClientProfile.objects.filter(
+                accountant_user=request.user, email__iexact=email
+            ).exists():
+                raise serializers.ValidationError(
+                    {"email": "A client with this email already exists in your portal."}
+                )
+        return data
 
     def to_internal_value(self, data):
         data = data.copy()
@@ -103,6 +135,7 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
             "id", "email", "first_name", "last_name", "full_name", "company_name",
             "client_type", "tax_type", "preferred_language", "phone", "status",
             "tax_year", "notes", "display_name", "engagement_count", "latest_readiness",
+            "latest_missing_count", "latest_risk_level", "accountant_display",
             "address_street", "address_city", "address_postcode",
             "bsn", "bsn_is_set", "kvk_number", "btw_number", "birth_date",
             "deactivated_at", "scheduled_deletion_at", "days_until_deletion",
@@ -110,7 +143,9 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id", "created_at", "updated_at", "display_name",
-            "engagement_count", "latest_readiness", "full_name", "tax_type",
+            "engagement_count", "latest_readiness", "latest_missing_count",
+            "latest_risk_level", "accountant_display",
+            "full_name", "tax_type",
             "deactivated_at", "scheduled_deletion_at", "days_until_deletion",
             "bsn_enc", "bsn_is_set",
         ]
