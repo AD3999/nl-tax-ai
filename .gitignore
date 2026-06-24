@@ -60,7 +60,7 @@ build/
 
 # Docker (kept local, not deployed via Railway)
 .docker/
-Dockerfile*
+Dockerfile.*.local
 docker-compose*.yml
 docker-entrypoint.sh
 .dockerignore
