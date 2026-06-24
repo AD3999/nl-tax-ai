@@ -449,7 +449,7 @@ export default function AccountantPortalPage() {
                 <div>
                   <label className="tw-label">{tx.type_label}</label>
                   <select className="tw-input" style={{ width: "100%", fontSize: 16 }}
-                    value={addForm.client_type} onChange={e => setAddForm(f => ({ ...f, client_type: e.target.value }))}>
+                    value={addForm.client_type} onChange={e => setAddForm(f => ({ ...f, client_type: e.target.value as ClientType }))}>
                     <option value="employee">Employee</option>
                     <option value="zzp">ZZP / Freelancer</option>
                     <option value="expat">Expat</option>
@@ -460,7 +460,7 @@ export default function AccountantPortalPage() {
                 <div>
                   <label className="tw-label">{tx.lang_label}</label>
                   <select className="tw-input" style={{ width: "100%", fontSize: 16 }}
-                    value={addForm.preferred_language} onChange={e => setAddForm(f => ({ ...f, preferred_language: e.target.value }))}>
+                    value={addForm.preferred_language} onChange={e => setAddForm(f => ({ ...f, preferred_language: e.target.value as "nl" | "en" | "fa" }))}>
                     <option value="nl">Nederlands</option>
                     <option value="en">English</option>
                     <option value="fa">فارسی</option>
