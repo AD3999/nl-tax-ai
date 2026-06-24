@@ -1,7 +1,44 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 21 Jun 2026 — P0/P1/P2 sprint complete
+> Last updated: 24 Jun 2026 — QA audit sprint complete (all 20 issues)
+
+---
+
+## Session — 24 Jun 2026 · QA Audit Sprint ✅ Complete (all 20 issues)
+
+### What was fixed
+
+Branch `fix/qa-audit-all-20` → merged to `master` (commit `fd3c0a1`), pushed to GitHub → Railway auto-deployed with `manage.py migrate` running migration 0013.
+
+**Backend (Django/DRF):**
+- FIX 1: `RegisterSerializer.validate_role` blocks admin/accountant roles at self-registration
+- FIX 3: Route guard — `useEffect` redirects wrong-role users to correct portal
+- FIX 4: `DELETE /api/portal/engagements/:id/` — draft-only guard + blocks if documents exist; frontend trash button
+- FIX 7: `UniqueConstraint` on `ChecklistItem(engagement, stable_key)`, `DocumentRequest(engagement, stable_key)`, `AccountantClientProfile(accountant_user, email)` — migration 0013
+- FIX 8: `accountant_display` SerializerMethodField on client profile (name + email of accountant)
+- FIX 9: `latest_missing_count` + `latest_risk_level` on client list serializer
+- FIX 12: `ready_to_file` in-app notification sent when engagement patched to that status
+- FIX 14: `rejection_reason` required server-side when checklist item set to `rejected`
+- FIX 16: Uploaded document auto-linked to matching open `DocumentRequest` on same engagement
+- FIX 18: `Content-Disposition: inline` for images/PDFs, `attachment` for all others
+- FIX 19: `check_vapid_config()` helper + exposed in `/api/users/health/` response
+- FIX 20: `ACCOUNTANT_ALLOWED_TRANSITIONS` dict enforced in `ChecklistItemDetailView.patch()`
+
+**Frontend (React/TypeScript):**
+- FIX 2: Add-client form card in `AccountantPortalPage` (all required fields, saves via `createClient`)
+- FIX 3: `useEffect` route guards on `AccountantPortalPage` + `ClientPortalPage`
+- FIX 5+6: `NotificationBell` — badge not cleared on panel open; `markRead` fires on item click
+- FIX 8: Accountant name/email from `accountant_display` shown in `ClientPortalPage`
+- FIX 9: Missing count + risk level rendered in accountant client table
+- FIX 10: `validateFile()` (type + 10MB size check) before upload in both document pages
+- FIX 11: `recalculateReadiness()` called after checklist item action in `EngagementPage`
+- FIX 12: "Confirm Ready to File" button + green status banner in `EngagementPage`
+- FIX 13: Google OAuth button `disabled` + notice paragraph when accountant mode is selected
+- FIX 15: `ENGAGEMENT_TYPE_LABELS` constant (`frontend/src/lib/engagementTypes.ts`) replaces raw strings across all portal pages
+- FIX 17: AI chat question pre-filled from task `title` + `description` in `ClientTasksPage`
+
+**Files changed:** 18 modified + 2 new (`0013_add_uniqueness_constraints.py`, `engagementTypes.ts`)
 
 ---
 
