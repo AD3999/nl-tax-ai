@@ -1,7 +1,49 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 24 Jun 2026 — QA audit follow-up: regression fix + 5 remaining issues (commit 15df70e)
+> Last updated: 25 Jun 2026 — QA full audit v2: all 20 fixes complete (commit 77fc811 → merged a70b6c1)
+
+---
+
+## Session — 25 Jun 2026 · QA Full Audit v2 ✅ Complete (all 20 fixes)
+
+### Context
+Continued from 24 Jun session. All 20 fixes from the Full Fix Prompt completed in `fix/qa-full-audit-v2`, merged to master as `a70b6c1`.
+
+### Critical fixes (C-1 through C-5)
+- **C-1:** Accountant registration fully gated: `RegisterSerializer.validate_role` blocks non-client roles. New `AccountantAccessRequest` model + `AccountantAccessRequestView` (POST, AllowAny) + `AccountantAccessApproveView` (IsAdminUser). Frontend shows verification notice and submits to request-access endpoint.
+- **C-2:** Portal invitation flow end-to-end: `PortalInvitationSendView` + `PortalInvitationAcceptView` backend endpoints. New `AcceptInvitationPage.tsx` frontend page + route `/portal/accept-invitation`.
+- **C-3:** DGA `gebruikelijk_loon` corrected to €58,000 in: `accountant_checklists.py`, `tax_constants.py`, `_build_risks_and_deductions` in `portal/views.py`.
+- **C-4:** Django Channels WebSocket infrastructure: `config/asgi.py`, `users/consumers.py`, `users/ws_middleware.py`, `users/ws_routing.py`. `channels` + `channels-redis` added to `requirements.txt`. `NotificationBell.tsx` now uses WebSocket-primary + polling fallback.
+- **C-5:** `plan_limits.py` service (free=3, professional=25, firm=unlimited). 402 guard on `AccountantClientListView.post()`. `AccountantPortalPage.tsx` shows inline upgrade modal on 402.
+
+### High fixes (H-1 through H-4)
+- **H-1:** `AccountantAction` UniqueConstraint on `(engagement, stable_key)` where `stable_key` non-empty.
+- **H-2:** `missing_items_count` refresh on `DocumentReviewView.patch()` + `post_save` signal on `ChecklistItem` (never raises, always try/except).
+- **H-3:** `ready_to_file` guard at 85% backend (returns 400 if score < 85). Frontend `EngagementPage.tsx` threshold 80→85.
+- **H-4:** Readiness weights: checklist 25→30, accountant_review 15→10. Total still 100.
+
+### Medium fixes (M-1 through M-5)
+- **M-1:** `ClientPortalTaskUpdateView` allows `"answered"` status. `task_type` field added to `ChecklistItem` model + migration. `ClientTasksPage.tsx` uses `task_type === "info" ? "answered" : "uploaded"`.
+- **M-2:** `frontend/src/lib/engagementStatus.ts` with `STATUS_LABELS` + `getStatusLabel()`. Applied in `ClientPortalPage`, `AccountantPortalPage`, `EngagementPage`.
+- **M-3:** Ask AI button in `ClientPortalPage` passes top-3 pending task titles into the context question string.
+- **M-4:** `tax_constants.py` imported in `portal/views.py`; `BOX3_VRIJSTELLING`, `DGA_GEBRUIKELIJK_LOON_MIN`, `BOX2_RATE_LOW`, `BOX2_RATE_LOW_THRESHOLD` replace hardcoded strings.
+- **M-5:** `get_accountant_display` returns `is_verified`. Verified badge (✓) shown on client accountant card.
+
+### Low fixes (L-1, L-4)
+- **L-1:** `getStatusLabel()` applied to `AccountantPortalPage` status columns for clients and engagements.
+- **L-4:** `ClientMessagesPage.tsx` dispatches `messages:read` CustomEvent on mount. `AppSidebar.tsx` resets `unreadCount` to 0 on this event.
+
+### Migrations
+- `users/0014_add_accountant_access_request` — `AccountantAccessRequest` model
+- `portal/0014_add_action_unique_constraint_and_task_type` — `task_type` field + unique constraint
+
+### Verification
+- `npx tsc --noEmit` → 0 errors
+- `python manage.py check` → 0 issues
+- `python manage.py migrate` → all 15 pending migrations applied OK
+
+**Branch:** `fix/qa-full-audit-v2` → merged to `master` · **Commits:** `77fc811`, `a70b6c1`
 
 ---
 
