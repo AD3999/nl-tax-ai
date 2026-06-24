@@ -179,8 +179,26 @@ export default function ClientDocumentsPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
+  const ALLOWED_MIME_TYPES = [
+    "application/pdf",
+    "image/jpeg", "image/jpg", "image/png",
+    "image/heic", "image/heif", "image/webp",
+    "text/csv",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel",
+  ];
+  const MAX_FILE_SIZE = 20 * 1024 * 1024;
+
+  function validateFile(file: File): string | null {
+    if (file.size > MAX_FILE_SIZE) return `File is too large (max 20 MB). Your file: ${(file.size / 1024 / 1024).toFixed(1)} MB`;
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) return "File type not supported. Allowed: PDF, JPG, PNG, HEIC, WebP, CSV, XLSX";
+    return null;
+  }
+
   async function handleUpload() {
     if (!uploadFile || !engagement) return;
+    const validationError = validateFile(uploadFile);
+    if (validationError) { showToast(validationError, "error"); return; }
     setUploading(true);
     setUploadProgress(0);
     setUploadError("");
@@ -351,7 +369,7 @@ export default function ClientDocumentsPage() {
             <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "center", flexShrink: 0 }}>
               {error && <span style={{ color: "var(--danger-text)", fontSize: "var(--text-xs)", fontWeight: 600 }}>{error}</span>}
               <button onClick={() => void load(true)} title="Refresh" style={{ background: "none", border: "1px solid var(--border-2)", borderRadius: 6, cursor: "pointer", color: "var(--text-3)", fontSize: 14, width: 30, height: 30, display: "grid", placeItems: "center" }}>↻</button>
-              <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.heic,.csv,.xlsx" style={{ display: "none" }} onChange={handleFileChosen} />
+              <input ref={fileInputRef} type="file" accept="application/pdf,image/*,.csv,.xlsx,.xls" style={{ display: "none" }} onChange={handleFileChosen} />
               <button className="btn btn-accent btn-sm" onClick={() => fileInputRef.current?.click()} disabled={!engagement} style={{ fontWeight: 700 }}>
                 {t("upload", lang)}
               </button>

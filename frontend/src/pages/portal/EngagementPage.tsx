@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { formatDate, formatEur } from "../../lib/utils";
 import { ChevronRight, Download, FileText, RefreshCw, X, AlertTriangle, Bot } from "lucide-react";
+import { ENGAGEMENT_TYPE_LABELS } from "../../lib/engagementTypes";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -15,7 +16,7 @@ import {
   fetchIncome, fetchExpenses, fetchActions, generateActions, fetchRisks,
   fetchAudit, updateChecklistItem, reviewDocument, sendReminder,
   recalculateReadiness, updateAction, updateIncome, updateExpense,
-  uploadDocument,
+  uploadDocument, updateEngagement,
 } from "../../api/portal/client";
 import {
   fetchEngagementMessages, sendEngagementMessage,
@@ -333,6 +334,7 @@ export default function EngagementPage() {
   const tx = TX[lang];
 
   const [engagement, setEngagement] = useState<TaxEngagement | null>(null);
+  const [confirmingFile, setConfirmingFile] = useState(false);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
   const [income, setIncome] = useState<ExtractedIncome[]>([]);
@@ -480,6 +482,12 @@ export default function EngagementPage() {
     try {
       await updateAction(actionId, { status: newStatus });
       showToast(tx.action_updated, "success");
+      if (newStatus === "done" && engagement) {
+        try {
+          const newReadiness = await recalculateReadiness(engagement.id);
+          setEngagement(prev => prev ? { ...prev, readiness_score: newReadiness.score } : prev);
+        } catch { /* silent */ }
+      }
     } catch {
       // Revert
       setActions(prev => prev.map(a => a.id === actionId ? { ...a, status: "open" } : a));
@@ -662,7 +670,7 @@ export default function EngagementPage() {
           <span style={{ margin: "0 var(--sp-2)" }}>›</span>
           <Link to={`/accountant/clients/${engagement.client_profile}`} style={{ color: "var(--ink-4)", textDecoration: "none" }}>{engagement.client_profile_display}</Link>
           <span style={{ margin: "0 var(--sp-2)" }}>›</span>
-          <span style={{ color: "var(--ink)" }}>{engagement.tax_year} {engagement.engagement_type}</span>
+          <span style={{ color: "var(--ink)" }}>{engagement.tax_year} {ENGAGEMENT_TYPE_LABELS[engagement.engagement_type] ?? engagement.engagement_type}</span>
         </div>
 
         {/* Header */}
@@ -673,7 +681,7 @@ export default function EngagementPage() {
             </h1>
             <div style={{ display: "flex", gap: "var(--sp-3)", marginTop: "var(--sp-2)", fontSize: "var(--text-xs)", alignItems: "center", flexWrap: "wrap" }}>
               <span className="pill">{engagement.tax_year}</span>
-              <span className="pill">{engagement.engagement_type}</span>
+              <span className="pill">{ENGAGEMENT_TYPE_LABELS[engagement.engagement_type] ?? engagement.engagement_type}</span>
               <span style={{ color: RISK_COLOR[engagement.risk_level] }}>{tx.risk}: {engagement.risk_level}</span>
               <span style={{ color: engagement.missing_items_count > 0 ? "var(--danger)" : "var(--ok)" }}>
                 {engagement.missing_items_count} {tx.missing_items}
@@ -760,6 +768,33 @@ export default function EngagementPage() {
                     </div>
                   )}
                   <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: "var(--sp-2)" }}>{tx.status}: {engagement.status}</div>
+
+                  {/* Ready to File flow */}
+                  {engagement.status === "ready_to_file" ? (
+                    <div className="card" style={{ padding: "var(--sp-3)", marginTop: "var(--sp-3)", background: "var(--ok-subtle)", border: "1px solid var(--ok)", color: "var(--ok-text)", fontSize: "var(--text-sm)", fontWeight: 600 }}>
+                      ✅ Ready to File — client has been notified.
+                    </div>
+                  ) : engagement.readiness_score >= 80 && engagement.status !== "filed" ? (
+                    <button
+                      className="btn btn-accent"
+                      style={{ width: "100%", marginTop: "var(--sp-3)", justifyContent: "center" }}
+                      disabled={confirmingFile}
+                      onClick={async () => {
+                        if (!window.confirm("Mark this engagement as Ready to File? This will notify the client and set the status to ready_to_file.")) return;
+                        setConfirmingFile(true);
+                        try {
+                          const updated = await updateEngagement(engagement.id, { status: "ready_to_file" });
+                          setEngagement(prev => prev ? { ...prev, status: updated.status } : prev);
+                          showToast("Engagement marked as ready to file. Client has been notified.", "success");
+                        } catch {
+                          showToast("Failed to update engagement status.", "error");
+                        }
+                        setConfirmingFile(false);
+                      }}
+                    >
+                      {confirmingFile ? "…" : "Confirm Ready to File"}
+                    </button>
+                  ) : null}
                 </div>
 
                 {/* Actions */}

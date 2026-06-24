@@ -3,11 +3,13 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { useMobile } from "../../hooks/useMobile";
+import { Trash2 } from "lucide-react";
 import {
   fetchClient, updateClient, fetchEngagements, createEngagement, archiveClient,
-  disconnectClient, reactivateClient,
+  disconnectClient, reactivateClient, deleteEngagement,
 } from "../../api/portal/client";
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
+import { ENGAGEMENT_TYPE_LABELS } from "../../lib/engagementTypes";
 
 const STATUS_COLOR: Record<string, string> = {
   draft: "var(--ink-4)", collecting: "var(--sage-600)",
@@ -262,7 +264,7 @@ export default function AccountantClientDetailPage() {
                   <div>
                     <label className="tw-label">Type</label>
                     <select className="tw-input" style={{ width: "100%", fontSize: 14 }} value={engForm.engagement_type} onChange={e => setEngForm(f => ({ ...f, engagement_type: e.target.value }))}>
-                      {["income_tax","vat","annual_accounts","payroll","advisory"].map(t => <option key={t} value={t}>{t}</option>)}
+                      {Object.entries(ENGAGEMENT_TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                     </select>
                   </div>
                   <div style={{ display: "flex", gap: "var(--sp-2)" }}>
@@ -283,7 +285,7 @@ export default function AccountantClientDetailPage() {
                   <div key={eng.id} className="card" style={{ padding: "var(--sp-4)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
                       <div style={{ fontWeight: 600, color: "var(--ink)", fontSize: "var(--text-sm)" }}>
-                        {eng.tax_year} — {eng.engagement_type}
+                        {eng.tax_year} — {ENGAGEMENT_TYPE_LABELS[eng.engagement_type] ?? eng.engagement_type}
                       </div>
                       <div style={{ display: "flex", gap: "var(--sp-3)", marginTop: "var(--sp-1)", fontSize: "var(--text-xs)", color: "var(--ink-3)" }}>
                         <span style={{ color: STATUS_COLOR[eng.status] }}>{eng.status}</span>
@@ -293,7 +295,28 @@ export default function AccountantClientDetailPage() {
                         </span>
                       </div>
                     </div>
-                    <Link to={`/accountant/engagements/${eng.id}`} className="btn btn-accent btn-sm">Open →</Link>
+                    <div style={{ display: "flex", gap: "var(--sp-2)", alignItems: "center" }}>
+                      {eng.status === "draft" && (
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          style={{ color: "var(--danger)", padding: "4px 6px" }}
+                          title="Delete draft engagement"
+                          onClick={async () => {
+                            if (!window.confirm("Delete this draft engagement? This cannot be undone.")) return;
+                            try {
+                              await deleteEngagement(eng.id);
+                              setEngagements(prev => prev.filter(e => e.id !== eng.id));
+                              showToast("Engagement deleted.", "info");
+                            } catch {
+                              showToast("Failed to delete engagement.", "error");
+                            }
+                          }}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                      <Link to={`/accountant/engagements/${eng.id}`} className="btn btn-accent btn-sm">Open →</Link>
+                    </div>
                   </div>
                 ))}
               </div>

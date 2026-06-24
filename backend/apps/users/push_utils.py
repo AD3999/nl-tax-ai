@@ -78,3 +78,12 @@ def send_push_notification(user, title: str, body: str, url: str = "/") -> None:
     if to_delete:
         from .models import PushSubscription
         PushSubscription.objects.filter(pk__in=to_delete).delete()
+
+
+def check_vapid_config() -> dict:
+    return {
+        "vapid_configured": bool(_VAPID_PRIVATE_KEY and VAPID_PUBLIC_KEY),
+        "public_key_set": bool(VAPID_PUBLIC_KEY),
+        "private_key_set": bool(_VAPID_PRIVATE_KEY),
+        "claims_email": _VAPID_CLAIMS_EMAIL,
+    }

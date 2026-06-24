@@ -13,6 +13,8 @@ import {
   type SentInvitation,
 } from "../../api/invitations";
 import { useToast } from "../../context/ToastContext";
+import { ENGAGEMENT_TYPE_LABELS } from "../../lib/engagementTypes";
+import { createClient } from "../../api/portal/client";
 
 const TX: Record<string, Record<string, string>> = {
   en: {
@@ -204,6 +206,13 @@ export default function AccountantPortalPage() {
   const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as "nl" | "en" | "fa";
   const tx = TX[lang];
 
+  useEffect(() => {
+    if (!user || loading) return;
+    if (user.role !== "accountant" && !user.is_admin) {
+      navigate("/client", { replace: true });
+    }
+  }, [user, loading, navigate]);
+
   const [tab, setTab] = useState<"clients" | "engagements" | "invitations">("clients");
   const [clients, setClients] = useState<ClientProfile[]>([]);
   const [engagements, setEngagements] = useState<TaxEngagement[]>([]);
@@ -211,6 +220,11 @@ export default function AccountantPortalPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // Add client form state
+  const [showAddClient, setShowAddClient] = useState(false);
+  const [addForm, setAddForm] = useState({ email: "", first_name: "", last_name: "", client_type: "other", preferred_language: "nl", notes: "" });
+  const [addSaving, setAddSaving] = useState(false);
 
   // Invitation form state
   const [invEmail, setInvEmail] = useState("");
@@ -253,6 +267,24 @@ export default function AccountantPortalPage() {
       showToast(msg.includes("already exists") ? tx.invite_error_dup : msg, "error");
     } finally {
       setInvSending(false);
+    }
+  }
+
+  async function handleAddClient(e: React.FormEvent) {
+    e.preventDefault();
+    setAddSaving(true);
+    try {
+      const newClient = await createClient({ ...addForm });
+      setClients(prev => [newClient, ...prev]);
+      setAddForm({ email: "", first_name: "", last_name: "", client_type: "other", preferred_language: "nl", notes: "" });
+      setShowAddClient(false);
+      showToast(lang === "nl" ? "Klant toegevoegd!" : lang === "fa" ? "مشتری اضافه شد!" : "Client added!", "success");
+      navigate(`/accountant/clients/${newClient.id}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to add client";
+      showToast(msg, "error");
+    } finally {
+      setAddSaving(false);
     }
   }
 
@@ -381,8 +413,71 @@ export default function AccountantPortalPage() {
               )}
             </button>
           ))}
-          <div style={{ marginInlineStart: "auto" }} />
+          {tab === "clients" && (
+            <button
+              className="btn btn-accent btn-sm"
+              style={{ marginInlineStart: "auto" }}
+              onClick={() => setShowAddClient(s => !s)}
+            >
+              {tx.add_client}
+            </button>
+          )}
+          {tab !== "clients" && <div style={{ marginInlineStart: "auto" }} />}
         </div>
+
+        {/* Add Client form */}
+        {tab === "clients" && showAddClient && (
+          <div className="card" style={{ padding: "var(--sp-5)", marginBottom: "var(--sp-4)" }}>
+            <form onSubmit={handleAddClient} style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)" }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "var(--sp-3)" }}>
+                <div>
+                  <label className="tw-label">{tx.email_label} *</label>
+                  <input type="email" required className="tw-input" style={{ width: "100%", fontSize: 16 }}
+                    value={addForm.email} onChange={e => setAddForm(f => ({ ...f, email: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="tw-label">{tx.first_name_label}</label>
+                  <input type="text" className="tw-input" style={{ width: "100%", fontSize: 16 }}
+                    value={addForm.first_name} onChange={e => setAddForm(f => ({ ...f, first_name: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="tw-label">{tx.last_name_label}</label>
+                  <input type="text" className="tw-input" style={{ width: "100%", fontSize: 16 }}
+                    value={addForm.last_name} onChange={e => setAddForm(f => ({ ...f, last_name: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="tw-label">{tx.type_label}</label>
+                  <select className="tw-input" style={{ width: "100%", fontSize: 16 }}
+                    value={addForm.client_type} onChange={e => setAddForm(f => ({ ...f, client_type: e.target.value }))}>
+                    <option value="employee">Employee</option>
+                    <option value="zzp">ZZP / Freelancer</option>
+                    <option value="expat">Expat</option>
+                    <option value="dga">DGA / Director</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="tw-label">{tx.lang_label}</label>
+                  <select className="tw-input" style={{ width: "100%", fontSize: 16 }}
+                    value={addForm.preferred_language} onChange={e => setAddForm(f => ({ ...f, preferred_language: e.target.value }))}>
+                    <option value="nl">Nederlands</option>
+                    <option value="en">English</option>
+                    <option value="fa">فارسی</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="tw-label">{tx.notes_label}</label>
+                  <textarea className="tw-input" style={{ width: "100%", fontSize: 16, resize: "vertical", minHeight: 60 }}
+                    value={addForm.notes} onChange={e => setAddForm(f => ({ ...f, notes: e.target.value }))} />
+                </div>
+              </div>
+              <div style={{ display: "flex", gap: "var(--sp-3)" }}>
+                <button type="submit" className="btn btn-accent" disabled={addSaving}>{addSaving ? "…" : tx.add_btn}</button>
+                <button type="button" className="btn btn-ghost" onClick={() => setShowAddClient(false)}>{tx.cancel}</button>
+              </div>
+            </form>
+          </div>
+        )}
 
         {/* Client table */}
         {tab === "clients" && (
@@ -428,8 +523,12 @@ export default function AccountantPortalPage() {
                             </span>
                           ) : "—"}
                         </td>
-                        <td style={{ padding: "var(--sp-3)", textAlign: "center", color: "var(--ink-3)" }}>—</td>
-                        <td style={{ padding: "var(--sp-3)" }}>—</td>
+                        <td style={{ padding: "var(--sp-3)", textAlign: "center", color: c.latest_missing_count > 0 ? "var(--danger)" : "var(--ok)" }}>
+                          {c.latest_missing_count > 0 ? c.latest_missing_count : "—"}
+                        </td>
+                        <td style={{ padding: "var(--sp-3)" }}>
+                          <span style={{ fontSize: "var(--text-xs)", color: RISK_COLOR[c.latest_risk_level] }}>{c.latest_risk_level}</span>
+                        </td>
                         <td style={{ padding: "var(--sp-3)" }}>
                           <div style={{ display: "flex", gap: "var(--sp-2)" }}>
                             <Link to={`/accountant/clients/${c.id}`} className="btn btn-ghost btn-sm">{tx.view_client} →</Link>
@@ -478,7 +577,7 @@ export default function AccountantPortalPage() {
                       <td style={{ padding: "var(--sp-3)", fontWeight: 500 }}>{eng.client_profile_display}</td>
                       <td style={{ padding: "var(--sp-3)", color: "var(--ink-3)" }}>{eng.tax_year}</td>
                       <td style={{ padding: "var(--sp-3)" }}>
-                        <span className="pill" style={{ fontSize: "var(--text-2xs)" }}>{eng.engagement_type}</span>
+                        <span className="pill" style={{ fontSize: "var(--text-2xs)" }}>{ENGAGEMENT_TYPE_LABELS[eng.engagement_type] ?? eng.engagement_type}</span>
                       </td>
                       <td style={{ padding: "var(--sp-3)" }}>
                         <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[eng.status] || "var(--ink-3)" }}>{eng.status}</span>

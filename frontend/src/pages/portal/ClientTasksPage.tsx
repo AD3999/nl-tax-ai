@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
+import { useToast } from "../../context/ToastContext";
 import {
   fetchClientTasks, updateClientTask,
   fetchClientEngagement, uploadClientDocument,
@@ -335,6 +336,7 @@ function SkeletonTask() {
 export default function ClientTasksPage() {
   const { i18n } = useTranslation();
   const { user } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
   const isMobile = useMobile();
   const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as Lang;
@@ -448,7 +450,7 @@ export default function ClientTasksPage() {
         lang === "fa" ? "لطفاً به فارسی پاسخ دهید.\n\n" :
         lang === "nl" ? "Antwoord alstublieft in het Nederlands.\n\n" :
         "";
-      const question = `${langPrefix}${task.title}${task.description ? `:\n${task.description}` : ""}`;
+      const question = `${langPrefix}How do I complete "${task.title}"? ${task.description || ""}`.trim();
       navigate(route, { state: { question } });
     } else {
       navigate(route);
@@ -474,8 +476,26 @@ export default function ClientTasksPage() {
     setInlineSaving(false);
   }
 
+  const ALLOWED_MIME_TYPES = [
+    "application/pdf",
+    "image/jpeg", "image/jpg", "image/png",
+    "image/heic", "image/heif", "image/webp",
+    "text/csv",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-excel",
+  ];
+  const MAX_FILE_SIZE = 20 * 1024 * 1024;
+
+  function validateFile(file: File): string | null {
+    if (file.size > MAX_FILE_SIZE) return `File is too large (max 20 MB). Your file: ${(file.size / 1024 / 1024).toFixed(1)} MB`;
+    if (!ALLOWED_MIME_TYPES.includes(file.type)) return "File type not supported. Allowed: PDF, JPG, PNG, HEIC, WebP, CSV, XLSX";
+    return null;
+  }
+
   async function handleUploadDoc() {
     if (!uploadFile || !engagement || uploadTaskId === null) return;
+    const validationError = validateFile(uploadFile);
+    if (validationError) { showToast(validationError, "error"); return; }
     setUploading(true);
     setUploadProgress(0);
     setUploadError("");

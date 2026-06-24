@@ -55,10 +55,11 @@ export const reactivateClient  = (id: number) => post<ClientProfile>(`/clients/$
 export const selfDisconnect    = () => post<{ detail: string }>("/client/disconnect/", {});
 
 // ── Engagements ───────────────────────────────────────────────────────────────
-export const fetchEngagements = () => get<TaxEngagement[]>("/engagements/");
-export const createEngagement = (data: Partial<TaxEngagement>) => post<TaxEngagement>("/engagements/", data);
-export const fetchEngagement  = (id: number) => get<TaxEngagement>(`/engagements/${id}/`);
-export const updateEngagement = (id: number, data: Partial<TaxEngagement>) => patch<TaxEngagement>(`/engagements/${id}/`, data);
+export const fetchEngagements    = () => get<TaxEngagement[]>("/engagements/");
+export const createEngagement    = (data: Partial<TaxEngagement>) => post<TaxEngagement>("/engagements/", data);
+export const fetchEngagement     = (id: number) => get<TaxEngagement>(`/engagements/${id}/`);
+export const updateEngagement    = (id: number, data: Partial<TaxEngagement>) => patch<TaxEngagement>(`/engagements/${id}/`, data);
+export const deleteEngagement    = (id: number) => del(`/engagements/${id}/`);
 
 // ── Checklist ─────────────────────────────────────────────────────────────────
 export const fetchChecklist      = (engId: number) => get<ChecklistItem[]>(`/engagements/${engId}/checklist/`);

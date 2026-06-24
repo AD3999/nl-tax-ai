@@ -17,7 +17,8 @@ class HealthView(APIView):
     throttle_classes = []
 
     def get(self, request):
-        return Response({"status": "ok"})
+        from .push_utils import check_vapid_config
+        return Response({"status": "ok", "vapid": check_vapid_config()})
 
 
 class AlertsView(APIView):

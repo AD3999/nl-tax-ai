@@ -103,6 +103,12 @@ class AccountantClientProfile(models.Model):
         db_table = "portal_client_profiles"
         ordering = ["-created_at"]
         unique_together = [("accountant_user", "client_user")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["accountant_user", "email"],
+                name="unique_client_email_per_accountant",
+            )
+        ]
 
     def __str__(self):
         name = f"{self.first_name} {self.last_name}".strip() or self.email
@@ -224,6 +230,13 @@ class DocumentRequest(models.Model):
     class Meta:
         db_table = "portal_document_requests"
         ordering = ["required", "created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["engagement", "stable_key"],
+                condition=models.Q(stable_key__gt=""),
+                name="unique_document_request_stable_key",
+            )
+        ]
 
     def __str__(self):
         return f"{self.title} ({self.status})"
@@ -436,6 +449,13 @@ class ChecklistItem(models.Model):
     class Meta:
         db_table = "portal_checklist_items"
         ordering = ["-required", "priority", "created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["engagement", "stable_key"],
+                condition=models.Q(stable_key__gt=""),
+                name="unique_checklist_item_stable_key",
+            )
+        ]
 
     def __str__(self):
         return f"{self.title} ({self.status})"

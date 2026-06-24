@@ -107,13 +107,8 @@ export default function NotificationBell() {
 
   // ── Handlers ─────────────────────────────────────────────────────
   function handleOpen() {
-    const opening = !open;
     setOpen(o => !o);
-    // Clear badge immediately when panel opens
-    if (opening && count > 0) {
-      setCount(0);
-      prevCountRef.current = 0;
-    }
+    // Badge count is NOT cleared on open — only on markAllRead or server poll
   }
 
   async function handleMarkAllRead() {
@@ -130,11 +125,8 @@ export default function NotificationBell() {
     // 2. Close panel
     setOpen(false);
 
-    // 3. Permanently delete the notification from the server (fire-and-forget)
-    clearNotification(notif.id).catch(() => {
-      // Fallback: if delete fails, at least mark it read
-      if (!notif.is_read) markRead(notif.id).catch(() => null);
-    });
+    // 3. Mark as read on the server (fire-and-forget) — record is NOT deleted
+    if (!notif.is_read) markRead(notif.id).catch(() => null);
 
     // 4. Navigate to the relevant page
     if (notif.action_url) {

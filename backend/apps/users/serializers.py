@@ -42,6 +42,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ["email", "username", "password", "user_type", "role", "preferred_language",
                   "firm_name", "kvk_number"]
 
+    def validate_role(self, value):
+        if value not in ("client",):
+            raise serializers.ValidationError("Role cannot be set during registration.")
+        return value
+
     def validate_email(self, value):
         if User.objects.filter(email__iexact=value).exists():
             raise serializers.ValidationError("An account with this email address already exists.")
