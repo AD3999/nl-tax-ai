@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir -r requirements_backend.txt
 COPY backend/  ./backend/
 COPY phase1/   ./phase1/
 COPY phase2/   ./phase2/
-COPY start.sh  ./start.sh
+COPY scripts/start.sh ./start.sh
 RUN chmod +x start.sh
 
 # Whitenoise serves frontend from /app/frontend/dist (WHITENOISE_ROOT in settings.py)
