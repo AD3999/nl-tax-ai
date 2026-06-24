@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-# Ensure Nix-installed Python is on PATH (nixpacks uses python311 pkg)
-export PATH=/root/.nix-profile/bin:/nix/var/nix/profiles/default/bin:${PATH}
+# Ensure Python is on PATH — mise shims (railpack) or Nix profile (nixpacks)
+export PATH=/root/.local/share/mise/shims:/root/.nix-profile/bin:/nix/var/nix/profiles/default/bin:${PATH}
 
 export PYTHONPATH=/app/backend:${PYTHONPATH:-}
 cd /app/backend

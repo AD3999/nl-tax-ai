@@ -18,4 +18,4 @@ cmds = [
 ]
 
 [start]
-cmd = "bash start.sh"
+cmd = "mise exec -- bash start.sh"
