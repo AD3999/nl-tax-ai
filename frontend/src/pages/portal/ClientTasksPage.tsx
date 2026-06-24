@@ -23,6 +23,7 @@ interface Task {
   stable_key?: string;
   meta_value?: string;
   rejection_note?: string | null;
+  task_type?: "document" | "info";
 }
 
 // Stable keys whose "Take action" shows an inline input (text / date / number)
@@ -408,7 +409,8 @@ export default function ClientTasksPage() {
   }
 
   async function handleMarkDone(task: Task) {
-    const newStatus = task.status === "uploaded" ? "todo" : "uploaded";
+    const doneStatus = task.task_type === "info" ? "answered" : "uploaded";
+    const newStatus = (task.status === "uploaded" || task.status === "answered") ? "todo" : doneStatus;
     setMarkingId(task.raw_id);
     try {
       await updateClientTask(task.raw_id, { status: newStatus });
@@ -417,7 +419,8 @@ export default function ClientTasksPage() {
       ));
       // Optimistically update counter + progress bar
       setCompleted(c => {
-        const newC = newStatus === "uploaded" ? c + 1 : Math.max(0, c - 1);
+        const isDone = newStatus === "uploaded" || newStatus === "answered";
+        const newC = isDone ? c + 1 : Math.max(0, c - 1);
         setReadiness(total > 0 ? Math.round((newC / total) * 100) : 0);
         return newC;
       });
@@ -461,12 +464,13 @@ export default function ClientTasksPage() {
     if (!inlineValue.trim()) return;
     setInlineSaving(true);
     try {
-      await updateClientTask(task.raw_id, { status: "uploaded", meta_value: inlineValue.trim() });
+      const inlineDoneStatus = task.task_type === "info" ? "answered" : "uploaded";
+      await updateClientTask(task.raw_id, { status: inlineDoneStatus, meta_value: inlineValue.trim() });
       setTasks(prev => prev.map(t =>
-        t.raw_id === task.raw_id ? { ...t, status: "uploaded", meta_value: inlineValue.trim() } : t
+        t.raw_id === task.raw_id ? { ...t, status: inlineDoneStatus, meta_value: inlineValue.trim() } : t
       ));
       setCompleted(c => {
-        const newC = task.status !== "uploaded" ? c + 1 : c;
+        const newC = task.status !== "uploaded" && task.status !== "answered" ? c + 1 : c;
         if (newC !== c) setReadiness(total > 0 ? Math.round((newC / total) * 100) : 0);
         return newC;
       });

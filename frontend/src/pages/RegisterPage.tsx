@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { register } from "../api/auth";
+import { register, requestAccountantAccess } from "../api/auth";
 import { useAuth } from "../context/AuthContext";
 import Wordmark from "../components/Wordmark";
 import { Icon } from "../components/Icon";
@@ -86,8 +86,9 @@ export default function RegisterPage() {
   const [userType,   setUserType]   = useState<UTK>("zzp");
   const [firmName,   setFirmName]   = useState("");
   const [kvkNumber,  setKvkNumber]  = useState("");
-  const [error,      setError]      = useState("");
-  const [loading,    setLoading]    = useState(false);
+  const [error,          setError]          = useState("");
+  const [loading,        setLoading]        = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const isAccountant = userType === "accountant";
 
@@ -133,17 +134,34 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccessMessage("");
     setLoading(true);
     try {
+      if (isAccountant) {
+        // Accountant self-registration is blocked — use request-access flow instead
+        await requestAccountantAccess({
+          email,
+          full_name: firmName || email,
+          firm_name: firmName,
+          kvk_number: kvkNumber,
+          designation: "other",
+        });
+        const msg = lang === "nl"
+          ? "Uw aanvraag is ontvangen! U wordt op de hoogte gesteld zodra uw account is goedgekeurd."
+          : lang === "fa"
+          ? "درخواست شما دریافت شد! پس از تأیید حساب به شما اطلاع داده خواهد شد."
+          : "Your request has been received! You will be notified once your account is approved.";
+        setSuccessMessage(msg);
+        showToast(msg, "success");
+        return;
+      }
       const payload = {
         email,
         username: email,
         password,
-        user_type: isAccountant ? "zzp" : userType, // accountants don't have a tax user_type
-        role:      isAccountant ? "accountant" as const : "client" as const,
+        user_type: userType,
+        role: "client" as const,
         preferred_language: lang,
-        ...(isAccountant && firmName   ? { firm_name:   firmName }   : {}),
-        ...(isAccountant && kvkNumber  ? { kvk_number:  kvkNumber }  : {}),
       };
       const result = await register(payload);
       setUser(result.user);
@@ -152,14 +170,17 @@ export default function RegisterPage() {
         lang === "nl" ? "Account aangemaakt! Welkom bij TaxWijs" : lang === "fa" ? "حساب ایجاد شد! به TaxWijs خوش آمدید" : "Account created! Welcome to TaxWijs",
         "success",
       );
-      navigate(isAccountant ? "/accountant/portal" : "/intake");
+      navigate("/intake");
     } catch (err: unknown) {
       const data = (err as ApiError)?.response?.data;
+      const errMsg = (err instanceof Error) ? err.message : null;
       let msg: string;
       if (data?.email || data?.username) {
         msg = EMAIL_TAKEN[lang] ?? EMAIL_TAKEN.en;
       } else if (data?.password) {
         msg = (data.password[0] ?? "") || (PW_WEAK[lang] ?? PW_WEAK.en);
+      } else if (errMsg) {
+        msg = errMsg;
       } else {
         msg = t("auth.register_error");
       }
@@ -291,6 +312,22 @@ export default function RegisterPage() {
               </p>
             )}
 
+            {isAccountant && (
+              <div style={{ marginTop: 12, padding: 12, background: "var(--info-soft, oklch(0.93 0.04 230))", borderRadius: "var(--r-sm)", fontSize: 13, color: "var(--info-text, oklch(0.35 0.09 230))", border: "1px solid var(--info-border, oklch(0.80 0.06 230))" }}>
+                {lang === "nl"
+                  ? "Accountantaccounts vereisen goedkeuring door een beheerder. Vul het formulier hieronder in om toegang aan te vragen."
+                  : lang === "fa"
+                  ? "حساب‌های حسابداری نیاز به تأیید مدیر دارند. فرم زیر را پر کنید تا درخواست دسترسی ارسال کنید."
+                  : "Accountant accounts require admin approval. Fill in the form below to request access."}
+              </div>
+            )}
+
+            {successMessage && (
+              <div style={{ marginTop: 12, padding: 12, background: "var(--ok-soft, oklch(0.93 0.06 145))", borderRadius: "var(--r-sm)", fontSize: 13, color: "var(--ok, oklch(0.40 0.10 145))", border: "1px solid var(--ok-border, oklch(0.80 0.07 145))" }}>
+                {successMessage}
+              </div>
+            )}
+
             {error && (
               <div style={{ marginTop: 12, padding: 12, background: "var(--danger-soft)", borderRadius: "var(--r-sm)", fontSize: 13, color: "var(--danger)" }}>
                 {error}
@@ -347,9 +384,11 @@ export default function RegisterPage() {
                 </>
               )}
 
-              <button className="btn btn-accent btn-lg" type="submit" disabled={loading} style={{ marginTop: 6 }}>
+              <button className="btn btn-accent btn-lg" type="submit" disabled={loading || !!successMessage} style={{ marginTop: 6 }}>
                 {loading
-                  ? (lang === "nl" ? "Bezig…" : lang === "fa" ? "در حال ثبت‌نام…" : "Creating account…")
+                  ? (lang === "nl" ? "Bezig…" : lang === "fa" ? "در حال ارسال…" : "Submitting…")
+                  : isAccountant
+                  ? <>{lang === "nl" ? "Toegang aanvragen" : lang === "fa" ? "درخواست دسترسی" : "Request access"} <Icon.arrow /></>
                   : <>{lang === "nl" ? "Doorgaan" : lang === "fa" ? "ادامه" : "Continue"} <Icon.arrow /></>
                 }
               </button>

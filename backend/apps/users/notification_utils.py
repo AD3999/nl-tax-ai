@@ -35,9 +35,10 @@ def create_notification(
     Silently swallows all errors — notification failure must never break the
     primary action that triggered it.
     """
+    notif = None
     try:
         from .models import Notification
-        Notification.objects.create(
+        notif = Notification.objects.create(
             user=user,
             notification_type=notif_type,
             title=title,
@@ -47,6 +48,31 @@ def create_notification(
         )
     except Exception as exc:
         logger.error("create_notification DB write failed for user %s: %s", getattr(user, "pk", "?"), exc)
+
+    # Push to WebSocket channel layer (best-effort; never blocks the caller)
+    if notif:
+        try:
+            from asgiref.sync import async_to_sync
+            from channels.layers import get_channel_layer
+            channel_layer = get_channel_layer()
+            if channel_layer:
+                async_to_sync(channel_layer.group_send)(
+                    f"notifications_{user.id}",
+                    {
+                        "type": "notification.message",
+                        "data": {
+                            "id":                notif.id,
+                            "notification_type": notif.notification_type,
+                            "title":             notif.title,
+                            "body":              notif.body,
+                            "action_url":        notif.action_url,
+                            "is_read":           False,
+                            "created_at":        notif.created_at.isoformat(),
+                        },
+                    },
+                )
+        except Exception as exc:
+            logger.debug("WebSocket push skipped for user %s: %s", getattr(user, "pk", "?"), exc)
 
     try:
         from .push_utils import send_push_notification

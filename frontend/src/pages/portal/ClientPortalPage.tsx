@@ -7,6 +7,7 @@ import { useMobile } from "../../hooks/useMobile";
 import { fetchClientProfile, fetchClientEngagement, fetchClientTasks } from "../../api/portal/client";
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
 import ReadinessCard from "../../components/ui/ReadinessCard";
+import { getStatusLabel } from "../../lib/engagementStatus";
 
 interface PortalTask {
   id: string;
@@ -180,7 +181,7 @@ export default function ClientPortalPage() {
     },
     {
       label: lang === "nl" ? "Checklist" : lang === "fa" ? "چک‌لیست" : "Checklist",
-      weight: 25,
+      weight: 30,
       score: rc?.checklist_score != null
         ? rc.checklist_score
         : taskSummary ? Math.round((taskSummary.completed / Math.max(taskSummary.total, 1)) * 100) : score,
@@ -192,7 +193,7 @@ export default function ClientPortalPage() {
     },
     {
       label: lang === "nl" ? "Accountant" : lang === "fa" ? "حسابدار" : "Accountant Review",
-      weight: 15,
+      weight: 10,
       score: rc?.accountant_review_score != null
         ? rc.accountant_review_score
         : engagement.status === "needs_review" ? 50 : engagement.status === "ready_to_file" ? 100 : 0,
@@ -217,7 +218,7 @@ export default function ClientPortalPage() {
                 {t("taxYear", lang)} {engagement.tax_year}
               </span>
               <span style={{ fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 999, background: "var(--bg-3)", color: "var(--text-3)", border: "1px solid var(--border-2)" }}>
-                {engagement.status.replace(/_/g, " ")}
+                {getStatusLabel(engagement.status, lang)}
               </span>
             </div>
           </div>
@@ -328,12 +329,17 @@ export default function ClientPortalPage() {
               <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--blue-subtle)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 <User size={16} style={{ color: "var(--blue)" }} />
               </div>
-              <div>
-                <div style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--text)" }}>
-                  {(profile as ClientProfile & { accountant_display?: { name: string; email: string } | null }).accountant_display?.name ?? (lang === "nl" ? "Uw adviseur" : lang === "fa" ? "مشاور شما" : "Your advisor")}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: "var(--text-sm)", fontWeight: 700, color: "var(--text)" }}>
+                    {(profile as ClientProfile & { accountant_display?: { name: string; email: string; is_verified?: boolean } | null }).accountant_display?.name ?? (lang === "nl" ? "Uw adviseur" : lang === "fa" ? "مشاور شما" : "Your advisor")}
+                  </span>
+                  {(profile as ClientProfile & { accountant_display?: { name: string; email: string; is_verified?: boolean } | null }).accountant_display?.is_verified && (
+                    <span title={lang === "nl" ? "Geverifieerde accountant" : lang === "fa" ? "حسابدار تأیید شده" : "Verified accountant"} style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 16, height: 16, borderRadius: "50%", background: "var(--blue)", color: "#fff", fontSize: 10, fontWeight: 800, flexShrink: 0 }}>✓</span>
+                  )}
                 </div>
                 <div style={{ fontSize: 12, color: "var(--text-3)" }}>
-                  {(profile as ClientProfile & { accountant_display?: { name: string; email: string } | null }).accountant_display?.email ?? "TaxWijs"}
+                  {(profile as ClientProfile & { accountant_display?: { name: string; email: string; is_verified?: boolean } | null }).accountant_display?.email ?? "TaxWijs"}
                 </div>
               </div>
             </div>
@@ -364,7 +370,14 @@ export default function ClientPortalPage() {
                 <span style={{ fontSize: "var(--text-sm)", color: "var(--blue)", fontWeight: 600 }}>{t("viewTasks", lang)} →</span>
               </Link>
               <button
-                onClick={() => navigate("/chat", { state: { question: TX.aiTasksQ[lang] } })}
+                onClick={() => {
+                  const taskTitles = pendingTasks.slice(0, 3).map(task => `"${task.title}"`).join(", ");
+                  const baseQ = TX.aiTasksQ[lang] as string;
+                  const question = taskTitles
+                    ? `${baseQ} My pending tasks are: ${taskTitles}.`
+                    : baseQ;
+                  navigate("/chat", { state: { question } });
+                }}
                 className="btn btn-ghost btn-sm"
                 style={{ fontSize: "var(--text-xs)", display: "inline-flex", alignItems: "center", gap: 4, marginInlineStart: "auto" }}
               >

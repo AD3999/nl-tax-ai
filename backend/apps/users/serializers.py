@@ -43,9 +43,11 @@ class RegisterSerializer(serializers.ModelSerializer):
                   "firm_name", "kvk_number"]
 
     def validate_role(self, value):
-        # Block only privileged roles; "client" and "accountant" are valid on self-registration.
-        if value not in ("client", "accountant"):
-            raise serializers.ValidationError("Role not allowed during self-registration.")
+        if value not in ("client",):
+            raise serializers.ValidationError(
+                "Accountant registration requires admin approval. "
+                "Please use the accountant request-access form."
+            )
         return value
 
     def validate_email(self, value):
@@ -54,18 +56,10 @@ class RegisterSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        firm_name  = validated_data.pop("firm_name", "")
-        kvk_number = validated_data.pop("kvk_number", "")
-        role       = validated_data.get("role", "client")
+        validated_data.pop("firm_name", "")
+        validated_data.pop("kvk_number", "")
 
         validated_data.setdefault("username", validated_data["email"])
         user = User.objects.create_user(**validated_data)
-
-        if role == "accountant":
-            AccountantProfile.objects.create(
-                user=user,
-                firm_name=firm_name,
-                kvk_number=kvk_number,
-            )
 
         return user

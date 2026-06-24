@@ -31,6 +31,7 @@ export default function ClientMessagesPage() {
 
   useEffect(() => {
     fetchClientMessages().then(setMessages).catch(() => {});
+    window.dispatchEvent(new CustomEvent("messages:read"));
   }, []);
 
   useEffect(() => {

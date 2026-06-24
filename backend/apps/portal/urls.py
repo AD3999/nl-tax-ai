@@ -17,6 +17,7 @@ from .views import (
     ClientPortalTaskUpdateView, ClientPortalDocumentDeleteView,
     AccountantInboxView,
     EngagementMessagesView, ClientMessagesView, ClientMessageUnreadCountView,
+    PortalInvitationSendView, PortalInvitationAcceptView,
 )
 
 urlpatterns = [
@@ -70,4 +71,8 @@ urlpatterns = [
     path("client/documents/<int:pk>/",     ClientPortalDocumentDeleteView.as_view(),    name="portal-client-document-delete"),
     path("client/messages/",               ClientMessagesView.as_view(),                name="portal-client-messages"),
     path("client/messages/unread-count/",  ClientMessageUnreadCountView.as_view(),      name="portal-client-messages-unread"),
+
+    # ── Portal invitations (token-based) ───────────────────────────────────────
+    path("invitations/send/",   PortalInvitationSendView.as_view(),   name="portal-inv-send"),
+    path("invitations/accept/", PortalInvitationAcceptView.as_view(),  name="portal-inv-accept"),
 ]

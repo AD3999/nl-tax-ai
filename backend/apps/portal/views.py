@@ -31,6 +31,14 @@ from .models import (
 )
 from apps.users.push_utils import send_push_notification
 from apps.users.notification_utils import create_notification
+from apps.portal.services.tax_constants import (
+    DGA_GEBRUIKELIJK_LOON_MIN,
+    BOX2_RATE_LOW_THRESHOLD,
+    BOX2_RATE_LOW,
+    BOX2_RATE_HIGH,
+    BOX3_VRIJSTELLING,
+    RULING_30_PCT_CAP,
+)
 from .serializers import (
     AccountantClientProfileSerializer, TaxEngagementSerializer,
     DocumentRequestSerializer, ClientDocumentSerializer,
@@ -114,6 +122,12 @@ class AccountantClientListView(APIView):
     def post(self, request):
         if not _is_portal_user(request.user):
             return Response({"error": "Portal access requires an accountant account."}, status=403)
+
+        from apps.portal.services.plan_limits import check_client_limit
+        allowed, err_msg = check_client_limit(request.user)
+        if not allowed:
+            return Response({"detail": err_msg, "upgrade_required": True}, status=status.HTTP_402_PAYMENT_REQUIRED)
+
         data = request.data.copy()
         serializer = AccountantClientProfileSerializer(data=data, context={"request": request})
         if not serializer.is_valid():
@@ -384,6 +398,16 @@ class EngagementDetailView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         eng = serializer.save()
+
+        if eng.status == "ready_to_file" and eng.readiness_score < 85:
+            return Response(
+                {"detail": (
+                    f"Readiness score is {eng.readiness_score}%. "
+                    "A score of 85% or higher is required before marking as ready to file."
+                )},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         _audit(request, "engagement_updated", "TaxEngagement", eng.id,
                client_profile=eng.client_profile, engagement=eng)
 
@@ -783,6 +807,19 @@ class DocumentReviewView(APIView):
                     except Exception:
                         pass
 
+        # Refresh missing_items_count on the engagement after any review action
+        if new_status:
+            try:
+                eng = doc.engagement
+                missing = ChecklistItem.objects.filter(
+                    engagement=eng,
+                    required=True,
+                    status__in=("todo", "waiting_client", "rejected"),
+                ).count()
+                TaxEngagement.objects.filter(pk=eng.pk).update(missing_items_count=missing)
+            except Exception:
+                pass
+
         return Response(ClientDocumentSerializer(doc, context={"request": request}).data)
 
 
@@ -1133,8 +1170,8 @@ def _build_risks_and_deductions(engagement) -> dict:
         box3 = has("emp_box3_bank") or has("emp_box3_investments")
         opportunities.append({
             "id": "box3_exemption",
-            "title": "Box 3 exemption €59,357",
-            "description": "Assets below €59,357/person are exempt from Box 3 wealth tax.",
+            "title": f"Box 3 exemption €{BOX3_VRIJSTELLING:,}",
+            "description": f"Assets below €{BOX3_VRIJSTELLING:,}/person are exempt from Box 3 wealth tax.",
             "confidence": "needs_confirmation" if box3 else "not_enough_info",
             "rule_id": "B3R-2026-001",
             "source_url": "https://www.belastingdienst.nl",
@@ -1173,8 +1210,8 @@ def _build_risks_and_deductions(engagement) -> dict:
         salary_ok = has("dga_salary") or has("det_dga_salary")
         risks.append({
             "id": "gebruikelijk_loon",
-            "title": "Gebruikelijk loon €56,000 minimum",
-            "description": "DGA must pay at least €56,000 salary. Lower = risk of Belastingdienst correction.",
+            "title": f"Gebruikelijk loon €{DGA_GEBRUIKELIJK_LOON_MIN:,} minimum (2026)",
+            "description": f"DGA must pay at least €{DGA_GEBRUIKELIJK_LOON_MIN:,} salary in 2026. Lower = risk of Belastingdienst correction.",
             "level": "needs_confirmation" if salary_ok else "needs_accountant_review",
             "rule_id": "DGA-2026-001",
             "source_url": "https://www.belastingdienst.nl",
@@ -1182,8 +1219,8 @@ def _build_risks_and_deductions(engagement) -> dict:
         dividend_ok = has("dga_dividend")
         opportunities.append({
             "id": "dividend_box2",
-            "title": "Box 2 dividend — 24.5% up to €68,843",
-            "description": "Lower Box 2 rate applies on first €68,843 of dividend income.",
+            "title": f"Box 2 dividend — {BOX2_RATE_LOW}% up to €{BOX2_RATE_LOW_THRESHOLD:,}",
+            "description": f"Lower Box 2 rate applies on first €{BOX2_RATE_LOW_THRESHOLD:,} of dividend income.",
             "confidence": "likely" if dividend_ok else "needs_confirmation",
             "rule_id": "B2R-2026-001",
             "source_url": "https://www.belastingdienst.nl",
@@ -1547,7 +1584,7 @@ class ClientPortalTaskUpdateView(APIView):
         new_status = request.data.get("status")
         meta_value = request.data.get("meta_value", None)
 
-        allowed = ("uploaded", "todo")
+        allowed = ("uploaded", "answered", "todo")
         if new_status not in allowed:
             return Response({"detail": f"status must be one of {allowed}"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1583,7 +1620,7 @@ class ClientPortalTaskUpdateView(APIView):
                 pass  # Never block the task save if ZZP sync fails
 
         # Notify accountant when client marks item as done
-        if new_status == "uploaded" and old_status != "uploaded":
+        if new_status in ("uploaded", "answered") and old_status not in ("uploaded", "answered"):
             AccountantAction.objects.get_or_create(
                 engagement=item.engagement,
                 client_profile=item.client_profile,
@@ -1805,3 +1842,98 @@ class ClientMessagesView(APIView):
             PortalMessageSerializer(msg, context={"request": request}).data,
             status=201,
         )
+
+
+# ── Portal Invitation Send / Accept ──────────────────────────────────────────
+
+import secrets as _secrets
+import datetime as _dt
+
+
+class PortalInvitationSendView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        if not _is_portal_user(request.user):
+            return Response({"detail": "Accountant access required."}, status=403)
+        from .models import Invitation
+        email       = (request.data.get("email", "") or "").strip().lower()
+        client_name = (request.data.get("client_name", "") or "").strip()
+        client_type = request.data.get("client_type", "other")
+        tax_year    = int(request.data.get("tax_year", 2026))
+        lang        = request.data.get("preferred_language", "nl")
+        if not email:
+            return Response({"detail": "email is required."}, status=400)
+        if Invitation.objects.filter(sent_by=request.user, client_email__iexact=email, status="pending").exists():
+            return Response({"detail": "A pending invitation already exists for this email."}, status=400)
+        token      = _secrets.token_urlsafe(48)
+        expires_at = timezone.now() + _dt.timedelta(days=7)
+        inv = Invitation.objects.create(
+            sent_by=request.user, client_email=email, client_name=client_name,
+            tax_year=tax_year, token=token, expires_at=expires_at, status="pending",
+        )
+        profile, _ = AccountantClientProfile.objects.get_or_create(
+            accountant_user=request.user, email__iexact=email,
+            defaults={"email": email, "first_name": client_name.split(" ")[0] if client_name else "",
+                      "last_name": " ".join(client_name.split(" ")[1:]) if client_name else "",
+                      "client_type": client_type, "preferred_language": lang,
+                      "status": "invited", "tax_year": tax_year},
+        )
+        _audit(request, "portal_invitation_sent", "Invitation", inv.id, client_profile=profile)
+        return Response({"id": inv.id, "token": token, "client_email": email,
+                         "expires_at": inv.expires_at.isoformat(), "status": "pending",
+                         "accept_url": f"/portal/accept-invitation?token={token}"}, status=201)
+
+
+class PortalInvitationAcceptView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        from .models import Invitation
+        from apps.portal.services.accountant_checklists import create_checklist_for_engagement
+        token = (request.data.get("token", "") or "").strip()
+        if not token:
+            return Response({"detail": "token is required."}, status=400)
+        try:
+            inv = Invitation.objects.select_related("sent_by", "client_user").get(token=token)
+        except Invitation.DoesNotExist:
+            return Response({"detail": "Invalid or expired invitation."}, status=404)
+        if inv.status != "pending":
+            return Response({"detail": f"This invitation has already been {inv.status}."}, status=400)
+        if inv.expires_at <= timezone.now():
+            inv.status = "expired"; inv.save(update_fields=["status"])
+            return Response({"detail": "This invitation has expired."}, status=400)
+        inv.client_user = request.user; inv.status = "accepted"; inv.accepted_at = timezone.now()
+        inv.save(update_fields=["client_user", "status", "accepted_at"])
+        profile = AccountantClientProfile.objects.filter(accountant_user=inv.sent_by, email__iexact=inv.client_email).first()
+        if not profile:
+            profile = AccountantClientProfile.objects.create(
+                accountant_user=inv.sent_by, client_user=request.user,
+                email=request.user.email,
+                first_name=getattr(request.user, "first_name", ""),
+                last_name=getattr(request.user, "last_name", ""),
+                status="active", tax_year=inv.tax_year,
+            )
+        else:
+            profile.client_user = request.user; profile.status = "active"
+            profile.save(update_fields=["client_user", "status", "updated_at"])
+        try:
+            from apps.users.models import AccountantProfile, AccountantClient
+            acc_profile = AccountantProfile.objects.get(user=inv.sent_by)
+            AccountantClient.objects.get_or_create(accountant=acc_profile, client_user=request.user, defaults={"status": "active"})
+        except Exception:
+            pass
+        engagement = TaxEngagement.objects.filter(client_profile=profile).order_by("-created_at").first()
+        if not engagement:
+            engagement = TaxEngagement.objects.create(
+                accountant=inv.sent_by, client_profile=profile,
+                tax_year=inv.tax_year, status="collecting",
+            )
+            try:
+                create_checklist_for_engagement(engagement)
+            except Exception:
+                pass
+        inv.engagement = engagement; inv.save(update_fields=["engagement"])
+        _audit(request, "portal_invitation_accepted", "Invitation", inv.id, client_profile=profile, engagement=engagement)
+        return Response({"detail": "Invitation accepted. Your tax portal is ready.",
+                         "profile_id": profile.id, "engagement_id": engagement.id, "redirect_to": "/client"})

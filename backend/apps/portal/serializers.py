@@ -84,9 +84,11 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
     def get_accountant_display(self, obj):
         user = obj.accountant_user
         if user and (not obj.client_user_id or user.id != obj.client_user_id):
+            profile = getattr(user, "accountant_profile", None)
             return {
                 "name": user.get_full_name() or user.email,
                 "email": user.email,
+                "is_verified": getattr(profile, "is_verified", False),
             }
         return None
 

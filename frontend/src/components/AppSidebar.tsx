@@ -45,6 +45,14 @@ function useUnreadCount(isAccountant: boolean, isClient: boolean) {
     return () => clearTimeout(t);
   }, [location.pathname, poll]);
 
+  // Reset badge instantly when client navigates to the messages page
+  useEffect(() => {
+    if (!isClient) return;
+    function handleMessagesRead() { setCount(0); }
+    window.addEventListener("messages:read", handleMessagesRead);
+    return () => window.removeEventListener("messages:read", handleMessagesRead);
+  }, [isClient]);
+
   return count;
 }
 

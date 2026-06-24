@@ -59,8 +59,9 @@ export default function NotificationBell() {
   // inside the portal looks like an "outside click" and fires before onClick.
   const bellRef     = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const wsRef       = useRef<WebSocket | null>(null);
 
-  // ── Polling ──────────────────────────────────────────────────────
+  // ── Polling fallback ─────────────────────────────────────────────
   const fetchCount = useCallback(async () => {
     if (!user) return;
     try {
@@ -74,11 +75,62 @@ export default function NotificationBell() {
     } catch { /* silent */ }
   }, [user, showToast]);
 
+  // ── WebSocket (primary) + polling fallback ───────────────────────
   useEffect(() => {
+    if (!user) return;
+
+    // Initial count via REST so the badge is populated before WS connects
     fetchCount();
-    const id = setInterval(fetchCount, 30_000);
-    return () => clearInterval(id);
-  }, [fetchCount]);
+
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      const id = setInterval(fetchCount, 30_000);
+      return () => clearInterval(id);
+    }
+
+    const wsProto  = window.location.protocol === "https:" ? "wss" : "ws";
+    const wsHost   = import.meta.env.VITE_API_URL
+      ? new URL(import.meta.env.VITE_API_URL as string).host
+      : window.location.host;
+    const ws = new WebSocket(`${wsProto}://${wsHost}/ws/notifications/?token=${encodeURIComponent(token)}`);
+    wsRef.current = ws;
+
+    let pollingId: ReturnType<typeof setInterval> | null = null;
+
+    ws.onopen = () => {
+      // WS connected — no polling needed
+    };
+
+    ws.onmessage = (evt: MessageEvent) => {
+      try {
+        const data = JSON.parse(evt.data as string) as { id?: number; title?: string };
+        showToast(data.title ?? "You have a new notification", "success");
+        setCount(c => c + 1);
+        prevCountRef.current += 1;
+        // Refresh list if panel is open
+        setItems(prev => {
+          if (prev.length === 0) return prev; // panel not yet opened
+          return prev; // new item will appear on next panel open / re-fetch
+        });
+      } catch { /* ignore malformed frames */ }
+    };
+
+    ws.onerror = () => {
+      // Fall back to polling if WS fails
+      if (!pollingId) pollingId = setInterval(fetchCount, 30_000);
+    };
+
+    ws.onclose = () => {
+      // Fall back to polling after disconnect
+      if (!pollingId) pollingId = setInterval(fetchCount, 30_000);
+    };
+
+    return () => {
+      ws.close();
+      wsRef.current = null;
+      if (pollingId) clearInterval(pollingId);
+    };
+  }, [user, fetchCount, showToast]);
 
   // ── Load list when panel opens ────────────────────────────────────
   useEffect(() => {
