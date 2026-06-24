@@ -3,6 +3,7 @@ import { useParams, useSearchParams, Link } from "react-router-dom";
 import { formatDate, formatEur } from "../../lib/utils";
 import { ChevronRight, Download, FileText, RefreshCw, X, AlertTriangle, Bot } from "lucide-react";
 import { ENGAGEMENT_TYPE_LABELS } from "../../lib/engagementTypes";
+import { getStatusLabel } from "../../lib/engagementStatus";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -778,14 +779,14 @@ export default function EngagementPage() {
                       </ul>
                     </div>
                   )}
-                  <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: "var(--sp-2)" }}>{tx.status}: {engagement.status}</div>
+                  <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: "var(--sp-2)" }}>{tx.status}: {getStatusLabel(engagement.status, lang)}</div>
 
                   {/* Ready to File flow */}
                   {engagement.status === "ready_to_file" ? (
                     <div className="card" style={{ padding: "var(--sp-3)", marginTop: "var(--sp-3)", background: "var(--ok-subtle)", border: "1px solid var(--ok)", color: "var(--ok-text)", fontSize: "var(--text-sm)", fontWeight: 600 }}>
                       ✅ Ready to File — client has been notified.
                     </div>
-                  ) : engagement.readiness_score >= 80 && engagement.status !== "filed" ? (
+                  ) : engagement.readiness_score >= 85 && engagement.status !== "filed" ? (
                     <button
                       className="btn btn-accent"
                       style={{ width: "100%", marginTop: "var(--sp-3)", justifyContent: "center" }}

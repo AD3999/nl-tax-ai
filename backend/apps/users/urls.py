@@ -16,6 +16,7 @@ from .views import (
     GoogleCalendarAuthUrlView, GoogleCalendarCallbackView,
     GoogleCalendarDisconnectView, GoogleCalendarSyncNowView,
     GoogleCalendarStatusView,
+    AccountantAccessRequestView, AccountantAccessApproveView,
 )
 from .admin_views import AdminUserListView, AdminUserDetailView
 
@@ -70,4 +71,7 @@ urlpatterns = [
     # Admin-only user management
     path("admin/list/",              AdminUserListView.as_view(),   name="admin-user-list"),
     path("admin/<int:pk>/",          AdminUserDetailView.as_view(), name="admin-user-detail"),
+    # Accountant request-access flow
+    path("accountant/request-access/", AccountantAccessRequestView.as_view(), name="accountant-request-access"),
+    path("accountant/access-requests/<int:pk>/approve/", AccountantAccessApproveView.as_view(), name="accountant-access-approve"),
 ]

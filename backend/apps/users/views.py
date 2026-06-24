@@ -1,5 +1,6 @@
 import requests as http_requests
 import rest_framework.throttling
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -1364,3 +1365,52 @@ class GoogleCalendarStatusView(APIView):
             "enabled": request.user.google_calendar_enabled,
             "connected": bool(request.user.google_calendar_refresh_token),
         })
+
+
+class AccountantAccessRequestView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        from apps.users.models import AccountantAccessRequest
+        email      = (request.data.get("email", "") or "").strip().lower()
+        full_name  = (request.data.get("full_name", "") or "").strip()
+        firm_name  = (request.data.get("firm_name", "") or "").strip()
+        kvk_number = (request.data.get("kvk_number", "") or "").strip()
+        designation = (request.data.get("designation", "other") or "other").strip()
+        motivation = (request.data.get("motivation", "") or "").strip()
+        if not email or not full_name:
+            return Response({"detail": "email and full_name are required."}, status=status.HTTP_400_BAD_REQUEST)
+        if AccountantAccessRequest.objects.filter(email__iexact=email).exists():
+            return Response({"detail": "A request for this email already exists."}, status=status.HTTP_400_BAD_REQUEST)
+        AccountantAccessRequest.objects.create(
+            email=email, full_name=full_name, firm_name=firm_name,
+            kvk_number=kvk_number, designation=designation, motivation=motivation,
+        )
+        return Response({"detail": "Request submitted. You will be notified once reviewed."}, status=status.HTTP_201_CREATED)
+
+
+class AccountantAccessApproveView(APIView):
+    permission_classes = [permissions.IsAdminUser]
+
+    def post(self, request, pk):
+        from apps.users.models import AccountantAccessRequest, AccountantProfile
+        from django.utils import timezone as tz
+        req = get_object_or_404(AccountantAccessRequest, pk=pk)
+        if req.status != "pending":
+            return Response({"detail": f"Request is already {req.status}."}, status=status.HTTP_400_BAD_REQUEST)
+        user, created = User.objects.get_or_create(
+            email__iexact=req.email,
+            defaults={"username": req.email, "email": req.email,
+                      "first_name": req.full_name.split(" ")[0],
+                      "last_name":  " ".join(req.full_name.split(" ")[1:])},
+        )
+        user.role = "accountant"
+        user.save(update_fields=["role"])
+        AccountantProfile.objects.get_or_create(
+            user=user,
+            defaults={"firm_name": req.firm_name, "kvk_number": req.kvk_number,
+                      "designation": req.designation, "is_verified": True},
+        )
+        req.status = "approved"; req.reviewed_by = request.user; req.reviewed_at = tz.now()
+        req.save(update_fields=["status", "reviewed_by", "reviewed_at"])
+        return Response({"detail": f"Approved. User {req.email} is now an accountant."})

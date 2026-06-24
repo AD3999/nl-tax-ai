@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 from django.db import models
 
 
@@ -614,3 +615,35 @@ class UserItemState(models.Model):
 
     def __str__(self):
         return f"{self.user_id} / {self.item_type} / {self.item_id} → {self.state}"
+
+
+class AccountantAccessRequest(models.Model):
+    STATUS_CHOICES = [
+        ("pending",  "Pending review"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+    email       = models.EmailField(unique=True)
+    full_name   = models.CharField(max_length=200)
+    firm_name   = models.CharField(max_length=200, blank=True)
+    kvk_number  = models.CharField(max_length=20, blank=True)
+    designation = models.CharField(
+        max_length=10,
+        choices=[("RB", "RB"), ("AA", "AA"), ("RA", "RA"), ("other", "Other")],
+        default="other",
+    )
+    motivation  = models.TextField(blank=True)
+    status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name="reviewed_access_requests",
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "accountant_access_requests"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.email} ({self.status})"

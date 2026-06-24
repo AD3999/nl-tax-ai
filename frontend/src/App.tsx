@@ -68,6 +68,7 @@ const ClientPortalPage        = lazy(() => import("./pages/portal/ClientPortalPa
 const ClientTasksPage         = lazy(() => import("./pages/portal/ClientTasksPage"));
 const ClientDocumentsPage     = lazy(() => import("./pages/portal/ClientDocumentsPage"));
 const GoogleCallbackPage      = lazy(() => import("./pages/GoogleCallbackPage"));
+const AcceptInvitationPage    = lazy(() => import("./pages/AcceptInvitationPage"));
 const AccountantInboxPage     = lazy(() => import("./pages/AccountantInboxPage"));
 const AccountantSettingsPage  = lazy(() => import("./pages/AccountantSettingsPage"));
 const ClientMessagesPage      = lazy(() => import("./pages/ClientMessagesPage"));
@@ -135,6 +136,7 @@ function App() {
               <Route path="/login"                   element={<LoginPage />} />
               <Route path="/register"                element={<RegisterPage />} />
               <Route path="/auth/google/callback"    element={<GoogleCallbackPage />} />
+              <Route path="/portal/accept-invitation" element={<AcceptInvitationPage />} />
               <Route path="/zzp-tax-netherlands"     element={<ZZPTaxPage />} />
               <Route path="/expat-tax-netherlands"   element={<ExpatTaxPage />} />
             </Route>

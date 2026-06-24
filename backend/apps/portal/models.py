@@ -443,6 +443,12 @@ class ChecklistItem(models.Model):
     stable_key     = models.CharField(max_length=100, blank=True, db_index=True)
     # meta_value stores client-entered text (KVK number, BTW number, etc.)
     meta_value     = models.TextField(blank=True)
+    task_type      = models.CharField(
+        max_length=20,
+        choices=[("document", "Document upload"), ("info", "Information entry")],
+        default="document",
+        help_text="document = requires file upload; info = requires text/number entry",
+    )
     created_at     = models.DateTimeField(auto_now_add=True)
     updated_at     = models.DateTimeField(auto_now=True)
 
@@ -503,6 +509,13 @@ class AccountantAction(models.Model):
     class Meta:
         db_table = "portal_accountant_actions"
         ordering = ["-priority", "-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["engagement", "stable_key"],
+                condition=models.Q(stable_key__gt=""),
+                name="unique_action_stable_key_per_engagement",
+            )
+        ]
 
     def __str__(self):
         return f"{self.title} ({self.status})"
@@ -702,3 +715,24 @@ class Invitation(models.Model):
 
     def __str__(self):
         return f"Invitation to {self.client_email} ({self.status})"
+
+
+# ── Signals ───────────────────────────────────────────────────────────────────
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+
+@receiver(post_save, sender=ChecklistItem)
+def _update_missing_count_on_checklist_change(sender, instance, **kwargs):
+    """Keep TaxEngagement.missing_items_count in sync whenever a ChecklistItem is saved."""
+    try:
+        eng = instance.engagement
+        missing = ChecklistItem.objects.filter(
+            engagement=eng,
+            required=True,
+            status__in=("todo", "waiting_client", "rejected"),
+        ).count()
+        TaxEngagement.objects.filter(pk=eng.pk).update(missing_items_count=missing)
+    except Exception:
+        pass

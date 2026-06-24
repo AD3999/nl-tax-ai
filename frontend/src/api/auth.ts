@@ -109,3 +109,20 @@ const SESSION_KEYS = [
 export const logout = () => {
   SESSION_KEYS.forEach(key => localStorage.removeItem(key));
 };
+
+export async function requestAccountantAccess(data: {
+  email: string;
+  full_name: string;
+  firm_name?: string;
+  kvk_number?: string;
+  designation?: string;
+}): Promise<{ detail: string }> {
+  const res = await fetch(`${import.meta.env.VITE_API_BASE ?? "/api"}/users/accountant/request-access/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail ?? "Request failed");
+  return json;
+}

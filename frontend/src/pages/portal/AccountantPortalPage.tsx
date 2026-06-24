@@ -14,6 +14,7 @@ import {
 } from "../../api/invitations";
 import { useToast } from "../../context/ToastContext";
 import { ENGAGEMENT_TYPE_LABELS } from "../../lib/engagementTypes";
+import { getStatusLabel } from "../../lib/engagementStatus";
 import { createClient } from "../../api/portal/client";
 import type { ClientType } from "../../api/portal/types";
 
@@ -232,6 +233,10 @@ export default function AccountantPortalPage() {
   const [invMessage, setInvMessage] = useState("");
   const [invSending, setInvSending] = useState(false);
 
+  // Upgrade gate state
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState("");
+
   useEffect(() => {
     if (loading) return;
     if (!user) return;
@@ -283,6 +288,15 @@ export default function AccountantPortalPage() {
       navigate(`/accountant/clients/${newClient.id}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to add client";
+      // Detect 402 plan-limit response
+      try {
+        const parsed = JSON.parse(msg) as { detail?: string; upgrade_required?: boolean };
+        if (parsed.upgrade_required) {
+          setUpgradeReason(parsed.detail ?? "You have reached your client limit. Upgrade your plan to add more clients.");
+          setShowUpgrade(true);
+          return;
+        }
+      } catch { /* not JSON — fall through to toast */ }
       showToast(msg, "error");
     } finally {
       setAddSaving(false);
@@ -515,7 +529,7 @@ export default function AccountantPortalPage() {
                         </td>
                         <td style={{ padding: "var(--sp-3)", color: "var(--ink-3)" }}>{c.preferred_language.toUpperCase()}</td>
                         <td style={{ padding: "var(--sp-3)" }}>
-                          <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[c.status] || "var(--ink-3)" }}>{c.status}</span>
+                          <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[c.status] || "var(--ink-3)" }}>{getStatusLabel(c.status, lang)}</span>
                         </td>
                         <td style={{ padding: "var(--sp-3)", textAlign: "center" }}>
                           {!isDeactivated && c.latest_readiness !== null ? (
@@ -581,7 +595,7 @@ export default function AccountantPortalPage() {
                         <span className="pill" style={{ fontSize: "var(--text-2xs)" }}>{ENGAGEMENT_TYPE_LABELS[eng.engagement_type] ?? eng.engagement_type}</span>
                       </td>
                       <td style={{ padding: "var(--sp-3)" }}>
-                        <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[eng.status] || "var(--ink-3)" }}>{eng.status}</span>
+                        <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[eng.status] || "var(--ink-3)" }}>{getStatusLabel(eng.status, lang)}</span>
                       </td>
                       <td style={{ padding: "var(--sp-3)", textAlign: "center" }}>
                         <span style={{ fontWeight: 600, color: eng.readiness_score >= 85 ? "var(--ok)" : eng.readiness_score >= 50 ? "var(--warn)" : "var(--danger)" }}>
@@ -686,6 +700,50 @@ export default function AccountantPortalPage() {
         )}
 
       </div>
+
+      {/* Plan upgrade gate */}
+      {showUpgrade && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 9000,
+            background: "oklch(0 0 0 / 0.55)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 16,
+          }}
+          onClick={() => setShowUpgrade(false)}
+        >
+          <div
+            style={{
+              background: "var(--paper)", borderRadius: 16, padding: 32,
+              maxWidth: 420, width: "100%", boxShadow: "var(--sh-lg)",
+              textAlign: "center",
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ fontSize: 36, marginBottom: 12 }}>⬆️</div>
+            <h2 style={{ fontSize: "var(--text-xl)", fontWeight: 700, marginBottom: 8 }}>
+              {lang === "nl" ? "Plan limiet bereikt" : lang === "fa" ? "محدودیت پلن" : "Plan limit reached"}
+            </h2>
+            <p style={{ color: "var(--ink-3)", fontSize: "var(--text-sm)", marginBottom: 24 }}>
+              {upgradeReason}
+            </p>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+              <button
+                onClick={() => setShowUpgrade(false)}
+                style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid var(--border-2)", background: "transparent", cursor: "pointer", fontSize: "var(--text-sm)" }}
+              >
+                {lang === "nl" ? "Annuleren" : lang === "fa" ? "لغو" : "Cancel"}
+              </button>
+              <button
+                onClick={() => { setShowUpgrade(false); navigate("/pricing"); }}
+                style={{ padding: "8px 20px", borderRadius: 8, border: "none", background: "var(--accent)", color: "#fff", cursor: "pointer", fontSize: "var(--text-sm)", fontWeight: 600 }}
+              >
+                {lang === "nl" ? "Upgrade plan" : lang === "fa" ? "ارتقاء پلن" : "Upgrade plan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
