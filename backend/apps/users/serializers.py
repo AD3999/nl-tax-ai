@@ -43,8 +43,9 @@ class RegisterSerializer(serializers.ModelSerializer):
                   "firm_name", "kvk_number"]
 
     def validate_role(self, value):
-        if value not in ("client",):
-            raise serializers.ValidationError("Role cannot be set during registration.")
+        # Block only privileged roles; "client" and "accountant" are valid on self-registration.
+        if value not in ("client", "accountant"):
+            raise serializers.ValidationError("Role not allowed during self-registration.")
         return value
 
     def validate_email(self, value):

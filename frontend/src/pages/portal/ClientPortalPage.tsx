@@ -84,7 +84,18 @@ export default function ClientPortalPage() {
 
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [engagement, setEngagement] = useState<TaxEngagement | null>(null);
-  const [taskSummary, setTaskSummary] = useState<{ tasks: PortalTask[]; total: number; completed: number; readiness_score: number } | null>(null);
+  const [taskSummary, setTaskSummary] = useState<{
+    tasks: PortalTask[];
+    total: number;
+    completed: number;
+    readiness_score: number;
+    readiness_components: {
+      doc_score: number | null;
+      checklist_score: number | null;
+      verification_score: number | null;
+      accountant_review_score: number | null;
+    } | null;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -157,12 +168,34 @@ export default function ClientPortalPage() {
   const displayMissing = pendingTasks.slice(0, 4);
   const extraMissing = Math.max(0, pendingTasks.length - 4);
 
-  // Derive readiness factor breakdown from available data
+  // Use real ReadinessSnapshot component scores when available; fall back to
+  // estimates only when no snapshot exists yet (new engagement, not yet calculated).
+  const rc = taskSummary?.readiness_components;
   const readinessFactors = [
-    { label: lang === "nl" ? "Documenten" : lang === "fa" ? "اسناد" : "Documents", weight: 40, score: Math.min(100, score * 1.1) },
-    { label: lang === "nl" ? "Checklist" : lang === "fa" ? "چک‌لیست" : "Checklist", weight: 25, score: taskSummary ? Math.round((taskSummary.completed / Math.max(taskSummary.total, 1)) * 100) : score },
-    { label: lang === "nl" ? "Verificatie" : lang === "fa" ? "تأیید" : "Verification", weight: 20, score: Math.max(0, score - 10) },
-    { label: lang === "nl" ? "Accountant" : lang === "fa" ? "حسابدار" : "Accountant Review", weight: 15, score: engagement.status === "needs_review" ? 50 : engagement.status === "ready_to_file" ? 100 : 0 },
+    {
+      label: lang === "nl" ? "Documenten" : lang === "fa" ? "اسناد" : "Documents",
+      weight: 40,
+      score: rc?.doc_score != null ? rc.doc_score : Math.min(100, score * 1.1),
+    },
+    {
+      label: lang === "nl" ? "Checklist" : lang === "fa" ? "چک‌لیست" : "Checklist",
+      weight: 25,
+      score: rc?.checklist_score != null
+        ? rc.checklist_score
+        : taskSummary ? Math.round((taskSummary.completed / Math.max(taskSummary.total, 1)) * 100) : score,
+    },
+    {
+      label: lang === "nl" ? "Verificatie" : lang === "fa" ? "تأیید" : "Verification",
+      weight: 20,
+      score: rc?.verification_score != null ? rc.verification_score : Math.max(0, score - 10),
+    },
+    {
+      label: lang === "nl" ? "Accountant" : lang === "fa" ? "حسابدار" : "Accountant Review",
+      weight: 15,
+      score: rc?.accountant_review_score != null
+        ? rc.accountant_review_score
+        : engagement.status === "needs_review" ? 50 : engagement.status === "ready_to_file" ? 100 : 0,
+    },
   ].map(f => ({ ...f, score: Math.round(Math.min(100, Math.max(0, f.score))) }));
 
   return (

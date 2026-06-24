@@ -7,7 +7,7 @@ import { useToast } from "../../context/ToastContext";
 import { useMobile } from "../../hooks/useMobile";
 import {
   fetchClientDocuments, fetchClientEngagement,
-  uploadClientDocument, deleteClientDocument,
+  uploadClientDocument, deleteClientDocument, fetchClientTasks,
 } from "../../api/portal/client";
 import type { ClientDocument, TaxEngagement } from "../../api/portal/types";
 import { formatDate } from "../../lib/utils";
@@ -49,13 +49,15 @@ const TX = {
   delete:     { nl: "Verwijderen",          en: "Delete",              fa: "حذف" },
   deleting:   { nl: "Verwijderen…",         en: "Deleting…",           fa: "حذف…" },
   confirm_del:{ nl: "Zeker weten?",         en: "Are you sure?",       fa: "آیا مطمئن هستید؟" },
-  modal_title:{ nl: "Document uploaden",    en: "Upload document",     fa: "بارگذاری سند" },
-  doc_title:  { nl: "Titel (optioneel)",    en: "Title (optional)",    fa: "عنوان (اختیاری)" },
-  doc_note:   { nl: "Notitie (optioneel)",  en: "Note (optional)",     fa: "یادداشت (اختیاری)" },
-  choose_file:{ nl: "Bestand kiezen…",      en: "Choose file…",        fa: "انتخاب فایل…" },
-  confirm_up: { nl: "Uploaden",             en: "Upload",              fa: "بارگذاری" },
-  cancel:     { nl: "Annuleren",            en: "Cancel",              fa: "لغو" },
-  file_label: { nl: "Bestand",              en: "File",                fa: "فایل" },
+  modal_title:  { nl: "Document uploaden",       en: "Upload document",       fa: "بارگذاری سند" },
+  doc_title:    { nl: "Titel (optioneel)",       en: "Title (optional)",      fa: "عنوان (اختیاری)" },
+  doc_note:     { nl: "Notitie (optioneel)",     en: "Note (optional)",       fa: "یادداشت (اختیاری)" },
+  choose_file:  { nl: "Bestand kiezen…",         en: "Choose file…",          fa: "انتخاب فایل…" },
+  confirm_up:   { nl: "Uploaden",                en: "Upload",                fa: "بارگذاری" },
+  cancel:       { nl: "Annuleren",               en: "Cancel",                fa: "لغو" },
+  file_label:   { nl: "Bestand",                 en: "File",                  fa: "فایل" },
+  link_task:    { nl: "Koppel aan taak (optioneel)", en: "Link to task (optional)", fa: "اتصال به وظیفه (اختیاری)" },
+  no_task:      { nl: "— Geen koppeling —",      en: "— No link —",           fa: "— بدون اتصال —" },
 };
 
 function t(key: keyof typeof TX, lang: "nl"|"en"|"fa") { return TX[key][lang]; }
@@ -99,6 +101,9 @@ export default function ClientDocumentsPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState("");
+  // Task-link state: open tasks fetched lazily when the upload modal opens
+  const [openTasks, setOpenTasks] = useState<Array<{ raw_id: number; title: string }>>([]);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 
   // Delete state
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -175,8 +180,20 @@ export default function ClientDocumentsPage() {
     if (!file) return;
     setUploadFile(file);
     if (!uploadTitle) setUploadTitle(file.name.replace(/\.[^.]+$/, ""));
+    setSelectedTaskId(null);
     setShowModal(true);
     if (fileInputRef.current) fileInputRef.current.value = "";
+    // Lazily fetch open tasks for the link-to-task dropdown
+    fetchClientTasks().then(res => {
+      const tasks = (res.tasks as Array<{ id: string; title: string; status: string; required: boolean }>)
+        .filter(t => !["accepted", "waived", "uploaded"].includes(t.status))
+        .map(t => ({
+          raw_id: parseInt((t.id as string).replace("chk_", ""), 10),
+          title: t.title,
+        }))
+        .filter(t => !isNaN(t.raw_id) && t.raw_id > 0);
+      setOpenTasks(tasks);
+    }).catch(() => setOpenTasks([]));
   }
 
   const ALLOWED_MIME_TYPES = [
@@ -211,6 +228,7 @@ export default function ClientDocumentsPage() {
         uploadNote,
         undefined,
         (pct) => setUploadProgress(pct),
+        selectedTaskId ?? undefined,
       );
       setDocuments(prev => [doc, ...prev]);
       setShowModal(false);
@@ -218,6 +236,8 @@ export default function ClientDocumentsPage() {
       setUploadTitle("");
       setUploadNote("");
       setUploadProgress(null);
+      setSelectedTaskId(null);
+      setOpenTasks([]);
       setTimeout(() => void load(true), 3000);
     } catch (err: unknown) {
       setUploadError(err instanceof Error ? err.message : "Upload failed");
@@ -293,7 +313,7 @@ export default function ClientDocumentsPage() {
                 />
               </div>
 
-              <div style={{ marginBottom: "var(--sp-5)" }}>
+              <div style={{ marginBottom: "var(--sp-4)" }}>
                 <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
                   {t("doc_note", lang)}
                 </label>
@@ -304,6 +324,24 @@ export default function ClientDocumentsPage() {
                   style={{ width: "100%", padding: "var(--sp-3)", background: "var(--bg-3)", border: "1px solid var(--border-2)", borderRadius: "var(--r-sm)", color: "var(--text)", fontSize: "var(--text-sm)", fontFamily: "inherit", resize: "vertical", fontWeight: 500 }}
                 />
               </div>
+
+              {openTasks.length > 0 && (
+                <div style={{ marginBottom: "var(--sp-5)" }}>
+                  <label style={{ display: "block", fontSize: "var(--text-xs)", fontWeight: 700, color: "var(--text-3)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    {t("link_task", lang)}
+                  </label>
+                  <select
+                    value={selectedTaskId ?? ""}
+                    onChange={e => setSelectedTaskId(e.target.value ? Number(e.target.value) : null)}
+                    style={{ width: "100%", padding: "var(--sp-3)", background: "var(--bg-3)", border: "1px solid var(--border-2)", borderRadius: "var(--r-sm)", color: "var(--text)", fontSize: "var(--text-sm)", fontFamily: "inherit" }}
+                  >
+                    <option value="">{t("no_task", lang)}</option>
+                    {openTasks.map(task => (
+                      <option key={task.raw_id} value={task.raw_id}>{task.title}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* Progress bar — shown while uploading */}
@@ -347,7 +385,7 @@ export default function ClientDocumentsPage() {
             {/* Action buttons — hidden while uploading */}
             {!uploading && (
               <div style={{ display: "flex", gap: "var(--sp-3)", justifyContent: "flex-end" }}>
-                <button className="btn btn-ghost btn-sm" onClick={() => { setShowModal(false); setUploadFile(null); setUploadTitle(""); setUploadNote(""); setUploadError(""); }}>
+                <button className="btn btn-ghost btn-sm" onClick={() => { setShowModal(false); setUploadFile(null); setUploadTitle(""); setUploadNote(""); setUploadError(""); setSelectedTaskId(null); setOpenTasks([]); }}>
                   {t("cancel", lang)}
                 </button>
                 <button className="btn btn-accent btn-sm" onClick={handleUpload} disabled={!uploadFile}>

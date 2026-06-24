@@ -1478,11 +1478,22 @@ class ClientPortalTasksView(APIView):
             engagement=engagement, required=True, status__in=("accepted", "waived")
         ).count()
 
+        # Include the most recent ReadinessSnapshot component scores so the
+        # client portal can display accurate per-factor breakdowns.
+        snapshot = engagement.readiness_snapshots.order_by("-computed_at").first()
+        readiness_components = {
+            "doc_score":              snapshot.doc_score              if snapshot else None,
+            "checklist_score":        snapshot.checklist_score        if snapshot else None,
+            "verification_score":     snapshot.verification_score     if snapshot else None,
+            "accountant_review_score":snapshot.accountant_review_score if snapshot else None,
+        }
+
         return Response({
             "tasks": tasks,
             "total": total,
             "completed": completed,
             "readiness_score": engagement.readiness_score,
+            "readiness_components": readiness_components,
         })
 
 

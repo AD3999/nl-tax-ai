@@ -155,7 +155,18 @@ export const fetchAudit = (engId: number) => get<AuditLog[]>(`/engagements/${eng
 // ── Client self-service ───────────────────────────────────────────────────────
 export const fetchClientProfile    = () => get<ClientProfile>("/client/profile/");
 export const fetchClientEngagement = () => get<TaxEngagement>("/client/engagement/");
-export const fetchClientTasks      = () => get<{ tasks: unknown[]; total: number; completed: number; readiness_score: number }>("/client/tasks/");
+export const fetchClientTasks      = () => get<{
+  tasks: unknown[];
+  total: number;
+  completed: number;
+  readiness_score: number;
+  readiness_components: {
+    doc_score: number | null;
+    checklist_score: number | null;
+    verification_score: number | null;
+    accountant_review_score: number | null;
+  } | null;
+}>("/client/tasks/");
 export const fetchClientDocuments  = () => get<ClientDocument[]>("/client/documents/");
 export const updateClientTask      = (id: number, data: { status: string; meta_value?: string }) => patch<ChecklistItem>(`/client/tasks/${id}/`, data);
 

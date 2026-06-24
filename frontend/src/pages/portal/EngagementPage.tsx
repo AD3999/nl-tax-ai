@@ -307,6 +307,17 @@ const CHECKLIST_STATUS_OPTIONS: Array<{ value: string; labelKey: string }> = [
   { value: "waived",         labelKey: "status_waived"         },
 ];
 
+// Mirrors backend ChecklistItemDetailView.ACCOUNTANT_ALLOWED_TRANSITIONS
+const CHECKLIST_ALLOWED_TRANSITIONS: Record<string, string[]> = {
+  todo:           ["todo", "waiting_client", "waived"],
+  waiting_client: ["waiting_client", "waived"],
+  uploaded:       ["uploaded", "needs_review", "accepted", "rejected", "waived"],
+  needs_review:   ["needs_review", "accepted", "rejected", "waived"],
+  accepted:       ["accepted", "waived"],
+  rejected:       ["rejected", "todo"],
+  waived:         ["waived", "todo"],
+};
+
 const CHECKLIST_STATUS_COLOR: Record<string, string> = {
   todo: "var(--ink-4)", waiting_client: "var(--warn)",
   uploaded: "var(--ok)", needs_review: "var(--warn)",
@@ -482,7 +493,7 @@ export default function EngagementPage() {
     try {
       await updateAction(actionId, { status: newStatus });
       showToast(tx.action_updated, "success");
-      if (newStatus === "done" && engagement) {
+      if (engagement) {
         try {
           const newReadiness = await recalculateReadiness(engagement.id);
           setEngagement(prev => prev ? { ...prev, readiness_score: newReadiness.score } : prev);
@@ -969,9 +980,11 @@ export default function EngagementPage() {
                         className="tw-input"
                         style={{ fontSize: 12, padding: "2px 6px", height: 28 }}
                       >
-                        {CHECKLIST_STATUS_OPTIONS.map(opt => (
-                          <option key={opt.value} value={opt.value}>{tx[opt.labelKey]}</option>
-                        ))}
+                        {CHECKLIST_STATUS_OPTIONS
+                          .filter(opt => (CHECKLIST_ALLOWED_TRANSITIONS[item.status] ?? [item.status]).includes(opt.value))
+                          .map(opt => (
+                            <option key={opt.value} value={opt.value}>{tx[opt.labelKey]}</option>
+                          ))}
                       </select>
                     </div>
                   </div>
