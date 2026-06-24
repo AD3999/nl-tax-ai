@@ -1,7 +1,41 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 25 Jun 2026 — QA full audit v2: all 20 fixes complete (commit 77fc811 → merged a70b6c1)
+> Last updated: 25 Jun 2026 — Deployment fixed: Railway Dockerfile build working, app live at taxwijs.nl (commit a04fe95 + 460110b)
+
+---
+
+## Session — 25 Jun 2026 · Deployment Fixed ✅ Railway app live at taxwijs.nl
+
+### Context
+After the QA sprint merge, Railway deployment was failing with `python3: command not found`.
+Root cause: Railway migrated to railpack, which detected `start.sh` at project root and chose
+"Shell" provider — skipping all Python installation.
+
+### What was fixed
+- Moved `start.sh` → `scripts/start.sh` (removes Shell provider trigger)
+- Added root `Dockerfile` (multi-stage: node:22-slim → python:3.12-slim) for full Python + Node build
+- Fixed `Dockerfile COPY start.sh` → `COPY scripts/start.sh ./start.sh` (after root `start.sh` removed)
+- Updated `railway.json` builder → `DOCKERFILE`, start command → `bash /app/start.sh`
+- Ran `purgeServiceCache` GraphQL mutation to clear Railway's stale railpack plan cache
+- Fixed migration drift: `portal/0015_fix_task_type_choices` (choices label mismatch in 0014)
+- Added Django Channels + Redis infrastructure (already merged in QA sprint)
+
+### Deployment verification
+- `taxwijs.nl/api/users/health/` → `{"status":"ok","vapid":{"vapid_configured":true,...}}` ✅
+- All 15 migrations applied in production ✅
+- `portal.0015_fix_task_type_choices... OK` ✅
+- Tax rules imported: 28 updated ✅
+- Gunicorn running on PORT=8080 ✅
+- Railway health check `/api/users/health/` → 200 ✅
+
+### Still pending (non-blocking)
+- `FILE_STORAGE_PROVIDER=local` warning — uploaded files are lost on redeploy; S3 needed for persistence
+- WebSocket notifications (channels/redis) — Redis env var `REDIS_URL` is provisioned but
+  channels may not connect without `daphne` or `ASGI_APPLICATION` being the start command
+- `railway.json` `NIXPACKS` builder is now overridden by `DOCKERFILE` setting
+
+**Commits:** `335fffc`, `e0671de`, `8b5efa1`, `a04fe95`, `460110b` → all on `master`
 
 ---
 
