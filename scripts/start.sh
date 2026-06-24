@@ -22,8 +22,8 @@ else:
     print('  tax_rules_2026.json not found — skipping')
 "
 
-echo "==> Starting daphne (ASGI) on port ${PORT:-8000}…"
-exec python3 -m daphne config.asgi:application \
-  --bind 0.0.0.0 \
+echo "==> Starting uvicorn (ASGI) on port ${PORT:-8000}…"
+exec python3 -m uvicorn config.asgi:application \
+  --host 0.0.0.0 \
   --port "${PORT:-8000}" \
-  --access-log -
+  --ws websockets
