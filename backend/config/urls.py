@@ -1,9 +1,8 @@
-import json
 from pathlib import Path
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include, re_path
-from django.http import HttpResponse, Http404, JsonResponse
+from django.http import HttpResponse, Http404
 from django.views.static import serve as _media_serve
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from config.serializers import EmailOrUsernameTokenSerializer
@@ -17,15 +16,8 @@ def spa_index(request):
         raise Http404("Frontend not built.")
     return HttpResponse(_FRONTEND_INDEX.read_bytes(), content_type="text/html; charset=utf-8")
 
-def debug_headers(request):
-    """Temporary: echo all headers seen by the backend (to debug Railway proxy)."""
-    headers = {k: v for k, v in request.META.items() if k.startswith("HTTP_")}
-    headers["REQUEST_METHOD"] = request.method
-    return JsonResponse(headers)
-
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/debug/headers/", debug_headers),   # TEMP: remove after WS debugging
     # JWT auth
     path("api/auth/token/", TokenObtainPairView.as_view(serializer_class=EmailOrUsernameTokenSerializer), name="token_obtain_pair"),
     path("api/auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

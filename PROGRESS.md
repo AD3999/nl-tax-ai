@@ -5710,3 +5710,45 @@ Added **Rule 7 — PORTAL TASK PROTOCOL**:
 - [x] Triggers: message received (both sides), document uploaded, approved, rejected, tasks generated, reminder sent
 - [x] Trilingual notification text (NL/EN/FA) for client-facing events
 - [x] TypeScript clean (0 errors)
+
+---
+
+### Session — 2026-06-25 — WebSocket Production Debug + ASGI Migration
+
+**Problem:** WebSocket connections (`wss://taxwijs.nl/ws/notifications/`) were not establishing in production. Three separate root causes identified and fixed.
+
+**Root cause 1 — Railway railpack cache (pre-session, resolved):**
+`start.sh` at repo root triggered railpack "Shell" provider detection, skipping Python installation → `python3: command not found`. Fix: `purgeServiceCache` GraphQL mutation + `railway.json` builder = `"DOCKERFILE"`.
+
+**Root cause 2 — SPA catch-all intercepting `/ws/` paths:**
+`urls.py` had `re_path(r"^(?!api/|admin/|media/).*$", spa_index)` which matched `/ws/notifications/` and returned `index.html` (HTTP 200). Fix: added `ws/` to exclusion group.
+
+**Root cause 3 — gunicorn WSGI cannot handle WebSocket:**
+`start.sh` was using `gunicorn config.wsgi:application`. WSGI is sync-only; WebSocket upgrades are silently downgraded to HTTP. Fix: switched to `uvicorn config.asgi:application --ws websockets`.
+
+**Diagnosis method:**
+1. Added temporary `GET /api/debug/headers/` endpoint — confirmed Railway-hikari forwards standard HTTP headers correctly.
+2. Used `websocket-client` Python library with HTTP CONNECT proxy (`127.0.0.1:12334`) — only way to reach Railway from this machine (direct TLS fails at network level).
+3. Confirmed 403 responses were from `NotificationConsumer.close(code=4001)` before `accept()` (no token) — uvicorn logs these as "connection rejected (403)".
+4. Registered test user `wstest2026@taxwijs.nl`, obtained JWT, retested → **101 Switching Protocols** confirmed.
+
+**Files changed:**
+- `scripts/start.sh` — switched from `gunicorn config.wsgi` to `uvicorn config.asgi:application --ws websockets`
+- `backend/config/urls.py` — SPA catch-all now excludes `ws/` prefix; temporary debug endpoint added then removed
+- `backend/requirements.txt` + `requirements.txt` — added `uvicorn[standard]>=0.29,<1.0` and `daphne>=4.1.0,<5.0`
+- `backend/apps/portal/migrations/0015_fix_task_type_choices.py` — AlterField to sync choices label + help_text drift from migration 0014
+
+**Verified working:**
+- [x] `uvicorn` starts and serves HTTP on port 8080 in Railway ✅
+- [x] All migrations applied including portal.0015 ✅
+- [x] Health check `GET /api/users/health/` returns 200 ✅
+- [x] WebSocket `wss://taxwijs.nl/ws/notifications/?token=<jwt>` → `101 Switching Protocols` ✅
+- [x] JWT authentication validated in `JwtAuthMiddleware` ✅
+- [x] Channel joins `notifications_<user_id>` group via Redis channel layer ✅
+- [x] Connection closes cleanly on `ws.close()` ✅
+- [x] Unauthenticated attempts close immediately (no token → `close(code=4001)` → HTTP 403) ✅
+
+**Still open:**
+- `FILE_STORAGE_PROVIDER=local` — uploaded client documents lost on redeploy; needs S3 config
+- Dual invitation model (`users.AccountantInvitation` + `portal.Invitation`) not consolidated
+- Portal `models have changes not in migration` warning (non-blocking, cosmetic drift only)
