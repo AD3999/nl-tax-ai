@@ -896,23 +896,118 @@ class ClientInvitationsView(APIView):
 
         all_invs = list(invs) + list(email_invs)
 
-        return Response([
+        result = [
             {
-                "id":           inv.id,
-                "firm_name":    inv.accountant.firm_name or inv.accountant.user.get_full_name() or inv.accountant.user.email,
+                "id":               inv.id,
+                "inv_type":         "accountant",
+                "firm_name":        inv.accountant.firm_name or inv.accountant.user.get_full_name() or inv.accountant.user.email,
                 "accountant_email": inv.accountant.user.email,
-                "message":      inv.message,
-                "status":       inv.status,
-                "created_at":   inv.created_at.date().isoformat(),
+                "message":          inv.message,
+                "status":           inv.status,
+                "created_at":       inv.created_at.date().isoformat(),
             }
             for inv in all_invs
-        ])
+        ]
+
+        # Also include pending portal invitations sent to this email
+        try:
+            from apps.portal.models import Invitation as PortalInvitation
+            portal_invs = PortalInvitation.objects.filter(
+                client_email__iexact=request.user.email,
+                status="pending",
+            ).select_related("sent_by").order_by("-created_at")
+            for inv in portal_invs:
+                acct = getattr(inv.sent_by, "accountant_profile", None)
+                firm = (acct.firm_name if acct else None) or inv.sent_by.get_full_name() or inv.sent_by.email
+                result.append({
+                    "id":               inv.id,
+                    "inv_type":         "portal",
+                    "firm_name":        firm,
+                    "accountant_email": inv.sent_by.email,
+                    "message":          inv.message,
+                    "status":           inv.status,
+                    "created_at":       inv.created_at.date().isoformat(),
+                    "token":            inv.token,
+                })
+        except Exception:
+            pass
+
+        result.sort(key=lambda x: x["created_at"], reverse=True)
+        return Response(result)
 
     def post(self, request, pk=None):
         from .models import AccountantInvitation, AccountantClient
         action = (request.data.get("action") or "").strip()
         if action not in ("accept", "decline"):
             return Response({"error": "action must be 'accept' or 'decline'."}, status=400)
+
+        inv_type = (request.data.get("inv_type") or "accountant").strip()
+
+        # Route portal invitations to the portal accept logic
+        if inv_type == "portal":
+            try:
+                from apps.portal.models import Invitation as PortalInvitation
+                from apps.portal.services.accountant_checklists import create_checklist_for_engagement
+                from apps.portal.models import AccountantClientProfile, TaxEngagement
+                inv = PortalInvitation.objects.select_related("sent_by").get(
+                    pk=pk, status="pending",
+                )
+            except Exception:
+                return Response({"error": "Invitation not found."}, status=404)
+
+            if inv.client_email.lower() != request.user.email.lower():
+                return Response({"error": "Not your invitation."}, status=403)
+
+            if action == "decline":
+                inv.status = "declined"
+                inv.save(update_fields=["status"])
+                return Response({"status": "declined"})
+
+            # Accept
+            from django.utils import timezone
+            if inv.expires_at <= timezone.now():
+                inv.status = "expired"; inv.save(update_fields=["status"])
+                return Response({"error": "This invitation has expired."}, status=400)
+
+            inv.client_user = request.user; inv.status = "accepted"; inv.accepted_at = timezone.now()
+            inv.save(update_fields=["client_user", "status", "accepted_at"])
+
+            profile = AccountantClientProfile.objects.filter(
+                accountant_user=inv.sent_by, email__iexact=inv.client_email
+            ).first()
+            if not profile:
+                profile = AccountantClientProfile.objects.create(
+                    accountant_user=inv.sent_by, client_user=request.user,
+                    email=request.user.email,
+                    first_name=getattr(request.user, "first_name", ""),
+                    last_name=getattr(request.user, "last_name", ""),
+                    status="active", tax_year=inv.tax_year,
+                )
+            else:
+                profile.client_user = request.user; profile.status = "active"
+                profile.save(update_fields=["client_user", "status", "updated_at"])
+
+            try:
+                acc_profile = AccountantProfile.objects.get(user=inv.sent_by)
+                AccountantClient.objects.get_or_create(
+                    accountant=acc_profile, client_user=request.user,
+                    defaults={"status": "active"},
+                )
+            except Exception:
+                pass
+
+            engagement = TaxEngagement.objects.filter(client_profile=profile).order_by("-created_at").first()
+            if not engagement:
+                engagement = TaxEngagement.objects.create(
+                    accountant=inv.sent_by, client_profile=profile,
+                    tax_year=inv.tax_year, status="collecting",
+                )
+                try:
+                    create_checklist_for_engagement(engagement)
+                except Exception:
+                    pass
+            inv.engagement = engagement; inv.save(update_fields=["engagement"])
+            return Response({"status": "accepted"})
 
         try:
             inv = AccountantInvitation.objects.select_related("accountant__user").get(

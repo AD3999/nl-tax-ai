@@ -688,6 +688,7 @@ class Invitation(models.Model):
         ("accepted", "Accepted"),
         ("expired", "Expired"),
         ("cancelled", "Cancelled"),
+        ("declined", "Declined"),
     ]
 
     sent_by = models.ForeignKey(
@@ -695,6 +696,7 @@ class Invitation(models.Model):
     )
     client_email = models.EmailField()
     client_name = models.CharField(max_length=200, blank=True)
+    message = models.TextField(blank=True, default="")
     client_user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
         null=True, blank=True, related_name="invitations_received"

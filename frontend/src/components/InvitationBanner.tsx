@@ -75,17 +75,15 @@ export default function InvitationBanner() {
       .catch(() => null);
   }, []);
 
-  async function handle(id: number, action: "accept" | "decline") {
-    setResponding(id);
+  async function handle(invItem: ClientInvitation, action: "accept" | "decline") {
+    setResponding(invItem.id);
     try {
-      await respondToInvitation(id, action);
+      await respondToInvitation(invItem, action);
       setInvitations((prev) =>
-        prev.map((inv) => (inv.id === id ? { ...inv, status: action === "accept" ? "accepted" : "declined" } : inv))
+        prev.map((i) => (i.id === invItem.id ? { ...i, status: action === "accept" ? "accepted" : "declined" } : i))
       );
-      const inv = invitations.find((i) => i.id === id);
-      if (action === "accept" && inv) {
-        showToast(`${tx.accepted} ${inv.firm_name} ✓`, "success");
-        // Refresh connected accountants list after acceptance
+      if (action === "accept") {
+        showToast(`${tx.accepted} ${invItem.firm_name} ✓`, "success");
         fetch(`${apiBase}/users/client/my-accountant/`, { headers: authHeader() })
           .then(r => r.ok ? r.json() as Promise<ConnectedAccountant[]> : [])
           .then(setAccountants)
@@ -205,14 +203,14 @@ export default function InvitationBanner() {
             <button
               className="btn btn-accent btn-sm"
               disabled={responding === inv.id}
-              onClick={() => handle(inv.id, "accept")}
+              onClick={() => handle(inv, "accept")}
             >
               {responding === inv.id ? "…" : tx.accept}
             </button>
             <button
               className="btn btn-ghost btn-sm"
               disabled={responding === inv.id}
-              onClick={() => handle(inv.id, "decline")}
+              onClick={() => handle(inv, "decline")}
               style={{ color: "var(--ink-3)" }}
             >
               {tx.decline}

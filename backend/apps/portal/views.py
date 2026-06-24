@@ -1866,11 +1866,13 @@ class PortalInvitationSendView(APIView):
             return Response({"detail": "email is required."}, status=400)
         if Invitation.objects.filter(sent_by=request.user, client_email__iexact=email, status="pending").exists():
             return Response({"detail": "A pending invitation already exists for this email."}, status=400)
+        message    = (request.data.get("message", "") or "").strip()
         token      = _secrets.token_urlsafe(48)
         expires_at = timezone.now() + _dt.timedelta(days=7)
         inv = Invitation.objects.create(
             sent_by=request.user, client_email=email, client_name=client_name,
-            tax_year=tax_year, token=token, expires_at=expires_at, status="pending",
+            message=message, tax_year=tax_year, token=token,
+            expires_at=expires_at, status="pending",
         )
         profile, _ = AccountantClientProfile.objects.get_or_create(
             accountant_user=request.user, email__iexact=email,
@@ -1937,3 +1939,48 @@ class PortalInvitationAcceptView(APIView):
         _audit(request, "portal_invitation_accepted", "Invitation", inv.id, client_profile=profile, engagement=engagement)
         return Response({"detail": "Invitation accepted. Your tax portal is ready.",
                          "profile_id": profile.id, "engagement_id": engagement.id, "redirect_to": "/client"})
+
+
+class PortalInvitationListView(APIView):
+    """
+    GET /api/portal/invitations/sent/
+    Returns all invitations sent by this accountant, newest first.
+    Format is compatible with the frontend SentInvitation type.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        if not _is_portal_user(request.user):
+            return Response({"detail": "Accountant access required."}, status=403)
+        from .models import Invitation
+        invs = Invitation.objects.filter(sent_by=request.user).order_by("-created_at")
+        return Response([
+            {
+                "id":            inv.id,
+                "invited_email": inv.client_email,
+                "client_name":   inv.client_name or None,
+                "status":        inv.status,
+                "message":       inv.message,
+                "created_at":    inv.created_at.date().isoformat(),
+                "expires_at":    inv.expires_at.isoformat() if inv.expires_at else None,
+                "accept_url":    f"/portal/accept-invitation?token={inv.token}" if inv.status == "pending" else None,
+            }
+            for inv in invs
+        ])
+
+
+class PortalInvitationCancelView(APIView):
+    """
+    DELETE /api/portal/invitations/<pk>/cancel/
+    Cancels a pending invitation sent by this accountant.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, pk=None):
+        if not _is_portal_user(request.user):
+            return Response({"detail": "Accountant access required."}, status=403)
+        from .models import Invitation
+        updated = Invitation.objects.filter(pk=pk, sent_by=request.user, status="pending").update(status="cancelled")
+        if not updated:
+            return Response({"detail": "Invitation not found or already closed."}, status=404)
+        return Response(status=204)

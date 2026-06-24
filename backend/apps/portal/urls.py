@@ -18,6 +18,7 @@ from .views import (
     AccountantInboxView,
     EngagementMessagesView, ClientMessagesView, ClientMessageUnreadCountView,
     PortalInvitationSendView, PortalInvitationAcceptView,
+    PortalInvitationListView, PortalInvitationCancelView,
 )
 
 urlpatterns = [
@@ -73,6 +74,8 @@ urlpatterns = [
     path("client/messages/unread-count/",  ClientMessageUnreadCountView.as_view(),      name="portal-client-messages-unread"),
 
     # ── Portal invitations (token-based) ───────────────────────────────────────
-    path("invitations/send/",   PortalInvitationSendView.as_view(),   name="portal-inv-send"),
-    path("invitations/accept/", PortalInvitationAcceptView.as_view(),  name="portal-inv-accept"),
+    path("invitations/send/",           PortalInvitationSendView.as_view(),    name="portal-inv-send"),
+    path("invitations/accept/",         PortalInvitationAcceptView.as_view(),  name="portal-inv-accept"),
+    path("invitations/sent/",           PortalInvitationListView.as_view(),    name="portal-inv-list"),
+    path("invitations/<int:pk>/cancel/",PortalInvitationCancelView.as_view(),  name="portal-inv-cancel"),
 ]

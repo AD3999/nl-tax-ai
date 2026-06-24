@@ -665,9 +665,10 @@ export default function AccountantPortalPage() {
                   {invitations.map(inv => {
                     const chip = STATUS_CHIP[inv.status] ?? STATUS_CHIP.pending;
                     const statusLabel = (tx as Record<string, string>)[`inv_status_${inv.status}`] ?? inv.status;
+                    const fullAcceptUrl = inv.accept_url ? `${window.location.origin}${inv.accept_url}` : null;
                     return (
                       <div key={inv.id} className="card" style={{ padding: "var(--sp-4)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-                        <div style={{ minWidth: 0 }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
                           <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {inv.client_name || inv.invited_email}
                           </div>
@@ -675,6 +676,24 @@ export default function AccountantPortalPage() {
                             <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>{inv.invited_email}</div>
                           )}
                           <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: 4 }}>{inv.created_at}</div>
+                          {inv.status === "pending" && fullAcceptUrl && (
+                            <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                              <span style={{ fontSize: 10, color: "var(--ink-4)", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 200 }}>
+                                {fullAcceptUrl}
+                              </span>
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                style={{ fontSize: 10, padding: "2px 8px", flexShrink: 0 }}
+                                onClick={() => {
+                                  navigator.clipboard.writeText(fullAcceptUrl).then(() =>
+                                    showToast(lang === "nl" ? "Link gekopieerd" : lang === "fa" ? "لینک کپی شد" : "Link copied", "success")
+                                  );
+                                }}
+                              >
+                                {lang === "nl" ? "Kopiëren" : lang === "fa" ? "کپی" : "Copy"}
+                              </button>
+                            </div>
+                          )}
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
                           <span style={{ padding: "3px 10px", borderRadius: 99, fontSize: 11, fontWeight: 600, background: chip.bg, color: chip.color }}>
