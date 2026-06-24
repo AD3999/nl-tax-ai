@@ -33,6 +33,6 @@ urlpatterns = [
     # Uses Django's built-in serve view (works in dev and prod; for prod at scale
     # replace FileSystemStorage with S3/Cloudinary and remove this line).
     re_path(r"^media/(?P<path>.*)$", _media_serve, {"document_root": settings.MEDIA_ROOT}),
-    # SPA catch-all — excludes api/, admin/, and media/ so those reach their own handlers
-    re_path(r"^(?!api/|admin/|media/).*$", spa_index),
+    # SPA catch-all — excludes api/, admin/, media/, and ws/ (WebSocket) paths
+    re_path(r"^(?!api/|admin/|media/|ws/).*$", spa_index),
 ]
