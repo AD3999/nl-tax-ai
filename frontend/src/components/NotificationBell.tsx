@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import {
-  getNotifications, getUnreadCount, markRead, markAllRead, clearNotification,
+  getNotifications, getUnreadCount, markRead, markAllRead,
   type AppNotification,
 } from "../api/notifications";
 

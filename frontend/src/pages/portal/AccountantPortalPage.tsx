@@ -15,6 +15,7 @@ import {
 import { useToast } from "../../context/ToastContext";
 import { ENGAGEMENT_TYPE_LABELS } from "../../lib/engagementTypes";
 import { createClient } from "../../api/portal/client";
+import type { ClientType } from "../../api/portal/types";
 
 const TX: Record<string, Record<string, string>> = {
   en: {
@@ -223,7 +224,7 @@ export default function AccountantPortalPage() {
 
   // Add client form state
   const [showAddClient, setShowAddClient] = useState(false);
-  const [addForm, setAddForm] = useState({ email: "", first_name: "", last_name: "", client_type: "other", preferred_language: "nl", notes: "" });
+  const [addForm, setAddForm] = useState<{ email: string; first_name: string; last_name: string; client_type: ClientType; preferred_language: "nl" | "en" | "fa"; notes: string }>({ email: "", first_name: "", last_name: "", client_type: "other", preferred_language: "nl", notes: "" });
   const [addSaving, setAddSaving] = useState(false);
 
   // Invitation form state
