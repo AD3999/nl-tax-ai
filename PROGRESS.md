@@ -1,7 +1,39 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 24 Jun 2026 — QA audit sprint complete (all 20 issues)
+> Last updated: 24 Jun 2026 — QA audit follow-up: regression fix + 5 remaining issues (commit 15df70e)
+
+---
+
+## Session — 24 Jun 2026 · QA Audit Follow-Up ✅ Complete (5 remaining issues + 1 regression)
+
+### Context
+Full code-level audit of `/home/diako/Downloads/taxwijs-qa-report.html` against actual source revealed:
+- 21 of 26 targeted issues were genuinely fixed in the prior sprint
+- 1 regression introduced: `validate_role` was too aggressive (only `"client"` allowed), silently breaking accountant self-registration
+- 3 partial fixes: readiness recalc missing on "dismiss", readiness breakdown using estimates, generic upload had no user-facing task picker
+
+**Branch:** `master` · **Commit:** `15df70e` · pushed to GitHub
+
+### What was fixed
+
+**Backend (Django/DRF):**
+- `RegisterSerializer.validate_role` now allows `("client", "accountant")` — blocks only `"admin"`. Previous fix was overly restrictive and broke the accountant sign-up flow entirely.
+- `ClientPortalTasksView` returns `readiness_components` object (`doc_score`, `checklist_score`, `verification_score`, `accountant_review_score`) from the latest `ReadinessSnapshot` on every tasks fetch.
+
+**Frontend (React/TypeScript):**
+- `EngagementPage`: readiness recalculates after both "Done" **and** "Dismissed" actions (was only "done").
+- `ClientPortalPage`: `readinessFactors` now reads real `ReadinessSnapshot` component scores via `rc.doc_score` etc.; old `Math.min(100, score * 1.1)` estimates kept only as fallback for new engagements with no snapshot yet.
+- `EngagementPage`: checklist status dropdown now filters options by `CHECKLIST_ALLOWED_TRANSITIONS` (mirrors backend state machine) — invalid status jumps impossible in UI.
+- `ClientDocumentsPage`: upload modal now lazily fetches open tasks and shows a "Link to task (optional)" dropdown (NL/EN/FA); selected `raw_id` passed as `checklistItemId` to trigger backend auto-link and checklist status update.
+- `api/portal/client.ts`: `fetchClientTasks` return type updated to include `readiness_components`.
+
+**Files changed:** 6 (`backend/apps/portal/views.py`, `backend/apps/users/serializers.py`, `frontend/src/api/portal/client.ts`, `frontend/src/pages/portal/ClientDocumentsPage.tsx`, `frontend/src/pages/portal/ClientPortalPage.tsx`, `frontend/src/pages/portal/EngagementPage.tsx`)
+
+### Still outstanding (strategic — no timeline)
+- WebSocket / Django Channels — still polling (15–30s); not in requirements.txt
+- Subscription plan feature gating — model exists, no enforcement code
+- Dual invitation models — `users.AccountantInvitation` + `portal.Invitation` not consolidated
 
 ---
 
