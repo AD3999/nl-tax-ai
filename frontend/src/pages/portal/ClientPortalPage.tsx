@@ -118,7 +118,8 @@ export default function ClientPortalPage() {
       ]);
       setProfile(p);
       setEngagement(e);
-      setTaskSummary(tasks as { tasks: PortalTask[]; total: number; completed: number; readiness_score: number });
+      const { tasks: rawTasks, ...tasksMeta } = tasks;
+      setTaskSummary({ ...tasksMeta, tasks: rawTasks as PortalTask[] });
       setLastUpdated(new Date());
       if (!silent) setError("");
     } catch (err) {
