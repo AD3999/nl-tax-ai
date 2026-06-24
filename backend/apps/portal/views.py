@@ -591,7 +591,16 @@ class ClientDocumentUploadView(APIView):
         except Exception as exc:
             return Response({"detail": f"Upload failed: {exc}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        # Auto-link to checklist item via stable_key if not already linked
+        # Auto-link: if no document_request supplied (generic upload page),
+        # try to find the single open DocumentRequest on this engagement.
+        if checklist_item_obj is None and not doc.document_request:
+            open_reqs = DocumentRequest.objects.filter(engagement=engagement, status="open")
+            if open_reqs.count() == 1:
+                dr = open_reqs.first()
+                doc.document_request = dr
+                doc.save(update_fields=["document_request"])
+
+        # Auto-link checklist item via shared stable_key with the document_request
         if checklist_item_obj is None and doc.document_request:
             stable_key = doc.document_request.stable_key
             if stable_key:

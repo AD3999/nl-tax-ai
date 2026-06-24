@@ -380,10 +380,10 @@ export default function ClientTasksPage() {
         fetchClientTasks(),
         fetchClientEngagement(),
       ]);
-      const enriched = ((result.tasks as Task[]) || []).map(t => ({
-        ...t,
-        raw_id: parseInt((t.id as string).replace("chk_", ""), 10),
-      }));
+      const enriched = ((result.tasks as Task[]) || []).map(t => {
+        const raw_id = parseInt((t.id as string).replace("chk_", ""), 10);
+        return { ...t, raw_id: isNaN(raw_id) ? 0 : raw_id };
+      }).filter(t => t.raw_id > 0);
       setTasks(enriched);
       setTotal(result.total);
       setCompleted(result.completed);
