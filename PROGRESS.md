@@ -1,7 +1,54 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 26 Jun 2026 — Two production bug fixes deployed (commits 8242b08, 62bd8ce)
+> Last updated: 27 Jun 2026 — QA audit v3: 10 fixes merged to master (commit 93730e1)
+
+---
+
+## Session — 27 Jun 2026 · QA Audit v3 — 10 Fixes ✅
+
+### Branch: `fix/qa-audit-v3` → merged to `master` (commit 93730e1)
+
+**C-1 — Email delivery in PortalInvitationSendView**
+- Added 3-language `send_mail()` call (NL/EN/FA) after invitation creation
+- Updated `settings.py` defaults: `EMAIL_BACKEND=console`, `EMAIL_HOST=smtp.sendgrid.net`, `EMAIL_HOST_USER=apikey`, `FRONTEND_URL=https://taxwijs.nl`
+- Created `backend/.env.example` documenting all required env vars
+
+**C-2 — Unify AccountantPortalPage to portal invitation system**
+- Added `sendPortalInvitation`, `fetchPortalInvitations`, `cancelPortalInvitation`, `PortalInvitation` interface to `api/portal/client.ts`
+- Removed old `api/invitations` import from `AccountantPortalPage.tsx`
+- Updated list view to return `client_email` instead of `invited_email`
+
+**C-3 — Copy invite link (already implemented; confirmed `accept_url` in list response)**
+
+**H-1 — Expand engagementStatus.ts**
+- Replaced single flat map with `ENGAGEMENT_STATUS_LABELS` + `CLIENT_STATUS_LABELS`
+- Added `getEngagementStatusLabel` and `getClientStatusLabel` typed helpers
+
+**H-2 — Fix ws.onmessage in NotificationBell**
+- Was: `return prev` (always no-op). Now: prepends new notification with deduplication
+
+**H-3 — Fix AccountantAccessApproveView `get_or_create(email__iexact)` pitfall**
+- Replaced unreliable `get_or_create` with explicit `filter(...).first()` + `create_user()`
+- Username uniqueness collision handled with suffix loop
+
+**M-1 — Allow admin to set initial plan on accountant approval**
+- POST `{"plan": "professional"}` on approval sets `user.plan` at approval time
+
+**M-2 — First/last name fields on accountant RegisterPage**
+- Added `acctFirstName`, `acctLastName` state + inputs; `full_name` no longer uses firm name
+
+**M-3 — Documents Ask AI appends missing document names**
+- `onClick` now builds context from `displayMissing.slice(0, 3)` titles
+
+**M-4 — Use typed status helpers in portal tables**
+- Clients table: `getClientStatusLabel`, Engagements table: `getEngagementStatusLabel`
+
+### Validation
+- `python3 manage.py check` → 0 issues ✅
+- `python3 manage.py migrate --check` → no unapplied migrations ✅
+- `npx tsc --noEmit` → 0 TypeScript errors ✅
+- Django shell: `EMAIL_BACKEND: console.EmailBackend`, `FRONTEND_URL: https://taxwijs.nl` ✅
 
 ---
 
