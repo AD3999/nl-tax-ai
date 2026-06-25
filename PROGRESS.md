@@ -1,7 +1,34 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 25 Jun 2026 — Deployment fixed: Railway Dockerfile build working, app live at taxwijs.nl (commit a04fe95 + 460110b)
+> Last updated: 26 Jun 2026 — Two production bug fixes deployed (commits 8242b08, 62bd8ce)
+
+---
+
+## Session — 26 Jun 2026 · Production Bug Fixes ✅
+
+### Fixes
+
+**1. UniqueViolation 500 on `GET /api/portal/client/profile/` (commit 8242b08)**
+
+Root cause: Two code paths could create `AccountantClientProfile(accountant_user=X, client_user=X)` (the self-service profile used by clients with no accountant). If one path ran before the other completed the lookup, a race / duplicate creation hit the `unique_together = [("accountant_user", "client_user")]` DB constraint.
+
+- `_get_or_create_self_service_profile()` in `portal/views.py`: replaced bare `objects.create()` with `objects.get_or_create()` keyed on `(accountant_user=user, client_user=user)`
+- `ClientInvitationsView.post()` in `users/views.py`: replaced filter-by-email + bare `create()` with `get_or_create()` keyed on `(accountant_user=inv.sent_by, client_user=request.user)` — the actual unique constraint fields. Old filter was `(accountant_user, email__iexact)` which could miss a self-service profile where email matches but client_user differs.
+
+**2. Migration drift warning removed (commit 62bd8ce)**
+
+`AccountantAction.Meta.constraints` had constraint name `"unique_action_stable_key_per_engagement"` but migration 0014 created it as `"unique_action_per_engagement_stable_key"`. Every deploy printed "portal models have changes not reflected in a migration". Fixed by aligning the model name to match the DB (no DB change needed).
+
+### Verification
+- `railway logs` after each deploy: `No migrations to apply.` — no migration drift warning ✅
+- Health: `taxwijs.nl/api/users/health/ → 200 OK` ✅
+- SPA: `taxwijs.nl/ → 200` ✅
+- uvicorn running, WebSocket operational ✅
+
+**Commits:** `8242b08` (UniqueViolation fix), `62bd8ce` (constraint name fix) on `master`
+
+---
 
 ---
 
