@@ -8,13 +8,13 @@ import {
   fetchClients, fetchEngagements, disconnectClient,
 } from "../../api/portal/client";
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
-import {
-  fetchSentInvitations, sendInvitation, cancelInvitation,
-  type SentInvitation,
-} from "../../api/invitations";
 import { useToast } from "../../context/ToastContext";
 import { ENGAGEMENT_TYPE_LABELS } from "../../lib/engagementTypes";
-import { getStatusLabel } from "../../lib/engagementStatus";
+import { getStatusLabel, getEngagementStatusLabel, getClientStatusLabel } from "../../lib/engagementStatus";
+import {
+  sendPortalInvitation, fetchPortalInvitations, cancelPortalInvitation,
+  type PortalInvitation,
+} from "../../api/portal/client";
 import { createClient } from "../../api/portal/client";
 import type { ClientType } from "../../api/portal/types";
 
@@ -218,7 +218,7 @@ export default function AccountantPortalPage() {
   const [tab, setTab] = useState<"clients" | "engagements" | "invitations">("clients");
   const [clients, setClients] = useState<ClientProfile[]>([]);
   const [engagements, setEngagements] = useState<TaxEngagement[]>([]);
-  const [invitations, setInvitations] = useState<SentInvitation[]>([]);
+  const [invitations, setInvitations] = useState<PortalInvitation[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -248,7 +248,7 @@ export default function AccountantPortalPage() {
   async function loadData(silent = false) {
     if (!silent) setLoadingData(true);
     try {
-      const [cls, engs, invs] = await Promise.all([fetchClients(), fetchEngagements(), fetchSentInvitations()]);
+      const [cls, engs, invs] = await Promise.all([fetchClients(), fetchEngagements(), fetchPortalInvitations()]);
       setClients(cls);
       setEngagements(engs);
       setInvitations(invs);
@@ -263,11 +263,29 @@ export default function AccountantPortalPage() {
     e.preventDefault();
     setInvSending(true);
     try {
-      const inv = await sendInvitation(invEmail.trim(), invMessage.trim());
-      setInvitations(prev => [inv, ...prev]);
+      const result = await sendPortalInvitation({
+        email:              invEmail.trim(),
+        message:            invMessage.trim(),
+        preferred_language: lang,
+      });
+      setInvitations(prev => [result, ...prev]);
       setInvEmail("");
       setInvMessage("");
       showToast(tx.invite_sent, "success");
+      if (result.accept_url && navigator.clipboard) {
+        try {
+          const fullUrl = `${window.location.origin}${result.accept_url}`;
+          await navigator.clipboard.writeText(fullUrl);
+          showToast(
+            lang === "nl"
+              ? "Uitnodigingslink gekopieerd! Een e-mail is verzonden."
+              : lang === "fa"
+              ? "لینک دعوت کپی شد! یک ایمیل ارسال شده است."
+              : "Invite link copied! An email has been sent.",
+            "success"
+          );
+        } catch { /* clipboard not available */ }
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to send invitation";
       showToast(msg.includes("already exists") ? tx.invite_error_dup : msg, "error");
@@ -304,8 +322,14 @@ export default function AccountantPortalPage() {
   }
 
   async function handleCancelInvitation(id: number) {
-    await cancelInvitation(id);
-    setInvitations(prev => prev.map(inv => inv.id === id ? { ...inv, status: "cancelled" as const } : inv));
+    try {
+      await cancelPortalInvitation(id);
+      setInvitations(prev =>
+        prev.map(inv => inv.id === id ? { ...inv, status: "cancelled" as const } : inv)
+      );
+    } catch {
+      showToast("Failed to cancel invitation.", "error");
+    }
   }
 
   const totalClients      = clients.length;
@@ -529,7 +553,7 @@ export default function AccountantPortalPage() {
                         </td>
                         <td style={{ padding: "var(--sp-3)", color: "var(--ink-3)" }}>{c.preferred_language.toUpperCase()}</td>
                         <td style={{ padding: "var(--sp-3)" }}>
-                          <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[c.status] || "var(--ink-3)" }}>{getStatusLabel(c.status, lang)}</span>
+                          <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[c.status] || "var(--ink-3)" }}>{getClientStatusLabel(c.status, lang)}</span>
                         </td>
                         <td style={{ padding: "var(--sp-3)", textAlign: "center" }}>
                           {!isDeactivated && c.latest_readiness !== null ? (
@@ -595,7 +619,7 @@ export default function AccountantPortalPage() {
                         <span className="pill" style={{ fontSize: "var(--text-2xs)" }}>{ENGAGEMENT_TYPE_LABELS[eng.engagement_type] ?? eng.engagement_type}</span>
                       </td>
                       <td style={{ padding: "var(--sp-3)" }}>
-                        <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[eng.status] || "var(--ink-3)" }}>{getStatusLabel(eng.status, lang)}</span>
+                        <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[eng.status] || "var(--ink-3)" }}>{getEngagementStatusLabel(eng.status, lang)}</span>
                       </td>
                       <td style={{ padding: "var(--sp-3)", textAlign: "center" }}>
                         <span style={{ fontWeight: 600, color: eng.readiness_score >= 85 ? "var(--ok)" : eng.readiness_score >= 50 ? "var(--warn)" : "var(--danger)" }}>
@@ -670,10 +694,10 @@ export default function AccountantPortalPage() {
                       <div key={inv.id} className="card" style={{ padding: "var(--sp-4)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
                         <div style={{ minWidth: 0, flex: 1 }}>
                           <div style={{ fontWeight: 600, fontSize: "var(--text-sm)", color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                            {inv.client_name || inv.invited_email}
+                            {inv.client_name || inv.client_email}
                           </div>
                           {inv.client_name && (
-                            <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>{inv.invited_email}</div>
+                            <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>{inv.client_email}</div>
                           )}
                           <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: 4 }}>{inv.created_at}</div>
                           {inv.status === "pending" && fullAcceptUrl && (

@@ -85,6 +85,8 @@ export default function RegisterPage() {
   const [password,   setPassword]   = useState("");
   const [userType,   setUserType]   = useState<UTK>("zzp");
   const [firmName,   setFirmName]   = useState("");
+  const [acctFirstName, setAcctFirstName] = useState("");
+  const [acctLastName,  setAcctLastName]  = useState("");
   const [kvkNumber,  setKvkNumber]  = useState("");
   const [error,          setError]          = useState("");
   const [loading,        setLoading]        = useState(false);
@@ -139,11 +141,12 @@ export default function RegisterPage() {
     try {
       if (isAccountant) {
         // Accountant self-registration is blocked — use request-access flow instead
+        const fullName = `${acctFirstName.trim()} ${acctLastName.trim()}`.trim();
         await requestAccountantAccess({
           email,
-          full_name: firmName || email,
-          firm_name: firmName,
-          kvk_number: kvkNumber,
+          full_name:   fullName || email,
+          firm_name:   firmName,
+          kvk_number:  kvkNumber,
           designation: "other",
         });
         const msg = lang === "nl"
@@ -152,6 +155,8 @@ export default function RegisterPage() {
           ? "درخواست شما دریافت شد! پس از تأیید حساب به شما اطلاع داده خواهد شد."
           : "Your request has been received! You will be notified once your account is approved.";
         setSuccessMessage(msg);
+        setAcctFirstName("");
+        setAcctLastName("");
         showToast(msg, "success");
         return;
       }
@@ -360,6 +365,34 @@ export default function RegisterPage() {
                       {lang === "nl" ? "Kantoorgegevens (optioneel)" : lang === "fa" ? "اطلاعات شرکت (اختیاری)" : "Firm details (optional)"}
                     </div>
                     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                      <div>
+                        <label className="tw-label">
+                          {lang === "nl" ? "Voornaam *" : lang === "fa" ? "نام *" : "First name *"}
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          className="tw-input"
+                          style={{ width: "100%", fontSize: 16 }}
+                          value={acctFirstName}
+                          onChange={e => setAcctFirstName(e.target.value)}
+                          placeholder={lang === "nl" ? "Uw voornaam" : lang === "fa" ? "نام شما" : "Your first name"}
+                        />
+                      </div>
+                      <div>
+                        <label className="tw-label">
+                          {lang === "nl" ? "Achternaam *" : lang === "fa" ? "نام خانوادگی *" : "Last name *"}
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          className="tw-input"
+                          style={{ width: "100%", fontSize: 16 }}
+                          value={acctLastName}
+                          onChange={e => setAcctLastName(e.target.value)}
+                          placeholder={lang === "nl" ? "Uw achternaam" : lang === "fa" ? "نام خانوادگی شما" : "Your last name"}
+                        />
+                      </div>
                       <div>
                         <label htmlFor="firm-name" className="tw-label">
                           {lang === "nl" ? "Kантoor-/bedrijfsnaam" : lang === "fa" ? "نام شرکت یا دفتر" : "Firm / practice name"}

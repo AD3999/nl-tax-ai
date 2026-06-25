@@ -218,7 +218,7 @@ CELERY_BEAT_SCHEDULE = {
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY", default="")
 STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", default="")
 STRIPE_PRICE_ID = env("STRIPE_PRICE_ID", default="")   # monthly premium price ID
-FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:5173")
+FRONTEND_URL = env("FRONTEND_URL", default="https://taxwijs.nl")
 
 # ── Chat limits ───────────────────────────────────────────────────────────────
 FREE_DAILY_LIMIT  = env.int("FREE_DAILY_LIMIT",  default=10)   # free accounts: 10 AI messages/day
@@ -233,13 +233,13 @@ GOOGLE_CALENDAR_REDIRECT_URI = env(
     default="http://localhost:8000/api/users/google-calendar/callback/",
 )
 
-EMAIL_BACKEND     = env("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")
-EMAIL_HOST        = env("EMAIL_HOST", default="")
-EMAIL_PORT        = env.int("EMAIL_PORT", default=587)
-EMAIL_HOST_USER   = env("EMAIL_HOST_USER", default="")
+EMAIL_BACKEND       = env("EMAIL_BACKEND",       default="django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST          = env("EMAIL_HOST",          default="smtp.sendgrid.net")
+EMAIL_PORT          = env.int("EMAIL_PORT",      default=587)
+EMAIL_HOST_USER     = env("EMAIL_HOST_USER",     default="apikey")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
-EMAIL_USE_TLS     = env.bool("EMAIL_USE_TLS", default=True)
-DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="TaxWijs <noreply@taxwijs.nl>")
+EMAIL_USE_TLS       = env.bool("EMAIL_USE_TLS", default=True)
+DEFAULT_FROM_EMAIL  = env("DEFAULT_FROM_EMAIL",  default="TaxWijs <noreply@taxwijs.nl>")
 
 
 # ── Internationalisation ──────────────────────────────────────────────────────

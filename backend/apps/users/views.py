@@ -1497,14 +1497,36 @@ class AccountantAccessApproveView(APIView):
         req = get_object_or_404(AccountantAccessRequest, pk=pk)
         if req.status != "pending":
             return Response({"detail": f"Request is already {req.status}."}, status=status.HTTP_400_BAD_REQUEST)
-        user, created = User.objects.get_or_create(
-            email__iexact=req.email,
-            defaults={"username": req.email, "email": req.email,
-                      "first_name": req.full_name.split(" ")[0],
-                      "last_name":  " ".join(req.full_name.split(" ")[1:])},
-        )
+        # Explicit filter-then-create to avoid __iexact get_or_create pitfalls
+        user = User.objects.filter(email__iexact=req.email).first()
+        created = False
+        if not user:
+            name_parts = req.full_name.strip().split(" ", 1) if req.full_name.strip() else ["", ""]
+            base_username = req.email
+            username = base_username
+            suffix = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_username}_{suffix}"
+                suffix += 1
+            user = User.objects.create_user(
+                email      = req.email,
+                username   = username,
+                first_name = name_parts[0],
+                last_name  = name_parts[1] if len(name_parts) > 1 else "",
+                password   = None,
+            )
+            created = True
+
         user.role = "accountant"
-        user.save(update_fields=["role"])
+
+        # Allow admin to set an initial plan at approval time
+        plan_choices = {"free", "professional", "firm"}
+        initial_plan = (request.data.get("plan", "") or "").strip().lower()
+        if initial_plan and initial_plan in plan_choices:
+            user.plan = initial_plan
+            user.save(update_fields=["role", "plan"])
+        else:
+            user.save(update_fields=["role"])
         AccountantProfile.objects.get_or_create(
             user=user,
             defaults={"firm_name": req.firm_name, "kvk_number": req.kvk_number,
