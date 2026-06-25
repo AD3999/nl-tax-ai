@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useMobile } from "../../hooks/useMobile";
 import {
-  fetchClients, fetchEngagements, disconnectClient,
+  fetchClients, fetchEngagements, disconnectClient, reactivateClient,
 } from "../../api/portal/client";
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
 import { useToast } from "../../context/ToastContext";
@@ -538,9 +538,16 @@ export default function AccountantPortalPage() {
                   {clients.map(c => {
                     const isDeactivated = c.status === "deactivated";
                     return (
-                      <tr key={c.id} style={{ borderBottom: "1px solid var(--hairline)", opacity: isDeactivated ? 0.65 : 1 }}>
+                      <tr key={c.id} style={{ borderBottom: "1px solid var(--hairline)", opacity: isDeactivated ? 0.5 : 1, background: isDeactivated ? "var(--amber-s, #fff8e1)" : undefined, transition: "opacity 0.3s, background 0.3s" }}>
                         <td style={{ padding: "var(--sp-3)", fontWeight: 500 }}>
-                          <div style={{ color: "var(--ink)" }}>{c.display_name}</div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ color: "var(--ink)" }}>{c.display_name}</span>
+                            {isDeactivated && (
+                              <span style={{ fontSize: 10, fontWeight: 700, color: "var(--amber, #d97706)", background: "var(--amber-s, #fff8e1)", border: "1px solid var(--amber-b, #f0c040)", padding: "1px 6px", borderRadius: 99, textTransform: "uppercase" }}>
+                                {lang === "nl" ? "Losgekoppeld" : lang === "fa" ? "قطع شده" : "Disconnected"}
+                              </span>
+                            )}
+                          </div>
                           <div style={{ color: "var(--ink-4)", fontSize: "var(--text-xs)" }}>{c.email}</div>
                           {isDeactivated && c.days_until_deletion !== null && (
                             <div style={{ color: "var(--warn-text, #7a5a00)", fontSize: "var(--text-2xs)", marginTop: 2 }}>
@@ -571,7 +578,7 @@ export default function AccountantPortalPage() {
                         <td style={{ padding: "var(--sp-3)" }}>
                           <div style={{ display: "flex", gap: "var(--sp-2)" }}>
                             <Link to={`/accountant/clients/${c.id}`} className="btn btn-ghost btn-sm">{tx.view_client} →</Link>
-                            {!isDeactivated && (
+                            {!isDeactivated ? (
                               <button
                                 className="btn btn-ghost btn-sm"
                                 style={{ color: "var(--warn-text, #7a5a00)", display: "inline-flex", alignItems: "center" }}
@@ -582,6 +589,24 @@ export default function AccountantPortalPage() {
                                   setClients(prev => prev.map(x => x.id === c.id ? updated : x));
                                 }}
                               ><X size={13} /></button>
+                            ) : (
+                              <button
+                                className="btn btn-accent btn-sm"
+                                style={{ fontSize: "var(--text-2xs)" }}
+                                onClick={async () => {
+                                  try {
+                                    await reactivateClient(c.id);
+                                    setClients(prev =>
+                                      prev.map(x => x.id === c.id
+                                        ? { ...x, status: "active", deactivated_at: null, scheduled_deletion_at: null }
+                                        : x
+                                      )
+                                    );
+                                  } catch {
+                                    // handled by detail page
+                                  }
+                                }}
+                              >Reactivate</button>
                             )}
                           </div>
                         </td>

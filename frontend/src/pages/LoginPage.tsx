@@ -236,7 +236,12 @@ export default function LoginPage() {
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--sp-2)" }}>
                   <label htmlFor="login-password" className="tw-label" style={{ marginBottom: 0 }}>{t("auth.password")}</label>
-                  <span role="button" tabIndex={0} style={{ fontSize: "var(--text-xs)", color: "var(--sage-700)", cursor: "pointer" }}>
+                  <span
+                    role="button" tabIndex={0}
+                    style={{ fontSize: "var(--text-xs)", color: "var(--blue)", cursor: "pointer", textDecoration: "underline" }}
+                    onClick={() => navigate("/forgot-password")}
+                    onKeyDown={e => e.key === "Enter" && navigate("/forgot-password")}
+                  >
                     {lang === "nl" ? "Wachtwoord vergeten?" : lang === "fa" ? "رمز فراموش کردید؟" : "Forgot password?"}
                   </span>
                 </div>
@@ -259,6 +264,18 @@ export default function LoginPage() {
                   : <>{t("nav.login")} <Icon.arrow /></>
                 }
               </button>
+              <p style={{ textAlign: "center", fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: "var(--sp-3)" }}>
+                <span
+                  role="button" tabIndex={0}
+                  style={{ color: "var(--blue)", cursor: "pointer" }}
+                  onClick={() => navigate("/forgot-password")}
+                  onKeyDown={e => e.key === "Enter" && navigate("/forgot-password")}
+                >
+                  {lang === "nl" ? "Wachtwoord vergeten?"
+                   : lang === "fa" ? "رمز عبور را فراموش کرده‌اید؟"
+                   : "Forgot your password?"}
+                </span>
+              </p>
             </form>
 
             <p style={{ marginTop: 22, fontSize: 13, color: "var(--ink-3)" }}>

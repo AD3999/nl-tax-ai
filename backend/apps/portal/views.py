@@ -29,6 +29,7 @@ from .models import (
     ChecklistItem, AccountantAction, PortalAuditLog,
     ReminderLog, PortalMessage,
 )
+from apps.users.models import User
 from apps.users.push_utils import send_push_notification
 from apps.users.notification_utils import create_notification
 from apps.portal.services.tax_constants import (
@@ -95,6 +96,11 @@ def _can_access_client(user, client_profile):
 
 def _can_access_engagement(user, engagement):
     return _can_access_client(user, engagement.client_profile)
+
+
+def _check_client_active(client_profile) -> bool:
+    """Returns True if the client is in an active (non-disconnected) state."""
+    return client_profile.status not in ("deactivated",)
 
 
 # ── Client Profile CRUD ───────────────────────────────────────────────────────
@@ -290,9 +296,35 @@ class AccountantClientReactivateView(APIView):
         _reactivate_client_link(profile)
         _audit(request, "client_reactivated", "AccountantClientProfile", profile.id, client_profile=profile)
 
-        return Response(
-            AccountantClientProfileSerializer(profile, context={"request": request}).data
-        )
+        # ── Notify client of reactivation + push via WS ────────────────────
+        if profile.client_user_id:
+            lang = profile.preferred_language or "nl"
+            TITLES = {
+                "nl": "Uw accountantkoppeling is hersteld",
+                "en": "Your accountant connection has been restored",
+                "fa": "اتصال شما به مشاور بازگردانده شد",
+            }
+            BODIES = {
+                "nl": "Uw account is opnieuw gekoppeld aan uw accountant. U heeft weer volledig toegang tot uw portaal.",
+                "en": "Your account has been reconnected to your accountant. You have full access to your portal again.",
+                "fa": "حساب شما دوباره به مشاور مالیاتی متصل شده است. شما دوباره دسترسی کامل به پورتال دارید.",
+            }
+            create_notification(
+                user       = profile.client_user,
+                notif_type = "status_update",
+                title      = TITLES.get(lang, TITLES["en"]),
+                body       = BODIES.get(lang, BODIES["en"]),
+                action_url = "/client",
+                metadata   = {"event": "client_reactivated"},
+            )
+        # ── End reactivation notification ─────────────────────────────────
+
+        return Response({
+            "detail":                "Client reactivated successfully.",
+            "status":                profile.status,
+            "deactivated_at":        None,
+            "scheduled_deletion_at": None,
+        })
 
 
 class ClientSelfDisconnectView(APIView):
@@ -392,6 +424,11 @@ class EngagementDetailView(APIView):
         eng, err = self._get_engagement(request, pk)
         if err:
             return err
+        if not _check_client_active(eng.client_profile):
+            return Response(
+                {"detail": "This client is disconnected. Reactivate the client to make changes."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         serializer = TaxEngagementSerializer(
             eng, data=request.data, partial=True, context={"request": request}
         )
@@ -412,20 +449,45 @@ class EngagementDetailView(APIView):
                client_profile=eng.client_profile, engagement=eng)
 
         if eng.status == "ready_to_file" and eng.client_profile.client_user_id:
-            lang = eng.client_profile.preferred_language or "nl"
-            TITLES = {
-                "nl": "Uw aangifte is klaar voor indiening",
-                "en": "Your tax return is ready to file",
-                "fa": "اظهارنامه مالیاتی شما آماده ارسال است",
+            client = eng.client_profile.client_user
+            lang   = eng.client_profile.preferred_language or "nl"
+            accountant_name = eng.accountant.get_full_name() or eng.accountant.email
+
+            NOTIF_TITLES = {
+                "nl": "Uw aangifte is klaar voor indiening! 🎉",
+                "en": "Your tax return is ready to file! 🎉",
+                "fa": "اظهارنامه مالیاتی شما آماده ارسال است! 🎉",
             }
+            NOTIF_BODIES = {
+                "nl": f"Uw accountant {accountant_name} heeft uw belastingaangifte {eng.tax_year} goedgekeurd. Bekijk de volgende stappen in uw portaal.",
+                "en": f"Your accountant {accountant_name} has approved your {eng.tax_year} tax return. See next steps in your portal.",
+                "fa": f"مشاور مالیاتی شما {accountant_name} اظهارنامه مالیاتی {eng.tax_year} شما را تأیید کرده است. مراحل بعدی را در پورتال ببینید.",
+            }
+            action_url = f"/client?tab=overview&engagement_id={eng.id}&ready=1"
+
             create_notification(
-                user=eng.client_profile.client_user,
-                notif_type="engagement_ready",
-                title=TITLES.get(lang, TITLES["en"]),
-                body="",
-                action_url="/client",
-                metadata={"engagement_id": eng.id},
+                user        = client,
+                notif_type  = "engagement_ready",
+                title       = NOTIF_TITLES.get(lang, NOTIF_TITLES["en"]),
+                body        = NOTIF_BODIES.get(lang, NOTIF_BODIES["en"]),
+                action_url  = action_url,
+                metadata    = {"engagement_id": eng.id, "tax_year": eng.tax_year},
             )
+
+            GUIDANCE = {
+                "nl": f"📋 **Uw belastingaangifte {eng.tax_year} is klaar voor indiening**\n\nGoed nieuws! Uw accountant {accountant_name} heeft alles gecontroleerd en uw aangifte goedgekeurd.\n\n**Wat gebeurt er nu?**\n\n1. **Uw accountant dient de aangifte in** bij de Belastingdienst namens u. U hoeft zelf niets te doen bij de Belastingdienst.\n\n2. **Verwerktijd**: De Belastingdienst verwerkt aangiften doorgaans binnen 4–6 weken.\n\n3. **Belastingteruggave of -betaling**: Controleer uw DigiD-inbox op MijnBelastingdienst.nl.\n\n4. **Vragen?**: Stuur een bericht aan uw accountant via dit portaal.\n\n5. **Documenten bewaren**: Bewaar al uw belastingdocumenten minimaal 5 jaar.\n\nMet vriendelijke groet,\n{accountant_name} via TaxWijs",
+                "en": f"📋 **Your {eng.tax_year} tax return is ready to file**\n\nGreat news! Your accountant {accountant_name} has reviewed everything and approved your tax return.\n\n**What happens next?**\n\n1. **Your accountant files your return** with the Dutch Tax Authority (Belastingdienst) on your behalf.\n\n2. **Processing time**: The Belastingdienst typically processes returns within 4–6 weeks.\n\n3. **Tax refund or payment**: Check your DigiD inbox on MijnBelastingdienst.nl.\n\n4. **Questions?**: Send a message to your accountant through this portal.\n\n5. **Keep your documents**: Retain all your tax documents for at least 5 years.\n\nKind regards,\n{accountant_name} via TaxWijs",
+                "fa": f"📋 **اظهارنامه مالیاتی {eng.tax_year} شما آماده ارسال است**\n\nاخبار خوب! مشاور مالیاتی شما {accountant_name} همه چیز را بررسی کرده است.\n\n**مراحل بعدی:**\n\n1. **مشاور شما اظهارنامه را ارسال می‌کند** به سازمان مالیاتی هلند (Belastingdienst) از طرف شما.\n\n2. **زمان پردازش**: Belastingdienst معمولاً اظهارنامه‌ها را ظرف ۴ تا ۶ هفته پردازش می‌کند.\n\n3. **استرداد یا پرداخت مالیات**: صندوق DigiD خود را در MijnBelastingdienst.nl بررسی کنید.\n\n4. **سؤال دارید؟**: از طریق این پورتال پیام به مشاور مالیاتی خود بفرستید.\n\n5. **اسناد را نگه دارید**: تمام اسناد مالیاتی خود را حداقل ۵ سال نگه دارید.\n\nبا احترام،\n{accountant_name} از طریق TaxWijs",
+            }
+            try:
+                PortalMessage.objects.create(
+                    engagement     = eng,
+                    client_profile = eng.client_profile,
+                    sender         = eng.accountant,
+                    body           = GUIDANCE.get(lang, GUIDANCE["en"]),
+                )
+            except Exception:
+                pass
 
         return Response(TaxEngagementSerializer(eng, context={"request": request}).data)
 
@@ -496,6 +558,11 @@ class ChecklistItemDetailView(APIView):
         item = get_object_or_404(ChecklistItem, pk=pk)
         if not _can_access_engagement(request.user, item.engagement):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        if not _check_client_active(item.engagement.client_profile):
+            return Response(
+                {"detail": "This client is disconnected. Reactivate the client to make changes."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         new_status = request.data.get("status")
         if new_status and new_status != item.status:
             allowed = self.ACCOUNTANT_ALLOWED_TRANSITIONS.get(item.status, [])
@@ -701,6 +768,11 @@ class DocumentReviewView(APIView):
         doc = get_object_or_404(ClientDocument, pk=pk)
         if not _is_accountant_of_client(request.user, doc.client_profile) and not request.user.is_staff:
             return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+        if not _check_client_active(doc.client_profile):
+            return Response(
+                {"detail": "This client is disconnected. Reactivate the client to make changes."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         new_status = request.data.get("processing_status")
         review_notes = request.data.get("review_notes", doc.review_notes)
@@ -988,6 +1060,11 @@ class AccountantActionsView(APIView):
         eng = get_object_or_404(TaxEngagement, pk=pk)
         if not _is_accountant_of_client(request.user, eng.client_profile) and not request.user.is_staff:
             return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+        if not _check_client_active(eng.client_profile):
+            return Response(
+                {"detail": "This client is disconnected. Reactivate the client to make changes."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         from apps.portal.services.accountant_actions import generate_accountant_actions
         result = generate_accountant_actions(eng)
         _audit(request, "actions_generated", "TaxEngagement", eng.id, engagement=eng)
@@ -1021,6 +1098,11 @@ class AccountantActionDetailView(APIView):
         action = get_object_or_404(AccountantAction, pk=pk)
         if not _can_access_engagement(request.user, action.engagement):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        if not _check_client_active(action.engagement.client_profile):
+            return Response(
+                {"detail": "This client is disconnected. Reactivate the client to make changes."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         serializer = AccountantActionSerializer(action, data=request.data, partial=True)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -1243,6 +1325,11 @@ class PortalReminderView(APIView):
         eng = get_object_or_404(TaxEngagement, pk=pk)
         if not _is_accountant_of_client(request.user, eng.client_profile) and not request.user.is_staff:
             return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
+        if not _check_client_active(eng.client_profile):
+            return Response(
+                {"detail": "This client is disconnected. Reactivate the client to make changes."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         profile = eng.client_profile
         lang = profile.preferred_language or "en"
@@ -1741,6 +1828,11 @@ class EngagementMessagesView(APIView):
         eng = get_object_or_404(TaxEngagement, pk=pk)
         if not _can_access_engagement(request.user, eng):
             return Response({"detail": "Not found."}, status=404)
+        if request.user.role == "accountant" and not _check_client_active(eng.client_profile):
+            return Response(
+                {"detail": "This client is disconnected. Reactivate the client to make changes."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         body = request.data.get("body", "").strip()
         if not body:
             return Response({"detail": "body is required."}, status=400)
@@ -1948,7 +2040,7 @@ class PortalInvitationSendView(APIView):
 
 
 class PortalInvitationAcceptView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         from .models import Invitation
@@ -1965,24 +2057,53 @@ class PortalInvitationAcceptView(APIView):
         if inv.expires_at <= timezone.now():
             inv.status = "expired"; inv.save(update_fields=["status"])
             return Response({"detail": "This invitation has expired."}, status=400)
-        inv.client_user = request.user; inv.status = "accepted"; inv.accepted_at = timezone.now()
+
+        # ── Resolve the accepting user ─────────────────────────────────────
+        if request.user and request.user.is_authenticated:
+            acting_user = request.user
+        else:
+            acting_user = User.objects.filter(
+                email__iexact=inv.client_email, is_active=True
+            ).first()
+
+        if not acting_user:
+            from django.conf import settings as _s
+            frontend_url = getattr(_s, "FRONTEND_URL", "https://taxwijs.nl")
+            return Response({
+                "status":      "register_required",
+                "email":       inv.client_email,
+                "redirect_to": (
+                    f"/register"
+                    f"?invitation_token={inv.token}"
+                    f"&email={inv.client_email}"
+                ),
+                "message": (
+                    "Please create a TaxWijs account to accept this invitation. "
+                    "Your accountant connection will be set up automatically after registration."
+                ),
+            }, status=200)
+        # ─────────────────────────────────────────────────────────────────────
+
+        inv.client_user = acting_user
+        inv.status      = "accepted"
+        inv.accepted_at = timezone.now()
         inv.save(update_fields=["client_user", "status", "accepted_at"])
         profile = AccountantClientProfile.objects.filter(accountant_user=inv.sent_by, email__iexact=inv.client_email).first()
         if not profile:
             profile = AccountantClientProfile.objects.create(
-                accountant_user=inv.sent_by, client_user=request.user,
-                email=request.user.email,
-                first_name=getattr(request.user, "first_name", ""),
-                last_name=getattr(request.user, "last_name", ""),
+                accountant_user=inv.sent_by, client_user=acting_user,
+                email=acting_user.email,
+                first_name=getattr(acting_user, "first_name", ""),
+                last_name=getattr(acting_user, "last_name", ""),
                 status="active", tax_year=inv.tax_year,
             )
         else:
-            profile.client_user = request.user; profile.status = "active"
+            profile.client_user = acting_user; profile.status = "active"
             profile.save(update_fields=["client_user", "status", "updated_at"])
         try:
             from apps.users.models import AccountantProfile, AccountantClient
             acc_profile = AccountantProfile.objects.get(user=inv.sent_by)
-            AccountantClient.objects.get_or_create(accountant=acc_profile, client_user=request.user, defaults={"status": "active"})
+            AccountantClient.objects.get_or_create(accountant=acc_profile, client_user=acting_user, defaults={"status": "active"})
         except Exception:
             pass
         engagement = TaxEngagement.objects.filter(client_profile=profile).order_by("-created_at").first()

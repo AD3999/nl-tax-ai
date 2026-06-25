@@ -149,14 +149,19 @@ export default function AccountantClientDetailPage() {
         </div>
 
         {profile.status === "deactivated" && (
-          <div className="card" style={{ padding: "var(--sp-4)", background: "var(--warn-subtle, #fff8e1)", border: "1px solid var(--warn)", color: "var(--warn-text, #7a5a00)", marginBottom: "var(--sp-4)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "var(--sp-3)", flexWrap: "wrap" }}>
-            <div>
-              <strong>Client disconnected</strong>
-              {profile.days_until_deletion !== null && (
-                <span style={{ marginLeft: 8, fontSize: "var(--text-xs)" }}>
-                  — data will be permanently deleted in <strong>{profile.days_until_deletion}</strong> day{profile.days_until_deletion !== 1 ? "s" : ""}
-                </span>
-              )}
+          <div style={{
+            background: "var(--amber-s, #fff8e1)", border: "1px solid var(--amber-b, #f0c040)",
+            borderRadius: "var(--r)", padding: "var(--sp-4)", marginBottom: "var(--sp-5)",
+            display: "flex", alignItems: "flex-start", gap: "var(--sp-3)",
+          }}>
+            <span style={{ fontSize: 18 }}>⚠️</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, color: "var(--amber-text, #7a5a00)", marginBottom: 4 }}>
+                Client Disconnected
+              </div>
+              <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)" }}>
+                {`Disconnected on ${profile.deactivated_at ? new Date(profile.deactivated_at).toLocaleDateString("en-GB") : "—"}. Data will be permanently deleted on ${profile.scheduled_deletion_at ? new Date(profile.scheduled_deletion_at).toLocaleDateString("en-GB") : "—"} unless you reactivate the client.`}
+              </div>
             </div>
             <button className="btn btn-accent btn-sm" onClick={handleReactivate} disabled={reactivating}>
               {reactivating ? "Restoring…" : "Reactivate client"}
@@ -249,7 +254,14 @@ export default function AccountantClientDetailPage() {
               <h3 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-2xl)", fontWeight: 400, color: "var(--ink)", margin: 0 }}>
                 Tax Engagements
               </h3>
-              <button className="btn btn-accent btn-sm" onClick={() => setShowNewEng(s => !s)}>+ New engagement</button>
+              <button
+                className="btn btn-accent btn-sm"
+                onClick={() => setShowNewEng(s => !s)}
+                disabled={profile.status === "deactivated"}
+                title={profile.status === "deactivated" ? "Reactivate client to create engagements" : undefined}
+              >
+                + New engagement
+              </button>
             </div>
 
             {showNewEng && (
@@ -282,7 +294,16 @@ export default function AccountantClientDetailPage() {
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)" }}>
                 {engagements.map(eng => (
-                  <div key={eng.id} className="card" style={{ padding: "var(--sp-4)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div
+                    key={eng.id}
+                    style={{
+                      position: "relative",
+                      opacity: profile.status === "deactivated" ? 0.45 : 1,
+                      pointerEvents: profile.status === "deactivated" ? "none" : "auto",
+                      transition: "opacity 0.3s ease",
+                    }}
+                  >
+                  <div className="card" style={{ padding: "var(--sp-4)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
                       <div style={{ fontWeight: 600, color: "var(--ink)", fontSize: "var(--text-sm)" }}>
                         {eng.tax_year} — {ENGAGEMENT_TYPE_LABELS[eng.engagement_type] ?? eng.engagement_type}
@@ -317,6 +338,7 @@ export default function AccountantClientDetailPage() {
                       )}
                       <Link to={`/accountant/engagements/${eng.id}`} className="btn btn-accent btn-sm">Open →</Link>
                     </div>
+                  </div>
                   </div>
                 ))}
               </div>

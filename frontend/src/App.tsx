@@ -76,6 +76,8 @@ const ClientProfilePage       = lazy(() => import("./pages/ClientProfilePage"));
 const ZZPWorkspacePage        = lazy(() => import("./pages/ZZPWorkspacePage"));
 const FindAccountantPage      = lazy(() => import("./pages/FindAccountantPage"));
 const PricingPage             = lazy(() => import("./pages/PricingPage"));
+const ForgotPasswordPage      = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage       = lazy(() => import("./pages/ResetPasswordPage"));
 
 const AdminDashboard          = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminUsersPage          = lazy(() => import("./pages/admin/AdminUsersPage"));
@@ -135,6 +137,8 @@ function App() {
               <Route path="/"                        element={<LandingPage />} />
               <Route path="/login"                   element={<LoginPage />} />
               <Route path="/register"                element={<RegisterPage />} />
+              <Route path="/forgot-password"         element={<ForgotPasswordPage />} />
+              <Route path="/reset-password"          element={<ResetPasswordPage />} />
               <Route path="/auth/google/callback"    element={<GoogleCallbackPage />} />
               <Route path="/portal/accept-invitation" element={<AcceptInvitationPage />} />
               <Route path="/zzp-tax-netherlands"     element={<ZZPTaxPage />} />

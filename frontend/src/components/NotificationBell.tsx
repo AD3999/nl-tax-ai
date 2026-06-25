@@ -103,7 +103,7 @@ export default function NotificationBell() {
 
     ws.onmessage = (evt: MessageEvent) => {
       try {
-        const data = JSON.parse(evt.data as string) as { id?: number; title?: string };
+        const data = JSON.parse(evt.data as string) as { id?: number; title?: string; metadata?: { event?: string } };
         showToast(data.title ?? "You have a new notification", "success");
         setCount(c => c + 1);
         prevCountRef.current += 1;
@@ -113,6 +113,10 @@ export default function NotificationBell() {
           if (data.id && prev.some(n => n.id === data.id)) return prev; // already present
           return [{ ...data, is_read: false } as AppNotification, ...prev];
         });
+        // Dispatch custom event so ClientPortalPage reloads on reactivation
+        if (data.metadata?.event === "client_reactivated") {
+          window.dispatchEvent(new CustomEvent("portal:client_reactivated"));
+        }
       } catch { /* ignore malformed frames */ }
     };
 
