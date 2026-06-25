@@ -10,7 +10,7 @@ import {
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
 import { useToast } from "../../context/ToastContext";
 import { ENGAGEMENT_TYPE_LABELS } from "../../lib/engagementTypes";
-import { getStatusLabel, getEngagementStatusLabel, getClientStatusLabel } from "../../lib/engagementStatus";
+import { getEngagementStatusLabel, getClientStatusLabel } from "../../lib/engagementStatus";
 import {
   sendPortalInvitation, fetchPortalInvitations, cancelPortalInvitation,
   type PortalInvitation,
