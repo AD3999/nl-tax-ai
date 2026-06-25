@@ -1,7 +1,31 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 27 Jun 2026 — QA audit v3: 10 fixes merged to master (commit 93730e1)
+> Last updated: 27 Jun 2026 — Deploy fix: removed stale import that blocked all builds after QA v3 (commit 1f67675)
+
+---
+
+## Session — 27 Jun 2026 · Deploy Fix (commit 1f67675) ✅
+
+### Root cause of all Railway deploy failures since QA v3
+
+`AccountantPortalPage.tsx` imported `getStatusLabel` from `engagementStatus.ts` but
+the QA v3 update replaced all usages with `getEngagementStatusLabel`/`getClientStatusLabel`,
+leaving the import unused. TypeScript's `tsc -b` (run in `npm run build`) treats unused
+imports as errors (TS6133), which silently broke the Docker frontend build stage.
+Every deploy from 16:10–16:44 on June 25 showed `FAILED` for this reason.
+
+**Fix:** Removed the unused `getStatusLabel` import (1-line change). Build now passes.
+GitHub auto-deploy from the push triggered deployment `02303743` → `SUCCESS` at 16:44:25.
+App is live at taxwijs.nl with all 10 QA v3 fixes active.
+
+### The 3 "bugs" in Railway logs (all benign)
+
+| Request | Status | Cause |
+|---------|--------|-------|
+| `GET /api/tax/reminders/` 404 | Old browser cache — reminders live at `/api/users/reminders/` | No code change needed |
+| `POST /api/users/token/` 404 | Old browser cache — correct JWT URL is `/api/auth/token/` | No code change needed |
+| `GET /ws/notifications/` 404 | Expected — HTTP router returns 404 for WS paths; ASGI handles upgrades | Not a bug |
 
 ---
 
