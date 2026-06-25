@@ -180,7 +180,7 @@ export default function RegisterPage() {
       );
       if (invitationToken) {
         try {
-          const accessToken = result.tokens?.access ?? localStorage.getItem("access_token") ?? "";
+          const accessToken = result.access ?? localStorage.getItem("access_token") ?? "";
           await fetch(`${apiBase}/portal/invitations/accept/`, {
             method: "POST",
             headers: {
