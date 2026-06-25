@@ -1385,15 +1385,20 @@ def _get_or_create_self_service_profile(user):
         ).order_by("-created_at").first()
 
     if not profile:
-        # Create a self-managed profile so the portal is immediately usable
-        profile = AccountantClientProfile.objects.create(
+        # Create a self-managed profile so the portal is immediately usable.
+        # Use get_or_create to guard against a concurrent request or a profile
+        # already created by the invite-accept path (same user as both accountant
+        # and client), which shares the unique (accountant_user, client_user) key.
+        profile, _ = AccountantClientProfile.objects.get_or_create(
             accountant_user=user,
             client_user=user,
-            email=user.email,
-            first_name=getattr(user, "first_name", ""),
-            last_name=getattr(user, "last_name", ""),
-            status="active",
-            client_type="other",
+            defaults={
+                "email": user.email,
+                "first_name": getattr(user, "first_name", ""),
+                "last_name": getattr(user, "last_name", ""),
+                "status": "active",
+                "client_type": "other",
+            },
         )
 
     return profile

@@ -972,19 +972,23 @@ class ClientInvitationsView(APIView):
             inv.client_user = request.user; inv.status = "accepted"; inv.accepted_at = timezone.now()
             inv.save(update_fields=["client_user", "status", "accepted_at"])
 
-            profile = AccountantClientProfile.objects.filter(
-                accountant_user=inv.sent_by, email__iexact=inv.client_email
-            ).first()
-            if not profile:
-                profile = AccountantClientProfile.objects.create(
-                    accountant_user=inv.sent_by, client_user=request.user,
-                    email=request.user.email,
-                    first_name=getattr(request.user, "first_name", ""),
-                    last_name=getattr(request.user, "last_name", ""),
-                    status="active", tax_year=inv.tax_year,
-                )
-            else:
-                profile.client_user = request.user; profile.status = "active"
+            # Keyed on the actual unique constraint (accountant_user, client_user)
+            # so get_or_create is idempotent even when the same user is both sender
+            # and recipient (test scenario) or a self-service profile already exists.
+            profile, created = AccountantClientProfile.objects.get_or_create(
+                accountant_user=inv.sent_by,
+                client_user=request.user,
+                defaults={
+                    "email": request.user.email,
+                    "first_name": getattr(request.user, "first_name", ""),
+                    "last_name": getattr(request.user, "last_name", ""),
+                    "status": "active",
+                    "tax_year": inv.tax_year,
+                },
+            )
+            if not created:
+                profile.client_user = request.user
+                profile.status = "active"
                 profile.save(update_fields=["client_user", "status", "updated_at"])
 
             try:
