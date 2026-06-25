@@ -513,7 +513,7 @@ class AccountantAction(models.Model):
             models.UniqueConstraint(
                 fields=["engagement", "stable_key"],
                 condition=models.Q(stable_key__gt=""),
-                name="unique_action_stable_key_per_engagement",
+                name="unique_action_per_engagement_stable_key",
             )
         ]
 
