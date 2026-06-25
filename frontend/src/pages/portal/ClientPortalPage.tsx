@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { CheckSquare, FolderOpen, AlertTriangle, Wrench, RefreshCw, User, TrendingUp, FileWarning, MessageSquare, Bot } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -7,7 +7,8 @@ import { useMobile } from "../../hooks/useMobile";
 import { fetchClientProfile, fetchClientEngagement, fetchClientTasks } from "../../api/portal/client";
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
 import ReadinessCard from "../../components/ui/ReadinessCard";
-import { getStatusLabel } from "../../lib/engagementStatus";
+import { getEngagementStatusLabel } from "../../lib/engagementStatus";
+import { ENGAGEMENT_TYPE_LABELS } from "../../lib/engagementTypes";
 
 interface PortalTask {
   id: string;
@@ -83,6 +84,9 @@ export default function ClientPortalPage() {
     }
   }, [user, navigate]);
 
+  const [searchParams] = useSearchParams();
+  const showReadyBanner = searchParams.get("ready") === "1";
+
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [engagement, setEngagement] = useState<TaxEngagement | null>(null);
   const [taskSummary, setTaskSummary] = useState<{
@@ -107,6 +111,12 @@ export default function ClientPortalPage() {
     const id = setInterval(() => void load(true), 15_000);
     return () => clearInterval(id);
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    function handleReactivation() { void load(); }
+    window.addEventListener("portal:client_reactivated", handleReactivation);
+    return () => window.removeEventListener("portal:client_reactivated", handleReactivation);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function load(silent = false) {
     if (!silent) setLoading(true);
@@ -217,8 +227,17 @@ export default function ClientPortalPage() {
               <span style={{ fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 999, background: "var(--blue-subtle)", color: "var(--blue-text)" }}>
                 {t("taxYear", lang)} {engagement.tax_year}
               </span>
+              <span style={{
+                fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 999,
+                background: engagement.status === "ready_to_file" ? "var(--ok-subtle)" : "var(--bg-3)",
+                color: engagement.status === "ready_to_file" ? "var(--ok-text)" : "var(--text-3)",
+                border: engagement.status === "ready_to_file" ? "1px solid var(--ok)" : "1px solid var(--border-2)",
+              }}>
+                {engagement.status === "ready_to_file" ? "🎉 " : ""}
+                {getEngagementStatusLabel(engagement.status, lang)}
+              </span>
               <span style={{ fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 999, background: "var(--bg-3)", color: "var(--text-3)", border: "1px solid var(--border-2)" }}>
-                {getStatusLabel(engagement.status, lang)}
+                {ENGAGEMENT_TYPE_LABELS[engagement.engagement_type] ?? engagement.engagement_type.replace(/_/g, " ")}
               </span>
             </div>
           </div>
@@ -232,6 +251,37 @@ export default function ClientPortalPage() {
             </button>
           </div>
         </div>
+
+        {/* ── Ready-to-file celebratory banner ── */}
+        {(showReadyBanner || engagement.status === "ready_to_file") && (
+          <div style={{
+            background: "var(--ok-subtle)", border: "2px solid var(--ok)",
+            borderRadius: "var(--r)", padding: "var(--sp-5)",
+            marginBottom: "var(--sp-5)", textAlign: "center",
+          }}>
+            <div style={{ fontSize: 32, marginBottom: "var(--sp-2)" }}>🎉</div>
+            <div style={{ fontWeight: 700, fontSize: "var(--text-lg)", color: "var(--ok-text)", marginBottom: "var(--sp-2)" }}>
+              {lang === "nl" ? "Uw aangifte is klaar voor indiening!"
+               : lang === "fa" ? "اظهارنامه شما آماده ارسال است!"
+               : "Your tax return is ready to file!"}
+            </div>
+            <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", lineHeight: 1.6, maxWidth: 480, margin: "0 auto var(--sp-4)" }}>
+              {lang === "nl"
+                ? "Uw accountant dient de aangifte in bij de Belastingdienst. Controleer uw berichtenbox voor de volgende stappen."
+                : lang === "fa"
+                ? "مشاور شما اظهارنامه را به Belastingdienst ارسال می‌کند. صندوق پیام‌های خود را برای مراحل بعدی بررسی کنید."
+                : "Your accountant will file your return with the Belastingdienst. Check your messages for the next steps."}
+            </div>
+            <button
+              className="btn btn-accent btn-sm"
+              onClick={() => navigate("/client/messages")}
+            >
+              {lang === "nl" ? "Naar mijn berichtenbox →"
+               : lang === "fa" ? "رفتن به پیام‌ها ←"
+               : "View my messages →"}
+            </button>
+          </div>
+        )}
 
         {/* ── Above-the-fold row: Readiness + quick stats ── */}
         <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr 1fr", gap: "var(--sp-4)", marginBottom: "var(--sp-5)" }}>

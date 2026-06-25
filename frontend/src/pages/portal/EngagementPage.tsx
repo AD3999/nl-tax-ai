@@ -385,6 +385,7 @@ export default function EngagementPage() {
   const [messages, setMessages] = useState<PortalMessage[]>([]);
   const [msgBody, setMsgBody] = useState("");
   const [sendingMsg, setSendingMsg] = useState(false);
+  const [showReadyToFileModal, setShowReadyToFileModal] = useState(false);
 
   const engId = Number(id);
 
@@ -661,6 +662,8 @@ export default function EngagementPage() {
     </main>
   );
 
+  const unreadMessageCount = messages.filter(m => !m.is_read && !m.is_own).length;
+
   const TABS: { key: Tab; label: string }[] = [
     { key: "overview",  label: tx.tab_overview },
     { key: "checklist", label: `${tx.tab_checklist} (${checklist.length})` },
@@ -750,9 +753,21 @@ export default function EngagementPage() {
                 fontWeight: tab === t.key ? 600 : 400,
                 borderBottom: tab === t.key ? "2px solid var(--blue)" : "2px solid transparent",
                 whiteSpace: "nowrap",
+                display: "flex", alignItems: "center", gap: 5,
               }}
             >
               {t.label}
+              {t.key === "messages" && unreadMessageCount > 0 && (
+                <span style={{
+                  minWidth: 16, height: 16, borderRadius: 999,
+                  background: "var(--danger)", color: "#fff",
+                  fontSize: 10, fontWeight: 800,
+                  display: "inline-flex", alignItems: "center", justifyContent: "center",
+                  padding: "0 4px", lineHeight: 1,
+                }}>
+                  {unreadMessageCount}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -791,20 +806,9 @@ export default function EngagementPage() {
                       className="btn btn-accent"
                       style={{ width: "100%", marginTop: "var(--sp-3)", justifyContent: "center" }}
                       disabled={confirmingFile}
-                      onClick={async () => {
-                        if (!window.confirm("Mark this engagement as Ready to File? This will notify the client and set the status to ready_to_file.")) return;
-                        setConfirmingFile(true);
-                        try {
-                          const updated = await updateEngagement(engagement.id, { status: "ready_to_file" });
-                          setEngagement(prev => prev ? { ...prev, status: updated.status } : prev);
-                          showToast("Engagement marked as ready to file. Client has been notified.", "success");
-                        } catch {
-                          showToast("Failed to update engagement status.", "error");
-                        }
-                        setConfirmingFile(false);
-                      }}
+                      onClick={() => setShowReadyToFileModal(true)}
                     >
-                      {confirmingFile ? "…" : "Confirm Ready to File"}
+                      {confirmingFile ? "…" : (lang === "nl" ? "Bevestig: klaar voor aangifte" : lang === "fa" ? "تأیید: آماده ارسال" : "Confirm Ready to File")}
                     </button>
                   ) : null}
                 </div>
@@ -1070,6 +1074,69 @@ export default function EngagementPage() {
             <button className="btn btn-ghost btn-sm" onClick={() => { setShowRejectDialog(false); setRejectReason(""); setRejectTargetDocId(null); }}>Cancel</button>
             <button className="btn btn-sm" style={{ background: "var(--danger)", color: "#fff", border: "none", borderRadius: "var(--r-sm)", padding: "0 var(--sp-4)", cursor: "pointer", fontWeight: 700, fontSize: "var(--text-sm)" }} onClick={() => void handleRejectWithReason()}>
               {tx.reject_reason_submit}
+            </button>
+          </div>
+        </Modal>
+
+        {/* ── READY TO FILE CONFIRMATION MODAL (L-3) ──────── */}
+        <Modal
+          open={showReadyToFileModal}
+          onClose={() => setShowReadyToFileModal(false)}
+          title={lang === "nl" ? "Klaar voor aangifte bevestigen" : lang === "fa" ? "تأیید آماده بودن برای ارسال" : "Confirm Ready to File"}
+          maxWidth={480}
+        >
+          <p style={{ margin: "0 0 var(--sp-3)", fontSize: "var(--text-sm)", color: "var(--text-2)", lineHeight: 1.6 }}>
+            {lang === "nl"
+              ? <>U staat op het punt <strong>{engagement.client_profile_display}</strong> — belastingjaar <strong>{engagement.tax_year}</strong> ({ENGAGEMENT_TYPE_LABELS[engagement.engagement_type] ?? engagement.engagement_type}) als klaar te markeren.</>
+              : lang === "fa"
+              ? <>شما در حال علامت‌گذاری <strong>{engagement.client_profile_display}</strong> — سال مالی <strong>{engagement.tax_year}</strong> به عنوان آماده ارسال هستید.</>
+              : <>You are about to mark <strong>{engagement.client_profile_display}</strong> — tax year <strong>{engagement.tax_year}</strong> ({ENGAGEMENT_TYPE_LABELS[engagement.engagement_type] ?? engagement.engagement_type}) as ready to file.</>
+            }
+          </p>
+          <ul style={{ margin: "0 0 var(--sp-5)", paddingInlineStart: "var(--sp-5)", fontSize: "var(--text-sm)", color: "var(--text-3)", lineHeight: 1.8 }}>
+            {(lang === "nl" ? [
+              "De status wordt gewijzigd naar 'Klaar voor aangifte'",
+              "De klant ontvangt een melding met een link naar het portaal",
+              "Een bericht met begeleiding wordt in het portaal geplaatst",
+              "U kunt de status later bijwerken als dat nodig is",
+            ] : lang === "fa" ? [
+              "وضعیت به 'آماده ارسال' تغییر می‌کند",
+              "مشتری اعلانی با لینک پورتال دریافت می‌کند",
+              "یک پیام راهنما در پورتال ارسال می‌شود",
+              "در صورت نیاز می‌توانید وضعیت را بعداً تغییر دهید",
+            ] : [
+              "Status changes to 'Ready to File'",
+              "Client receives a notification with a link to the portal",
+              "A guidance message is posted in the client portal",
+              "You can update the status later if needed",
+            ]).map((item, i) => <li key={i}>{item}</li>)}
+          </ul>
+          <div style={{ display: "flex", gap: "var(--sp-3)", justifyContent: "flex-end" }}>
+            <button className="btn btn-ghost btn-sm" onClick={() => setShowReadyToFileModal(false)}>
+              {lang === "nl" ? "Annuleren" : lang === "fa" ? "انصراف" : "Cancel"}
+            </button>
+            <button
+              className="btn btn-accent btn-sm"
+              disabled={confirmingFile}
+              onClick={async () => {
+                setShowReadyToFileModal(false);
+                setConfirmingFile(true);
+                try {
+                  const updated = await updateEngagement(engagement.id, { status: "ready_to_file" });
+                  setEngagement(prev => prev ? { ...prev, status: updated.status } : prev);
+                  showToast(
+                    lang === "nl" ? "Aangifte klaar — klant is geïnformeerd."
+                    : lang === "fa" ? "آماده ارسال — مشتری مطلع شد."
+                    : "Engagement marked as ready to file. Client has been notified.",
+                    "success"
+                  );
+                } catch {
+                  showToast(lang === "nl" ? "Status bijwerken mislukt." : lang === "fa" ? "خطا در به‌روزرسانی وضعیت." : "Failed to update engagement status.", "error");
+                }
+                setConfirmingFile(false);
+              }}
+            >
+              {confirmingFile ? "…" : (lang === "nl" ? "Ja, markeer als klaar" : lang === "fa" ? "بله، به عنوان آماده علامت‌گذاری کن" : "Yes, mark as ready")}
             </button>
           </div>
         </Modal>

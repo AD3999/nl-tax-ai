@@ -39,6 +39,7 @@ interface AccountantSetup {
   default_engagement_type: string;
   max_clients: number;
   plan: string;
+  is_verified?: boolean;
 }
 
 // ── Reusable field components ────────────────────────────────────────
@@ -173,6 +174,10 @@ export default function AccountantSettingsPage() {
     wcagBlock:    isFA ? "رنگ باید حداقل ۴.۵:۱ کنتراست روی یک پس‌زمینه داشته باشد (WCAG AA)"
                 : isNL ? "Kleur moet minimaal 4,5:1 contrast hebben op één achtergrond (WCAG AA)"
                 : "Brand color must pass 4.5:1 contrast on at least one background (WCAG AA)",
+    pendingTitle: isFA ? "تأیید در انتظار" : isNL ? "Verificatie in behandeling" : "Verification Pending",
+    pendingBody:  isFA ? "حساب شما هنوز توسط TaxWijs تأیید نشده است. پس از تأیید یک ایمیل دریافت خواهید کرد."
+                : isNL ? "Uw account is nog niet geverifieerd door TaxWijs. U ontvangt een e-mail zodra uw account is goedgekeurd."
+                : "Your account is pending verification by TaxWijs. You will receive an email once your account has been approved.",
   };
 
   const [form, setForm]     = useState<Partial<AccountantSetup>>({});
@@ -227,6 +232,28 @@ export default function AccountantSettingsPage() {
           {T.subtitle}
         </p>
       </div>
+
+      {/* ── Pending verification notice (M-2) ── */}
+      {form.is_verified === false && (
+        <div style={{
+          display: "flex", gap: "var(--sp-3)", alignItems: "flex-start",
+          padding: "var(--sp-4)",
+          borderRadius: "var(--r)",
+          background: "var(--amber-s, #fff8e1)",
+          border: "1px solid var(--amber-b, #f0c040)",
+          marginBottom: "var(--sp-5)",
+        }}>
+          <span style={{ fontSize: 18, flexShrink: 0 }}>⏳</span>
+          <div>
+            <div style={{ fontWeight: 700, color: "var(--amber-text, #7a5a00)", marginBottom: 4, fontSize: "var(--text-sm)" }}>
+              {T.pendingTitle}
+            </div>
+            <p style={{ margin: 0, fontSize: "var(--text-sm)", color: "var(--ink-3)", lineHeight: 1.6 }}>
+              {T.pendingBody}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Contact Information ── */}
       <Section icon={Building2} title={T.contact} description={T.contactDesc}>

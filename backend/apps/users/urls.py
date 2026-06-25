@@ -17,6 +17,7 @@ from .views import (
     GoogleCalendarDisconnectView, GoogleCalendarSyncNowView,
     GoogleCalendarStatusView,
     AccountantAccessRequestView, AccountantAccessApproveView,
+    PasswordResetRequestView, PasswordResetConfirmView,
 )
 from .admin_views import AdminUserListView, AdminUserDetailView
 
@@ -74,4 +75,7 @@ urlpatterns = [
     # Accountant request-access flow
     path("accountant/request-access/", AccountantAccessRequestView.as_view(), name="accountant-request-access"),
     path("accountant/access-requests/<int:pk>/approve/", AccountantAccessApproveView.as_view(), name="accountant-access-approve"),
+    # Password reset
+    path("password-reset/request/", PasswordResetRequestView.as_view(), name="password-reset-request"),
+    path("password-reset/confirm/", PasswordResetConfirmView.as_view(), name="password-reset-confirm"),
 ]

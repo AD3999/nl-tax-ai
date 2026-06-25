@@ -1,3 +1,4 @@
+import logging
 import requests as http_requests
 import rest_framework.throttling
 from django.shortcuts import get_object_or_404
@@ -10,6 +11,8 @@ from .models import User, AccountantProfile
 from .serializers import UserSerializer, RegisterSerializer, AccountantProfileSerializer
 from .alerts import generate_alerts
 from .actions import generate_actions
+
+logger = logging.getLogger(__name__)
 
 
 class HealthView(APIView):
@@ -1527,6 +1530,39 @@ class AccountantAccessApproveView(APIView):
             user.save(update_fields=["role", "plan"])
         else:
             user.save(update_fields=["role"])
+
+        # ── Send activation email to newly-approved accountant ─────────────
+        try:
+            from django.contrib.auth.tokens import default_token_generator
+            from django.utils.http import urlsafe_base64_encode
+            from django.utils.encoding import force_bytes
+            from django.conf import settings as _s
+            from django.core.mail import send_mail
+
+            uid   = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            frontend_url = getattr(_s, "FRONTEND_URL", "https://taxwijs.nl")
+            set_pw_link  = f"{frontend_url}/reset-password?uid={uid}&token={token}"
+            plan_display = (initial_plan or "free").capitalize()
+
+            send_mail(
+                subject="Your TaxWijs accountant account is approved — Set your password",
+                message=(
+                    f"Dear {req.full_name or req.email},\n\n"
+                    f"Your TaxWijs accountant account has been approved.\n"
+                    f"Plan: {plan_display}\n\n"
+                    f"Set your password and log in here:\n{set_pw_link}\n\n"
+                    f"This link expires in 24 hours.\n\n"
+                    f"Kind regards,\nThe TaxWijs Team"
+                ),
+                from_email=getattr(_s, "DEFAULT_FROM_EMAIL", "noreply@taxwijs.nl"),
+                recipient_list=[user.email],
+                fail_silently=True,
+            )
+        except Exception as _e:
+            logger.warning("Accountant approval email failed for %s: %s", user.email, _e)
+        # ── End activation email ───────────────────────────────────────────
+
         AccountantProfile.objects.get_or_create(
             user=user,
             defaults={"firm_name": req.firm_name, "kvk_number": req.kvk_number,
@@ -1535,3 +1571,106 @@ class AccountantAccessApproveView(APIView):
         req.status = "approved"; req.reviewed_by = request.user; req.reviewed_at = tz.now()
         req.save(update_fields=["status", "reviewed_by", "reviewed_at"])
         return Response({"detail": f"Approved. User {req.email} is now an accountant."})
+
+
+class PasswordResetRequestView(APIView):
+    """
+    POST /api/users/password-reset/request/
+    Public — takes email, generates a secure token, sends reset email.
+    Always returns 200 (security: don't reveal if email exists).
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        from django.contrib.auth.tokens import default_token_generator
+        from django.utils.http import urlsafe_base64_encode
+        from django.utils.encoding import force_bytes
+        from django.conf import settings as _s
+        from django.core.mail import send_mail
+
+        email = (request.data.get("email", "") or "").strip().lower()
+        if not email:
+            return Response({"detail": "email is required."}, status=400)
+
+        user = User.objects.filter(email__iexact=email, is_active=True).first()
+        if user:
+            uid   = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            frontend_url = getattr(_s, "FRONTEND_URL", "https://taxwijs.nl")
+            reset_link   = f"{frontend_url}/reset-password?uid={uid}&token={token}"
+            lang = getattr(user, "preferred_language", "en") or "en"
+
+            SUBJECTS = {
+                "nl": "Wachtwoord opnieuw instellen — TaxWijs",
+                "en": "Reset your password — TaxWijs",
+                "fa": "بازنشانی رمز عبور — TaxWijs",
+            }
+            BODIES = {
+                "nl": (
+                    f"Hallo,\n\nU heeft een wachtwoordherstel aangevraagd voor uw TaxWijs-account.\n\n"
+                    f"Klik op de onderstaande link om uw wachtwoord opnieuw in te stellen:\n{reset_link}\n\n"
+                    f"Deze link is 24 uur geldig.\n\nAls u dit niet heeft aangevraagd, kunt u dit bericht negeren.\n\n"
+                    f"Met vriendelijke groet,\nHet TaxWijs-team"
+                ),
+                "en": (
+                    f"Hello,\n\nYou requested a password reset for your TaxWijs account.\n\n"
+                    f"Click the link below to set a new password:\n{reset_link}\n\n"
+                    f"This link expires in 24 hours.\n\nIf you didn't request this, you can safely ignore this email.\n\n"
+                    f"Kind regards,\nThe TaxWijs Team"
+                ),
+                "fa": (
+                    f"سلام،\n\nشما درخواست بازنشانی رمز عبور برای حساب TaxWijs خود را ارسال کرده‌اید.\n\n"
+                    f"برای تنظیم رمز عبور جدید روی لینک زیر کلیک کنید:\n{reset_link}\n\n"
+                    f"این لینک ۲۴ ساعت معتبر است.\n\nاگر این درخواست را نداده‌اید، این ایمیل را نادیده بگیرید.\n\n"
+                    f"با احترام،\nتیم TaxWijs"
+                ),
+            }
+            try:
+                send_mail(
+                    subject=SUBJECTS.get(lang, SUBJECTS["en"]),
+                    message=BODIES.get(lang, BODIES["en"]),
+                    from_email=getattr(_s, "DEFAULT_FROM_EMAIL", "noreply@taxwijs.nl"),
+                    recipient_list=[user.email],
+                    fail_silently=True,
+                )
+            except Exception as e:
+                logger.warning("Password reset email failed for %s: %s", email, e)
+
+        return Response({
+            "detail": "If an account with this email exists, a reset link has been sent."
+        })
+
+
+class PasswordResetConfirmView(APIView):
+    """
+    POST /api/users/password-reset/confirm/
+    Public — validates uid + token, sets new password.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        from django.contrib.auth.tokens import default_token_generator
+        from django.utils.http import urlsafe_base64_decode
+        from django.utils.encoding import force_str
+
+        uid      = (request.data.get("uid",      "") or "").strip()
+        token    = (request.data.get("token",    "") or "").strip()
+        password = (request.data.get("password", "") or "").strip()
+
+        if not all([uid, token, password]):
+            return Response({"detail": "uid, token, and password are required."}, status=400)
+        if len(password) < 8:
+            return Response({"detail": "Password must be at least 8 characters."}, status=400)
+
+        try:
+            pk   = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=pk)
+        except (User.DoesNotExist, ValueError, TypeError, OverflowError):
+            return Response({"detail": "Invalid or expired reset link."}, status=400)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({"detail": "Invalid or expired reset link."}, status=400)
+
+        user.set_password(password)
+        user.save(update_fields=["password"])
+        return Response({"detail": "Password has been set successfully. You can now log in."})

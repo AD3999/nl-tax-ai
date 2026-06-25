@@ -7,6 +7,7 @@ import Wordmark from "../components/Wordmark";
 import { Icon } from "../components/Icon";
 import { useMobile } from "../hooks/useMobile";
 import { useToast } from "../context/ToastContext";
+import { apiBase } from "../api/client";
 
 type ApiError = { response?: { data?: Record<string, string[]> } };
 
@@ -81,7 +82,9 @@ export default function RegisterPage() {
   const lang = i18n.language as "nl" | "en" | "fa";
 
   const [searchParams] = useSearchParams();
-  const [email,      setEmail]      = useState("");
+  const invitationToken = searchParams.get("invitation_token") ?? "";
+  const prefilledEmail  = searchParams.get("email") ?? "";
+  const [email,      setEmail]      = useState(prefilledEmail);
   const [password,   setPassword]   = useState("");
   const [userType,   setUserType]   = useState<UTK>("zzp");
   const [firmName,   setFirmName]   = useState("");
@@ -175,6 +178,24 @@ export default function RegisterPage() {
         lang === "nl" ? "Account aangemaakt! Welkom bij TaxWijs" : lang === "fa" ? "حساب ایجاد شد! به TaxWijs خوش آمدید" : "Account created! Welcome to TaxWijs",
         "success",
       );
+      if (invitationToken) {
+        try {
+          const accessToken = result.tokens?.access ?? localStorage.getItem("access_token") ?? "";
+          await fetch(`${apiBase}/portal/invitations/accept/`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${accessToken}`,
+            },
+            body: JSON.stringify({ token: invitationToken }),
+          });
+          navigate("/client");
+          return;
+        } catch {
+          navigate("/client");
+          return;
+        }
+      }
       navigate("/intake");
     } catch (err: unknown) {
       const data = (err as ApiError)?.response?.data;
@@ -330,6 +351,15 @@ export default function RegisterPage() {
             {successMessage && (
               <div style={{ marginTop: 12, padding: 12, background: "var(--ok-soft, oklch(0.93 0.06 145))", borderRadius: "var(--r-sm)", fontSize: 13, color: "var(--ok, oklch(0.40 0.10 145))", border: "1px solid var(--ok-border, oklch(0.80 0.07 145))" }}>
                 {successMessage}
+                {isAccountant && (
+                  <p style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", marginTop: "var(--sp-3)", lineHeight: 1.6, marginBottom: 0 }}>
+                    {lang === "nl"
+                      ? "U ontvangt een e-mail zodra uw account is goedgekeurd, met een link om uw wachtwoord in te stellen."
+                      : lang === "fa"
+                      ? "پس از تأیید حساب، ایمیلی با لینک تنظیم رمز عبور دریافت خواهید کرد."
+                      : "You will receive an email when your account is approved with a link to set your password."}
+                  </p>
+                )}
               </div>
             )}
 
