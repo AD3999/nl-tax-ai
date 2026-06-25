@@ -1886,6 +1886,61 @@ class PortalInvitationSendView(APIView):
                       "client_type": client_type, "preferred_language": lang,
                       "status": "invited", "tax_year": tax_year},
         )
+        # ── Send invitation email ─────────────────────────────────────────────
+        try:
+            from django.core.mail import send_mail
+            from django.conf import settings as _settings
+
+            frontend_url = getattr(_settings, "FRONTEND_URL", "https://taxwijs.nl")
+            accept_link  = f"{frontend_url}/portal/accept-invitation?token={token}"
+            accountant_name = request.user.get_full_name() or request.user.email
+
+            SUBJECT = {
+                "nl": f"Uitnodiging van {accountant_name} — TaxWijs",
+                "en": f"Invitation from {accountant_name} — TaxWijs",
+                "fa": f"دعوتنامه از {accountant_name} — TaxWijs",
+            }
+            BODY = {
+                "nl": (
+                    f"Beste {client_name or email},\n\n"
+                    f"Uw belastingadviseur {accountant_name} heeft u uitgenodigd "
+                    f"voor het TaxWijs belastingportaal.\n\n"
+                    + (f"Persoonlijk bericht:\n{message}\n\n" if message else "")
+                    + f"Klik op de onderstaande link om uw portaal te activeren:\n{accept_link}\n\n"
+                    f"Deze uitnodigingslink verloopt over 7 dagen.\n\n"
+                    f"Met vriendelijke groet,\n{accountant_name}"
+                ),
+                "en": (
+                    f"Dear {client_name or email},\n\n"
+                    f"Your tax advisor {accountant_name} has invited you to "
+                    f"the TaxWijs tax portal.\n\n"
+                    + (f"Personal message:\n{message}\n\n" if message else "")
+                    + f"Click the link below to activate your portal:\n{accept_link}\n\n"
+                    f"This invitation link expires in 7 days.\n\n"
+                    f"Kind regards,\n{accountant_name}"
+                ),
+                "fa": (
+                    f"با احترام {client_name or email},\n\n"
+                    f"مشاور مالیاتی شما {accountant_name} شما را به "
+                    f"پورتال مالیاتی TaxWijs دعوت کرده است.\n\n"
+                    + (f"پیام شخصی:\n{message}\n\n" if message else "")
+                    + f"برای فعال‌سازی پورتال خود روی لینک زیر کلیک کنید:\n{accept_link}\n\n"
+                    f"این لینک دعوت پس از ۷ روز منقضی می‌شود.\n\n"
+                    f"با احترام،\n{accountant_name}"
+                ),
+            }
+
+            send_mail(
+                subject       = SUBJECT.get(lang, SUBJECT["en"]),
+                message       = BODY.get(lang, BODY["en"]),
+                from_email    = getattr(_settings, "DEFAULT_FROM_EMAIL", "noreply@taxwijs.nl"),
+                recipient_list= [email],
+                fail_silently = True,
+            )
+        except Exception as _email_exc:
+            logger.warning("Invitation email failed for %s: %s", email, _email_exc)
+        # ── End email ─────────────────────────────────────────────────────────
+
         _audit(request, "portal_invitation_sent", "Invitation", inv.id, client_profile=profile)
         return Response({"id": inv.id, "token": token, "client_email": email,
                          "expires_at": inv.expires_at.isoformat(), "status": "pending",
@@ -1962,7 +2017,7 @@ class PortalInvitationListView(APIView):
         return Response([
             {
                 "id":            inv.id,
-                "invited_email": inv.client_email,
+                "client_email":  inv.client_email,
                 "client_name":   inv.client_name or None,
                 "status":        inv.status,
                 "message":       inv.message,

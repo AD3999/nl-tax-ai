@@ -399,7 +399,17 @@ export default function ClientPortalPage() {
                 <span style={{ fontSize: "var(--text-sm)", color: "var(--blue)", fontWeight: 600 }}>{t("viewDocs", lang)} →</span>
               </Link>
               <button
-                onClick={() => navigate("/chat", { state: { question: TX.aiDocsQ[lang] } })}
+                onClick={() => {
+                  const missingTitles = displayMissing
+                    .slice(0, 3)
+                    .map((task: { title: string }) => `"${task.title}"`)
+                    .join(", ");
+                  const baseQ = TX.aiDocsQ[lang] as string;
+                  const question = missingTitles
+                    ? `${baseQ} The documents I still need to provide are: ${missingTitles}.`
+                    : baseQ;
+                  navigate("/chat", { state: { question } });
+                }}
                 className="btn btn-ghost btn-sm"
                 style={{ fontSize: "var(--text-xs)", display: "inline-flex", alignItems: "center", gap: 4, marginInlineStart: "auto" }}
               >

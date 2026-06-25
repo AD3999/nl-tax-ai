@@ -178,6 +178,45 @@ export async function deleteClientDocument(id: number): Promise<void> {
   if (!r.ok) throw new Error(`${r.status}`);
 }
 
+// ── Portal invitation system (token-based, with auto-engagement) ──────────
+
+export interface PortalInvitation {
+  id: number;
+  client_email: string;
+  client_name: string;
+  message: string;
+  status: "pending" | "accepted" | "expired" | "cancelled" | "declined";
+  accept_url: string | null;
+  expires_at: string;
+  created_at: string;
+}
+
+export async function sendPortalInvitation(data: {
+  email: string;
+  client_name?: string;
+  message?: string;
+  client_type?: string;
+  preferred_language?: string;
+  tax_year?: number;
+}): Promise<PortalInvitation & { token: string; accept_url: string }> {
+  return post<PortalInvitation & { token: string; accept_url: string }>("/invitations/send/", {
+    email:              data.email,
+    client_name:        data.client_name ?? "",
+    message:            data.message ?? "",
+    client_type:        data.client_type ?? "other",
+    preferred_language: data.preferred_language ?? "nl",
+    tax_year:           data.tax_year ?? 2026,
+  });
+}
+
+export async function fetchPortalInvitations(): Promise<PortalInvitation[]> {
+  return get<PortalInvitation[]>("/invitations/sent/");
+}
+
+export async function cancelPortalInvitation(id: number): Promise<void> {
+  await del(`/invitations/${id}/cancel/`);
+}
+
 export function uploadClientDocument(
   engagementId: number,
   clientProfileId: number,

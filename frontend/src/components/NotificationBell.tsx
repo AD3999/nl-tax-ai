@@ -107,10 +107,11 @@ export default function NotificationBell() {
         showToast(data.title ?? "You have a new notification", "success");
         setCount(c => c + 1);
         prevCountRef.current += 1;
-        // Refresh list if panel is open
+        // Prepend new notification to open panel list (deduplicated)
         setItems(prev => {
-          if (prev.length === 0) return prev; // panel not yet opened
-          return prev; // new item will appear on next panel open / re-fetch
+          if (prev.length === 0) return prev;             // panel not yet loaded — skip
+          if (data.id && prev.some(n => n.id === data.id)) return prev; // already present
+          return [{ ...data, is_read: false } as AppNotification, ...prev];
         });
       } catch { /* ignore malformed frames */ }
     };
