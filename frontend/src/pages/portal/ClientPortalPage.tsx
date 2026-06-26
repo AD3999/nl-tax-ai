@@ -214,6 +214,53 @@ export default function ClientPortalPage() {
     <main style={{ background: "var(--bg)", flex: 1 }}>
       <div style={{ maxWidth: 900, margin: "0 auto", padding: "var(--sp-8) var(--sp-6)" }}>
 
+          {/* ── Deactivated connection notice (M-1) ── */}
+        {profile.status === "deactivated" && (
+          <div style={{
+            background:    "var(--warn-subtle)",
+            border:        "1px solid var(--warn-border)",
+            borderRadius:  "var(--r)",
+            padding:       "var(--sp-4) var(--sp-5)",
+            marginBottom:  "var(--sp-5)",
+            display:       "flex",
+            alignItems:    "flex-start",
+            gap:           "var(--sp-3)",
+          }}>
+            <span style={{ fontSize: 20, flexShrink: 0, lineHeight: 1.3 }}>⚠️</span>
+            <div>
+              <div style={{
+                fontWeight: 700,
+                color:      "var(--warn-text)",
+                marginBottom: 4,
+                fontSize:   "var(--text-sm)",
+              }}>
+                {lang === "nl"
+                  ? "Uw accountant heeft de koppeling tijdelijk gepauzeerd"
+                  : lang === "fa"
+                  ? "مشاور مالیاتی شما اتصال را موقتاً متوقف کرده است"
+                  : "Your accountant has temporarily paused your connection"}
+              </div>
+              <div style={{
+                fontSize:   "var(--text-sm)",
+                color:      "var(--ink-3)",
+                lineHeight: 1.6,
+              }}>
+                {profile.scheduled_deletion_at
+                  ? (lang === "nl"
+                      ? `Uw gegevens worden automatisch verwijderd op ${new Date(profile.scheduled_deletion_at).toLocaleDateString("nl-NL")}. Neem contact op met uw accountant om de toegang te herstellen.`
+                      : lang === "fa"
+                      ? `داده‌های شما در تاریخ ${new Date(profile.scheduled_deletion_at).toLocaleDateString("fa-IR")} به طور خودکار حذف می‌شود. برای بازیابی دسترسی با مشاور مالیاتی خود تماس بگیرید.`
+                      : `Your data will be permanently deleted on ${new Date(profile.scheduled_deletion_at).toLocaleDateString("en-GB")}. Contact your accountant to restore access.`)
+                  : (lang === "nl"
+                      ? "Neem contact op met uw accountant voor meer informatie."
+                      : lang === "fa"
+                      ? "برای اطلاعات بیشتر با مشاور مالیاتی خود تماس بگیرید."
+                      : "Please contact your accountant for more information.")}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header — greeting + tax year + assigned accountant */}
         <div style={{ marginBottom: "var(--sp-6)", display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "var(--sp-3)" }}>
           <div>

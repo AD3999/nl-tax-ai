@@ -538,12 +538,12 @@ export default function AccountantPortalPage() {
                   {clients.map(c => {
                     const isDeactivated = c.status === "deactivated";
                     return (
-                      <tr key={c.id} style={{ borderBottom: "1px solid var(--hairline)", opacity: isDeactivated ? 0.5 : 1, background: isDeactivated ? "var(--amber-s, #fff8e1)" : undefined, transition: "opacity 0.3s, background 0.3s" }}>
+                      <tr key={c.id} style={{ borderBottom: "1px solid var(--hairline)", opacity: isDeactivated ? 0.5 : 1, background: isDeactivated ? "var(--warn-subtle)" : undefined, transition: "opacity 0.3s, background 0.3s" }}>
                         <td style={{ padding: "var(--sp-3)", fontWeight: 500 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                             <span style={{ color: "var(--ink)" }}>{c.display_name}</span>
                             {isDeactivated && (
-                              <span style={{ fontSize: 10, fontWeight: 700, color: "var(--amber, #d97706)", background: "var(--amber-s, #fff8e1)", border: "1px solid var(--amber-b, #f0c040)", padding: "1px 6px", borderRadius: 99, textTransform: "uppercase" }}>
+                              <span style={{ fontSize: 10, fontWeight: 700, color: "var(--warn)", background: "var(--warn-subtle)", border: "1px solid var(--warn-border)", padding: "1px 6px", borderRadius: 99, textTransform: "uppercase" }}>
                                 {lang === "nl" ? "Losgekoppeld" : lang === "fa" ? "قطع شده" : "Disconnected"}
                               </span>
                             )}
@@ -551,7 +551,11 @@ export default function AccountantPortalPage() {
                           <div style={{ color: "var(--ink-4)", fontSize: "var(--text-xs)" }}>{c.email}</div>
                           {isDeactivated && c.days_until_deletion !== null && (
                             <div style={{ color: "var(--warn-text, #7a5a00)", fontSize: "var(--text-2xs)", marginTop: 2 }}>
-                              Deleted in {c.days_until_deletion}d
+                              {lang === "nl"
+                                ? `Verwijderd over ${c.days_until_deletion ?? 0} dagen`
+                                : lang === "fa"
+                                ? `حذف در ${c.days_until_deletion ?? 0} روز`
+                                : `Deleted in ${c.days_until_deletion ?? 0}d`}
                             </div>
                           )}
                         </td>
