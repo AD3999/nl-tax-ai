@@ -150,13 +150,13 @@ export default function AccountantClientDetailPage() {
 
         {profile.status === "deactivated" && (
           <div style={{
-            background: "var(--amber-s, #fff8e1)", border: "1px solid var(--amber-b, #f0c040)",
+            background: "var(--warn-subtle)", border: "1px solid var(--warn-border)",
             borderRadius: "var(--r)", padding: "var(--sp-4)", marginBottom: "var(--sp-5)",
             display: "flex", alignItems: "flex-start", gap: "var(--sp-3)",
           }}>
             <span style={{ fontSize: 18 }}>⚠️</span>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, color: "var(--amber-text, #7a5a00)", marginBottom: 4 }}>
+              <div style={{ fontWeight: 700, color: "var(--warn-text)", marginBottom: 4 }}>
                 Client Disconnected
               </div>
               <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)" }}>
