@@ -8,8 +8,9 @@ import { useMobile } from "../../hooks/useMobile";
 import {
   fetchClientDocuments, fetchClientEngagement,
   uploadClientDocument, deleteClientDocument, fetchClientTasks,
+  fetchClientProfile,
 } from "../../api/portal/client";
-import type { ClientDocument, TaxEngagement } from "../../api/portal/types";
+import type { ClientDocument, TaxEngagement, ClientProfile } from "../../api/portal/types";
 import { formatDate } from "../../lib/utils";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -89,6 +90,7 @@ export default function ClientDocumentsPage() {
 
   const [documents, setDocuments] = useState<ClientDocument[]>([]);
   const [engagement, setEngagement] = useState<TaxEngagement | null>(null);
+  const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [, setLastUpdated] = useState<Date | null>(null);
@@ -121,12 +123,14 @@ export default function ClientDocumentsPage() {
   async function load(silent = false) {
     if (!silent) setLoading(true);
     try {
-      const [docs, eng] = await Promise.all([
+      const [docs, eng, prof] = await Promise.all([
         fetchClientDocuments(),
         fetchClientEngagement(),
+        fetchClientProfile().catch(() => null),
       ]);
       setDocuments(docs);
       setEngagement(eng);
+      setProfile(prof);
       setLastUpdated(new Date());
       if (!silent) setError("");
     } catch {
@@ -399,6 +403,54 @@ export default function ClientDocumentsPage() {
 
       <main style={{ background: "var(--bg)", flex: 1 }}>
         <div style={{ maxWidth: 740, margin: "0 auto", padding: isMobile ? "var(--sp-4) 0" : "var(--sp-5) 0" }}>
+
+          {/* ── Deactivated connection notice ─────────────────────────────────── */}
+          {profile?.status === "deactivated" && (
+            <div style={{
+              background:   "var(--warn-subtle)",
+              border:       "1px solid var(--warn-border)",
+              borderRadius: "var(--r)",
+              padding:      "var(--sp-4) var(--sp-5)",
+              marginBottom: "var(--sp-5)",
+              display:      "flex",
+              alignItems:   "flex-start",
+              gap:          "var(--sp-3)",
+            }}>
+              <span style={{ fontSize: 20, flexShrink: 0, lineHeight: 1.3 }}>⚠️</span>
+              <div>
+                <div style={{
+                  fontWeight:   700,
+                  color:        "var(--warn-text)",
+                  marginBottom: 4,
+                  fontSize:     "var(--text-sm)",
+                }}>
+                  {lang === "nl"
+                    ? "Uw accountant heeft de koppeling tijdelijk gepauzeerd"
+                    : lang === "fa"
+                    ? "مشاور مالیاتی شما اتصال را موقتاً متوقف کرده است"
+                    : "Your accountant has temporarily paused your connection"}
+                </div>
+                <div style={{
+                  fontSize:   "var(--text-sm)",
+                  color:      "var(--ink-3)",
+                  lineHeight: 1.6,
+                }}>
+                  {profile?.scheduled_deletion_at
+                    ? (lang === "nl"
+                        ? `Uw gegevens worden automatisch verwijderd op ${new Date(profile.scheduled_deletion_at).toLocaleDateString("nl-NL")}. Neem contact op met uw accountant om de toegang te herstellen.`
+                        : lang === "fa"
+                        ? `داده‌های شما در تاریخ ${new Date(profile.scheduled_deletion_at).toLocaleDateString("fa-IR")} به طور خودکار حذف می‌شود. برای بازیابی دسترسی با مشاور مالیاتی خود تماس بگیرید.`
+                        : `Your data will be permanently deleted on ${new Date(profile.scheduled_deletion_at).toLocaleDateString("en-GB")}. Contact your accountant to restore access.`)
+                    : (lang === "nl"
+                        ? "Neem contact op met uw accountant voor meer informatie."
+                        : lang === "fa"
+                        ? "برای اطلاعات بیشتر با مشاور مالیاتی خود تماس بگیرید."
+                        : "Please contact your accountant for more information.")}
+                </div>
+              </div>
+            </div>
+          )}
+          {/* ── End deactivated notice ─────────────────────────────────────────── */}
 
           <Link to="/client" style={{ fontSize: "var(--text-sm)", color: "var(--text-3)", textDecoration: "none", fontWeight: 600 }}>{t("back", lang)}</Link>
 

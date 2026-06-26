@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { useMobile } from "../hooks/useMobile";
 import { AppSidebarDesktop, AppSidebarMobileDrawer } from "./AppSidebar";
@@ -17,7 +17,21 @@ export default function AppLayout() {
   const isMobile = useMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { pathname } = useLocation();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // ── Authentication guard ──────────────────────────────────────────────────
+  // AuthContext sets loading=false once it has tried to resolve the profile.
+  // If loading completes and user is still null the visitor is unauthenticated.
+  // Redirect them to /login rather than showing a blank or broken page.
+  useEffect(() => {
+    if (loading) return;          // still resolving — wait
+    if (!user) {
+      navigate("/login", { replace: true });
+    }
+  }, [user, loading, navigate]);
+  // ──────────────────────────────────────────────────────────────────────────
+
   const isFullBleed = FULL_BLEED.has(pathname);
 
   // Show bottom nav only for client role on mobile
@@ -26,6 +40,25 @@ export default function AppLayout() {
   const isClientRole = !isAdmin && !isAccountant;
   const isClientPath = CLIENT_PATHS.some(p => pathname.startsWith(p));
   const showBottomNav = isMobile && isClientRole && isClientPath;
+
+  // Show a minimal loading state while AuthContext resolves the profile.
+  // This prevents a jarring flash of empty sidebar before the redirect fires.
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: "100svh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--bg)",
+      }}>
+        <div
+          className="skel"
+          style={{ width: 40, height: 40, borderRadius: "50%" }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div style={{
