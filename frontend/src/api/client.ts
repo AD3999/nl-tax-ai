@@ -37,11 +37,13 @@ client.interceptors.request.use((config) => {
   return config;
 });
 
-// Auto-refresh token on 401
+// Auto-refresh token on 401; detect portal disconnection on 403
 client.interceptors.response.use(
   (res) => res,
   async (error) => {
     const original = error.config;
+
+    // 401 → attempt silent token refresh
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
       const refresh = localStorage.getItem("refresh_token");
@@ -52,6 +54,17 @@ client.interceptors.response.use(
         return client(original);
       }
     }
+
+    // 403 with has_accountant:false → accountant disconnected this client.
+    // Dispatch the same DOM event the WebSocket handler uses so AppSidebar
+    // calls refreshUser() immediately — the PortalClientRoute then redirects.
+    if (
+      error.response?.status === 403 &&
+      error.response?.data?.has_accountant === false
+    ) {
+      window.dispatchEvent(new CustomEvent("portal:client_deactivated"));
+    }
+
     return Promise.reject(error);
   }
 );

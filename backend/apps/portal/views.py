@@ -1523,6 +1523,25 @@ def _get_or_create_self_service_profile(user):
     return profile
 
 
+_PORTAL_FORBIDDEN = {"detail": "No active accountant connection.", "has_accountant": False}
+
+
+def _get_active_accountant_profile(user):
+    """
+    Return the active, real-accountant-managed profile for this client user, or None.
+    Excludes self-managed profiles (accountant_user == client_user) and any profile
+    with status deactivated or archived.  Used to gate client portal endpoints so
+    disconnected clients cannot access task/document/message data via direct URL.
+    """
+    return AccountantClientProfile.objects.filter(
+        client_user=user,
+    ).exclude(
+        accountant_user=user,
+    ).exclude(
+        status__in=["deactivated", "archived"],
+    ).order_by("-created_at").first()
+
+
 def _get_or_create_engagement(profile):
     """Return the latest engagement for profile, creating one if none exists."""
     engagement = profile.engagements.order_by("-created_at").first()
@@ -1594,6 +1613,8 @@ class ClientPortalTasksView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        if not _get_active_accountant_profile(request.user):
+            return Response(_PORTAL_FORBIDDEN, status=status.HTTP_403_FORBIDDEN)
         profile = _get_or_create_self_service_profile(request.user)
         engagement = _get_or_create_engagement(profile)
         if not engagement:
@@ -1673,6 +1694,8 @@ class ClientPortalDocumentsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        if not _get_active_accountant_profile(request.user):
+            return Response(_PORTAL_FORBIDDEN, status=status.HTTP_403_FORBIDDEN)
         profile = _get_or_create_self_service_profile(request.user)
         docs = ClientDocument.objects.filter(client_profile=profile).order_by("-created_at")
         return Response(ClientDocumentSerializer(docs, many=True, context={"request": request}).data)
@@ -1683,6 +1706,8 @@ class ClientPortalDocumentDeleteView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request, pk):
+        if not _get_active_accountant_profile(request.user):
+            return Response(_PORTAL_FORBIDDEN, status=status.HTTP_403_FORBIDDEN)
         doc = get_object_or_404(ClientDocument, pk=pk)
         profile = _get_or_create_self_service_profile(request.user)
 
@@ -1709,6 +1734,8 @@ class ClientPortalTaskUpdateView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def patch(self, request, pk):
+        if not _get_active_accountant_profile(request.user):
+            return Response(_PORTAL_FORBIDDEN, status=status.HTTP_403_FORBIDDEN)
         item = get_object_or_404(ChecklistItem, pk=pk)
         profile = _get_or_create_self_service_profile(request.user)
 
@@ -2061,6 +2088,8 @@ class ClientMessageUnreadCountView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        if not _get_active_accountant_profile(request.user):
+            return Response({"count": 0})
         profile = _get_or_create_self_service_profile(request.user)
         eng = _get_or_create_engagement(profile)
         if not eng:
@@ -2079,11 +2108,15 @@ class ClientMessagesView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def _get_engagement(self, user):
+        if not _get_active_accountant_profile(user):
+            return None, None
         profile = _get_or_create_self_service_profile(user)
         return _get_or_create_engagement(profile), profile
 
     def get(self, request):
         eng, profile = self._get_engagement(request.user)
+        if eng is None:
+            return Response(_PORTAL_FORBIDDEN, status=status.HTTP_403_FORBIDDEN)
         msgs = PortalMessage.objects.filter(engagement=eng).order_by("created_at")
         # Mark unread messages from accountant as read
         PortalMessage.objects.filter(
@@ -2093,6 +2126,8 @@ class ClientMessagesView(APIView):
 
     def post(self, request):
         eng, profile = self._get_engagement(request.user)
+        if eng is None:
+            return Response(_PORTAL_FORBIDDEN, status=status.HTTP_403_FORBIDDEN)
         body = request.data.get("body", "").strip()
         if not body:
             return Response({"detail": "body is required."}, status=400)

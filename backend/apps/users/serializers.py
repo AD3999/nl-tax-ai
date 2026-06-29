@@ -19,11 +19,18 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_has_accountant(self, obj):
         from apps.portal.models import AccountantClientProfile
-        # Portal profiles are the canonical source — any linked, non-deactivated profile counts
+        # Only count profiles where a DIFFERENT user is the accountant.
+        # Self-managed profiles (accountant_user == client_user, created automatically
+        # by _get_or_create_self_service_profile) must not count — they exist for every
+        # user who has ever visited the portal, including clients whose accountant has
+        # since disconnected. Including them would make has_accountant permanently true.
         portal_linked = AccountantClientProfile.objects.filter(
             client_user=obj,
-        ).exclude(status__in=["deactivated", "archived"]).exists()
-        # Also honour the legacy users.AccountantClient relationship
+        ).exclude(
+            accountant_user=obj,           # not a self-managed profile
+        ).exclude(
+            status__in=["deactivated", "archived"],
+        ).exists()
         legacy_linked = obj.accountant_links.filter(status="active").exists()
         return portal_linked or legacy_linked
 
