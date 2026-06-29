@@ -548,6 +548,7 @@ class ChecklistItemDetailView(APIView):
         "todo":           ["todo", "waiting_client", "waived"],
         "waiting_client": ["waiting_client", "waived"],
         "uploaded":       ["uploaded", "needs_review", "accepted", "rejected", "waived"],
+        "answered":       ["answered", "needs_review", "accepted", "waived", "todo"],
         "needs_review":   ["needs_review", "accepted", "rejected", "waived"],
         "accepted":       ["accepted", "waived"],
         "rejected":       ["rejected", "todo"],
@@ -1065,12 +1066,20 @@ class AccountantActionsView(APIView):
                 {"detail": "This client is disconnected. Reactivate the client to make changes."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        from apps.portal.services.accountant_actions import generate_accountant_actions
-        result = generate_accountant_actions(eng)
+        try:
+            from apps.portal.services.accountant_actions import generate_accountant_actions
+            result = generate_accountant_actions(eng)
+        except Exception as exc:
+            logger.error("generate_accountant_actions failed for engagement %s: %s", eng.id, exc)
+            return Response(
+                {"detail": "Action engine encountered an error. Please try again.", "error": str(exc)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
         _audit(request, "actions_generated", "TaxEngagement", eng.id, engagement=eng)
 
-        # Notify client that new tasks are available
-        if eng.client_profile.client_user_id:
+        # Only notify client if new items were actually created
+        if eng.client_profile.client_user_id and result.get("new_checklist_items", 0) > 0:
             lang = eng.client_profile.preferred_language or "nl"
             TITLES = {"nl": "Nieuwe taken beschikbaar", "en": "New tasks available", "fa": "وظایف جدید در دسترس است"}
             BODIES = {
@@ -1548,6 +1557,15 @@ class ClientPortalEngagementView(APIView):
         return Response(TaxEngagementSerializer(engagement, context={"request": request}).data)
 
 
+_INFO_TASK_STABLE_KEYS = frozenset({
+    "zzp_kvk", "zzp_btw", "zzp_start_date", "zzp_revenue", "zzp_wet_dba_clients", "zzp_hours",
+    "emp_bsn", "emp_personal_details",
+    "exp_start_date", "exp_prev_country",
+    "dga_bv_details", "dga_shareholding", "dga_salary", "dga_gebruikelijk_loon",
+    "oth_employment_status",
+})
+
+
 class ClientPortalTasksView(APIView):
     """GET /api/portal/client/tasks/  — all checklist items for client (all statuses)."""
     permission_classes = [permissions.IsAuthenticated]
@@ -1590,6 +1608,7 @@ class ClientPortalTasksView(APIView):
             tasks.append({
                 "id": f"chk_{item.id}",
                 "type": "checklist",
+                "task_type": "info" if (item.stable_key or "") in _INFO_TASK_STABLE_KEYS else "document",
                 "title": item.title,
                 "description": item.description,
                 "category": item.category,
@@ -1604,7 +1623,7 @@ class ClientPortalTasksView(APIView):
 
         total = ChecklistItem.objects.filter(engagement=engagement, required=True).count()
         completed = ChecklistItem.objects.filter(
-            engagement=engagement, required=True, status__in=("accepted", "waived")
+            engagement=engagement, required=True, status__in=("accepted", "waived", "answered")
         ).count()
 
         # Include the most recent ReadinessSnapshot component scores so the

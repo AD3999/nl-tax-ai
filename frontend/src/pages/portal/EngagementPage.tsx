@@ -321,7 +321,7 @@ const CHECKLIST_ALLOWED_TRANSITIONS: Record<string, string[]> = {
 
 const CHECKLIST_STATUS_COLOR: Record<string, string> = {
   todo: "var(--ink-4)", waiting_client: "var(--warn)",
-  uploaded: "var(--ok)", needs_review: "var(--warn)",
+  uploaded: "var(--ok)", answered: "var(--ok)", needs_review: "var(--warn)",
   accepted: "var(--ok)", rejected: "var(--danger)", waived: "var(--ink-4)",
 };
 

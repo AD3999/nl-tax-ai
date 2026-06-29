@@ -12,15 +12,21 @@ the AI never computes or decides).
 from __future__ import annotations
 
 
-def generate_accountant_actions(engagement) -> list:
+def generate_accountant_actions(engagement) -> dict:
     """
-    Idempotent. Returns list of created AccountantAction dicts.
+    Idempotent. Returns structured dict with action list + counts.
     """
+    import logging
+    _log = logging.getLogger(__name__)
+
     from apps.portal.models import AccountantAction, ChecklistItem, ClientDocument, ExtractedIncome, ExtractedExpense
     from apps.portal.services.missing_info import detect_missing_information
 
-    # First run the missing info engine (idempotent)
-    detect_missing_information(engagement)
+    engine_result: dict = {"new_checklist_items": 0, "new_actions": 0}
+    try:
+        engine_result = detect_missing_information(engagement)
+    except Exception as exc:
+        _log.error("detect_missing_information failed for engagement %s: %s", engagement.id, exc)
 
     # Collect all open actions for response
     actions = list(
@@ -50,11 +56,11 @@ def generate_accountant_actions(engagement) -> list:
         },
     }
 
-    result = []
+    action_list = []
     for action in actions:
         msg_map = CLIENT_MESSAGES.get(action.action_type, {})
         suggested_message = msg_map.get(lang, msg_map.get("en", ""))
-        result.append({
+        action_list.append({
             "id":                action.id,
             "title":             action.title,
             "body":              action.body,
@@ -64,4 +70,9 @@ def generate_accountant_actions(engagement) -> list:
             "suggested_message": suggested_message,
         })
 
-    return result
+    return {
+        "actions":              action_list,
+        "actions_count":        len(action_list),
+        "new_checklist_items":  engine_result.get("new_checklist_items", 0),
+        "new_actions":          engine_result.get("new_actions", 0),
+    }

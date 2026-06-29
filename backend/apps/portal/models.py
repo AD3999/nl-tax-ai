@@ -413,6 +413,7 @@ class ChecklistItem(models.Model):
         ("todo",          "To do"),
         ("waiting_client","Waiting for client"),
         ("uploaded",      "Uploaded"),
+        ("answered",      "Answered"),
         ("needs_review",  "Needs review"),
         ("accepted",      "Accepted"),
         ("rejected",      "Rejected"),

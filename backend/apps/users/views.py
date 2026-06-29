@@ -780,11 +780,12 @@ class AccountantView(APIView):
 
 class AccountantInvitationsView(APIView):
     """
-    Accountant side of the invitation system.
+    DEPRECATED — use /api/portal/invitations/ instead.
+    Kept for backward compatibility; redirects GET to portal invitation data.
 
-    GET  /api/users/accountant/invitations/       — list sent invitations
-    POST /api/users/accountant/invitations/       — send a new invitation
-    DELETE /api/users/accountant/invitations/<pk>/ — cancel a pending invitation
+    GET  /api/users/accountant/invitations/       — list sent invitations (legacy)
+    POST /api/users/accountant/invitations/       — send a new invitation (legacy)
+    DELETE /api/users/accountant/invitations/<pk>/ — cancel a pending invitation (legacy)
     """
     authentication_classes = [SoftJWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
@@ -799,17 +800,18 @@ class AccountantInvitationsView(APIView):
         if not profile:
             return Response({"error": "Not an accountant account."}, status=403)
 
-        from .models import AccountantInvitation
-        invs = AccountantInvitation.objects.filter(accountant=profile).order_by("-created_at")
+        # Read from the canonical portal.Invitation model so both endpoints return consistent data
+        from apps.portal.models import Invitation as PortalInvitation
+        invs = PortalInvitation.objects.filter(sent_by=request.user).order_by("-created_at")
         return Response([
             {
-                "id":             inv.id,
-                "invited_email":  inv.invited_email,
-                "status":         inv.status,
-                "message":        inv.message,
-                "client_name":    inv.client_user.get_full_name() or inv.client_user.email if inv.client_user else None,
-                "created_at":     inv.created_at.date().isoformat(),
-                "updated_at":     inv.updated_at.date().isoformat(),
+                "id":            inv.id,
+                "invited_email": inv.client_email,
+                "status":        inv.status,
+                "message":       inv.message,
+                "client_name":   inv.client_name or None,
+                "created_at":    inv.created_at.date().isoformat(),
+                "updated_at":    inv.created_at.date().isoformat(),
             }
             for inv in invs
         ])
