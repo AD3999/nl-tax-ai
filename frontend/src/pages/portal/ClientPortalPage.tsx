@@ -312,20 +312,33 @@ export default function ClientPortalPage() {
                : lang === "fa" ? "اظهارنامه شما آماده ارسال است!"
                : "Your tax return is ready to file!"}
             </div>
-            <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", lineHeight: 1.6, maxWidth: 480, margin: "0 auto var(--sp-4)" }}>
+            <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", lineHeight: 1.6, maxWidth: 520, margin: "0 auto var(--sp-3)" }}>
               {lang === "nl"
-                ? "Uw accountant dient de aangifte in bij de Belastingdienst. Controleer uw berichtenbox voor de volgende stappen."
+                ? "Uw aangifte wordt nu door uw accountant gecontroleerd en ingediend. U hoeft niets te doen — u volgt alle stappen via dit platform."
                 : lang === "fa"
-                ? "مشاور شما اظهارنامه را به Belastingdienst ارسال می‌کند. صندوق پیام‌های خود را برای مراحل بعدی بررسی کنید."
-                : "Your accountant will file your return with the Belastingdienst. Check your messages for the next steps."}
+                ? "اظهارنامه شما اکنون توسط مشاور بررسی و ارسال می‌شود. نیازی به اقدام خارجی ندارید — تمام مراحل اینجا پیگیری می‌شود."
+                : "Your return is now with your accountant for final review and filing. No external portals needed — track every step right here on TaxWijs."}
+            </div>
+            {/* Inline next-steps progress strip */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              gap: 6, flexWrap: "wrap",
+              fontSize: "var(--text-xs)", color: "var(--ok-text)",
+              marginBottom: "var(--sp-4)",
+            }}>
+              <span>✅ {lang === "nl" ? "Documenten compleet" : lang === "fa" ? "مدارک کامل" : "Documents complete"}</span>
+              <span style={{ color: "var(--ok)", opacity: 0.5 }}>›</span>
+              <span style={{ opacity: 0.75 }}>⏳ {lang === "nl" ? "Accountant controleert & dient in" : lang === "fa" ? "مشاور بررسی و ارسال می‌کند" : "Accountant reviews & files"}</span>
+              <span style={{ color: "var(--ok)", opacity: 0.5 }}>›</span>
+              <span style={{ opacity: 0.5 }}>🏁 {lang === "nl" ? "Bevestiging in uw portaal" : lang === "fa" ? "تأییدیه در پورتال شما" : "Confirmation in your portal"}</span>
             </div>
             <button
               className="btn btn-accent btn-sm"
-              onClick={() => navigate("/client/messages")}
+              onClick={() => navigate("/client/messages", { state: { readyToFile: true } })}
             >
-              {lang === "nl" ? "Naar mijn berichtenbox →"
-               : lang === "fa" ? "رفتن به پیام‌ها ←"
-               : "View my messages →"}
+              {lang === "nl" ? "Bekijk uw berichten →"
+               : lang === "fa" ? "مشاهده پیام‌ها ←"
+               : "View messages →"}
             </button>
           </div>
         )}

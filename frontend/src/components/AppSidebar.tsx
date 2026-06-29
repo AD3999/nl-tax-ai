@@ -111,9 +111,17 @@ interface SidebarContentProps { onNav?: () => void }
 
 function SidebarContent({ onNav }: SidebarContentProps) {
   const { t } = useTranslation();
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
+
+  // When accountant reactivates a client, re-fetch profile so has_accountant
+  // updates and the portal nav items appear immediately without a page refresh.
+  useEffect(() => {
+    function onReactivated() { refreshUser().catch(() => null); }
+    window.addEventListener("portal:client_reactivated", onReactivated);
+    return () => window.removeEventListener("portal:client_reactivated", onReactivated);
+  }, [refreshUser]);
 
   const isAdmin      = !!user?.is_admin;
   const isAccountant = user?.role === "accountant";

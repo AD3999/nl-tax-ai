@@ -176,16 +176,18 @@ export default function NotificationBell() {
   }
 
   function handleClick(notif: AppNotification) {
-    // 1. Optimistically remove from list so the panel looks cleared instantly
-    setItems(prev => prev.filter(n => n.id !== notif.id));
+    // 1. Mark as read in-place so the item stays visible without the blue dot
+    setItems(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
 
-    // 2. Close panel
+    // 2. Decrement badge count for unread notifications immediately
+    if (!notif.is_read) {
+      setCount(c => Math.max(0, c - 1));
+      prevCountRef.current = Math.max(0, prevCountRef.current - 1);
+      markRead(notif.id).catch(() => null);
+    }
+
+    // 3. Close panel and navigate
     setOpen(false);
-
-    // 3. Mark as read on the server (fire-and-forget) — record is NOT deleted
-    if (!notif.is_read) markRead(notif.id).catch(() => null);
-
-    // 4. Navigate to the relevant page
     if (notif.action_url) {
       navigate(toRelativePath(notif.action_url));
     }

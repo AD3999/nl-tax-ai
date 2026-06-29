@@ -9,6 +9,7 @@ interface AuthState {
   loading: boolean;
   setUser: (u: AuthUser | null) => void;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState>({
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthState>({
   loading: true,
   setUser: () => {},
   logout: () => {},
+  refreshUser: async () => {},
 });
 
 function updateLastActive() {
@@ -47,6 +49,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(LAST_ACTIVE_KEY);
   };
 
+  const refreshUser = async () => {
+    const u = await fetchProfile();
+    setUser(u);
+  };
+
   // Track user activity and auto-logout after 1hr inactivity
   useEffect(() => {
     if (!user) return;
@@ -72,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, setUser, logout }}>
+    <AuthContext.Provider value={{ user, loading, setUser, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

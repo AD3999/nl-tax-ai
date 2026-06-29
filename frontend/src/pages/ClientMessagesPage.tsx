@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import { Send } from "lucide-react";
 import type { PortalMessage } from "../api/portal/messages";
 import { fetchClientMessages, sendClientMessage } from "../api/portal/messages";
@@ -9,6 +10,8 @@ import ReminderBody, { isReminderBody } from "../components/ReminderBody";
 export default function ClientMessagesPage() {
   const { i18n } = useTranslation();
   const isMobile = useMobile();
+  const location = useLocation();
+  const isReadyToFile = (location.state as { readyToFile?: boolean } | null)?.readyToFile === true;
   const isFA = i18n.language?.startsWith("fa");
   const isNL = i18n.language?.startsWith("nl");
   const dir  = isFA ? "rtl" : "ltr";
@@ -122,6 +125,50 @@ export default function ClientMessagesPage() {
           <div style={{ fontSize: "0.75rem", color: "var(--text-3)", marginTop: 1 }}>{T.subtitle}</div>
         </div>
       </div>
+
+      {/* ── Ready-to-file context banner ── */}
+      {isReadyToFile && (
+        <div style={{
+          padding: isMobile ? "var(--sp-3) var(--sp-3)" : "var(--sp-3) var(--sp-6)",
+          borderBottom: "1px solid var(--ok)",
+          background: "var(--ok-subtle)",
+          flexShrink: 0,
+        }}>
+          <div style={{ fontWeight: 700, fontSize: "var(--text-sm)", color: "var(--ok-text)", marginBottom: "var(--sp-1)" }}>
+            {isFA ? "مراحل بعدی اظهارنامه شما"
+             : isNL ? "Wat gebeurt er nu met uw aangifte?"
+             : "What happens next with your return?"}
+          </div>
+          <ol style={{
+            margin: 0, paddingInlineStart: "1.2em",
+            fontSize: "var(--text-xs)", color: "var(--ok-text)",
+            lineHeight: 1.8, opacity: 0.85,
+          }}>
+            {isFA ? (
+              <>
+                <li>مشاور شما اظهارنامه را بررسی نهایی می‌کند</li>
+                <li>اظهارنامه از طریق سیستم ما ارسال می‌شود</li>
+                <li>تأییدیه در پورتال TaxWijs شما نمایش داده می‌شود</li>
+                <li>اگر سؤالی دارید، همین‌جا پیام بفرستید</li>
+              </>
+            ) : isNL ? (
+              <>
+                <li>Uw accountant voert de eindcontrole uit</li>
+                <li>De aangifte wordt via ons platform ingediend</li>
+                <li>U ontvangt bevestiging in uw TaxWijs-portaal</li>
+                <li>Heeft u vragen? Stuur hier een bericht</li>
+              </>
+            ) : (
+              <>
+                <li>Your accountant performs the final review</li>
+                <li>The return is filed through our platform</li>
+                <li>You receive confirmation in your TaxWijs portal</li>
+                <li>Questions? Send a message right here</li>
+              </>
+            )}
+          </ol>
+        </div>
+      )}
 
       {/* ── Message list ── */}
       <div style={{
