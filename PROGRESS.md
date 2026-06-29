@@ -5958,3 +5958,28 @@ Added **Rule 7 — PORTAL TASK PROTOCOL**:
 - `FILE_STORAGE_PROVIDER=local` — uploaded client documents lost on redeploy; needs S3 config
 - Dual invitation model (`users.AccountantInvitation` + `portal.Invitation`) not consolidated
 - Portal `models have changes not in migration` warning (non-blocking, cosmetic drift only)
+
+---
+
+### Session — 2026-06-29 — Portal Disconnect/Reactivate Bug Fix
+
+**Issues reported:**
+1. After accountant disconnects a client, client's sidebar still showed "My Portal" and "Messages", and portal pages still loaded (endpoints returned 200).
+2. After accountant reactivated a client, the page showed "Something went wrong" (global ErrorBoundary) even though the backend reactivation succeeded.
+
+**Root causes identified:**
+
+**Issue 1 — Two separate causes:**
+- `ClientPortalEngagementView` had no `_get_active_accountant_profile` gate. `/portal/client/engagement/` returned 200 for deactivated clients, so `_dispatchIfDeactivated` never fired from that code path and no `portal:client_deactivated` event was emitted.
+- `PortalClientRoute` read stale `user.has_accountant: true` from memory and immediately rendered portal children before the async `refreshUser()` resolved. Disconnected clients could navigate to portal routes within the refresh window.
+
+**Issue 2 — Two separate causes:**
+- `TabErrorBoundary.componentDidCatch` called `this.props.onReset()` (= `loadData(true)`) during React's error-recovery commit phase. This triggered parent-component state setters while React was mid-recovery, causing the error to escape to the global ErrorBoundary and show "Something went wrong".
+- Reactivation used an optimistic `setClients` spread that preserved stale derived fields (e.g. `days_until_deletion`), risking render errors outside the error boundary.
+
+**Files changed:**
+- `backend/apps/portal/views.py` — Added `_get_active_accountant_profile` gate to `ClientPortalEngagementView` (returns 403+has_accountant:false when disconnected)
+- `frontend/src/App.tsx` — `PortalClientRoute` now has a `checking` state + `mountedRef`; renders `null` until `refreshUser()` resolves, blocking stale renders
+- `frontend/src/pages/portal/AccountantPortalPage.tsx` — Removed auto-reset from `TabErrorBoundary.componentDidCatch`; `onReset` now only called from Retry button. Reactivation button replaced optimistic spread with `loadData(true)` (server reload) + added error toast
+
+**Commit:** `14d77a0`
