@@ -1597,6 +1597,8 @@ class ClientPortalEngagementView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        if not _get_active_accountant_profile(request.user):
+            return Response(_PORTAL_FORBIDDEN, status=status.HTTP_403_FORBIDDEN)
         profile = _get_or_create_self_service_profile(request.user)
         engagement = _get_or_create_engagement(profile)
         return Response(TaxEngagementSerializer(engagement, context={"request": request}).data)

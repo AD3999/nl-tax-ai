@@ -29,7 +29,9 @@ class TabErrorBoundary extends Component<
     this.state = { hasError: false };
   }
   static getDerivedStateFromError() { return { hasError: true }; }
-  componentDidCatch() { this.props.onReset(); }
+  // Do NOT call onReset() here — invoking parent state setters inside
+  // componentDidCatch triggers state updates while React is mid-recovery and
+  // can propagate the error to the global ErrorBoundary.
   render() {
     if (this.state.hasError) {
       return (
@@ -37,7 +39,10 @@ class TabErrorBoundary extends Component<
           Failed to load client data.{" "}
           <button
             className="btn btn-ghost btn-sm"
-            onClick={() => this.setState({ hasError: false })}
+            onClick={() => {
+              this.setState({ hasError: false });
+              this.props.onReset();
+            }}
           >
             Retry
           </button>
@@ -678,14 +683,16 @@ export default function AccountantPortalPage() {
                                 onClick={async () => {
                                   try {
                                     await reactivateClient(c.id);
-                                    setClients(prev =>
-                                      prev.map(x => x.id === c.id
-                                        ? { ...x, status: "active", deactivated_at: null, scheduled_deletion_at: null }
-                                        : x
-                                      )
-                                    );
+                                    // Reload from server — ensures fresh serialized data
+                                    // (optimistic spread could leave stale derived fields)
+                                    void loadData(true);
                                   } catch {
-                                    // handled by detail page
+                                    showToast(
+                                      lang === "nl" ? "Reactiveren mislukt. Probeer opnieuw."
+                                      : lang === "fa" ? "فعال‌سازی مجدد ناموفق بود. دوباره امتحان کنید."
+                                      : "Reactivation failed. Please try again.",
+                                      "error"
+                                    );
                                   }
                                 }}
                               >Reactivate</button>

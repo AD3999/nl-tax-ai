@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState, Component, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, Component, type ReactNode } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -101,17 +101,26 @@ function AdminRoute({ children }: { children: ReactNode }) {
 
 // Guards all /client/* portal pages — redirects to /dashboard when the user
 // has no active accountant connection (deactivated, archived, or never linked).
+// Does a fresh server check on every mount so stale in-memory has_accountant
+// never lets a disconnected client through.
 function PortalClientRoute({ children }: { children: ReactNode }) {
   const { user, loading, refreshUser } = useAuth();
+  const [checking, setChecking] = useState(true);
+  // Track mount so we never call setChecking after unmount.
+  const mountedRef = useRef(true);
 
-  // Re-verify has_accountant from the server every time this route renders
-  // (e.g. after an accountant disconnect). The WS event / poll will also
-  // update the state, but this guarantees correctness on direct navigation.
   useEffect(() => {
-    void refreshUser().catch(() => null);
+    mountedRef.current = true;
+    setChecking(true);
+    refreshUser()
+      .catch(() => null)
+      .finally(() => {
+        if (mountedRef.current) setChecking(false);
+      });
+    return () => { mountedRef.current = false; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (loading) return null;
+  if (loading || checking) return null;
   if (!user) return <Navigate to="/login" replace />;
   if (!user.has_accountant) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
