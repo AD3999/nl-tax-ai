@@ -619,6 +619,11 @@ export default function AccountantPortalPage() {
                                 {lang === "nl" ? "Losgekoppeld" : lang === "fa" ? "قطع شده" : "Disconnected"}
                               </span>
                             )}
+                            {!isDeactivated && c.client_user === null && c.status === "invited" && (
+                              <span style={{ fontSize: 10, fontWeight: 700, color: "var(--warn-text)", background: "var(--warn-subtle)", border: "1px solid var(--warn-border)", padding: "1px 6px", borderRadius: 99, textTransform: "uppercase", whiteSpace: "nowrap" }}>
+                                {lang === "nl" ? "⏳ Wacht op acceptatie" : lang === "fa" ? "⏳ در انتظار پذیرش" : "⏳ Awaiting acceptance"}
+                              </span>
+                            )}
                           </div>
                           <div style={{ color: "var(--ink-4)", fontSize: "var(--text-xs)" }}>{c.email}</div>
                           {isDeactivated && c.days_until_deletion !== null && (
