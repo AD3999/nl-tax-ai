@@ -18,7 +18,14 @@ class UserSerializer(serializers.ModelSerializer):
         return obj.is_staff or obj.is_superuser
 
     def get_has_accountant(self, obj):
-        return obj.accountant_links.filter(status="active").exists()
+        from apps.portal.models import AccountantClientProfile
+        # Portal profiles are the canonical source — any linked, non-deactivated profile counts
+        portal_linked = AccountantClientProfile.objects.filter(
+            client_user=obj,
+        ).exclude(status__in=["deactivated", "archived"]).exists()
+        # Also honour the legacy users.AccountantClient relationship
+        legacy_linked = obj.accountant_links.filter(status="active").exists()
+        return portal_linked or legacy_linked
 
     class Meta:
         model = User
