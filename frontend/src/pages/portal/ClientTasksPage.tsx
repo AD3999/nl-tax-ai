@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -342,6 +342,8 @@ export default function ClientTasksPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const highlightId = Number(searchParams.get("highlight") || 0);
   const isMobile = useMobile();
   const lang = (["nl", "fa"].includes(i18n.language) ? i18n.language : "en") as Lang;
   const tx = TX[lang];
@@ -369,7 +371,9 @@ export default function ClientTasksPage() {
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState("");
   const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef   = useRef<HTMLInputElement>(null);
+  const taskCardRefs   = useRef<Record<number, HTMLDivElement | null>>({});
+  const [highlightedId, setHighlightedId] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -377,6 +381,16 @@ export default function ClientTasksPage() {
     const id = setInterval(() => void load(true), 15_000);
     return () => clearInterval(id);
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Scroll to and highlight a task when ?highlight=<id> is in the URL
+  useEffect(() => {
+    if (!highlightId || tasks.length === 0) return;
+    setHighlightedId(highlightId);
+    const el = taskCardRefs.current[highlightId];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    const t = setTimeout(() => setHighlightedId(0), 3000);
+    return () => clearTimeout(t);
+  }, [tasks, highlightId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function load(silent = false) {
     if (!silent) setLoading(true);
@@ -656,11 +670,18 @@ export default function ClientTasksPage() {
               const isDone = task.status === "uploaded";
               const isMarking = markingId === task.raw_id;
               return (
-                <div key={task.id} className="card" style={{
-                  padding: "var(--sp-4)", marginBottom: "var(--sp-3)",
-                  borderInlineStart: `3px solid ${task.rejection_note ? "var(--danger)" : task.required ? "var(--danger)" : "var(--border-2)"}`,
-                  transition: "opacity 0.2s",
-                }}>
+                <div
+                  key={task.id}
+                  ref={el => { taskCardRefs.current[task.raw_id] = el; }}
+                  className="card"
+                  style={{
+                    padding: "var(--sp-4)", marginBottom: "var(--sp-3)",
+                    borderInlineStart: `3px solid ${task.rejection_note ? "var(--danger)" : task.required ? "var(--danger)" : "var(--border-2)"}`,
+                    transition: "opacity 0.2s, box-shadow 0.4s, background 0.4s",
+                    boxShadow: highlightedId === task.raw_id ? "0 0 0 2px var(--warn), var(--sh-md)" : undefined,
+                    background: highlightedId === task.raw_id ? "var(--warn-subtle)" : undefined,
+                  }}
+                >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "var(--sp-3)" }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 700, fontSize: "var(--text-base)", color: "var(--text)", marginBottom: 4 }}>

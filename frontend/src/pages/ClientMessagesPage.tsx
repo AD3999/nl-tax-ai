@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Send } from "lucide-react";
 import type { PortalMessage } from "../api/portal/messages";
 import { fetchClientMessages, sendClientMessage } from "../api/portal/messages";
@@ -11,6 +11,7 @@ export default function ClientMessagesPage() {
   const { i18n } = useTranslation();
   const isMobile = useMobile();
   const location = useLocation();
+  const navigate = useNavigate();
   const isReadyToFile = (location.state as { readyToFile?: boolean } | null)?.readyToFile === true;
   const isFA = i18n.language?.startsWith("fa");
   const isNL = i18n.language?.startsWith("nl");
@@ -74,6 +75,44 @@ export default function ClientMessagesPage() {
     yesterday.setDate(today.getDate() - 1);
     if (d.toDateString() === yesterday.toDateString()) return isFA ? "دیروز" : isNL ? "Gisteren" : "Yesterday";
     return d.toLocaleDateString(isFA ? "fa-IR" : isNL ? "nl-NL" : "en-GB", { day: "numeric", month: "long" });
+  }
+
+  // Parse [task_link:id:title] tokens in a message body, rendering them as
+  // clickable chips that navigate to /client/tasks?highlight=<id>.
+  function parseMessageBody(text: string): ReactNode {
+    const RE = /\[task_link:(\d+):([^\]]+)\]/g;
+    const parts: ReactNode[] = [];
+    let last = 0;
+    let m: RegExpExecArray | null;
+    while ((m = RE.exec(text)) !== null) {
+      if (m.index > last) parts.push(text.slice(last, m.index).trimEnd());
+      const taskId = m[1];
+      const taskTitle = m[2];
+      parts.push(
+        <button
+          key={`tl-${m.index}`}
+          onClick={() => navigate(`/client/tasks?highlight=${taskId}`)}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 4,
+            marginTop: 8,
+            padding: "5px 12px",
+            borderRadius: 999,
+            border: "1.5px solid var(--blue)",
+            background: "oklch(0.55 0.18 243 / 0.12)",
+            color: "var(--blue)",
+            fontSize: "var(--text-xs)",
+            fontWeight: 700,
+            cursor: "pointer",
+            lineHeight: 1.4,
+          }}
+        >
+          📋 {taskTitle}
+        </button>
+      );
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) parts.push(text.slice(last));
+    return <>{parts}</>;
   }
 
   // Group messages by day
@@ -264,7 +303,11 @@ export default function ClientMessagesPage() {
                             variant="bubble"
                             textColor={isOwn ? "#fff" : "var(--text)"}
                           />
-                        ) : m.body}
+                        ) : (
+                          <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+                            {parseMessageBody(m.body)}
+                          </span>
+                        )}
                       </div>
                     </div>
                   );
