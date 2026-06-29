@@ -623,8 +623,10 @@ export default function AccountantPortalPage() {
                                 onClick={async () => {
                                   if (!window.confirm(`Disconnect ${c.display_name}? Their data is kept for 30 days.`)) return;
                                   try {
-                                    const updated = await disconnectClient(c.id);
-                                    setClients(prev => prev.map(x => x.id === c.id ? updated : x));
+                                    await disconnectClient(c.id);
+                                    // Reload from server — avoids any potential
+                                    // render crash from optimistic state patching
+                                    void loadData(true);
                                   } catch {
                                     showToast(
                                       lang === "nl" ? "Loskoppelen mislukt. Probeer opnieuw."
@@ -632,7 +634,6 @@ export default function AccountantPortalPage() {
                                       : "Disconnect failed. Please try again.",
                                       "error"
                                     );
-                                    void loadData(true);
                                   }
                                 }}
                               ><X size={13} /></button>

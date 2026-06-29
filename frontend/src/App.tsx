@@ -102,7 +102,15 @@ function AdminRoute({ children }: { children: ReactNode }) {
 // Guards all /client/* portal pages — redirects to /dashboard when the user
 // has no active accountant connection (deactivated, archived, or never linked).
 function PortalClientRoute({ children }: { children: ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
+
+  // Re-verify has_accountant from the server every time this route renders
+  // (e.g. after an accountant disconnect). The WS event / poll will also
+  // update the state, but this guarantees correctness on direct navigation.
+  useEffect(() => {
+    void refreshUser().catch(() => null);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
   if (!user.has_accountant) return <Navigate to="/dashboard" replace />;
