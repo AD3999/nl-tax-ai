@@ -153,6 +153,7 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
             "address_street", "address_city", "address_postcode",
             "bsn", "bsn_is_set", "kvk_number", "btw_number", "birth_date",
             "deactivated_at", "scheduled_deletion_at", "days_until_deletion",
+            "client_user",
             "created_at", "updated_at",
         ]
         read_only_fields = [

@@ -2337,6 +2337,32 @@ class PortalInvitationAcceptView(APIView):
                 pass
         inv.engagement = engagement; inv.save(update_fields=["engagement"])
         _audit(request, "portal_invitation_accepted", "Invitation", inv.id, client_profile=profile, engagement=engagement)
+
+        # ── Notify the accountant that their invitation was accepted ──────────
+        try:
+            client_display = (
+                acting_user.get_full_name().strip()
+                or acting_user.email
+            )
+            create_notification(
+                user       = inv.sent_by,
+                notif_type = "invitation_accepted",
+                title      = f"{client_display} accepted your invitation",
+                body       = (
+                    f"{client_display} has joined TaxWijs and accepted your invitation. "
+                    f"Their tax portal is now active."
+                ),
+                action_url = f"/accountant/clients/{profile.id}",
+                metadata   = {
+                    "invitation_id": inv.id,
+                    "profile_id":    profile.id,
+                    "engagement_id": engagement.id if engagement else None,
+                },
+            )
+        except Exception:
+            pass   # notification failure must never break the accept flow
+        # ─────────────────────────────────────────────────────────────────────
+
         return Response({"detail": "Invitation accepted. Your tax portal is ready.",
                          "profile_id": profile.id, "engagement_id": engagement.id, "redirect_to": "/client"})
 
@@ -2384,3 +2410,73 @@ class PortalInvitationCancelView(APIView):
         if not updated:
             return Response({"detail": "Invitation not found or already closed."}, status=404)
         return Response(status=204)
+
+
+class PortalInvitationDeclineView(APIView):
+    """
+    POST /api/portal/invitations/decline/
+    Client declines a token-based portal invitation.
+    - Marks the Invitation as declined
+    - Deletes the pre-created AccountantClientProfile shell (or archives it
+      if an engagement already exists on it)
+    - Sends an in-app notification to the accountant
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        from .models import Invitation
+        token = (request.data.get("token", "") or "").strip()
+        if not token:
+            return Response({"detail": "token is required."}, status=400)
+
+        try:
+            inv = Invitation.objects.select_related("sent_by").get(token=token)
+        except Invitation.DoesNotExist:
+            return Response({"detail": "Invalid invitation."}, status=404)
+
+        if inv.status not in ("pending",):
+            return Response(
+                {"detail": f"This invitation has already been {inv.status}."},
+                status=400,
+            )
+
+        inv.status = "declined"
+        inv.save(update_fields=["status"])
+
+        # ── Clean up the pre-created shell profile ────────────────────────────
+        try:
+            shell_profile = AccountantClientProfile.objects.filter(
+                accountant_user=inv.sent_by,
+                email__iexact=inv.client_email,
+                client_user__isnull=True,   # only the un-linked placeholder
+            ).first()
+            if shell_profile:
+                has_engagement = TaxEngagement.objects.filter(
+                    client_profile=shell_profile
+                ).exists()
+                if has_engagement:
+                    shell_profile.status = "archived"
+                    shell_profile.save(update_fields=["status", "updated_at"])
+                else:
+                    shell_profile.delete()
+        except Exception:
+            pass
+
+        # ── Notify the accountant in-app ──────────────────────────────────────
+        try:
+            create_notification(
+                user       = inv.sent_by,
+                notif_type = "status_update",
+                title      = f"{inv.client_name or inv.client_email} declined your invitation",
+                body       = (
+                    f"{inv.client_name or inv.client_email} has declined your "
+                    f"TaxWijs portal invitation."
+                ),
+                action_url = "/accountant/portal",
+                metadata   = {"invitation_id": inv.id},
+            )
+        except Exception:
+            pass
+
+        _audit(request, "portal_invitation_declined", "Invitation", inv.id)
+        return Response({"detail": "Invitation declined."})
