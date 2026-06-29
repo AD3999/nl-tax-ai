@@ -1676,7 +1676,7 @@ export default function EngagementPage() {
 
             {/* File confirmation modal */}
             {showFileConfirm && (
-              <Modal onClose={() => setShowFileConfirm(false)}>
+              <Modal open={showFileConfirm} onClose={() => setShowFileConfirm(false)}>
                 <div style={{ padding: "var(--sp-5)", maxWidth: 400 }}>
                   <div style={{ fontWeight: 700, fontSize: "var(--text-lg)", marginBottom: "var(--sp-3)" }}>
                     {tx.review_file_confirm_title}

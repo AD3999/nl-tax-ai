@@ -135,6 +135,8 @@ export interface ChecklistItem {
   priority: string;
   stable_key: string;
   task_type?: "document" | "info";
+  meta_value?: string | null;
+  rejection_note?: string | null;
   created_at: string;
   updated_at: string;
 }
