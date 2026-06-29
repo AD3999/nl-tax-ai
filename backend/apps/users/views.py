@@ -966,6 +966,45 @@ class ClientInvitationsView(APIView):
             if action == "decline":
                 inv.status = "declined"
                 inv.save(update_fields=["status"])
+
+                # ── Remove the pre-created shell profile so accountant no longer sees
+                # this person as "Invited" after they explicitly declined ───────────────
+                try:
+                    declined_profile = AccountantClientProfile.objects.filter(
+                        accountant_user=inv.sent_by,
+                        email__iexact=inv.client_email,
+                        client_user__isnull=True,   # only the un-linked shell
+                    ).first()
+                    if declined_profile:
+                        has_eng = TaxEngagement.objects.filter(
+                            client_profile=declined_profile
+                        ).exists()
+                        if has_eng:
+                            declined_profile.status = "archived"
+                            declined_profile.save(update_fields=["status", "updated_at"])
+                        else:
+                            declined_profile.delete()
+                except Exception:
+                    pass
+
+                # ── Notify the accountant in-app ─────────────────────────────────────
+                try:
+                    from apps.users.notification_utils import create_notification
+                    create_notification(
+                        user       = inv.sent_by,
+                        notif_type = "status_update",
+                        title      = f"{inv.client_name or inv.client_email} declined your invitation",
+                        body       = (
+                            f"{inv.client_name or inv.client_email} has declined "
+                            f"your TaxWijs portal invitation."
+                        ),
+                        action_url = "/accountant/portal",
+                        metadata   = {"invitation_id": inv.id},
+                    )
+                except Exception:
+                    pass
+                # ─────────────────────────────────────────────────────────────────────
+
                 return Response({"status": "declined"})
 
             # Accept
@@ -977,24 +1016,36 @@ class ClientInvitationsView(APIView):
             inv.client_user = request.user; inv.status = "accepted"; inv.accepted_at = timezone.now()
             inv.save(update_fields=["client_user", "status", "accepted_at"])
 
-            # Keyed on the actual unique constraint (accountant_user, client_user)
-            # so get_or_create is idempotent even when the same user is both sender
-            # and recipient (test scenario) or a self-service profile already exists.
-            profile, created = AccountantClientProfile.objects.get_or_create(
+            # Find the profile pre-created when the invitation was sent
+            # (keyed on accountant_user + email with client_user=None).
+            # Link it to the accepting user instead of creating a new duplicate.
+            profile = AccountantClientProfile.objects.filter(
                 accountant_user=inv.sent_by,
-                client_user=request.user,
-                defaults={
-                    "email": request.user.email,
-                    "first_name": getattr(request.user, "first_name", ""),
-                    "last_name": getattr(request.user, "last_name", ""),
-                    "status": "active",
-                    "tax_year": inv.tax_year,
-                },
-            )
-            if not created:
+                email__iexact=inv.client_email,
+            ).first()
+
+            if profile:
+                # Update the pre-created profile — link client_user and activate
                 profile.client_user = request.user
-                profile.status = "active"
-                profile.save(update_fields=["client_user", "status", "updated_at"])
+                profile.status      = "active"
+                if not profile.first_name:
+                    profile.first_name = getattr(request.user, "first_name", "")
+                if not profile.last_name:
+                    profile.last_name  = getattr(request.user, "last_name", "")
+                profile.save(update_fields=[
+                    "client_user", "status", "first_name", "last_name", "updated_at"
+                ])
+            else:
+                # No pre-created profile — create one fresh
+                profile = AccountantClientProfile.objects.create(
+                    accountant_user = inv.sent_by,
+                    client_user     = request.user,
+                    email           = request.user.email,
+                    first_name      = getattr(request.user, "first_name", ""),
+                    last_name       = getattr(request.user, "last_name", ""),
+                    status          = "active",
+                    tax_year        = inv.tax_year,
+                )
 
             try:
                 acc_profile = AccountantProfile.objects.get(user=inv.sent_by)
@@ -1016,6 +1067,32 @@ class ClientInvitationsView(APIView):
                 except Exception:
                     pass
             inv.engagement = engagement; inv.save(update_fields=["engagement"])
+
+            # ── Notify accountant that invitation was accepted ─────────────────────
+            try:
+                from apps.users.notification_utils import create_notification
+                client_display = (
+                    request.user.get_full_name().strip()
+                    or request.user.email
+                )
+                create_notification(
+                    user       = inv.sent_by,
+                    notif_type = "invitation_accepted",
+                    title      = f"{client_display} accepted your invitation",
+                    body       = (
+                        f"{client_display} has joined TaxWijs and accepted your "
+                        f"portal invitation. Their tax file is now active."
+                    ),
+                    action_url = f"/accountant/clients/{profile.id}",
+                    metadata   = {
+                        "invitation_id": inv.id,
+                        "profile_id":    profile.id,
+                    },
+                )
+            except Exception:
+                pass
+            # ──────────────────────────────────────────────────────────────────────
+
             return Response({"status": "accepted"})
 
         try:
