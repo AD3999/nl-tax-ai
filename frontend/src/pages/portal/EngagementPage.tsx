@@ -17,7 +17,7 @@ import {
   fetchIncome, fetchExpenses, fetchActions, generateActions, fetchRisks,
   fetchAudit, updateChecklistItem, reviewDocument, sendReminder,
   recalculateReadiness, updateAction, updateIncome, updateExpense,
-  uploadDocument, updateEngagement,
+  uploadDocument, updateEngagement, fileEngagement, rejectTask,
 } from "../../api/portal/client";
 import {
   fetchEngagementMessages, sendEngagementMessage,
@@ -28,7 +28,7 @@ import type {
   ExtractedIncome, ExtractedExpense, AccountantAction, ReadinessResult, AuditLog,
 } from "../../api/portal/types";
 
-type Tab = "overview" | "checklist" | "documents" | "income" | "expenses" | "risks" | "messages" | "audit";
+type Tab = "overview" | "checklist" | "documents" | "income" | "expenses" | "risks" | "messages" | "audit" | "review";
 type Lang = "nl" | "en" | "fa";
 
 const TX: Record<Lang, Record<string, string>> = {
@@ -119,6 +119,23 @@ const TX: Record<Lang, Record<string, string>> = {
     income_error: "Failed to update income",
     expense_updated: "Expense record updated",
     expense_error: "Failed to update expense",
+    tab_review: "Review & File",
+    review_ready_title: "Client is ready for review",
+    review_ready_body: "All tasks are complete. Review each item below, send corrections if needed, then file the return.",
+    review_not_ready: "Client has not completed all tasks yet.",
+    review_reject_btn: "Request correction",
+    review_reject_title: "Request correction from client",
+    review_reject_label: "Your message to the client",
+    review_reject_placeholder: "Explain what needs to be corrected. A link to this task will be included automatically.",
+    review_reject_send: "Send & request correction",
+    review_file_btn: "File Tax Return",
+    review_file_confirm_title: "Confirm filing",
+    review_file_confirm_body: "This will mark the return as filed and notify the client. You still need to submit it on MijnBelastingdienst separately.",
+    review_file_confirm_btn: "Yes, mark as filed",
+    review_filed_ok: "Return marked as filed. Client has been notified.",
+    review_rejected_ok: "Correction requested. Client has been notified.",
+    review_filing: "Filing…",
+    review_sending: "Sending…",
   },
   nl: {
     portal: "Accountant Portal",
@@ -207,6 +224,23 @@ const TX: Record<Lang, Record<string, string>> = {
     income_error: "Inkomstenrecord bijwerken mislukt",
     expense_updated: "Kostenrecord bijgewerkt",
     expense_error: "Kostenrecord bijwerken mislukt",
+    tab_review: "Beoordeling & Indiening",
+    review_ready_title: "Cliënt is klaar voor beoordeling",
+    review_ready_body: "Alle taken zijn voltooid. Beoordeel elk item hieronder, stuur correcties indien nodig en dien dan de aangifte in.",
+    review_not_ready: "Cliënt heeft nog niet alle taken voltooid.",
+    review_reject_btn: "Correctie aanvragen",
+    review_reject_title: "Correctie aanvragen bij cliënt",
+    review_reject_label: "Uw bericht aan de cliënt",
+    review_reject_placeholder: "Leg uit wat gecorrigeerd moet worden. Een link naar deze taak wordt automatisch toegevoegd.",
+    review_reject_send: "Sturen & correctie aanvragen",
+    review_file_btn: "Aangifte indienen",
+    review_file_confirm_title: "Indiening bevestigen",
+    review_file_confirm_body: "Dit markeert de aangifte als ingediend en informeert de cliënt. U moet de aangifte nog apart indienen op MijnBelastingdienst.",
+    review_file_confirm_btn: "Ja, markeer als ingediend",
+    review_filed_ok: "Aangifte gemarkeerd als ingediend. Cliënt is geïnformeerd.",
+    review_rejected_ok: "Correctie aangevraagd. Cliënt is geïnformeerd.",
+    review_filing: "Indienen…",
+    review_sending: "Sturen…",
   },
   fa: {
     portal: "پورتال حسابدار",
@@ -295,6 +329,23 @@ const TX: Record<Lang, Record<string, string>> = {
     income_error: "به‌روزرسانی درآمد ناموفق بود",
     expense_updated: "رکورد هزینه به‌روز شد",
     expense_error: "به‌روزرسانی هزینه ناموفق بود",
+    tab_review: "بررسی و ارسال",
+    review_ready_title: "مشتری آماده بررسی است",
+    review_ready_body: "همه وظایف تکمیل شده. هر مورد را بررسی کنید، در صورت نیاز اصلاح بخواهید، سپس اظهارنامه را ارسال کنید.",
+    review_not_ready: "مشتری هنوز همه وظایف را تکمیل نکرده است.",
+    review_reject_btn: "درخواست اصلاح",
+    review_reject_title: "درخواست اصلاح از مشتری",
+    review_reject_label: "پیام شما به مشتری",
+    review_reject_placeholder: "توضیح دهید چه چیزی باید اصلاح شود. لینک این وظیفه به‌طور خودکار اضافه می‌شود.",
+    review_reject_send: "ارسال و درخواست اصلاح",
+    review_file_btn: "ارسال اظهارنامه",
+    review_file_confirm_title: "تأیید ارسال",
+    review_file_confirm_body: "این اظهارنامه را به‌عنوان ارسال‌شده علامت می‌زند و مشتری را مطلع می‌کند. شما همچنان باید آن را جداگانه در MijnBelastingdienst ارسال کنید.",
+    review_file_confirm_btn: "بله، به‌عنوان ارسال‌شده علامت بزن",
+    review_filed_ok: "اظهارنامه به‌عنوان ارسال‌شده علامت خورد. مشتری مطلع شد.",
+    review_rejected_ok: "درخواست اصلاح ارسال شد. مشتری مطلع شد.",
+    review_filing: "در حال ارسال…",
+    review_sending: "در حال ارسال…",
   },
 };
 
@@ -386,6 +437,13 @@ export default function EngagementPage() {
   const [msgBody, setMsgBody] = useState("");
   const [sendingMsg, setSendingMsg] = useState(false);
   const [showReadyToFileModal, setShowReadyToFileModal] = useState(false);
+
+  // Review tab state
+  const [rejectingItemId, setRejectingItemId] = useState<number | null>(null);
+  const [rejectMsg, setRejectMsg] = useState("");
+  const [sendingReject, setSendingReject] = useState(false);
+  const [filingReturn, setFilingReturn] = useState(false);
+  const [showFileConfirm, setShowFileConfirm] = useState(false);
 
   const engId = Number(id);
 
@@ -664,13 +722,19 @@ export default function EngagementPage() {
 
   const unreadMessageCount = messages.filter(m => !m.is_read && !m.is_own).length;
 
-  const TABS: { key: Tab; label: string }[] = [
+  const isNeedsReview = engagement?.status === "needs_review" || engagement?.status === "ready_to_file";
+  const allTasksDone = checklist.length > 0 && checklist
+    .filter(i => i.required)
+    .every(i => ["uploaded", "answered", "accepted", "waived"].includes(i.status));
+
+  const TABS: { key: Tab; label: string; badge?: boolean }[] = [
     { key: "overview",  label: tx.tab_overview },
     { key: "checklist", label: `${tx.tab_checklist} (${checklist.length})` },
     { key: "documents", label: `${tx.tab_documents} (${documents.length})` },
     { key: "income",    label: `${tx.tab_income} (${income.length})` },
     { key: "expenses",  label: `${tx.tab_expenses} (${expenses.length})` },
     { key: "risks",     label: tx.tab_risks },
+    { key: "review",    label: tx.tab_review, badge: isNeedsReview },
     { key: "messages",  label: `${tx.tab_messages} (${messages.length})` },
     { key: "audit",     label: tx.tab_audit },
   ];
@@ -757,6 +821,13 @@ export default function EngagementPage() {
               }}
             >
               {t.label}
+              {t.badge && (
+                <span style={{
+                  width: 8, height: 8, borderRadius: "50%",
+                  background: "var(--warn)", flexShrink: 0,
+                  boxShadow: "0 0 0 2px var(--paper)",
+                }} />
+              )}
               {t.key === "messages" && unreadMessageCount > 0 && (
                 <span style={{
                   minWidth: 16, height: 16, borderRadius: 999,
@@ -1464,6 +1535,181 @@ export default function EngagementPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ── REVIEW & FILE ────────────────────────────────── */}
+        {tab === "review" && (
+          <div>
+            {/* Status banner */}
+            <div style={{
+              padding: "var(--sp-4) var(--sp-5)",
+              borderRadius: "var(--r)",
+              marginBottom: "var(--sp-5)",
+              background: isNeedsReview ? "var(--ok-subtle)" : "var(--bg-2)",
+              border: `1px solid ${isNeedsReview ? "var(--ok)" : "var(--border)"}`,
+            }}>
+              <div style={{ fontWeight: 700, marginBottom: 4, color: isNeedsReview ? "var(--ok-text)" : "var(--ink)" }}>
+                {isNeedsReview ? tx.review_ready_title : tx.review_not_ready}
+              </div>
+              {isNeedsReview && (
+                <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)" }}>{tx.review_ready_body}</div>
+              )}
+            </div>
+
+            {/* Checklist items for review */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)", marginBottom: "var(--sp-6)" }}>
+              {checklist.map(item => {
+                const done = ["uploaded", "answered", "accepted", "waived"].includes(item.status);
+                const isRejectingThis = rejectingItemId === item.id;
+                return (
+                  <div key={item.id} className="card" style={{
+                    padding: "var(--sp-4)",
+                    borderLeft: `3px solid ${done ? "var(--ok)" : "var(--warn)"}`,
+                  }}>
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: "var(--sp-3)" }}>
+                      <span style={{ fontSize: 18, flexShrink: 0, marginTop: 2 }}>{done ? "✅" : "⏳"}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 600, fontSize: "var(--text-sm)" }}>{item.title}</div>
+                        {item.description && (
+                          <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginTop: 2 }}>{item.description}</div>
+                        )}
+                        <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: 4 }}>
+                          Status: <strong>{item.status}</strong>
+                          {item.meta_value && <> · Value: <strong>{item.meta_value}</strong></>}
+                        </div>
+                      </div>
+                      {done && (
+                        <button
+                          className="btn btn-ghost btn-sm"
+                          style={{ flexShrink: 0, color: "var(--warn)", borderColor: "var(--warn)" }}
+                          onClick={() => { setRejectingItemId(item.id); setRejectMsg(""); }}
+                        >
+                          {tx.review_reject_btn}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Inline reject form */}
+                    {isRejectingThis && (
+                      <div style={{ marginTop: "var(--sp-3)", paddingTop: "var(--sp-3)", borderTop: "1px solid var(--border)" }}>
+                        <div style={{ fontSize: "var(--text-xs)", fontWeight: 600, marginBottom: "var(--sp-2)", color: "var(--ink-2)" }}>
+                          {tx.review_reject_label}
+                        </div>
+                        <textarea
+                          rows={3}
+                          style={{
+                            width: "100%", boxSizing: "border-box",
+                            border: "1.5px solid var(--border-2)", borderRadius: "var(--r-sm)",
+                            background: "var(--bg-2)", color: "var(--text)",
+                            fontFamily: "inherit", fontSize: "var(--text-sm)",
+                            padding: "var(--sp-2) var(--sp-3)", resize: "vertical",
+                          }}
+                          placeholder={tx.review_reject_placeholder}
+                          value={rejectMsg}
+                          onChange={e => setRejectMsg(e.target.value)}
+                        />
+                        <div style={{ display: "flex", gap: "var(--sp-2)", marginTop: "var(--sp-2)", justifyContent: "flex-end" }}>
+                          <button className="btn btn-ghost btn-sm" onClick={() => setRejectingItemId(null)}>Cancel</button>
+                          <button
+                            className="btn btn-accent btn-sm"
+                            disabled={!rejectMsg.trim() || sendingReject}
+                            onClick={async () => {
+                              if (!engagement) return;
+                              setSendingReject(true);
+                              try {
+                                await rejectTask(engagement.id, item.id, rejectMsg.trim());
+                                setChecklist(prev => prev.map(c => c.id === item.id ? { ...c, status: "waiting_client" } : c));
+                                setRejectingItemId(null);
+                                setRejectMsg("");
+                                showToast(tx.review_rejected_ok, "success");
+                              } catch {
+                                showToast("Failed to send correction request.", "error");
+                              } finally {
+                                setSendingReject(false);
+                              }
+                            }}
+                          >
+                            {sendingReject ? tx.review_sending : tx.review_reject_send}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* File Tax Return button */}
+            {engagement?.status !== "filed" && engagement?.status !== "completed" && (
+              <div style={{
+                padding: "var(--sp-5)",
+                background: "var(--bg-2)",
+                borderRadius: "var(--r)",
+                border: "1px solid var(--border)",
+                textAlign: "center",
+              }}>
+                <div style={{ fontWeight: 700, marginBottom: "var(--sp-2)" }}>
+                  {allTasksDone
+                    ? "✅ All tasks complete — ready to file"
+                    : "⚠️ Some tasks are still pending"}
+                </div>
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-3)", marginBottom: "var(--sp-4)", maxWidth: 400, margin: "0 auto var(--sp-4)" }}>
+                  {tx.review_file_confirm_body}
+                </div>
+                <button
+                  className="btn btn-accent"
+                  onClick={() => setShowFileConfirm(true)}
+                >
+                  🏁 {tx.review_file_btn}
+                </button>
+              </div>
+            )}
+            {(engagement?.status === "filed" || engagement?.status === "completed") && (
+              <div style={{ padding: "var(--sp-5)", background: "var(--ok-subtle)", borderRadius: "var(--r)", border: "1px solid var(--ok)", textAlign: "center" }}>
+                <div style={{ fontWeight: 700, color: "var(--ok-text)" }}>🎉 Tax return has been filed</div>
+                <div style={{ fontSize: "var(--text-xs)", color: "var(--ok-text)", marginTop: 4, opacity: 0.8 }}>
+                  The client has been notified. Remember to submit on MijnBelastingdienst if not yet done.
+                </div>
+              </div>
+            )}
+
+            {/* File confirmation modal */}
+            {showFileConfirm && (
+              <Modal onClose={() => setShowFileConfirm(false)}>
+                <div style={{ padding: "var(--sp-5)", maxWidth: 400 }}>
+                  <div style={{ fontWeight: 700, fontSize: "var(--text-lg)", marginBottom: "var(--sp-3)" }}>
+                    {tx.review_file_confirm_title}
+                  </div>
+                  <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", marginBottom: "var(--sp-5)", lineHeight: 1.6 }}>
+                    {tx.review_file_confirm_body}
+                  </div>
+                  <div style={{ display: "flex", gap: "var(--sp-3)", justifyContent: "flex-end" }}>
+                    <button className="btn btn-ghost" onClick={() => setShowFileConfirm(false)}>Cancel</button>
+                    <button
+                      className="btn btn-accent"
+                      disabled={filingReturn}
+                      onClick={async () => {
+                        if (!engagement) return;
+                        setFilingReturn(true);
+                        try {
+                          await fileEngagement(engagement.id);
+                          setEngagement(prev => prev ? { ...prev, status: "filed" } : prev);
+                          setShowFileConfirm(false);
+                          showToast(tx.review_filed_ok, "success");
+                        } catch {
+                          showToast("Failed to file return.", "error");
+                        } finally {
+                          setFilingReturn(false);
+                        }
+                      }}
+                    >
+                      {filingReturn ? tx.review_filing : tx.review_file_confirm_btn}
+                    </button>
+                  </div>
+                </div>
+              </Modal>
+            )}
           </div>
         )}
 

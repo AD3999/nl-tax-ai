@@ -1745,10 +1745,33 @@ class ClientPortalTaskUpdateView(APIView):
                     "status": "open",
                 },
             )
-            # Recalculate readiness score
+            # Recalculate readiness score — notify accountant if 100% reached
             try:
                 from apps.portal.services.readiness import calculate_readiness
-                calculate_readiness(item.engagement)
+                result = calculate_readiness(item.engagement)
+                new_score = result.get("readiness_score", 0) if isinstance(result, dict) else 0
+                eng = item.engagement
+                eng.refresh_from_db(fields=["status", "readiness_score"])
+                pre_review_statuses = ("draft", "collecting", "waiting_client")
+                if new_score >= 100 and eng.status in pre_review_statuses:
+                    eng.status = "needs_review"
+                    eng.save(update_fields=["status"])
+                    # Notify the accountant
+                    client_name = (
+                        item.client_profile.first_name or
+                        item.client_profile.email or "Your client"
+                    )
+                    create_notification(
+                        eng.accountant,
+                        "readiness_milestone",
+                        f"{client_name} is ready for review",
+                        body=(
+                            f"All tasks are complete for {client_name}. "
+                            "Review their documents and file when ready."
+                        ),
+                        action_url=f"/accountant/portal?engagement={eng.id}",
+                        metadata={"event": "client_ready_for_review", "engagement_id": eng.id},
+                    )
             except Exception:
                 pass
 
@@ -1757,6 +1780,120 @@ class ClientPortalTaskUpdateView(APIView):
                before={"status": old_status}, after={"status": new_status})
 
         return Response(ChecklistItemSerializer(item).data)
+
+
+# ── File Tax Return ───────────────────────────────────────────────────────────
+
+class FileTaxReturnView(APIView):
+    """POST /api/portal/engagements/<id>/file/  — accountant marks return as filed."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _is_accountant_of_client(request.user, eng.client_profile):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if eng.status == "filed":
+            return Response({"detail": "Already filed."}, status=status.HTTP_400_BAD_REQUEST)
+
+        eng.status = "filed"
+        eng.ready_to_file = False
+        eng.accountant_confirmed = True
+        eng.save(update_fields=["status", "ready_to_file", "accountant_confirmed"])
+
+        client_name = eng.client_profile.first_name or eng.client_profile.email or "Client"
+        # Portal message to client
+        PortalMessage.objects.create(
+            engagement=eng,
+            sender=request.user,
+            body=(
+                f"Great news! Your {eng.tax_year} tax return has been filed. "
+                "Everything is complete on our end. Your accountant will submit the return "
+                "to the tax authorities and will keep you updated here."
+            ),
+            is_system=True,
+        )
+        # Push notification to client
+        if eng.client_profile.client_user_id:
+            try:
+                client_user = User.objects.get(pk=eng.client_profile.client_user_id)
+                create_notification(
+                    client_user,
+                    "engagement_ready",
+                    "Your tax return has been filed! 🎉",
+                    body=(
+                        f"Your {eng.tax_year} income tax return has been filed by your accountant. "
+                        "You will receive confirmation once the submission is processed."
+                    ),
+                    action_url="/client",
+                    metadata={"event": "tax_return_filed", "engagement_id": eng.id},
+                )
+            except User.DoesNotExist:
+                pass
+
+        _audit(request, "tax_return_filed", "TaxEngagement", eng.id,
+               client_profile=eng.client_profile, engagement=eng)
+        return Response({"status": "filed", "engagement_id": eng.id})
+
+
+# ── Reject Task ───────────────────────────────────────────────────────────────
+
+class RejectTaskView(APIView):
+    """
+    POST /api/portal/engagements/<id>/reject-task/
+    Accountant rejects a specific checklist item with a message.
+    The item is reset to waiting_client and the client receives a portal message
+    with a direct link to that task.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        eng = get_object_or_404(TaxEngagement, pk=pk)
+        if not _is_accountant_of_client(request.user, eng.client_profile):
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        checklist_item_id = request.data.get("checklist_item_id")
+        message_text = (request.data.get("message") or "").strip()
+
+        if not checklist_item_id:
+            return Response({"detail": "checklist_item_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if not message_text:
+            return Response({"detail": "message is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        item = get_object_or_404(ChecklistItem, pk=checklist_item_id, engagement=eng)
+        old_status = item.status
+        item.status = "waiting_client"
+        item.save(update_fields=["status", "updated_at"])
+
+        # Build portal message with embedded task link (frontend reads task_link metadata)
+        task_link = f"/client/tasks?highlight={item.id}"
+        full_body = f"{message_text}\n\n[task_link:{item.id}:{item.title}]"
+        msg = PortalMessage.objects.create(
+            engagement=eng,
+            sender=request.user,
+            body=full_body,
+            is_system=False,
+        )
+
+        # Notify client
+        if eng.client_profile.client_user_id:
+            try:
+                client_user = User.objects.get(pk=eng.client_profile.client_user_id)
+                create_notification(
+                    client_user,
+                    "checklist_update",
+                    f"Action needed: {item.title}",
+                    body=message_text[:120],
+                    action_url=task_link,
+                    metadata={"event": "task_rejected", "checklist_item_id": item.id, "engagement_id": eng.id},
+                )
+            except User.DoesNotExist:
+                pass
+
+        _audit(request, "task_rejected", "ChecklistItem", item.id,
+               client_profile=eng.client_profile, engagement=eng,
+               before={"status": old_status}, after={"status": "waiting_client"})
+        return Response({"status": "rejected", "checklist_item_id": item.id, "message_id": msg.id})
 
 
 # ── P2.1 Accountant Inbox ─────────────────────────────────────────────────────

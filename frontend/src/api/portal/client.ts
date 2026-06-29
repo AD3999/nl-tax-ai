@@ -60,6 +60,9 @@ export const createEngagement    = (data: Partial<TaxEngagement>) => post<TaxEng
 export const fetchEngagement     = (id: number) => get<TaxEngagement>(`/engagements/${id}/`);
 export const updateEngagement    = (id: number, data: Partial<TaxEngagement>) => patch<TaxEngagement>(`/engagements/${id}/`, data);
 export const deleteEngagement    = (id: number) => del(`/engagements/${id}/`);
+export const fileEngagement      = (id: number) => post<{ status: string }>(`/engagements/${id}/file/`, {});
+export const rejectTask          = (engId: number, checklistItemId: number, message: string) =>
+  post<{ status: string }>(`/engagements/${engId}/reject-task/`, { checklist_item_id: checklistItemId, message });
 
 // ── Checklist ─────────────────────────────────────────────────────────────────
 export const fetchChecklist      = (engId: number) => get<ChecklistItem[]>(`/engagements/${engId}/checklist/`);

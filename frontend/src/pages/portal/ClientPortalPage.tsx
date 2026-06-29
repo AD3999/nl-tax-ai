@@ -308,38 +308,29 @@ export default function ClientPortalPage() {
           }}>
             <div style={{ fontSize: 32, marginBottom: "var(--sp-2)" }}>🎉</div>
             <div style={{ fontWeight: 700, fontSize: "var(--text-lg)", color: "var(--ok-text)", marginBottom: "var(--sp-2)" }}>
-              {lang === "nl" ? "Uw aangifte is klaar voor indiening!"
-               : lang === "fa" ? "اظهارنامه شما آماده ارسال است!"
-               : "Your tax return is ready to file!"}
+              {lang === "nl" ? "Uw documenten zijn compleet!"
+               : lang === "fa" ? "مدارک شما کامل است!"
+               : "Your documents are complete!"}
             </div>
             <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", lineHeight: 1.6, maxWidth: 520, margin: "0 auto var(--sp-3)" }}>
               {lang === "nl"
-                ? "Uw aangifte wordt nu door uw accountant gecontroleerd en ingediend. U hoeft niets te doen — u volgt alle stappen via dit platform."
+                ? "Uw accountant controleert alles en informeert u hier zodra de aangifte is ingediend. U hoeft niets meer te doen."
                 : lang === "fa"
-                ? "اظهارنامه شما اکنون توسط مشاور بررسی و ارسال می‌شود. نیازی به اقدام خارجی ندارید — تمام مراحل اینجا پیگیری می‌شود."
-                : "Your return is now with your accountant for final review and filing. No external portals needed — track every step right here on TaxWijs."}
+                ? "مشاور شما در حال بررسی است. پس از ارسال اظهارنامه، از طریق همین پلتفرم به شما اطلاع داده می‌شود. نیازی به هیچ اقدامی ندارید."
+                : "Your accountant is reviewing everything and will let you know here once the return has been filed. No further action needed from you."}
             </div>
-            {/* Inline next-steps progress strip */}
+            {/* Inline next-steps progress strip — no button, just status */}
             <div style={{
               display: "flex", alignItems: "center", justifyContent: "center",
               gap: 6, flexWrap: "wrap",
               fontSize: "var(--text-xs)", color: "var(--ok-text)",
-              marginBottom: "var(--sp-4)",
             }}>
               <span>✅ {lang === "nl" ? "Documenten compleet" : lang === "fa" ? "مدارک کامل" : "Documents complete"}</span>
               <span style={{ color: "var(--ok)", opacity: 0.5 }}>›</span>
-              <span style={{ opacity: 0.75 }}>⏳ {lang === "nl" ? "Accountant controleert & dient in" : lang === "fa" ? "مشاور بررسی و ارسال می‌کند" : "Accountant reviews & files"}</span>
+              <span style={{ fontWeight: 700 }}>⏳ {lang === "nl" ? "Accountant beoordeelt" : lang === "fa" ? "در حال بررسی" : "Accountant reviewing"}</span>
               <span style={{ color: "var(--ok)", opacity: 0.5 }}>›</span>
-              <span style={{ opacity: 0.5 }}>🏁 {lang === "nl" ? "Bevestiging in uw portaal" : lang === "fa" ? "تأییدیه در پورتال شما" : "Confirmation in your portal"}</span>
+              <span style={{ opacity: 0.5 }}>🏁 {lang === "nl" ? "Bevestiging volgt" : lang === "fa" ? "تأییدیه ارسال می‌شود" : "Confirmation coming"}</span>
             </div>
-            <button
-              className="btn btn-accent btn-sm"
-              onClick={() => navigate("/client/messages", { state: { readyToFile: true } })}
-            >
-              {lang === "nl" ? "Bekijk uw berichten →"
-               : lang === "fa" ? "مشاهده پیام‌ها ←"
-               : "View messages →"}
-            </button>
           </div>
         )}
 

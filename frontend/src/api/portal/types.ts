@@ -23,6 +23,8 @@ export interface ClientProfile {
   latest_readiness: number | null;
   latest_missing_count: number;
   latest_risk_level: "low" | "medium" | "high";
+  latest_engagement_status: EngagementStatus | null;
+  latest_engagement_id: number | null;
   accountant_display?: { name: string; email: string } | null;
   deactivated_at: string | null;
   scheduled_deletion_at: string | null;

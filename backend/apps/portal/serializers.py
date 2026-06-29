@@ -51,6 +51,17 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
     bsn_is_set = serializers.SerializerMethodField()
     accountant_display  = serializers.SerializerMethodField()
 
+    latest_engagement_status = serializers.SerializerMethodField()
+    latest_engagement_id     = serializers.SerializerMethodField()
+
+    def get_latest_engagement_status(self, obj):
+        eng = obj.engagements.order_by("-created_at").first()
+        return eng.status if eng else None
+
+    def get_latest_engagement_id(self, obj):
+        eng = obj.engagements.order_by("-created_at").first()
+        return eng.id if eng else None
+
     def get_engagement_count(self, obj):
         return obj.engagements.count()
 
@@ -137,7 +148,8 @@ class AccountantClientProfileSerializer(serializers.ModelSerializer):
             "id", "email", "first_name", "last_name", "full_name", "company_name",
             "client_type", "tax_type", "preferred_language", "phone", "status",
             "tax_year", "notes", "display_name", "engagement_count", "latest_readiness",
-            "latest_missing_count", "latest_risk_level", "accountant_display",
+            "latest_missing_count", "latest_risk_level", "latest_engagement_status",
+            "latest_engagement_id", "accountant_display",
             "address_street", "address_city", "address_postcode",
             "bsn", "bsn_is_set", "kvk_number", "btw_number", "birth_date",
             "deactivated_at", "scheduled_deletion_at", "days_until_deletion",

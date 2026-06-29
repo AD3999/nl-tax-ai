@@ -406,6 +406,39 @@ export default function AccountantPortalPage() {
           ))}
         </div>
 
+        {/* ── Waiting for review banner ── */}
+        {!loadingData && clients.filter(c => c.latest_engagement_status === "needs_review").length > 0 && (
+          <div style={{
+            background: "var(--warn-subtle)",
+            border: "1px solid var(--warn)",
+            borderRadius: "var(--r)",
+            padding: "var(--sp-4) var(--sp-5)",
+            marginBottom: "var(--sp-5)",
+          }}>
+            <div style={{ fontWeight: 700, color: "var(--warn-text)", marginBottom: "var(--sp-2)", display: "flex", alignItems: "center", gap: 8 }}>
+              <span>⏳</span>
+              {lang === "nl" ? "Wacht op uw beoordeling" : lang === "fa" ? "منتظر بررسی شما" : "Waiting for your review"}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
+              {clients
+                .filter(c => c.latest_engagement_status === "needs_review")
+                .map(c => (
+                  <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--bg)", borderRadius: "var(--r-sm)", padding: "var(--sp-2) var(--sp-4)" }}>
+                    <span style={{ fontSize: "var(--text-sm)", fontWeight: 600, color: "var(--ink)" }}>
+                      {c.display_name || c.email}
+                    </span>
+                    <button
+                      className="btn btn-accent btn-sm"
+                      onClick={() => navigate(`/accountant/engagements/${c.latest_engagement_id}?tab=review`)}
+                    >
+                      {lang === "nl" ? "Beoordelen →" : lang === "fa" ? "بررسی ←" : "Review →"}
+                    </button>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
         {/* Priority Actions */}
         {!loadingData && priorities.length > 0 && (
           <div className="card" style={{ marginBottom: "var(--sp-5)", overflow: "hidden" }}>
