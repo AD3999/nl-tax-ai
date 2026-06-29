@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchClientInvitations, respondToInvitation, type ClientInvitation } from "../api/invitations";
 import { useToast } from "../context/ToastContext";
+import { useAuth } from "../context/AuthContext";
 import { apiBase, authHeader } from "../api/client";
 
 interface ConnectedAccountant {
@@ -59,6 +60,7 @@ const TX = {
 export default function InvitationBanner() {
   const { i18n } = useTranslation();
   const { showToast } = useToast();
+  const { refreshUser } = useAuth();
   const lang = (i18n.language in TX ? i18n.language : "en") as keyof typeof TX;
   const tx = TX[lang];
 
@@ -88,6 +90,9 @@ export default function InvitationBanner() {
           .then(r => r.ok ? r.json() as Promise<ConnectedAccountant[]> : [])
           .then(setAccountants)
           .catch(() => null);
+        // Re-fetch user profile so has_accountant flips to true and the
+        // sidebar immediately shows "My Portal" and "Messages" links.
+        refreshUser().catch(() => null);
       } else {
         showToast(tx.declined, "info");
       }
