@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, Component, type ReactNode } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Users, CheckCircle2, AlertCircle, AlertTriangle, ArrowRight, Zap, X, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -17,6 +17,36 @@ import {
 } from "../../api/portal/client";
 import { createClient } from "../../api/portal/client";
 import type { ClientType } from "../../api/portal/types";
+
+// Local error boundary so a render crash in the tab area shows an inline
+// "Retry" instead of the full-page "Something went wrong" ErrorBoundary.
+class TabErrorBoundary extends Component<
+  { children: ReactNode; onReset: () => void },
+  { hasError: boolean }
+> {
+  constructor(props: { children: ReactNode; onReset: () => void }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() { return { hasError: true }; }
+  componentDidCatch() { this.props.onReset(); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 24, textAlign: "center", color: "var(--ink-3)", fontSize: "var(--text-sm)" }}>
+          Failed to load client data.{" "}
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={() => this.setState({ hasError: false })}
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const TX: Record<string, Record<string, string>> = {
   en: {
@@ -551,6 +581,10 @@ export default function AccountantPortalPage() {
           </div>
         )}
 
+        {/* Tab content — wrapped in a local error boundary so any render crash
+            shows an inline Retry instead of the global "Something went wrong" */}
+        <TabErrorBoundary onReset={() => void loadData(true)}>
+
         {/* Client table */}
         {tab === "clients" && (
           loadingData ? (
@@ -814,6 +848,8 @@ export default function AccountantPortalPage() {
             </div>
           </div>
         )}
+
+        </TabErrorBoundary>
 
       </div>
 
