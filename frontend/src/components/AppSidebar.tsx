@@ -115,12 +115,16 @@ function SidebarContent({ onNav }: SidebarContentProps) {
   const { theme } = useTheme();
   const navigate = useNavigate();
 
-  // When accountant reactivates a client, re-fetch profile so has_accountant
-  // updates and the portal nav items appear immediately without a page refresh.
+  // Re-fetch profile on both reactivation and deactivation so has_accountant
+  // updates and portal nav items appear / disappear without a page refresh.
   useEffect(() => {
-    function onReactivated() { refreshUser().catch(() => null); }
-    window.addEventListener("portal:client_reactivated", onReactivated);
-    return () => window.removeEventListener("portal:client_reactivated", onReactivated);
+    function onProfileChange() { refreshUser().catch(() => null); }
+    window.addEventListener("portal:client_reactivated", onProfileChange);
+    window.addEventListener("portal:client_deactivated", onProfileChange);
+    return () => {
+      window.removeEventListener("portal:client_reactivated", onProfileChange);
+      window.removeEventListener("portal:client_deactivated", onProfileChange);
+    };
   }, [refreshUser]);
 
   const isAdmin      = !!user?.is_admin;

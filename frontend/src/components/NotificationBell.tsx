@@ -113,9 +113,12 @@ export default function NotificationBell() {
           if (data.id && prev.some(n => n.id === data.id)) return prev; // already present
           return [{ ...data, is_read: false } as AppNotification, ...prev];
         });
-        // Dispatch custom event so ClientPortalPage reloads on reactivation
+        // Dispatch custom events so sidebar updates in real-time
         if (data.metadata?.event === "client_reactivated") {
           window.dispatchEvent(new CustomEvent("portal:client_reactivated"));
+        }
+        if (data.metadata?.event === "client_deactivated") {
+          window.dispatchEvent(new CustomEvent("portal:client_deactivated"));
         }
       } catch { /* ignore malformed frames */ }
     };

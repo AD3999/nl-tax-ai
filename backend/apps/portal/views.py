@@ -262,6 +262,29 @@ class AccountantClientDisconnectView(APIView):
         _deactivate_client_link(profile)
         _audit(request, "client_deactivated", "AccountantClientProfile", profile.id, client_profile=profile)
 
+        # ── Notify client via WS so sidebar updates in real-time ───────────
+        if profile.client_user_id:
+            lang = profile.preferred_language or "nl"
+            TITLES = {
+                "nl": "Uw accountantkoppeling is beëindigd",
+                "en": "Your accountant connection has ended",
+                "fa": "اتصال شما به مشاور پایان یافت",
+            }
+            BODIES = {
+                "nl": "Uw accountant heeft de verbinding verbroken. Uw portaaltoegang is tijdelijk opgeschort.",
+                "en": "Your accountant has disconnected. Your portal access has been temporarily suspended.",
+                "fa": "مشاور شما اتصال را قطع کرده است. دسترسی به پورتال شما به طور موقت معلق شده است.",
+            }
+            create_notification(
+                user       = profile.client_user,
+                notif_type = "status_update",
+                title      = TITLES.get(lang, TITLES["en"]),
+                body       = BODIES.get(lang, BODIES["en"]),
+                action_url = "/dashboard",
+                metadata   = {"event": "client_deactivated"},
+            )
+        # ── End disconnect notification ────────────────────────────────────
+
         return Response(
             AccountantClientProfileSerializer(profile, context={"request": request}).data
         )
