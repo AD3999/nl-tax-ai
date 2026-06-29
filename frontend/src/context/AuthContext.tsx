@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { type AuthUser, fetchProfile, logout as apiLogout } from "../api/auth";
 
 const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000; // 1 hour
@@ -49,10 +49,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem(LAST_ACTIVE_KEY);
   };
 
-  const refreshUser = async () => {
+  // Stable reference — wrapped in useCallback so effects that depend on it
+  // don't re-fire on every render (setUser from useState is always stable).
+  const refreshUser = useCallback(async () => {
     const u = await fetchProfile();
     setUser(u);
-  };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Track user activity and auto-logout after 1hr inactivity
   useEffect(() => {

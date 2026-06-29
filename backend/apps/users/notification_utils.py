@@ -68,6 +68,7 @@ def create_notification(
                             "action_url":        notif.action_url,
                             "is_read":           False,
                             "created_at":        notif.created_at.isoformat(),
+                            "metadata":          metadata or {},
                         },
                     },
                 )

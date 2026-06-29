@@ -117,6 +117,7 @@ function SidebarContent({ onNav }: SidebarContentProps) {
 
   // Re-fetch profile on both reactivation and deactivation so has_accountant
   // updates and portal nav items appear / disappear without a page refresh.
+  // refreshUser is stable (useCallback in AuthContext) so this effect only runs once.
   useEffect(() => {
     function onProfileChange() { refreshUser().catch(() => null); }
     window.addEventListener("portal:client_reactivated", onProfileChange);
@@ -126,6 +127,14 @@ function SidebarContent({ onNav }: SidebarContentProps) {
       window.removeEventListener("portal:client_deactivated", onProfileChange);
     };
   }, [refreshUser]);
+
+  // Polling fallback: re-fetch profile every 30 s for clients so the sidebar
+  // syncs even when the WebSocket is disconnected or the tab was in the background.
+  useEffect(() => {
+    if (!isClient) return;
+    const id = setInterval(() => { void refreshUser().catch(() => null); }, 30_000);
+    return () => clearInterval(id);
+  }, [isClient, refreshUser]);
 
   const isAdmin      = !!user?.is_admin;
   const isAccountant = user?.role === "accountant";

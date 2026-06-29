@@ -99,6 +99,16 @@ function AdminRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+// Guards all /client/* portal pages — redirects to /dashboard when the user
+// has no active accountant connection (deactivated, archived, or never linked).
+function PortalClientRoute({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!user.has_accountant) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
+
 const SPLASH_DURATION = 2400;
 const SPLASH_FADE     = 500;
 
@@ -159,10 +169,10 @@ function App() {
               <Route path="/accountant/clients/:id"      element={<AccountantClientPage />} />
               <Route path="/accountant/engagements/:id"  element={<AccountantEngagementPage />} />
               <Route path="/accountant/review-queue"     element={<AccountantReviewQueue />} />
-              <Route path="/client"                 element={<ClientPortalPage />} />
-              <Route path="/client/tasks"           element={<ClientTasksPage />} />
-              <Route path="/client/documents"       element={<ClientDocumentsPage />} />
-              <Route path="/client/messages"        element={<ClientMessagesPage />} />
+              <Route path="/client"          element={<PortalClientRoute><ClientPortalPage /></PortalClientRoute>} />
+              <Route path="/client/tasks"    element={<PortalClientRoute><ClientTasksPage /></PortalClientRoute>} />
+              <Route path="/client/documents" element={<PortalClientRoute><ClientDocumentsPage /></PortalClientRoute>} />
+              <Route path="/client/messages" element={<PortalClientRoute><ClientMessagesPage /></PortalClientRoute>} />
               <Route path="/client/profile"         element={<ClientProfilePage />} />
               <Route path="/accountant/inbox"       element={<AccountantInboxPage />} />
               <Route path="/accountant/settings"    element={<AccountantSettingsPage />} />
