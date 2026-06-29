@@ -1,7 +1,47 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 27 Jun 2026 — Deploy fix: removed stale import that blocked all builds after QA v3 (commit 1f67675)
+> Last updated: 29 Jun 2026 — Review & File flow complete + task link parser + highlight scroll
+
+---
+
+## Session — 29 Jun 2026 · Review & File Flow + Rejection UX ✅
+
+### Commits in this session
+
+| Commit | Description |
+|--------|-------------|
+| `4da7ec2` | Merge migration 0017 — fixed Railway portal migration graph conflict (two 0014 leaves) |
+| `a7416da` | `has_accountant` now checks `portal.AccountantClientProfile` (canonical) instead of `users.AccountantClient` (legacy) — portal clients were always getting `false` |
+| `ae37e94` | Review & File flow: accountant Review tab, per-task rejection with message, File Tax Return button + modal, auto-transition to `needs_review` at 100% readiness, accountant dashboard banner for waiting clients |
+| `3b9ea62` | Real-time sidebar removal when accountant disconnects — `AccountantClientDisconnectView` now sends `metadata.event=client_deactivated` notification; NotificationBell dispatches DOM event; AppSidebar calls `refreshUser()` |
+| `6cecbed` | Task link parser in messages + scroll/highlight in tasks (this session) |
+
+### Review & File architecture
+
+**Status flow:** `draft` → `collecting` → `waiting_client` → `needs_review` (auto at 100%) → `filed` (accountant) → `completed`
+
+**New backend endpoints:**
+- `POST /api/portal/engagements/<id>/file/` — `FileTaxReturnView`: marks `status=filed`, notifies client
+- `POST /api/portal/engagements/<id>/reject-task/` — `RejectTaskView`: resets item to `waiting_client`, sends portal message with `[task_link:id:title]` embedded, notifies client
+
+**Real-time pattern established:**
+- Backend calls `create_notification(user, notif_type, ..., metadata={"event": "..."})` 
+- WebSocket delivers to `NotificationBell` → dispatches `CustomEvent("portal:<event>")` on `window`
+- `AppSidebar` catches the event → calls `refreshUser()` → `has_accountant` updates → nav items appear/disappear immediately
+
+### Task link parser + highlight scroll (commit 6cecbed)
+
+**ClientMessagesPage.tsx:**
+- `parseMessageBody(text)` splits on `[task_link:id:title]` regex, renders text segments + blue chip buttons
+- Chip onClick → `navigate("/client/tasks?highlight=<id>")`
+- Bubble content wrapped in `<span style={{flexDirection:"column"}}>` so chip renders on its own line below the message text
+
+**ClientTasksPage.tsx:**
+- `useSearchParams` reads `?highlight=<id>`
+- `taskCardRefs: useRef<Record<number, HTMLDivElement|null>>({})` stores one ref per card
+- `useEffect([tasks, highlightId])`: on tasks load, sets `highlightedId`, scrolls card into view, clears after 3s
+- Card renders `boxShadow: "0 0 0 2px var(--warn)"` + `background: "var(--warn-subtle)"` while highlighted
 
 ---
 
