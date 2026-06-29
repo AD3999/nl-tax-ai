@@ -25,10 +25,12 @@ export interface ClientProfile {
   latest_risk_level: "low" | "medium" | "high";
   latest_engagement_status: EngagementStatus | null;
   latest_engagement_id: number | null;
-  accountant_display?: { name: string; email: string } | null;
+  accountant_display?: { name: string; email: string; is_verified?: boolean } | null;
   deactivated_at: string | null;
   scheduled_deletion_at: string | null;
   days_until_deletion: number | null;
+  /** null means the client hasn't accepted/linked their account yet (status="invited") */
+  client_user: number | null;
   created_at: string;
   updated_at: string;
 }
