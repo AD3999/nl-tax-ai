@@ -207,13 +207,17 @@ DISCONNECT_GRACE_DAYS = 30
 
 
 def _deactivate_client_link(profile):
-    """Deactivate the AccountantClient link so the client loses has_accountant."""
+    """Deactivate the AccountantClient link so the client loses has_accountant.
+
+    Uses accountant__user= traversal so we never need a separate
+    AccountantProfile.objects.get() call that could silently fail when
+    the accountant's AccountantProfile doesn't exist yet or isn't found.
+    """
     if profile.client_user_id:
         try:
-            from apps.users.models import AccountantProfile, AccountantClient
-            acc_profile = AccountantProfile.objects.get(user=profile.accountant_user)
+            from apps.users.models import AccountantClient
             AccountantClient.objects.filter(
-                accountant=acc_profile,
+                accountant__user=profile.accountant_user,
                 client_user_id=profile.client_user_id,
                 status="active",
             ).update(status="deactivated", deactivated_at=timezone.now())
@@ -225,10 +229,9 @@ def _reactivate_client_link(profile):
     """Restore the AccountantClient link so the client regains has_accountant."""
     if profile.client_user_id:
         try:
-            from apps.users.models import AccountantProfile, AccountantClient
-            acc_profile = AccountantProfile.objects.get(user=profile.accountant_user)
+            from apps.users.models import AccountantClient
             AccountantClient.objects.filter(
-                accountant=acc_profile,
+                accountant__user=profile.accountant_user,
                 client_user_id=profile.client_user_id,
                 status="deactivated",
             ).update(status="active", deactivated_at=None)
