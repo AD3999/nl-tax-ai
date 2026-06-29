@@ -593,9 +593,9 @@ export default function AccountantPortalPage() {
                           )}
                         </td>
                         <td style={{ padding: "var(--sp-3)" }}>
-                          <span className="pill" style={{ fontSize: "var(--text-2xs)" }}>{c.client_type.toUpperCase()}</span>
+                          <span className="pill" style={{ fontSize: "var(--text-2xs)" }}>{(c.client_type || "other").toUpperCase()}</span>
                         </td>
-                        <td style={{ padding: "var(--sp-3)", color: "var(--ink-3)" }}>{c.preferred_language.toUpperCase()}</td>
+                        <td style={{ padding: "var(--sp-3)", color: "var(--ink-3)" }}>{(c.preferred_language || "nl").toUpperCase()}</td>
                         <td style={{ padding: "var(--sp-3)" }}>
                           <span style={{ fontSize: "var(--text-xs)", color: STATUS_COLOR[c.status] || "var(--ink-3)" }}>{getClientStatusLabel(c.status, lang)}</span>
                         </td>
@@ -622,8 +622,18 @@ export default function AccountantPortalPage() {
                                 title="Disconnect client (30-day grace period)"
                                 onClick={async () => {
                                   if (!window.confirm(`Disconnect ${c.display_name}? Their data is kept for 30 days.`)) return;
-                                  const updated = await disconnectClient(c.id);
-                                  setClients(prev => prev.map(x => x.id === c.id ? updated : x));
+                                  try {
+                                    const updated = await disconnectClient(c.id);
+                                    setClients(prev => prev.map(x => x.id === c.id ? updated : x));
+                                  } catch {
+                                    showToast(
+                                      lang === "nl" ? "Loskoppelen mislukt. Probeer opnieuw."
+                                      : lang === "fa" ? "قطع اتصال ناموفق بود. دوباره امتحان کنید."
+                                      : "Disconnect failed. Please try again.",
+                                      "error"
+                                    );
+                                    void loadData(true);
+                                  }
                                 }}
                               ><X size={13} /></button>
                             ) : (

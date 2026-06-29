@@ -7,9 +7,19 @@ import type {
 
 const base = `${apiBase}/portal`;
 
+function _dispatchIfDeactivated(status: number, data: Record<string, unknown>) {
+  if (status === 403 && data.has_accountant === false) {
+    window.dispatchEvent(new CustomEvent("portal:client_deactivated"));
+  }
+}
+
 async function get<T>(path: string): Promise<T> {
   const r = await fetch(`${base}${path}`, { headers: authHeader() });
-  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  if (!r.ok) {
+    const data = await r.json().catch(() => ({})) as Record<string, unknown>;
+    _dispatchIfDeactivated(r.status, data);
+    throw new Error(JSON.stringify(data) || `${r.status}`);
+  }
   return r.json();
 }
 
@@ -20,8 +30,9 @@ async function post<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   if (!r.ok) {
-    const err = await r.json().catch(() => ({}));
-    throw new Error(JSON.stringify(err) || `${r.status}`);
+    const data = await r.json().catch(() => ({})) as Record<string, unknown>;
+    _dispatchIfDeactivated(r.status, data);
+    throw new Error(JSON.stringify(data) || `${r.status}`);
   }
   return r.json();
 }
@@ -33,8 +44,9 @@ async function patch<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   if (!r.ok) {
-    const err = await r.json().catch(() => ({}));
-    throw new Error(JSON.stringify(err) || `${r.status}`);
+    const data = await r.json().catch(() => ({})) as Record<string, unknown>;
+    _dispatchIfDeactivated(r.status, data);
+    throw new Error(JSON.stringify(data) || `${r.status}`);
   }
   return r.json();
 }
