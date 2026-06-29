@@ -1,7 +1,75 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 29 Jun 2026 — Review & File flow complete + task link parser + highlight scroll
+> Last updated: 29 Jun 2026 — Portal disconnect hardening (crash fix + full access lockout)
+
+---
+
+## Session — 29 Jun 2026 · Portal Disconnect Hardening ✅
+
+### Commits in this session (late session)
+
+| Commit | Description |
+|--------|-------------|
+| `bbdec14` | WS metadata fix in `create_notification` (was missing `metadata` key in push payload) + `refreshUser` as `useCallback` + AppSidebar event listeners + `PortalClientRoute` guard |
+| `8919347` | Fix TS2448: move `isClient` declaration before its polling useEffect in AppSidebar |
+| `ca804ca` | `get_has_accountant` excludes self-managed profiles (root cause: every portal-visiting client gets an `AccountantClientProfile(accountant_user=self)` with `status="active"` — this was returning `has_accountant=True` forever after disconnect) + backend 403 gates on all client portal views + axios 403 interceptor |
+| `d3391d8` | Disconnect try/catch (prevents ErrorBoundary crash) + null-safe field render + 403 event dispatch in portal/client.ts raw-fetch helpers |
+
+### Root causes found and fixed
+
+**1. Accountant page "Something went wrong" crash on disconnect**
+
+The `onClick={async () => { ... await disconnectClient(c.id) ... }}` had no `try/catch`.
+An unhandled promise rejection (400 on double-click, network error, etc.) propagates
+in React 18 and can surface to the class ErrorBoundary. Fixed: wrapped in try/catch,
+shows a toast on error and silently refreshes the client list.
+
+Bonus: added null safety on `c.client_type.toUpperCase()` and `c.preferred_language.toUpperCase()`
+in case DB records have unexpected empty values (defensive).
+
+**2. Client sidebar persisting portal links after disconnect (`has_accountant` permanently true)**
+
+Root cause: `_get_or_create_self_service_profile()` creates `AccountantClientProfile(accountant_user=user, client_user=user)` with `status="active"` for every client who visits the portal. After disconnect, the accountant-managed profile is deactivated but the self-managed profile stays active. `get_has_accountant` was finding the self-managed profile and returning `True` forever.
+
+Fix: added `.exclude(accountant_user=obj)` to both queries in `UserSerializer.get_has_accountant`.
+
+**3. WS real-time update not firing**
+
+Root cause: `create_notification` WebSocket push payload was missing the `metadata` key.
+`data.metadata?.event` in `NotificationBell` always returned `undefined` → DOM event never dispatched.
+Fix: added `"metadata": metadata or {}` to the channel layer push payload.
+
+**4. Frontend route guard**
+
+`PortalClientRoute` wraps all `/client/...` routes (except `/client/profile`). If `user.has_accountant` is false, redirects to `/dashboard`.
+
+**5. Backend 403 gates**
+
+All client portal API views now call `_get_active_accountant_profile` (excludes self and deactivated). Returns `{"detail": "No active accountant connection.", "has_accountant": false}` with 403 when client is disconnected. The axios interceptor + fetch helper's `_dispatchIfDeactivated` fire the DOM event for immediate frontend sync.
+
+**6. `portal/client.ts` raw-fetch 403 handling**
+
+The portal API helpers use native `fetch`, not axios, so the axios interceptor missed these calls.
+Added `_dispatchIfDeactivated(status, data)` called from get/post/patch error paths so these also trigger the sidebar update.
+
+### Architecture: disconnect event flow
+
+```
+Accountant clicks disconnect
+  → Backend: profile.status = "deactivated"
+  → Backend: create_notification(client_user, metadata={"event": "client_deactivated"})
+  → WS push to client's notification channel
+  → Client NotificationBell: dispatches CustomEvent("portal:client_deactivated")
+  → AppSidebar catches event → calls refreshUser()
+  → user.has_accountant = false → sidebar hides portal nav items
+  → PortalClientRoute detects !has_accountant → redirects to /dashboard
+
+Fallback (WS disconnected):
+  → AppSidebar polls refreshUser() every 30s
+  → Next page load: PortalClientRoute redirects before any portal component renders
+  → Any portal API call: 403 + has_accountant:false → _dispatchIfDeactivated → refreshUser()
+```
 
 ---
 
