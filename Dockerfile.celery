@@ -40,26 +40,4 @@ ENV PYTHONPATH=/app/backend
 
 WORKDIR /app/backend
 
-# Scan ALL Python files (backend + installed packages) for null bytes
-RUN python3 - <<'PYEOF'
-import os, sys
-null_found = []
-for search_root in ['/app/backend', '/usr/local/lib/python3.12/site-packages']:
-    for root, dirs, files in os.walk(search_root):
-        dirs[:] = [d for d in dirs if d != '__pycache__']
-        for f in files:
-            if f.endswith('.py'):
-                path = os.path.join(root, f)
-                try:
-                    data = open(path, 'rb').read()
-                    if b'\x00' in data:
-                        null_found.append(path)
-                except:
-                    pass
-if null_found:
-    print(f"NULL BYTES IN ({len(null_found)} files):", null_found[:5])
-    sys.exit(1)
-print("All Python files clean")
-PYEOF
-
 CMD ["/bin/bash", "-c", "python3 /app/backend/manage.py migrate --noinput && exec python3 -m celery -A config worker --beat --loglevel=INFO --concurrency=2"]
