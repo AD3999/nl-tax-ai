@@ -2,3 +2,9 @@
 *.sh text eol=lf
 *.toml text eol=lf
 Procfile text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.js text eol=lf
+*.cjs text eol=lf
+*.mjs text eol=lf
