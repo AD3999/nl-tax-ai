@@ -23,8 +23,8 @@ else:
 "
 
 # If this is the celery-worker service, run Celery instead of uvicorn.
-# Railway injects RAILWAY_SERVICE_NAME automatically.
-if [ "${RAILWAY_SERVICE_NAME}" = "celery-worker" ]; then
+# IS_CELERY_WORKER=1 is set as a user env var on the Railway celery-worker service.
+if [ "${IS_CELERY_WORKER}" = "1" ]; then
   echo "==> Starting Celery worker + beat…"
   exec python3 -m celery -A config worker \
     --beat \
