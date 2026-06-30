@@ -271,6 +271,7 @@ export default function AccountantPortalPage() {
   // Upgrade gate state
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState("");
+  const [actioningClient, setActioningClient] = useState<number | null>(null);
 
   useEffect(() => {
     if (loading) return;
@@ -664,12 +665,12 @@ export default function AccountantPortalPage() {
                                 className="btn btn-ghost btn-sm"
                                 style={{ color: "var(--warn-text, #7a5a00)", display: "inline-flex", alignItems: "center" }}
                                 title="Disconnect client (30-day grace period)"
+                                disabled={actioningClient === c.id}
                                 onClick={async () => {
                                   if (!window.confirm(`Disconnect ${c.display_name}? Their data is kept for 30 days.`)) return;
+                                  setActioningClient(c.id);
                                   try {
                                     await disconnectClient(c.id);
-                                    // Reload from server — avoids any potential
-                                    // render crash from optimistic state patching
                                     void loadData(true);
                                   } catch {
                                     showToast(
@@ -678,18 +679,20 @@ export default function AccountantPortalPage() {
                                       : "Disconnect failed. Please try again.",
                                       "error"
                                     );
+                                  } finally {
+                                    setActioningClient(null);
                                   }
                                 }}
-                              ><X size={13} /></button>
+                              >{actioningClient === c.id ? "…" : <X size={13} />}</button>
                             ) : (
                               <button
                                 className="btn btn-accent btn-sm"
                                 style={{ fontSize: "var(--text-2xs)" }}
+                                disabled={actioningClient === c.id}
                                 onClick={async () => {
+                                  setActioningClient(c.id);
                                   try {
                                     await reactivateClient(c.id);
-                                    // Reload from server — ensures fresh serialized data
-                                    // (optimistic spread could leave stale derived fields)
                                     void loadData(true);
                                   } catch {
                                     showToast(
@@ -698,9 +701,11 @@ export default function AccountantPortalPage() {
                                       : "Reactivation failed. Please try again.",
                                       "error"
                                     );
+                                  } finally {
+                                    setActioningClient(null);
                                   }
                                 }}
-                              >Reactivate</button>
+                              >{actioningClient === c.id ? "…" : (lang === "nl" ? "Reactiveer" : lang === "fa" ? "فعال‌سازی مجدد" : "Reactivate")}</button>
                             )}
                           </div>
                         </td>

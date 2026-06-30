@@ -416,6 +416,8 @@ export default function EngagementPage() {
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [generatingActions, setGeneratingActions] = useState(false);
+  const [recalculating, setRecalculating] = useState(false);
+  const [sendingReminder, setSendingReminder] = useState(false);
   const [reminderPreview, setReminderPreview] = useState<{ subject: string; body: string; missing_count: number } | null>(null);
 
   const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
@@ -548,6 +550,8 @@ export default function EngagementPage() {
   }
 
   async function handleRecalculate() {
+    if (recalculating) return;
+    setRecalculating(true);
     try {
       const r = await recalculateReadiness(engId);
       setReadiness(r);
@@ -555,6 +559,8 @@ export default function EngagementPage() {
       setEngagement(updated);
     } catch {
       showToast("Recalculate failed", "error");
+    } finally {
+      setRecalculating(false);
     }
   }
 
@@ -665,11 +671,15 @@ export default function EngagementPage() {
   }
 
   async function handleSendReminder() {
+    if (sendingReminder) return;
+    setSendingReminder(true);
     try {
       const result = await sendReminder(engId);
       setReminderPreview(result);
     } catch {
       showToast("Failed to generate reminder", "error");
+    } finally {
+      setSendingReminder(false);
     }
   }
 
@@ -786,8 +796,8 @@ export default function EngagementPage() {
               <span style={{ fontSize: 10, color: "var(--ink-4)" }}>{tx.updated} {lastUpdated.toLocaleTimeString()}</span>
             )}
             <button title="Refresh" onClick={() => void loadAll(true)} style={{ background: "none", border: "1px solid var(--hairline-2)", borderRadius: 6, cursor: "pointer", color: "var(--ink-4)", padding: "4px 7px", display: "flex", alignItems: "center" }}><RefreshCw size={12} /></button>
-            <button className="btn btn-ghost btn-sm" onClick={handleRecalculate}>{tx.recalculate}</button>
-            <button className="btn btn-ghost btn-sm" onClick={handleSendReminder}>{tx.send_reminder}</button>
+            <button className="btn btn-ghost btn-sm" onClick={() => void handleRecalculate()} disabled={recalculating}>{recalculating ? "…" : tx.recalculate}</button>
+            <button className="btn btn-ghost btn-sm" onClick={() => void handleSendReminder()} disabled={sendingReminder}>{sendingReminder ? "…" : tx.send_reminder}</button>
             <button className="btn btn-accent btn-sm" onClick={handleGenerateActions} disabled={generatingActions}>
               {generatingActions ? tx.generating : tx.generate_actions}
             </button>
