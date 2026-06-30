@@ -76,7 +76,7 @@ type UTK = keyof typeof USER_TYPES;
 export default function RegisterPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { setUser } = useAuth();
+  const { setUser, refreshUser } = useAuth();
   const { showToast } = useToast();
   const isMobile = useMobile();
   const lang = i18n.language as "nl" | "en" | "fa";
@@ -189,9 +189,12 @@ export default function RegisterPage() {
             },
             body: JSON.stringify({ token: invitationToken }),
           });
+          // Refresh user so has_accountant flips to true and sidebar shows My Portal immediately.
+          await refreshUser().catch(() => null);
           navigate("/client");
           return;
         } catch {
+          await refreshUser().catch(() => null);
           navigate("/client");
           return;
         }

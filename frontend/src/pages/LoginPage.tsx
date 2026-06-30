@@ -69,7 +69,13 @@ export default function LoginPage() {
         lang === "nl" ? "Ingelogd! Welkom terug" : lang === "fa" ? "وارد شدید! خوش آمدید" : "Logged in! Welcome back",
         "success",
       );
-      navigate("/chat");
+      if (profile?.role === "accountant") {
+        navigate("/accountant/portal");
+      } else if (profile?.has_accountant) {
+        navigate("/client");
+      } else {
+        navigate("/dashboard");
+      }
     } catch {
       const msg = LOGIN_ERR[lang] ?? t("auth.login_error");
       setError(msg);
