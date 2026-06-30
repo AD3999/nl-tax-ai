@@ -446,11 +446,13 @@ export default function ClientPortalPage() {
                 </div>
               </div>
             </div>
-            <Link to="/client/messages" style={{ textDecoration: "none" }}>
-              <button className="btn btn-accent btn-sm" style={{ width: "100%", justifyContent: "center" }}>
-                <MessageSquare size={13} />
-                {t("sendMessage", lang)}
-              </button>
+            <Link
+              to="/client/messages"
+              className="btn btn-accent btn-sm"
+              style={{ width: "100%", justifyContent: "center", textDecoration: "none" }}
+            >
+              <MessageSquare size={13} />
+              {t("sendMessage", lang)}
             </Link>
           </div>
         </div>

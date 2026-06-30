@@ -846,6 +846,25 @@ export default function ChatPage() {
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
                   )}
+                  {!msg.streaming && msg.id === "intake-greeting" && (
+                    <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--hairline)", display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      {([
+                        { key: "zzp",      nl: "ZZP",         en: "ZZP",      fa: "ZZP" },
+                        { key: "employee", nl: "Werknemer",   en: "Employee", fa: "کارمند" },
+                        { key: "expat",    nl: "Expat",       en: "Expat",    fa: "مهاجر خارجی" },
+                        { key: "dga",      nl: "DGA",         en: "DGA",      fa: "DGA" },
+                      ] as { key: string; nl: string; en: string; fa: string }[]).map(opt => (
+                        <button
+                          key={opt.key}
+                          onClick={() => void submit(opt[lang] ?? opt.en, true)}
+                          disabled={loading}
+                          style={{ padding: "7px 16px", borderRadius: 999, border: "1px solid var(--hairline-2)", background: "var(--paper-3)", color: "var(--ink-2)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                        >
+                          {opt[lang] ?? opt.en}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   {!msg.streaming && !msg.isIntake && (
                     <ContextSourceChips sources={[
                       "Rules",
