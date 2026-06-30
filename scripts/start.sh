@@ -25,6 +25,9 @@ else:
 # If this is the celery-worker service, run Celery instead of uvicorn.
 # IS_CELERY_WORKER=1 is set as a user env var on the Railway celery-worker service.
 if [ "${IS_CELERY_WORKER}" = "1" ]; then
+  echo "==> Starting health-check HTTP server on port ${PORT:-8000}…"
+  python3 /app/health_server.py &
+
   echo "==> Starting Celery worker + beat…"
   exec python3 -m celery -A config worker \
     --beat \
