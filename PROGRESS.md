@@ -1,7 +1,67 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 29 Jun 2026 — Portal disconnect hardening (crash fix + full access lockout)
+> Last updated: 30 Jun 2026 — Full QA sprint: all 18 issues fixed and merged
+
+---
+
+## Session — 30 Jun 2026 · Full QA Sprint — 18 Issues Fixed ✅
+
+### Commit: `b4a95d5` (branch `fix/qa-18-issues`, merged to `master` as `88f0534`)
+
+All 18 issues identified in the full-stack QA audit were fixed and merged.
+
+### Critical fixes (C1–C3)
+
+| Issue | Fix |
+|-------|-----|
+| C1 — Invite hijacking | `PortalInvitationAcceptView` now rejects authenticated users whose email doesn't match the invitation's `client_email` |
+| C2 — Missing `client_profile` | `PortalMessage.objects.create()` in `FileTaxReturnView` and `RejectTaskView` now passes `client_profile=eng.client_profile` |
+| C3 — Readiness gate order | Moved readiness score check BEFORE `serializer.save()` so the DB write never happens if the gate fails |
+
+### High priority fixes (H1–H5)
+
+| Issue | Fix |
+|-------|-----|
+| H1 — Status state machine | `EngagementDetailView.patch()` enforces valid transitions via `VALID_TRANSITIONS` dict; invalid transitions return 400 |
+| H2 — Client checklist override | `ChecklistItemDetailView.patch()` restricts clients to `{uploaded, answered, todo}` only |
+| H3 — Cancel shell leak | `PortalInvitationCancelView.delete()` cleans up the pre-created shell `AccountantClientProfile` |
+| H4 — Portal sidebar not flipping | `RegisterPage` calls `refreshUser()` after invitation accept so `has_accountant` flips immediately |
+| H5 — Wrong post-login redirect | `LoginPage` now routes: accountant→`/accountant/portal`, client+has_accountant→`/client`, client→`/dashboard` |
+
+### Medium priority fixes (M1–M6)
+
+| Issue | Fix |
+|-------|-----|
+| M1 — Language source bug | `AcceptInvitationPage` + `ForgotPasswordPage` now use `i18n.language` instead of `localStorage.getItem("taxwijs_lang")` |
+| M2 — ReadinessCard weights | Fixed `DEFAULT_FACTORS`: Checklist 25%→30%, Accountant Review 15%→10% (now matches backend `readiness.py`) |
+| M3 — Staff inbox unscoped | `AccountantInboxView` now always filters by `accountant_user=request.user` regardless of `is_staff` |
+| M4 — Silent exceptions | Replaced all `except Exception: pass` with `logger.exception(...)` or `logger.warning(...)` throughout `portal/views.py` |
+| M5 — Duplicate invitations | `ClientInvitationsView` deduplicates by accountant email; silently swallowed exceptions now logged |
+| M6 — Idempotency-Key | `PortalInvitationSendView` accepts `Idempotency-Key` header; repeated submissions with same key return cached 200 for 24h |
+
+### Low priority fixes (L1–L4)
+
+| Issue | Fix |
+|-------|-----|
+| L1 — Status dropdown EN only | `AccountantClientDetailPage` renders status options in NL/EN/FA via `PROFILE_STATUS_LABELS` map |
+| L2 — Error toast EN only | `InvitationBanner` error toasts now use `tx.error` (localised in all 3 languages) |
+| L3 — Inline imports | `portal/views.py` service imports (`create_checklist_for_engagement`, `calculate_readiness`, `generate_accountant_actions`, `check_client_limit`, `secrets`, `datetime`) moved to module level |
+| L4 — N+1 queries | Key engagement fetches now use `select_related("accountant", "client_profile")` — engagement list view, EngagementDetailView, document upload, inbox |
+
+### Files changed
+
+- `backend/apps/portal/views.py` — C1, C2, C3, H1, H2, H3, M3, M4, M6, L3, L4
+- `backend/apps/users/views.py` — M5
+- `frontend/src/pages/LoginPage.tsx` — H5
+- `frontend/src/pages/RegisterPage.tsx` — H4
+- `frontend/src/pages/AcceptInvitationPage.tsx` — M1
+- `frontend/src/pages/ForgotPasswordPage.tsx` — M1
+- `frontend/src/components/ui/ReadinessCard.tsx` — M2
+- `frontend/src/components/InvitationBanner.tsx` — L2
+- `frontend/src/pages/portal/AccountantClientDetailPage.tsx` — L1
+
+---
 
 ---
 
