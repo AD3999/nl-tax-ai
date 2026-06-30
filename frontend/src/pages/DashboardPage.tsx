@@ -743,11 +743,12 @@ function AlertCard({
 }
 
 function ActionCard({
-  action, state, onMarkDone, onDismiss, onSnooze,
+  action, state, onMarkDone, onDismiss, onSnooze, lang,
 }: {
   action: TaxAction; state: ActionState;
   onMarkDone: (id: string) => void; onDismiss: (id: string) => void;
   onSnooze: (id: string, days: number) => void;
+  lang: "nl" | "en" | "fa";
 }) {
   const [showSnoozeMenu, setShowSnoozeMenu] = useState(false);
   const pColor = ACTION_PRIORITY_COLOR[action.priority] ?? "var(--sage-600)";
@@ -792,7 +793,7 @@ function ActionCard({
             <div style={{ position: "relative" }}>
               <button onClick={() => setShowSnoozeMenu(v => !v)}
                 style={{ background: "none", border: "none", fontSize: 11.5, color: "var(--ink-4)", cursor: "pointer", padding: 0 }}>
-                Snooze ↓
+                {lang === "nl" ? "Uitstellen ↓" : lang === "fa" ? "تعویق ↓" : "Snooze ↓"}
               </button>
               {showSnoozeMenu && (
                 <div style={{
@@ -804,7 +805,11 @@ function ActionCard({
                     <button key={d} onClick={() => { onSnooze(action.id, d); setShowSnoozeMenu(false); }}
                       style={{ display: "block", width: "100%", textAlign: "start", background: "none", border: "none",
                         padding: "6px 14px", fontSize: "var(--text-sm)", color: "var(--ink)", cursor: "pointer" }}>
-                      {d === 1 ? "Tomorrow" : d === 7 ? "1 week" : "1 month"}
+                      {d === 1
+                        ? (lang === "nl" ? "Morgen" : lang === "fa" ? "فردا" : "Tomorrow")
+                        : d === 7
+                          ? (lang === "nl" ? "1 week" : lang === "fa" ? "۱ هفته" : "1 week")
+                          : (lang === "nl" ? "1 maand" : lang === "fa" ? "۱ ماه" : "1 month")}
                     </button>
                   ))}
                 </div>
@@ -1266,7 +1271,7 @@ export default function DashboardPage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                   {openActions.map(action => (
                     <ActionCard key={action.id} action={action} state={actionStates[action.id] ?? "open"}
-                      onMarkDone={markActionDone} onDismiss={dismissAction} onSnooze={handleSnoozeAction} />
+                      onMarkDone={markActionDone} onDismiss={dismissAction} onSnooze={handleSnoozeAction} lang={lang} />
                   ))}
                   {doneActions.length > 0 && (
                     <details style={{ marginTop: 4 }}>
@@ -1276,7 +1281,7 @@ export default function DashboardPage() {
                       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
                         {doneActions.map(action => (
                           <ActionCard key={action.id} action={action} state="done"
-                            onMarkDone={markActionDone} onDismiss={dismissAction} onSnooze={handleSnoozeAction} />
+                            onMarkDone={markActionDone} onDismiss={dismissAction} onSnooze={handleSnoozeAction} lang={lang} />
                         ))}
                       </div>
                     </details>

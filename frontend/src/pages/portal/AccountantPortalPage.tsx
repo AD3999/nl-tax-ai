@@ -103,6 +103,7 @@ const TX: Record<string, Record<string, string>> = {
     inv_status_cancelled:"Cancelled",
     cancel_inv:          "Cancel",
     pending_invitations: "Pending",
+    loading: "Loading…",
   },
   nl: {
     title: "Accountant Portal",
@@ -152,6 +153,7 @@ const TX: Record<string, Record<string, string>> = {
     inv_status_cancelled:"Geannuleerd",
     cancel_inv:          "Annuleren",
     pending_invitations: "In afwachting",
+    loading: "Laden…",
   },
   fa: {
     title: "پورتال حسابدار",
@@ -201,6 +203,7 @@ const TX: Record<string, Record<string, string>> = {
     inv_status_cancelled:"لغو شده",
     cancel_inv:          "لغو",
     pending_invitations: "در انتظار",
+    loading: "در حال بارگذاری…",
   },
 };
 
@@ -596,7 +599,7 @@ export default function AccountantPortalPage() {
         {/* Client table */}
         {tab === "clients" && (
           loadingData ? (
-            <div style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-4)" }}>Loading...</div>
+            <div style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-4)" }}>{tx.loading}</div>
           ) : clients.length === 0 ? (
             <div className="card" style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-3)", fontSize: "var(--text-sm)" }}>{tx.no_clients}</div>
           ) : (
@@ -723,7 +726,7 @@ export default function AccountantPortalPage() {
         {/* Engagements table */}
         {tab === "engagements" && (
           loadingData ? (
-            <div style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-4)" }}>Loading...</div>
+            <div style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-4)" }}>{tx.loading}</div>
           ) : engagements.length === 0 ? (
             <div className="card" style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-3)", fontSize: "var(--text-sm)" }}>{tx.no_engagements}</div>
           ) : (

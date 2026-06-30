@@ -179,6 +179,7 @@ function App() {
               <Route path="/portal/accept-invitation" element={<AcceptInvitationPage />} />
               <Route path="/zzp-tax-netherlands"     element={<ZZPTaxPage />} />
               <Route path="/expat-tax-netherlands"   element={<ExpatTaxPage />} />
+              <Route path="/pricing"                 element={<PricingPage />} />
             </Route>
 
             {/* ── App routes: Sidebar layout ── */}
@@ -224,7 +225,6 @@ function App() {
             {/* ── Redirects ── */}
             <Route path="/ib-guide"    element={<Navigate to="/chat?mode=ib-return" replace />} />
             <Route path="/simulation"  element={<Navigate to="/chat?mode=simulation" replace />} />
-            <Route path="/pricing"     element={<PricingPage />} />
             <Route path="/accountant"  element={<Navigate to="/accountant/portal" replace />} />
             <Route path="*"            element={<Navigate to="/" replace />} />
 

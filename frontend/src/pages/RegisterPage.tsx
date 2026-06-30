@@ -407,10 +407,12 @@ export default function RegisterPage() {
                 <label htmlFor="reg-email" className="tw-label">{t("auth.email")}</label>
                 <input id="reg-email" className="tw-input" type="email" placeholder="you@example.nl" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" required style={{ fontSize: 16 }} />
               </div>
-              <div>
-                <label htmlFor="reg-password" className="tw-label">{t("auth.password")}</label>
-                <input id="reg-password" className="tw-input" type="password" placeholder={lang === "nl" ? "Minimaal 8 tekens" : lang === "fa" ? "حداقل ۸ کاراکتر" : "At least 8 characters"} value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password" minLength={8} required style={{ fontSize: 16 }} />
-              </div>
+              {!isAccountant && (
+                <div>
+                  <label htmlFor="reg-password" className="tw-label">{t("auth.password")}</label>
+                  <input id="reg-password" className="tw-input" type="password" placeholder={lang === "nl" ? "Minimaal 8 tekens" : lang === "fa" ? "حداقل ۸ کاراکتر" : "At least 8 characters"} value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password" minLength={8} required style={{ fontSize: 16 }} />
+                </div>
+              )}
 
               {/* Extra fields for accountant only */}
               {isAccountant && (
