@@ -63,15 +63,16 @@ export default function LoginPage() {
     try {
       await login({ username: email, password });
       const profile = await fetchProfile();
+      if (!profile) throw new Error("profile_fetch_failed");
       setUser(profile);
-      if (profile?.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
+      if (profile.id) localStorage.setItem("taxwijs_user_id", String(profile.id));
       showToast(
         lang === "nl" ? "Ingelogd! Welkom terug" : lang === "fa" ? "وارد شدید! خوش آمدید" : "Logged in! Welcome back",
         "success",
       );
-      if (profile?.role === "accountant") {
+      if (profile.role === "accountant") {
         navigate("/accountant/portal");
-      } else if (profile?.has_accountant) {
+      } else if (profile.has_accountant) {
         navigate("/client");
       } else {
         navigate("/dashboard");
@@ -212,12 +213,6 @@ export default function LoginPage() {
               {lang === "nl" ? "Doorgaan met Google" : lang === "fa" ? "ورود با گوگل" : "Continue with Google"}
             </button>
 
-            {error && (
-              <div style={{ marginTop: 12, padding: 12, background: "var(--danger-soft)", borderRadius: "var(--r-sm)", fontSize: 13, color: "var(--danger)" }}>
-                {error}
-              </div>
-            )}
-
             <div style={{ margin: "20px 0", display: "flex", alignItems: "center", gap: 12, color: "var(--ink-4)", fontSize: 11 }}>
               <span className="hair" style={{ flex: 1 }} />
               {lang === "nl" ? "of met e-mail" : lang === "fa" ? "یا با ایمیل" : "or with email"}
@@ -270,6 +265,12 @@ export default function LoginPage() {
                   : <>{t("nav.login")} <Icon.arrow /></>
                 }
               </button>
+
+              {error && (
+                <div style={{ padding: 12, background: "var(--danger-soft)", borderRadius: "var(--r-sm)", fontSize: 13, color: "var(--danger)" }}>
+                  {error}
+                </div>
+              )}
               <p style={{ textAlign: "center", fontSize: "var(--text-xs)", color: "var(--ink-4)", marginTop: "var(--sp-3)" }}>
                 <span
                   role="button" tabIndex={0}
