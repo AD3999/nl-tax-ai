@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { register, requestAccountantAccess } from "../api/auth";
@@ -8,6 +8,7 @@ import { Icon } from "../components/Icon";
 import { useMobile } from "../hooks/useMobile";
 import { useToast } from "../context/ToastContext";
 import { apiBase } from "../api/client";
+import { generatePKCE } from "../utils/pkce";
 
 type ApiError = { response?: { data?: Record<string, string[]> } };
 
@@ -105,25 +106,30 @@ export default function RegisterPage() {
     }
   }, [searchParams, lang]);
 
-  const handleGoogle = () => {
+  const handleGoogle = useCallback(async () => {
     if (isAccountant) {
       setError(lang === "nl" ? "Gebruik e-mail registratie voor een accountantaccount" : lang === "fa" ? "برای حساب حسابدار، از ثبت‌نام با ایمیل استفاده کنید" : "Use email sign-up for an accountant account");
       return;
     }
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
     if (!clientId) { setError("Google Client ID not configured"); return; }
+    const { verifier, challenge } = await generatePKCE();
     sessionStorage.setItem("google_auth_user_type", userType);
     sessionStorage.setItem("google_auth_redirect", "/intake");
+    sessionStorage.setItem("google_pkce_verifier", verifier);
+    const redirectUri = `${window.location.origin}/auth/google/callback`;
+    sessionStorage.setItem("google_auth_redirect_uri", redirectUri);
     const params = new URLSearchParams({
-      client_id:              clientId,
-      redirect_uri:           `${window.location.origin}/auth/google/callback`,
-      response_type:          "token",
-      scope:                  "openid email profile",
-      include_granted_scopes: "true",
-      prompt:                 "select_account",
+      client_id:             clientId,
+      redirect_uri:          redirectUri,
+      response_type:         "code",
+      scope:                 "openid email profile",
+      code_challenge:        challenge,
+      code_challenge_method: "S256",
+      prompt:                "select_account",
     });
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
-  };
+  }, [isAccountant, lang, userType]);
 
   const EMAIL_TAKEN: Record<string, string> = {
     nl: "Er bestaat al een account met dit e-mailadres",
@@ -181,7 +187,7 @@ export default function RegisterPage() {
       if (invitationToken) {
         try {
           const accessToken = result.access ?? localStorage.getItem("access_token") ?? "";
-          await fetch(`${apiBase}/portal/invitations/accept/`, {
+          const invRes = await fetch(`${apiBase}/portal/invitations/accept/`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -189,13 +195,29 @@ export default function RegisterPage() {
             },
             body: JSON.stringify({ token: invitationToken }),
           });
+          if (!invRes.ok) {
+            const body = await invRes.json().catch(() => ({})) as { detail?: string };
+            const errDetail = body.detail ?? (
+              lang === "nl" ? "Uitnodiging accepteren mislukt. Neem contact op met uw accountant."
+              : lang === "fa" ? "پذیرش دعوتنامه ناموفق بود. با مشاور مالیاتی خود تماس بگیرید."
+              : "Failed to accept invitation. Please contact your accountant."
+            );
+            showToast(errDetail, "error");
+            navigate("/dashboard");
+            return;
+          }
           // Refresh user so has_accountant flips to true and sidebar shows My Portal immediately.
           await refreshUser().catch(() => null);
           navigate("/client");
           return;
         } catch {
-          await refreshUser().catch(() => null);
-          navigate("/client");
+          showToast(
+            lang === "nl" ? "Uitnodiging accepteren mislukt. Probeer het later opnieuw."
+            : lang === "fa" ? "پذیرش دعوتنامه ناموفق بود. بعداً دوباره امتحان کنید."
+            : "Failed to accept invitation. Please try again later.",
+            "error",
+          );
+          navigate("/dashboard");
           return;
         }
       }
@@ -385,10 +407,12 @@ export default function RegisterPage() {
                 <label htmlFor="reg-email" className="tw-label">{t("auth.email")}</label>
                 <input id="reg-email" className="tw-input" type="email" placeholder="you@example.nl" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" required style={{ fontSize: 16 }} />
               </div>
-              <div>
-                <label htmlFor="reg-password" className="tw-label">{t("auth.password")}</label>
-                <input id="reg-password" className="tw-input" type="password" placeholder={lang === "nl" ? "Minimaal 8 tekens" : lang === "fa" ? "حداقل ۸ کاراکتر" : "At least 8 characters"} value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password" minLength={8} required style={{ fontSize: 16 }} />
-              </div>
+              {!isAccountant && (
+                <div>
+                  <label htmlFor="reg-password" className="tw-label">{t("auth.password")}</label>
+                  <input id="reg-password" className="tw-input" type="password" placeholder={lang === "nl" ? "Minimaal 8 tekens" : lang === "fa" ? "حداقل ۸ کاراکتر" : "At least 8 characters"} value={password} onChange={e => setPassword(e.target.value)} autoComplete="new-password" minLength={8} required style={{ fontSize: 16 }} />
+                </div>
+              )}
 
               {/* Extra fields for accountant only */}
               {isAccountant && (

@@ -1,9 +1,10 @@
-import { useEffect, useState, Component, type ReactNode } from "react";
+import { useEffect, useState, Component, useCallback, type ReactNode } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Users, CheckCircle2, AlertCircle, AlertTriangle, ArrowRight, Zap, X, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useMobile } from "../../hooks/useMobile";
+import { useVisibleInterval } from "../../hooks/useVisibleInterval";
 import {
   fetchClients, fetchEngagements, disconnectClient, reactivateClient,
 } from "../../api/portal/client";
@@ -102,6 +103,7 @@ const TX: Record<string, Record<string, string>> = {
     inv_status_cancelled:"Cancelled",
     cancel_inv:          "Cancel",
     pending_invitations: "Pending",
+    loading: "Loading…",
   },
   nl: {
     title: "Accountant Portal",
@@ -151,6 +153,7 @@ const TX: Record<string, Record<string, string>> = {
     inv_status_cancelled:"Geannuleerd",
     cancel_inv:          "Annuleren",
     pending_invitations: "In afwachting",
+    loading: "Laden…",
   },
   fa: {
     title: "پورتال حسابدار",
@@ -200,6 +203,7 @@ const TX: Record<string, Record<string, string>> = {
     inv_status_cancelled:"لغو شده",
     cancel_inv:          "لغو",
     pending_invitations: "در انتظار",
+    loading: "در حال بارگذاری…",
   },
 };
 
@@ -271,14 +275,16 @@ export default function AccountantPortalPage() {
   // Upgrade gate state
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [upgradeReason, setUpgradeReason] = useState("");
+  const [actioningClient, setActioningClient] = useState<number | null>(null);
 
   useEffect(() => {
     if (loading) return;
     if (!user) return;
     void loadData();
-    const id = setInterval(() => void loadData(true), 20_000);
-    return () => clearInterval(id);
   }, [user, loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const silentLoadData = useCallback(() => void loadData(true), []); // eslint-disable-line react-hooks/exhaustive-deps
+  useVisibleInterval(silentLoadData, 20_000);
 
   async function loadData(silent = false) {
     if (!silent) setLoadingData(true);
@@ -593,7 +599,7 @@ export default function AccountantPortalPage() {
         {/* Client table */}
         {tab === "clients" && (
           loadingData ? (
-            <div style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-4)" }}>Loading...</div>
+            <div style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-4)" }}>{tx.loading}</div>
           ) : clients.length === 0 ? (
             <div className="card" style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-3)", fontSize: "var(--text-sm)" }}>{tx.no_clients}</div>
           ) : (
@@ -664,12 +670,12 @@ export default function AccountantPortalPage() {
                                 className="btn btn-ghost btn-sm"
                                 style={{ color: "var(--warn-text, #7a5a00)", display: "inline-flex", alignItems: "center" }}
                                 title="Disconnect client (30-day grace period)"
+                                disabled={actioningClient === c.id}
                                 onClick={async () => {
                                   if (!window.confirm(`Disconnect ${c.display_name}? Their data is kept for 30 days.`)) return;
+                                  setActioningClient(c.id);
                                   try {
                                     await disconnectClient(c.id);
-                                    // Reload from server — avoids any potential
-                                    // render crash from optimistic state patching
                                     void loadData(true);
                                   } catch {
                                     showToast(
@@ -678,18 +684,20 @@ export default function AccountantPortalPage() {
                                       : "Disconnect failed. Please try again.",
                                       "error"
                                     );
+                                  } finally {
+                                    setActioningClient(null);
                                   }
                                 }}
-                              ><X size={13} /></button>
+                              >{actioningClient === c.id ? "…" : <X size={13} />}</button>
                             ) : (
                               <button
                                 className="btn btn-accent btn-sm"
                                 style={{ fontSize: "var(--text-2xs)" }}
+                                disabled={actioningClient === c.id}
                                 onClick={async () => {
+                                  setActioningClient(c.id);
                                   try {
                                     await reactivateClient(c.id);
-                                    // Reload from server — ensures fresh serialized data
-                                    // (optimistic spread could leave stale derived fields)
                                     void loadData(true);
                                   } catch {
                                     showToast(
@@ -698,9 +706,11 @@ export default function AccountantPortalPage() {
                                       : "Reactivation failed. Please try again.",
                                       "error"
                                     );
+                                  } finally {
+                                    setActioningClient(null);
                                   }
                                 }}
-                              >Reactivate</button>
+                              >{actioningClient === c.id ? "…" : (lang === "nl" ? "Reactiveer" : lang === "fa" ? "فعال‌سازی مجدد" : "Reactivate")}</button>
                             )}
                           </div>
                         </td>
@@ -716,7 +726,7 @@ export default function AccountantPortalPage() {
         {/* Engagements table */}
         {tab === "engagements" && (
           loadingData ? (
-            <div style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-4)" }}>Loading...</div>
+            <div style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-4)" }}>{tx.loading}</div>
           ) : engagements.length === 0 ? (
             <div className="card" style={{ padding: "var(--sp-8)", textAlign: "center", color: "var(--ink-3)", fontSize: "var(--text-sm)" }}>{tx.no_engagements}</div>
           ) : (

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { formatDate, formatEur } from "../../lib/utils";
 import { ChevronRight, Download, FileText, RefreshCw, X, AlertTriangle, Bot } from "lucide-react";
@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { useMobile } from "../../hooks/useMobile";
+import { useVisibleInterval } from "../../hooks/useVisibleInterval";
 import Modal from "../../components/ui/Modal";
 import ReadinessCard from "../../components/ui/ReadinessCard";
 import CopilotCard from "../../components/ui/CopilotCard";
@@ -136,6 +137,7 @@ const TX: Record<Lang, Record<string, string>> = {
     review_rejected_ok: "Correction requested. Client has been notified.",
     review_filing: "Filing…",
     review_sending: "Sending…",
+    load_error: "Failed to load data. Please try again.",
   },
   nl: {
     portal: "Accountant Portal",
@@ -241,6 +243,7 @@ const TX: Record<Lang, Record<string, string>> = {
     review_rejected_ok: "Correctie aangevraagd. Cliënt is geïnformeerd.",
     review_filing: "Indienen…",
     review_sending: "Sturen…",
+    load_error: "Laden mislukt. Probeer het opnieuw.",
   },
   fa: {
     portal: "پورتال حسابدار",
@@ -346,6 +349,7 @@ const TX: Record<Lang, Record<string, string>> = {
     review_rejected_ok: "درخواست اصلاح ارسال شد. مشتری مطلع شد.",
     review_filing: "در حال ارسال…",
     review_sending: "در حال ارسال…",
+    load_error: "بارگذاری ناموفق بود. دوباره امتحان کنید.",
   },
 };
 
@@ -413,6 +417,8 @@ export default function EngagementPage() {
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [generatingActions, setGeneratingActions] = useState(false);
+  const [recalculating, setRecalculating] = useState(false);
+  const [sendingReminder, setSendingReminder] = useState(false);
   const [reminderPreview, setReminderPreview] = useState<{ subject: string; body: string; missing_count: number } | null>(null);
 
   const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
@@ -451,9 +457,10 @@ export default function EngagementPage() {
     if (!user || !engId) return;
     void loadAll();
     if (initialTab === "messages") void loadMessages();
-    const pollId = setInterval(() => void loadLive(), 10_000);
-    return () => clearInterval(pollId);
   }, [user, engId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pollLive = useCallback(() => void loadLive(), []); // eslint-disable-line react-hooks/exhaustive-deps
+  useVisibleInterval(pollLive, 10_000);
 
   async function loadAll(silent = false) {
     if (!silent) setLoading(true);
@@ -496,13 +503,21 @@ export default function EngagementPage() {
   }
 
   async function loadRisks() {
-    const r = await fetchRisks(engId);
-    setRisks(r);
+    try {
+      const r = await fetchRisks(engId);
+      setRisks(r);
+    } catch {
+      setError(tx.load_error);
+    }
   }
 
   async function loadAudit() {
-    const logs = await fetchAudit(engId);
-    setAuditLog(logs);
+    try {
+      const logs = await fetchAudit(engId);
+      setAuditLog(logs);
+    } catch {
+      setError(tx.load_error);
+    }
   }
 
   async function loadMessages() {
@@ -537,6 +552,8 @@ export default function EngagementPage() {
   }
 
   async function handleRecalculate() {
+    if (recalculating) return;
+    setRecalculating(true);
     try {
       const r = await recalculateReadiness(engId);
       setReadiness(r);
@@ -544,6 +561,8 @@ export default function EngagementPage() {
       setEngagement(updated);
     } catch {
       showToast("Recalculate failed", "error");
+    } finally {
+      setRecalculating(false);
     }
   }
 
@@ -654,11 +673,15 @@ export default function EngagementPage() {
   }
 
   async function handleSendReminder() {
+    if (sendingReminder) return;
+    setSendingReminder(true);
     try {
       const result = await sendReminder(engId);
       setReminderPreview(result);
     } catch {
       showToast("Failed to generate reminder", "error");
+    } finally {
+      setSendingReminder(false);
     }
   }
 
@@ -775,8 +798,8 @@ export default function EngagementPage() {
               <span style={{ fontSize: 10, color: "var(--ink-4)" }}>{tx.updated} {lastUpdated.toLocaleTimeString()}</span>
             )}
             <button title="Refresh" onClick={() => void loadAll(true)} style={{ background: "none", border: "1px solid var(--hairline-2)", borderRadius: 6, cursor: "pointer", color: "var(--ink-4)", padding: "4px 7px", display: "flex", alignItems: "center" }}><RefreshCw size={12} /></button>
-            <button className="btn btn-ghost btn-sm" onClick={handleRecalculate}>{tx.recalculate}</button>
-            <button className="btn btn-ghost btn-sm" onClick={handleSendReminder}>{tx.send_reminder}</button>
+            <button className="btn btn-ghost btn-sm" onClick={() => void handleRecalculate()} disabled={recalculating}>{recalculating ? "…" : tx.recalculate}</button>
+            <button className="btn btn-ghost btn-sm" onClick={() => void handleSendReminder()} disabled={sendingReminder}>{sendingReminder ? "…" : tx.send_reminder}</button>
             <button className="btn btn-accent btn-sm" onClick={handleGenerateActions} disabled={generatingActions}>
               {generatingActions ? tx.generating : tx.generate_actions}
             </button>

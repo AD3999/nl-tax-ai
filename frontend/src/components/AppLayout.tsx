@@ -16,20 +16,23 @@ const CLIENT_PATHS = ["/dashboard", "/client", "/chat", "/intake", "/tax-history
 export default function AppLayout() {
   const isMobile = useMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   // ── Authentication guard ──────────────────────────────────────────────────
   // AuthContext sets loading=false once it has tried to resolve the profile.
   // If loading completes and user is still null the visitor is unauthenticated.
-  // Redirect them to /login rather than showing a blank or broken page.
+  // Redirect them to /login and preserve the current path as ?next= so after
+  // login the user lands where they were going.
   useEffect(() => {
     if (loading) return;          // still resolving — wait
     if (!user) {
-      navigate("/login", { replace: true });
+      const next = encodeURIComponent(location.pathname + location.search);
+      navigate(`/login?next=${next}`, { replace: true });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, location.pathname, location.search]);
   // ──────────────────────────────────────────────────────────────────────────
 
   const isFullBleed = FULL_BLEED.has(pathname);

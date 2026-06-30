@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { login, fetchProfile } from "../api/auth";
+import { generatePKCE } from "../utils/pkce";
 import { useAuth } from "../context/AuthContext";
 import Wordmark from "../components/Wordmark";
 import { Icon } from "../components/Icon";
@@ -31,24 +32,29 @@ export default function LoginPage() {
     }
   }, [searchParams, lang]);
 
-  const handleGoogle = () => {
+  const handleGoogle = useCallback(async () => {
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
     if (!clientId) {
       setError("Google Client ID not configured — set VITE_GOOGLE_CLIENT_ID in Railway env vars");
       return;
     }
+    const { verifier, challenge } = await generatePKCE();
     sessionStorage.setItem("google_auth_user_type", "zzp");
     sessionStorage.setItem("google_auth_redirect", "/dashboard");
+    sessionStorage.setItem("google_pkce_verifier", verifier);
+    const redirectUri = `${window.location.origin}/auth/google/callback`;
+    sessionStorage.setItem("google_auth_redirect_uri", redirectUri);
     const params = new URLSearchParams({
-      client_id: clientId,
-      redirect_uri: `${window.location.origin}/auth/google/callback`,
-      response_type: "token",
-      scope: "openid email profile",
-      include_granted_scopes: "true",
-      prompt: "select_account",
+      client_id:             clientId,
+      redirect_uri:          redirectUri,
+      response_type:         "code",
+      scope:                 "openid email profile",
+      code_challenge:        challenge,
+      code_challenge_method: "S256",
+      prompt:                "select_account",
     });
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
-  };
+  }, []);
 
   const LOGIN_ERR: Record<string, string> = {
     nl: "Onjuist e-mailadres of wachtwoord",
@@ -70,7 +76,13 @@ export default function LoginPage() {
         lang === "nl" ? "Ingelogd! Welkom terug" : lang === "fa" ? "وارد شدید! خوش آمدید" : "Logged in! Welcome back",
         "success",
       );
-      if (profile.role === "accountant") {
+      // Honour ?next= redirect (e.g. from AcceptInvitationPage or AppLayout deep-link)
+      const next = searchParams.get("next");
+      if (next) {
+        navigate(decodeURIComponent(next), { replace: true });
+      } else if (profile.is_admin) {
+        navigate("/admin");
+      } else if (profile.role === "accountant") {
         navigate("/accountant/portal");
       } else if (profile.has_accountant) {
         navigate("/client");

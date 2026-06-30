@@ -170,8 +170,30 @@ class GoogleAuthView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        from django.conf import settings as django_settings
+        user_type    = request.data.get("user_type", "zzp")
         access_token = request.data.get("access_token")
-        user_type = request.data.get("user_type", "zzp")
+        code         = request.data.get("code")
+        code_verifier = request.data.get("code_verifier")
+        redirect_uri = request.data.get("redirect_uri")
+
+        # PKCE authorization-code flow (preferred — implicit flow is deprecated)
+        if code and code_verifier and redirect_uri:
+            token_resp = http_requests.post(
+                "https://oauth2.googleapis.com/token",
+                data={
+                    "code": code,
+                    "client_id": django_settings.GOOGLE_CLIENT_ID,
+                    "client_secret": django_settings.GOOGLE_CLIENT_SECRET,
+                    "redirect_uri": redirect_uri,
+                    "grant_type": "authorization_code",
+                    "code_verifier": code_verifier,
+                },
+                timeout=10,
+            )
+            if token_resp.status_code != 200:
+                return Response({"error": "Failed to exchange Google auth code"}, status=400)
+            access_token = token_resp.json().get("access_token")
 
         if not access_token:
             return Response({"error": "No access token provided"}, status=400)

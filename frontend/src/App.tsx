@@ -99,6 +99,15 @@ function AdminRoute({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+// Guards all /accountant/* pages — only accountant role or admin can enter.
+function AccountantRoute({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== "accountant" && !user.is_admin) return <Navigate to="/dashboard" replace />;
+  return <>{children}</>;
+}
+
 // Guards all /client/* portal pages — redirects to /dashboard when the user
 // has no active accountant connection (deactivated, archived, or never linked).
 // Does a fresh server check on every mount so stale in-memory has_accountant
@@ -170,6 +179,7 @@ function App() {
               <Route path="/portal/accept-invitation" element={<AcceptInvitationPage />} />
               <Route path="/zzp-tax-netherlands"     element={<ZZPTaxPage />} />
               <Route path="/expat-tax-netherlands"   element={<ExpatTaxPage />} />
+              <Route path="/pricing"                 element={<PricingPage />} />
             </Route>
 
             {/* ── App routes: Sidebar layout ── */}
@@ -182,17 +192,17 @@ function App() {
               <Route path="/tax-calendar"           element={<TaxCalendarPage />} />
               {/* /calculator is admin-only — redirect others to /chat */}
               <Route path="/calculator"             element={<AdminRoute><CalculatorPage /></AdminRoute>} />
-              <Route path="/accountant/portal"           element={<AccountantPortalPage />} />
-              <Route path="/accountant/clients/:id"      element={<AccountantClientPage />} />
-              <Route path="/accountant/engagements/:id"  element={<AccountantEngagementPage />} />
-              <Route path="/accountant/review-queue"     element={<AccountantReviewQueue />} />
+              <Route path="/accountant/portal"           element={<AccountantRoute><AccountantPortalPage /></AccountantRoute>} />
+              <Route path="/accountant/clients/:id"      element={<AccountantRoute><AccountantClientPage /></AccountantRoute>} />
+              <Route path="/accountant/engagements/:id"  element={<AccountantRoute><AccountantEngagementPage /></AccountantRoute>} />
+              <Route path="/accountant/review-queue"     element={<AccountantRoute><AccountantReviewQueue /></AccountantRoute>} />
               <Route path="/client"          element={<PortalClientRoute><ClientPortalPage /></PortalClientRoute>} />
               <Route path="/client/tasks"    element={<PortalClientRoute><ClientTasksPage /></PortalClientRoute>} />
               <Route path="/client/documents" element={<PortalClientRoute><ClientDocumentsPage /></PortalClientRoute>} />
               <Route path="/client/messages" element={<PortalClientRoute><ClientMessagesPage /></PortalClientRoute>} />
-              <Route path="/client/profile"         element={<ClientProfilePage />} />
-              <Route path="/accountant/inbox"       element={<AccountantInboxPage />} />
-              <Route path="/accountant/settings"    element={<AccountantSettingsPage />} />
+              <Route path="/client/profile"         element={<PortalClientRoute><ClientProfilePage /></PortalClientRoute>} />
+              <Route path="/accountant/inbox"       element={<AccountantRoute><AccountantInboxPage /></AccountantRoute>} />
+              <Route path="/accountant/settings"    element={<AccountantRoute><AccountantSettingsPage /></AccountantRoute>} />
               <Route path="/zzp-workspace"          element={<ZZPWorkspacePage />} />
               <Route path="/find-accountant"        element={<FindAccountantPage />} />
 
@@ -215,7 +225,6 @@ function App() {
             {/* ── Redirects ── */}
             <Route path="/ib-guide"    element={<Navigate to="/chat?mode=ib-return" replace />} />
             <Route path="/simulation"  element={<Navigate to="/chat?mode=simulation" replace />} />
-            <Route path="/pricing"     element={<PricingPage />} />
             <Route path="/accountant"  element={<Navigate to="/accountant/portal" replace />} />
             <Route path="*"            element={<Navigate to="/" replace />} />
 
