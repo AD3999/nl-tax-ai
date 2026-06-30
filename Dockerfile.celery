@@ -40,4 +40,4 @@ ENV PYTHONPATH=/app/backend
 
 WORKDIR /app/backend
 
-CMD ["bash", "/app/start-celery.sh"]
+CMD ["/bin/bash", "-c", "python3 /app/backend/manage.py migrate --noinput && exec python3 -m celery -A config worker --beat --loglevel=INFO --concurrency=2"]
