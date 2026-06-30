@@ -1,7 +1,45 @@
 # TaxWijs — Build Progress Log
 
 > This file tracks what has been built, tested, and shipped.
-> Last updated: 30 Jun 2026 — Full QA sprint: all 18 issues fixed and merged
+> Last updated: 30 Jun 2026 — Full-stack audit sprint: all 25 issues fixed and merged
+
+---
+
+## Session — 30 Jun 2026 · Full-Stack Audit Sprint — 25 Issues Fixed ✅
+
+### Branch: `fix/full-audit-25-issues` → merged to `master` (04d3c99)
+
+25 issues from a two-agent full-stack audit (4 Critical, 6 High, 9 Medium, 6 Low) — all fixed.
+
+| ID | Fix |
+|----|-----|
+| C1 | AuthContext: `.catch()` + `.finally()` on fetchProfile — no more infinite loading |
+| C2 | 401 interceptor: try/catch, clear tokens, redirect `/login` on refresh failure |
+| C3 | `/client/profile` route wrapped in PortalClientRoute guard |
+| C4 | LoginPage reads `?next=` and honours deep-link redirect after login |
+| H1 | `AccountantRoute` guard added; all `/accountant/*` routes protected |
+| H2 | RegisterPage: `invRes.ok` check + toast on invite-acceptance failure |
+| H3 | EngagementPage: loadRisks/loadAudit wrapped in try/catch with `tx.load_error` |
+| H4 | DashboardPage calculator: `r.ok` check before JSON parse |
+| H5 | `Dockerfile.celery` + `scripts/start-celery.sh` — Celery worker ready for Railway |
+| H6 | `settings.py` EMAIL_BACKEND: production warning comment added |
+| M1 | LoginPage: `is_admin` checked first → redirects to `/admin` |
+| M2 | EngagementPage: `recalculating`/`sendingReminder` state, buttons disabled during ops |
+| M3 | AccountantPortalPage: `actioningClient` per-client state, buttons disabled during ops |
+| M4 | All portal POSTs: `Idempotency-Key: uuid` header via `idempotencyHeader()` |
+| M5 | Google OAuth: implicit flow → PKCE authorization-code flow (`pkce.ts`, backend exchange) |
+| M6 | Portal polling: `useVisibleInterval` hook pauses all 3 polls when tab is hidden |
+| M7 | ChatPage: intake greeting shows 4 clickable work-situation buttons (NL/EN/FA) |
+| M8 | ClientPortalPage: `<Link><button>` → single `<Link className="btn …">` |
+| M9 | AppLayout: preserves `?next=pathname+search` when bouncing to `/login` |
+| L1-L2 | ActionCard snooze: "Snooze ↓", "Tomorrow"/"1 week"/"1 month" → NL/FA |
+| L3 | AccountantPortalPage "Reactivate" → NL/FA localized |
+| L4 | AccountantPortalPage "Loading..." → `tx.loading` (EN/NL/FA) |
+| L5 | `/pricing` route moved inside PublicLayout block in App.tsx |
+| L6 | RegisterPage: password field hidden when `userType === "accountant"` |
+
+New files: `frontend/src/utils/pkce.ts`, `frontend/src/hooks/useVisibleInterval.ts`,
+           `Dockerfile.celery`, `scripts/start-celery.sh`
 
 ---
 
