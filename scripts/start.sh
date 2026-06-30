@@ -22,6 +22,16 @@ else:
     print('  tax_rules_2026.json not found — skipping')
 "
 
+# If this is the celery-worker service, run Celery instead of uvicorn.
+# Railway injects RAILWAY_SERVICE_NAME automatically.
+if [ "${RAILWAY_SERVICE_NAME}" = "celery-worker" ]; then
+  echo "==> Starting Celery worker + beat…"
+  exec python3 -m celery -A config worker \
+    --beat \
+    --loglevel=INFO \
+    --concurrency=2
+fi
+
 echo "==> Starting uvicorn (ASGI) on port ${PORT:-8000}…"
 exec python3 -m uvicorn config.asgi:application \
   --host 0.0.0.0 \

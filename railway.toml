@@ -1,0 +1,13 @@
+# Railway service configuration
+# Each [[services]] block overrides settings for that Railway service name.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "bash /app/start.sh"
+healthcheckPath = "/api/users/health/"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
