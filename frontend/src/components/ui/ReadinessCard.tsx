@@ -41,9 +41,9 @@ function getStatus(score: number): { label: string; labelFa: string; labelNl: st
 
 const DEFAULT_FACTORS: FactorBreakdown[] = [
   { label: "Documents",        weight: 40, score: 0 },
-  { label: "Checklist",        weight: 25, score: 0 },
+  { label: "Checklist",        weight: 30, score: 0 },
   { label: "Verification",     weight: 20, score: 0 },
-  { label: "Accountant Review", weight: 15, score: 0 },
+  { label: "Accountant Review", weight: 10, score: 0 },
 ];
 
 export default function ReadinessCard({ score, factors, compact = false }: ReadinessCardProps) {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { useMobile } from "../../hooks/useMobile";
@@ -18,12 +19,25 @@ const STATUS_COLOR: Record<string, string> = {
   completed: "var(--sage-600)", blocked: "var(--danger)",
 };
 
+const PROFILE_STATUS_LABELS: Record<string, Record<string, string>> = {
+  invited:    { nl: "Uitgenodigd",  en: "Invited",    fa: "دعوت شده" },
+  active:     { nl: "Actief",       en: "Active",      fa: "فعال" },
+  collecting: { nl: "Verzamelen",   en: "Collecting",  fa: "در حال جمع‌آوری" },
+  in_review:  { nl: "In beoordeling", en: "In review", fa: "در بررسی" },
+  ready:      { nl: "Klaar",        en: "Ready",       fa: "آماده" },
+  completed:  { nl: "Voltooid",     en: "Completed",   fa: "تکمیل شده" },
+  archived:   { nl: "Gearchiveerd", en: "Archived",    fa: "بایگانی شده" },
+  deactivated:{ nl: "Gedeactiveerd",en: "Deactivated", fa: "غیرفعال" },
+};
+
 export default function AccountantClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const isMobile = useMobile();
+  const { i18n } = useTranslation();
+  const lang = (i18n.language as "nl" | "en" | "fa") || "nl";
 
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [engagements, setEngagements] = useState<TaxEngagement[]>([]);
@@ -212,9 +226,9 @@ export default function AccountantClientDetailPage() {
                 disabled={saving || profile.status === "deactivated"}
               >
                 {["invited","active","collecting","in_review","ready","completed","archived"].map(s => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>{PROFILE_STATUS_LABELS[s]?.[lang] ?? s}</option>
                 ))}
-                {profile.status === "deactivated" && <option value="deactivated">deactivated</option>}
+                {profile.status === "deactivated" && <option value="deactivated">{PROFILE_STATUS_LABELS.deactivated[lang]}</option>}
               </select>
             </div>
 

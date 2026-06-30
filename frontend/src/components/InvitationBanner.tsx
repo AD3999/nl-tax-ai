@@ -26,6 +26,7 @@ const TX = {
     disconnect:   "Disconnect",
     disconnected: "Disconnected from accountant.",
     confirm_disc: (firm: string) => `Disconnect from ${firm}? They will lose access to your file.`,
+    error:        "Something went wrong. Try again.",
   },
   nl: {
     title:        "Accountant uitnodiging",
@@ -40,6 +41,7 @@ const TX = {
     disconnect:   "Verbinding verbreken",
     disconnected: "Verbinding met accountant verbroken.",
     confirm_disc: (firm: string) => `Verbinding verbreken met ${firm}? Zij verliezen toegang tot uw dossier.`,
+    error:        "Er is iets misgegaan. Probeer opnieuw.",
   },
   fa: {
     title:        "دعوت‌نامه حسابدار",
@@ -54,6 +56,7 @@ const TX = {
     disconnect:   "قطع اتصال",
     disconnected: "از حسابدار جدا شدید.",
     confirm_disc: (firm: string) => `از ${firm} جدا می‌شوید؟ آنها دسترسی به پرونده شما را از دست می‌دهند.`,
+    error:        "مشکلی پیش آمد. دوباره امتحان کنید.",
   },
 } as const;
 
@@ -97,7 +100,7 @@ export default function InvitationBanner() {
         showToast(tx.declined, "info");
       }
     } catch {
-      showToast("Something went wrong. Try again.", "error");
+      showToast(tx.error, "error");
     } finally {
       setResponding(null);
     }
@@ -114,7 +117,7 @@ export default function InvitationBanner() {
       setAccountants(prev => prev.filter(a => a.id !== acc.id));
       showToast(tx.disconnected, "info");
     } catch {
-      showToast("Something went wrong.", "error");
+      showToast(tx.error, "error");
     }
     setDisconnecting(null);
   }

@@ -914,7 +914,9 @@ class ClientInvitationsView(APIView):
             for inv in all_invs
         ]
 
-        # Also include pending portal invitations sent to this email
+        # Also include pending portal invitations sent to this email.
+        # Deduplicate: skip if the same accountant email already appeared via AccountantInvitation.
+        seen_accountant_emails = {r["accountant_email"] for r in result}
         try:
             from apps.portal.models import Invitation as PortalInvitation
             portal_invs = PortalInvitation.objects.filter(
@@ -922,6 +924,8 @@ class ClientInvitationsView(APIView):
                 status="pending",
             ).select_related("sent_by").order_by("-created_at")
             for inv in portal_invs:
+                if inv.sent_by.email in seen_accountant_emails:
+                    continue
                 acct = getattr(inv.sent_by, "accountant_profile", None)
                 firm = (acct.firm_name if acct else None) or inv.sent_by.get_full_name() or inv.sent_by.email
                 result.append({
@@ -934,8 +938,9 @@ class ClientInvitationsView(APIView):
                     "created_at":       inv.created_at.date().isoformat(),
                     "token":            inv.token,
                 })
+                seen_accountant_emails.add(inv.sent_by.email)
         except Exception:
-            pass
+            logger.exception("Failed to fetch portal invitations for user %s", request.user.id)
 
         result.sort(key=lambda x: x["created_at"], reverse=True)
         return Response(result)
@@ -985,7 +990,7 @@ class ClientInvitationsView(APIView):
                         else:
                             declined_profile.delete()
                 except Exception:
-                    pass
+                    logger.exception("Failed to clean up shell profile on portal invitation decline (inv=%s)", inv.id)
 
                 # ── Notify the accountant in-app ─────────────────────────────────────
                 try:
@@ -1002,7 +1007,7 @@ class ClientInvitationsView(APIView):
                         metadata   = {"invitation_id": inv.id},
                     )
                 except Exception:
-                    pass
+                    logger.warning("Failed to send invitation_declined notification (inv=%s)", inv.id)
                 # ─────────────────────────────────────────────────────────────────────
 
                 return Response({"status": "declined"})
@@ -1054,7 +1059,7 @@ class ClientInvitationsView(APIView):
                     defaults={"status": "active"},
                 )
             except Exception:
-                pass
+                logger.exception("Failed to create AccountantClient link on portal inv accept (inv=%s)", inv.id)
 
             engagement = TaxEngagement.objects.filter(client_profile=profile).order_by("-created_at").first()
             if not engagement:
@@ -1065,7 +1070,7 @@ class ClientInvitationsView(APIView):
                 try:
                     create_checklist_for_engagement(engagement)
                 except Exception:
-                    pass
+                    logger.exception("Failed to create checklist for engagement %s on portal inv accept", engagement.id)
             inv.engagement = engagement; inv.save(update_fields=["engagement"])
 
             # ── Notify accountant that invitation was accepted ─────────────────────
@@ -1090,7 +1095,7 @@ class ClientInvitationsView(APIView):
                     },
                 )
             except Exception:
-                pass
+                logger.warning("Failed to send invitation_accepted notification (inv=%s)", inv.id)
             # ──────────────────────────────────────────────────────────────────────
 
             return Response({"status": "accepted"})

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { apiBase } from "../api/client";
 import { useToast } from "../context/ToastContext";
 
@@ -35,7 +36,8 @@ const TX = {
 
 export default function ForgotPasswordPage() {
   const { showToast } = useToast();
-  const lang = (localStorage.getItem("taxwijs_lang") as "nl" | "en" | "fa") || "nl";
+  const { i18n } = useTranslation();
+  const lang = (i18n.language as "nl" | "en" | "fa") || "nl";
   const tx = TX[lang] ?? TX.en;
 
   const [email,   setEmail]   = useState("");

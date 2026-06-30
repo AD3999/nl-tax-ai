@@ -12,8 +12,11 @@ All write operations are logged via _audit().
 """
 from __future__ import annotations
 
+import datetime as _dt
 import logging
+import secrets as _secrets
 
+from django.core.cache import cache
 from django.db.models import F
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
@@ -48,6 +51,10 @@ from .serializers import (
     AccountantActionSerializer, PortalAuditLogSerializer,
     ReminderLogSerializer, PortalMessageSerializer,
 )
+from apps.portal.services.accountant_checklists import create_checklist_for_engagement
+from apps.portal.services.accountant_actions import generate_accountant_actions
+from apps.portal.services.readiness import calculate_readiness
+from apps.portal.services.plan_limits import check_client_limit
 
 logger = logging.getLogger(__name__)
 
@@ -129,7 +136,6 @@ class AccountantClientListView(APIView):
         if not _is_portal_user(request.user):
             return Response({"error": "Portal access requires an accountant account."}, status=403)
 
-        from apps.portal.services.plan_limits import check_client_limit
         allowed, err_msg = check_client_limit(request.user)
         if not allowed:
             return Response({"detail": err_msg, "upgrade_required": True}, status=status.HTTP_402_PAYMENT_REQUIRED)
@@ -196,7 +202,7 @@ class AccountantClientDetailView(APIView):
                     client_user_id=profile.client_user_id,
                 ).delete()
             except Exception:
-                pass
+                logger.exception("Failed to clean up AccountantClient link on profile delete (profile=%s)", profile.id)
 
         _audit(request, "client_deleted", "AccountantClientProfile", profile.id, client_profile=profile)
         profile.delete()
@@ -222,7 +228,7 @@ def _deactivate_client_link(profile):
                 status="active",
             ).update(status="deactivated", deactivated_at=timezone.now())
         except Exception:
-            pass
+            logger.exception("Failed to deactivate AccountantClient link (profile=%s)", profile.id)
 
 
 def _reactivate_client_link(profile):
@@ -236,7 +242,7 @@ def _reactivate_client_link(profile):
                 status="deactivated",
             ).update(status="active", deactivated_at=None)
         except Exception:
-            pass
+            logger.exception("Failed to reactivate AccountantClient link (profile=%s)", profile.id)
 
 
 class AccountantClientDisconnectView(APIView):
@@ -397,10 +403,10 @@ class EngagementListView(APIView):
 
     def get(self, request):
         if request.user.is_staff:
-            qs = TaxEngagement.objects.select_related("client_profile").all()
+            qs = TaxEngagement.objects.select_related("accountant", "client_profile").all()
         else:
             # Exclude self-managed engagements where accountant == client
-            qs = TaxEngagement.objects.select_related("client_profile").filter(
+            qs = TaxEngagement.objects.select_related("accountant", "client_profile").filter(
                 accountant=request.user
             ).exclude(client_profile__client_user=request.user)
         serializer = TaxEngagementSerializer(qs, many=True, context={"request": request})
@@ -421,7 +427,6 @@ class EngagementListView(APIView):
                client_profile=engagement.client_profile, engagement=engagement)
 
         # Auto-generate checklist
-        from apps.portal.services.accountant_checklists import create_checklist_for_engagement
         create_checklist_for_engagement(engagement)
 
         return Response(TaxEngagementSerializer(engagement, context={"request": request}).data, status=status.HTTP_201_CREATED)
@@ -435,7 +440,7 @@ class EngagementDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def _get_engagement(self, request, pk):
-        eng = get_object_or_404(TaxEngagement, pk=pk)
+        eng = get_object_or_404(TaxEngagement.objects.select_related("accountant", "client_profile"), pk=pk)
         if not _can_access_engagement(request.user, eng):
             return None, Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
         return eng, None
@@ -460,9 +465,27 @@ class EngagementDetailView(APIView):
         )
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        eng = serializer.save()
 
-        if eng.status == "ready_to_file" and eng.readiness_score < 85:
+        # Validate BEFORE saving so the DB is never left in an invalid state.
+        new_status = serializer.validated_data.get("status", eng.status)
+
+        # Enforce legal status transitions.
+        VALID_TRANSITIONS = {
+            "draft":         {"collecting"},
+            "collecting":    {"needs_review", "draft"},
+            "needs_review":  {"ready_to_file", "collecting"},
+            "ready_to_file": {"filed", "needs_review"},
+            "filed":         set(),
+        }
+        if new_status != eng.status:
+            allowed = VALID_TRANSITIONS.get(eng.status, set())
+            if new_status not in allowed:
+                return Response(
+                    {"detail": f"Cannot transition from '{eng.status}' to '{new_status}'."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        if new_status == "ready_to_file" and eng.readiness_score < 85:
             return Response(
                 {"detail": (
                     f"Readiness score is {eng.readiness_score}%. "
@@ -470,6 +493,8 @@ class EngagementDetailView(APIView):
                 )},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+        eng = serializer.save()
 
         _audit(request, "engagement_updated", "TaxEngagement", eng.id,
                client_profile=eng.client_profile, engagement=eng)
@@ -513,7 +538,7 @@ class EngagementDetailView(APIView):
                     body           = GUIDANCE.get(lang, GUIDANCE["en"]),
                 )
             except Exception:
-                pass
+                logger.warning("Failed to create guidance PortalMessage for engagement %s", eng.id)
 
         return Response(TaxEngagementSerializer(eng, context={"request": request}).data)
 
@@ -560,7 +585,6 @@ class ChecklistView(APIView):
         eng = get_object_or_404(TaxEngagement, pk=pk)
         if not _is_accountant_of_client(request.user, eng.client_profile) and not request.user.is_staff:
             return Response({"detail": "Forbidden."}, status=status.HTTP_403_FORBIDDEN)
-        from apps.portal.services.accountant_checklists import create_checklist_for_engagement
         count = create_checklist_for_engagement(eng)
         _audit(request, "checklist_regenerated", "TaxEngagement", eng.id, engagement=eng)
         return Response({"created": count})
@@ -590,10 +614,20 @@ class ChecklistItemDetailView(APIView):
                 {"detail": "This client is disconnected. Reactivate the client to make changes."},
                 status=status.HTTP_403_FORBIDDEN,
             )
+        is_accountant = _is_accountant_of_client(request.user, item.engagement.client_profile)
+
+        # Clients may only self-service to these statuses; everything else requires the accountant.
+        CLIENT_ALLOWED_STATUSES = {"uploaded", "answered", "todo"}
+
         new_status = request.data.get("status")
         if new_status and new_status != item.status:
+            if not is_accountant and new_status not in CLIENT_ALLOWED_STATUSES:
+                return Response(
+                    {"detail": f"Clients cannot set checklist status to '{new_status}'."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
             allowed = self.ACCOUNTANT_ALLOWED_TRANSITIONS.get(item.status, [])
-            if new_status not in allowed:
+            if is_accountant and new_status not in allowed:
                 return Response(
                     {"detail": f"Cannot transition from '{item.status}' to '{new_status}'."},
                     status=status.HTTP_400_BAD_REQUEST,
@@ -668,7 +702,9 @@ class ClientDocumentUploadView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        engagement     = serializer.validated_data["engagement"]
+        engagement     = TaxEngagement.objects.select_related("accountant", "client_profile").get(
+            pk=serializer.validated_data["engagement"].pk
+        )
         client_profile = serializer.validated_data["client_profile"]
 
         # Permission: client or accountant can upload
@@ -763,7 +799,7 @@ class ClientDocumentUploadView(APIView):
             from apps.portal.tasks import process_document_task
             process_document_task.delay(doc.id)
         except Exception:
-            pass
+            logger.warning("Failed to queue document processing task for doc %s", doc.id)
 
         return Response(ClientDocumentSerializer(doc, context={"request": request}).data, status=status.HTTP_201_CREATED)
 
@@ -904,7 +940,7 @@ class DocumentReviewView(APIView):
                             metadata={"engagement_id": doc.engagement_id, "document_id": doc.id},
                         )
                     except Exception:
-                        pass
+                        logger.warning("Failed to send document_approved notification for doc %s", doc.id)
 
         # Refresh missing_items_count on the engagement after any review action
         if new_status:
@@ -917,7 +953,7 @@ class DocumentReviewView(APIView):
                 ).count()
                 TaxEngagement.objects.filter(pk=eng.pk).update(missing_items_count=missing)
             except Exception:
-                pass
+                logger.exception("Failed to refresh missing_items_count for engagement on doc %s", doc.id)
 
         return Response(ClientDocumentSerializer(doc, context={"request": request}).data)
 
@@ -1093,7 +1129,6 @@ class AccountantActionsView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
         try:
-            from apps.portal.services.accountant_actions import generate_accountant_actions
             result = generate_accountant_actions(eng)
         except Exception as exc:
             logger.error("generate_accountant_actions failed for engagement %s: %s", eng.id, exc)
@@ -1155,7 +1190,6 @@ class ReadinessView(APIView):
         eng = get_object_or_404(TaxEngagement, pk=pk)
         if not _can_access_engagement(request.user, eng):
             return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
-        from apps.portal.services.readiness import calculate_readiness
         result = calculate_readiness(eng)
         return Response(result)
 
@@ -1555,11 +1589,10 @@ def _get_or_create_engagement(profile):
             status="collecting",
             tax_year=2026,
         )
-        from apps.portal.services.accountant_checklists import create_checklist_for_engagement
         try:
             create_checklist_for_engagement(engagement)
         except Exception:
-            pass
+            logger.exception("Failed to create checklist for engagement %s", engagement.id)
     return engagement
 
 
@@ -1802,7 +1835,6 @@ class ClientPortalTaskUpdateView(APIView):
             )
             # Recalculate readiness score — notify accountant if 100% reached
             try:
-                from apps.portal.services.readiness import calculate_readiness
                 result = calculate_readiness(item.engagement)
                 new_score = result.get("readiness_score", 0) if isinstance(result, dict) else 0
                 eng = item.engagement
@@ -1828,7 +1860,7 @@ class ClientPortalTaskUpdateView(APIView):
                         metadata={"event": "client_ready_for_review", "engagement_id": eng.id},
                     )
             except Exception:
-                pass
+                logger.warning("Failed to compute readiness or send milestone notification for item %s", item.id)
 
         _audit(request, f"client_task_{new_status}", "ChecklistItem", item.id,
                client_profile=item.client_profile, engagement=item.engagement,
@@ -1860,6 +1892,7 @@ class FileTaxReturnView(APIView):
         # Portal message to client
         PortalMessage.objects.create(
             engagement=eng,
+            client_profile=eng.client_profile,
             sender=request.user,
             body=(
                 f"Great news! Your {eng.tax_year} tax return has been filed. "
@@ -1925,6 +1958,7 @@ class RejectTaskView(APIView):
         full_body = f"{message_text}\n\n[task_link:{item.id}:{item.title}]"
         msg = PortalMessage.objects.create(
             engagement=eng,
+            client_profile=eng.client_profile,
             sender=request.user,
             body=full_body,
             is_system=False,
@@ -1968,16 +2002,15 @@ class AccountantInboxView(APIView):
         if not _is_portal_user(request.user) and not request.user.is_staff:
             return Response({"detail": "Portal access required."}, status=403)
 
-        # Scope to this accountant's clients (exclude self-managed profiles)
-        if request.user.is_staff:
-            profiles = AccountantClientProfile.objects.all()
-        else:
-            profiles = AccountantClientProfile.objects.filter(
-                accountant_user=request.user
-            ).exclude(client_user=F("accountant_user"))
+        # Scope to this accountant's clients only — staff are not exempt from firm scoping
+        profiles = AccountantClientProfile.objects.filter(
+            accountant_user=request.user
+        ).exclude(client_user=F("accountant_user"))
 
         profile_ids   = list(profiles.values_list("id", flat=True))
-        engagement_qs = TaxEngagement.objects.filter(client_profile_id__in=profile_ids)
+        engagement_qs = TaxEngagement.objects.select_related("accountant", "client_profile").filter(
+            client_profile_id__in=profile_ids
+        )
         eng_ids       = list(engagement_qs.values_list("id", flat=True))
 
         # Pending uploads awaiting review
@@ -2162,9 +2195,6 @@ class ClientMessagesView(APIView):
 
 # ── Portal Invitation Send / Accept ──────────────────────────────────────────
 
-import secrets as _secrets
-import datetime as _dt
-
 
 class PortalInvitationSendView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -2172,6 +2202,14 @@ class PortalInvitationSendView(APIView):
     def post(self, request):
         if not _is_portal_user(request.user):
             return Response({"detail": "Accountant access required."}, status=403)
+
+        idempotency_key = request.headers.get("Idempotency-Key", "").strip()
+        if idempotency_key:
+            cache_key = f"idempotency:inv_send:{request.user.id}:{idempotency_key}"
+            cached = cache.get(cache_key)
+            if cached is not None:
+                return Response(cached, status=200)
+
         from .models import Invitation
         email       = (request.data.get("email", "") or "").strip().lower()
         client_name = (request.data.get("client_name", "") or "").strip()
@@ -2253,9 +2291,12 @@ class PortalInvitationSendView(APIView):
         # ── End email ─────────────────────────────────────────────────────────
 
         _audit(request, "portal_invitation_sent", "Invitation", inv.id, client_profile=profile)
-        return Response({"id": inv.id, "token": token, "client_email": email,
+        response_data = {"id": inv.id, "token": token, "client_email": email,
                          "expires_at": inv.expires_at.isoformat(), "status": "pending",
-                         "accept_url": f"/portal/accept-invitation?token={token}"}, status=201)
+                         "accept_url": f"/portal/accept-invitation?token={token}"}
+        if idempotency_key:
+            cache.set(cache_key, response_data, timeout=86400)
+        return Response(response_data, status=201)
 
 
 class PortalInvitationAcceptView(APIView):
@@ -2263,7 +2304,6 @@ class PortalInvitationAcceptView(APIView):
 
     def post(self, request):
         from .models import Invitation
-        from apps.portal.services.accountant_checklists import create_checklist_for_engagement
         token = (request.data.get("token", "") or "").strip()
         if not token:
             return Response({"detail": "token is required."}, status=400)
@@ -2279,6 +2319,13 @@ class PortalInvitationAcceptView(APIView):
 
         # ── Resolve the accepting user ─────────────────────────────────────
         if request.user and request.user.is_authenticated:
+            # Reject if the logged-in user's email doesn't match the invitation.
+            # This prevents any authenticated user from hijacking someone else's invite.
+            if request.user.email.lower() != inv.client_email.lower():
+                return Response(
+                    {"detail": "This invitation was sent to a different email address."},
+                    status=403,
+                )
             acting_user = request.user
         else:
             acting_user = User.objects.filter(
@@ -2324,7 +2371,7 @@ class PortalInvitationAcceptView(APIView):
             acc_profile = AccountantProfile.objects.get(user=inv.sent_by)
             AccountantClient.objects.get_or_create(accountant=acc_profile, client_user=acting_user, defaults={"status": "active"})
         except Exception:
-            pass
+            logger.exception("Failed to create AccountantClient link on invitation accept (inv=%s)", inv.id)
         engagement = TaxEngagement.objects.filter(client_profile=profile).order_by("-created_at").first()
         if not engagement:
             engagement = TaxEngagement.objects.create(
@@ -2334,7 +2381,7 @@ class PortalInvitationAcceptView(APIView):
             try:
                 create_checklist_for_engagement(engagement)
             except Exception:
-                pass
+                logger.exception("Failed to create checklist for engagement %s on invitation accept", engagement.id)
         inv.engagement = engagement; inv.save(update_fields=["engagement"])
         _audit(request, "portal_invitation_accepted", "Invitation", inv.id, client_profile=profile, engagement=engagement)
 
@@ -2406,9 +2453,30 @@ class PortalInvitationCancelView(APIView):
         if not _is_portal_user(request.user):
             return Response({"detail": "Accountant access required."}, status=403)
         from .models import Invitation
-        updated = Invitation.objects.filter(pk=pk, sent_by=request.user, status="pending").update(status="cancelled")
-        if not updated:
+        try:
+            inv = Invitation.objects.get(pk=pk, sent_by=request.user, status="pending")
+        except Invitation.DoesNotExist:
             return Response({"detail": "Invitation not found or already closed."}, status=404)
+
+        inv.status = "cancelled"
+        inv.save(update_fields=["status"])
+
+        # Clean up the shell profile created when the invitation was sent.
+        try:
+            shell = AccountantClientProfile.objects.filter(
+                accountant_user=request.user,
+                email__iexact=inv.client_email,
+                client_user__isnull=True,
+            ).first()
+            if shell:
+                if TaxEngagement.objects.filter(client_profile=shell).exists():
+                    shell.status = "archived"
+                    shell.save(update_fields=["status", "updated_at"])
+                else:
+                    shell.delete()
+        except Exception:
+            logger.exception("Failed to clean up shell profile on invitation cancel (inv=%s)", inv.id)
+
         return Response(status=204)
 
 
@@ -2460,7 +2528,7 @@ class PortalInvitationDeclineView(APIView):
                 else:
                     shell_profile.delete()
         except Exception:
-            pass
+            logger.exception("Failed to clean up shell profile on invitation decline (inv=%s)", inv.id)
 
         # ── Notify the accountant in-app ──────────────────────────────────────
         try:
@@ -2476,7 +2544,7 @@ class PortalInvitationDeclineView(APIView):
                 metadata   = {"invitation_id": inv.id},
             )
         except Exception:
-            pass
+            logger.warning("Failed to send invitation_declined notification for inv %s", inv.id)
 
         _audit(request, "portal_invitation_declined", "Invitation", inv.id)
         return Response({"detail": "Invitation declined."})

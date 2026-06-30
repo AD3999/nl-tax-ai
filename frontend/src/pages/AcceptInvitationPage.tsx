@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { apiBase } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
@@ -66,7 +67,8 @@ export default function AcceptInvitationPage() {
   const [searchParams] = useSearchParams();
   const navigate       = useNavigate();
   const { refreshUser } = useAuth();
-  const lang           = (localStorage.getItem("taxwijs_lang") as "nl" | "en" | "fa") || "nl";
+  const { i18n }       = useTranslation();
+  const lang           = (i18n.language as "nl" | "en" | "fa") || "nl";
   const tx             = TX[lang] ?? TX.en;
 
   const token     = searchParams.get("token") ?? "";
