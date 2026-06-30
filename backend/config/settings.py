@@ -233,6 +233,9 @@ GOOGLE_CALENDAR_REDIRECT_URI = env(
     default="http://localhost:8000/api/users/google-calendar/callback/",
 )
 
+# PRODUCTION: set EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend on Railway.
+# Without it, all emails (password reset, invitations, reminders) go to logs only.
+# Also set EMAIL_HOST_PASSWORD to your SendGrid API key.
 EMAIL_BACKEND       = env("EMAIL_BACKEND",       default="django.core.mail.backends.console.EmailBackend")
 EMAIL_HOST          = env("EMAIL_HOST",          default="smtp.sendgrid.net")
 EMAIL_PORT          = env.int("EMAIL_PORT",      default=587)

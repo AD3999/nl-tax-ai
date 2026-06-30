@@ -1,0 +1,43 @@
+# Celery worker + beat scheduler service for Railway.
+#
+# HOW TO DEPLOY ON RAILWAY:
+# 1. In Railway dashboard → Add Service → GitHub Repo (same repo)
+# 2. Set "Dockerfile Path" to "Dockerfile.celery"
+# 3. Set "Start Command" to: bash /app/start-celery.sh
+# 4. Share the same env vars as the main service (REDIS_URL, DATABASE_URL,
+#    DJANGO_SECRET_KEY, ANTHROPIC_API_KEY, etc.)
+# 5. No health check, no exposed port needed.
+#
+# This service runs: celery worker + beat (scheduled tasks every 10s check)
+# Tasks configured in settings.CELERY_BEAT_SCHEDULE:
+#   - purge_expired_documents (daily 02:00 Amsterdam)
+#   - send_btw_reminders (daily 08:15)
+#   - send_ib_reminder (daily 08:20)
+#   - send_monthly_reserve_reminder (1st of month 09:00)
+#   - send_rule_change_notifications (daily 09:30)
+#   - sync_all_google_calendars (daily 07:00)
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY backend/requirements.txt ./requirements_backend.txt
+RUN pip install --no-cache-dir -r requirements_backend.txt
+
+COPY backend/  ./backend/
+COPY phase1/   ./phase1/
+COPY phase2/   ./phase2/
+COPY scripts/start-celery.sh ./start-celery.sh
+RUN chmod +x start-celery.sh
+
+ENV DJANGO_SETTINGS_MODULE=config.settings
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app/backend
+
+WORKDIR /app/backend
+
+CMD ["bash", "/app/start-celery.sh"]
