@@ -528,8 +528,8 @@ export default function EngagementPage() {
   async function handleGenerateActions() {
     setGeneratingActions(true);
     try {
-      const acts = await generateActions(engId);
-      setActions(acts);
+      const result = await generateActions(engId);
+      setActions(result.actions ?? []);
     } catch {
       showToast("Failed to generate actions", "error");
     }

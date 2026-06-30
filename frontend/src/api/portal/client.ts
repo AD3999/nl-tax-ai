@@ -154,7 +154,7 @@ export const updateExpense = (id: number, data: Partial<ExtractedExpense>) => pa
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 export const fetchActions    = (engId: number) => get<AccountantAction[]>(`/engagements/${engId}/actions/`);
-export const generateActions = (engId: number) => post<AccountantAction[]>(`/engagements/${engId}/generate-actions/`, {});
+export const generateActions = (engId: number) => post<{ actions: AccountantAction[]; actions_count: number; new_checklist_items: number; new_actions: number }>(`/engagements/${engId}/generate-actions/`, {});
 export const updateAction    = (id: number, data: Partial<AccountantAction>) => patch<AccountantAction>(`/actions/${id}/`, data);
 
 // ── Readiness & Risks ─────────────────────────────────────────────────────────
