@@ -7,6 +7,10 @@ import type {
 
 const base = `${apiBase}/portal`;
 
+function idempotencyHeader(): Record<string, string> {
+  return { "Idempotency-Key": crypto.randomUUID() };
+}
+
 function _dispatchIfDeactivated(status: number, data: Record<string, unknown>) {
   if (status === 403 && data.has_accountant === false) {
     window.dispatchEvent(new CustomEvent("portal:client_deactivated"));
@@ -23,10 +27,14 @@ async function get<T>(path: string): Promise<T> {
   return r.json();
 }
 
-async function post<T>(path: string, body: unknown): Promise<T> {
+async function post<T>(path: string, body: unknown, idempotent = false): Promise<T> {
   const r = await fetch(`${base}${path}`, {
     method: "POST",
-    headers: { ...authHeader(), "Content-Type": "application/json" },
+    headers: {
+      ...authHeader(),
+      "Content-Type": "application/json",
+      ...(idempotent ? idempotencyHeader() : {}),
+    },
     body: JSON.stringify(body),
   });
   if (!r.ok) {
@@ -58,32 +66,32 @@ async function del(path: string): Promise<void> {
 
 // ── Clients ──────────────────────────────────────────────────────────────────
 export const fetchClients      = () => get<ClientProfile[]>("/clients/");
-export const createClient      = (data: Partial<ClientProfile>) => post<ClientProfile>("/clients/", data);
+export const createClient      = (data: Partial<ClientProfile>) => post<ClientProfile>("/clients/", data, true);
 export const fetchClient       = (id: number) => get<ClientProfile>(`/clients/${id}/`);
 export const updateClient      = (id: number, data: Partial<ClientProfile>) => patch<ClientProfile>(`/clients/${id}/`, data);
 export const archiveClient     = (id: number) => del(`/clients/${id}/`);
-export const disconnectClient  = (id: number) => post<ClientProfile>(`/clients/${id}/disconnect/`, {});
-export const reactivateClient  = (id: number) => post<ClientProfile>(`/clients/${id}/reactivate/`, {});
-export const selfDisconnect    = () => post<{ detail: string }>("/client/disconnect/", {});
+export const disconnectClient  = (id: number) => post<ClientProfile>(`/clients/${id}/disconnect/`, {}, true);
+export const reactivateClient  = (id: number) => post<ClientProfile>(`/clients/${id}/reactivate/`, {}, true);
+export const selfDisconnect    = () => post<{ detail: string }>("/client/disconnect/", {}, true);
 
 // ── Engagements ───────────────────────────────────────────────────────────────
 export const fetchEngagements    = () => get<TaxEngagement[]>("/engagements/");
-export const createEngagement    = (data: Partial<TaxEngagement>) => post<TaxEngagement>("/engagements/", data);
+export const createEngagement    = (data: Partial<TaxEngagement>) => post<TaxEngagement>("/engagements/", data, true);
 export const fetchEngagement     = (id: number) => get<TaxEngagement>(`/engagements/${id}/`);
 export const updateEngagement    = (id: number, data: Partial<TaxEngagement>) => patch<TaxEngagement>(`/engagements/${id}/`, data);
 export const deleteEngagement    = (id: number) => del(`/engagements/${id}/`);
-export const fileEngagement      = (id: number) => post<{ status: string }>(`/engagements/${id}/file/`, {});
+export const fileEngagement      = (id: number) => post<{ status: string }>(`/engagements/${id}/file/`, {}, true);
 export const rejectTask          = (engId: number, checklistItemId: number, message: string) =>
-  post<{ status: string }>(`/engagements/${engId}/reject-task/`, { checklist_item_id: checklistItemId, message });
+  post<{ status: string }>(`/engagements/${engId}/reject-task/`, { checklist_item_id: checklistItemId, message }, true);
 
 // ── Checklist ─────────────────────────────────────────────────────────────────
 export const fetchChecklist      = (engId: number) => get<ChecklistItem[]>(`/engagements/${engId}/checklist/`);
-export const regenerateChecklist = (engId: number) => post<{ created: number }>(`/engagements/${engId}/checklist/regenerate/`, {});
+export const regenerateChecklist = (engId: number) => post<{ created: number }>(`/engagements/${engId}/checklist/regenerate/`, {}, true);
 export const updateChecklistItem = (id: number, data: Partial<ChecklistItem>) => patch<ChecklistItem>(`/checklist/${id}/`, data);
 
 // ── Document Requests ──────────────────────────────────────────────────────────
 export const fetchDocumentRequests = (engId: number) => get<DocumentRequest[]>(`/engagements/${engId}/document-requests/`);
-export const createDocumentRequest = (engId: number, data: Partial<DocumentRequest>) => post<DocumentRequest>(`/engagements/${engId}/document-requests/`, data);
+export const createDocumentRequest = (engId: number, data: Partial<DocumentRequest>) => post<DocumentRequest>(`/engagements/${engId}/document-requests/`, data, true);
 export const updateDocumentRequest = (id: number, data: Partial<DocumentRequest>) => patch<DocumentRequest>(`/document-requests/${id}/`, data);
 
 // ── Documents ──────────────────────────────────────────────────────────────────
@@ -154,15 +162,15 @@ export const updateExpense = (id: number, data: Partial<ExtractedExpense>) => pa
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 export const fetchActions    = (engId: number) => get<AccountantAction[]>(`/engagements/${engId}/actions/`);
-export const generateActions = (engId: number) => post<{ actions: AccountantAction[]; actions_count: number; new_checklist_items: number; new_actions: number }>(`/engagements/${engId}/generate-actions/`, {});
+export const generateActions = (engId: number) => post<{ actions: AccountantAction[]; actions_count: number; new_checklist_items: number; new_actions: number }>(`/engagements/${engId}/generate-actions/`, {}, true);
 export const updateAction    = (id: number, data: Partial<AccountantAction>) => patch<AccountantAction>(`/actions/${id}/`, data);
 
 // ── Readiness & Risks ─────────────────────────────────────────────────────────
-export const recalculateReadiness = (engId: number) => post<ReadinessResult>(`/engagements/${engId}/recalculate-readiness/`, {});
+export const recalculateReadiness = (engId: number) => post<ReadinessResult>(`/engagements/${engId}/recalculate-readiness/`, {}, true);
 export const fetchRisks = (engId: number) => get<{ client_type: string; opportunities: unknown[]; risks: unknown[] }>(`/engagements/${engId}/risks/`);
 
 // ── Reminder ──────────────────────────────────────────────────────────────────
-export const sendReminder = (engId: number) => post<{ subject: string; body: string; missing_count: number }>(`/engagements/${engId}/send-reminder/`, {});
+export const sendReminder = (engId: number) => post<{ subject: string; body: string; missing_count: number }>(`/engagements/${engId}/send-reminder/`, {}, true);
 
 // ── Audit ─────────────────────────────────────────────────────────────────────
 export const fetchAudit = (engId: number) => get<AuditLog[]>(`/engagements/${engId}/audit/`);
@@ -221,7 +229,7 @@ export async function sendPortalInvitation(data: {
     client_type:        data.client_type ?? "other",
     preferred_language: data.preferred_language ?? "nl",
     tax_year:           data.tax_year ?? 2026,
-  });
+  }, true);
 }
 
 export async function fetchPortalInvitations(): Promise<PortalInvitation[]> {
