@@ -136,6 +136,7 @@ const TX: Record<Lang, Record<string, string>> = {
     review_rejected_ok: "Correction requested. Client has been notified.",
     review_filing: "Filing…",
     review_sending: "Sending…",
+    load_error: "Failed to load data. Please try again.",
   },
   nl: {
     portal: "Accountant Portal",
@@ -241,6 +242,7 @@ const TX: Record<Lang, Record<string, string>> = {
     review_rejected_ok: "Correctie aangevraagd. Cliënt is geïnformeerd.",
     review_filing: "Indienen…",
     review_sending: "Sturen…",
+    load_error: "Laden mislukt. Probeer het opnieuw.",
   },
   fa: {
     portal: "پورتال حسابدار",
@@ -346,6 +348,7 @@ const TX: Record<Lang, Record<string, string>> = {
     review_rejected_ok: "درخواست اصلاح ارسال شد. مشتری مطلع شد.",
     review_filing: "در حال ارسال…",
     review_sending: "در حال ارسال…",
+    load_error: "بارگذاری ناموفق بود. دوباره امتحان کنید.",
   },
 };
 
@@ -496,13 +499,21 @@ export default function EngagementPage() {
   }
 
   async function loadRisks() {
-    const r = await fetchRisks(engId);
-    setRisks(r);
+    try {
+      const r = await fetchRisks(engId);
+      setRisks(r);
+    } catch {
+      setError(tx.load_error);
+    }
   }
 
   async function loadAudit() {
-    const logs = await fetchAudit(engId);
-    setAuditLog(logs);
+    try {
+      const logs = await fetchAudit(engId);
+      setAuditLog(logs);
+    } catch {
+      setError(tx.load_error);
+    }
   }
 
   async function loadMessages() {

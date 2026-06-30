@@ -181,7 +181,7 @@ export default function RegisterPage() {
       if (invitationToken) {
         try {
           const accessToken = result.access ?? localStorage.getItem("access_token") ?? "";
-          await fetch(`${apiBase}/portal/invitations/accept/`, {
+          const invRes = await fetch(`${apiBase}/portal/invitations/accept/`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -189,13 +189,29 @@ export default function RegisterPage() {
             },
             body: JSON.stringify({ token: invitationToken }),
           });
+          if (!invRes.ok) {
+            const body = await invRes.json().catch(() => ({})) as { detail?: string };
+            const errDetail = body.detail ?? (
+              lang === "nl" ? "Uitnodiging accepteren mislukt. Neem contact op met uw accountant."
+              : lang === "fa" ? "پذیرش دعوتنامه ناموفق بود. با مشاور مالیاتی خود تماس بگیرید."
+              : "Failed to accept invitation. Please contact your accountant."
+            );
+            showToast(errDetail, "error");
+            navigate("/dashboard");
+            return;
+          }
           // Refresh user so has_accountant flips to true and sidebar shows My Portal immediately.
           await refreshUser().catch(() => null);
           navigate("/client");
           return;
         } catch {
-          await refreshUser().catch(() => null);
-          navigate("/client");
+          showToast(
+            lang === "nl" ? "Uitnodiging accepteren mislukt. Probeer het later opnieuw."
+            : lang === "fa" ? "پذیرش دعوتنامه ناموفق بود. بعداً دوباره امتحان کنید."
+            : "Failed to accept invitation. Please try again later.",
+            "error",
+          );
+          navigate("/dashboard");
           return;
         }
       }

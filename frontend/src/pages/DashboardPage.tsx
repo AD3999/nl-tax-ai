@@ -964,7 +964,7 @@ export default function DashboardPage() {
     setLoadingCalc(true);
     fetch("/api/calculator/calculate/", {
       method: "POST", headers: { "Content-Type": "application/json", ...authHeader() }, body: JSON.stringify(profile),
-    }).then(r => r.json() as Promise<CalcResult>).then(result => {
+    }).then(r => r.ok ? r.json() as Promise<CalcResult> : Promise.reject(new Error(`calc ${r.status}`))).then(result => {
       setCalcResult(result);
       // Persist snapshot to backend for authenticated users (health score history)
       if (user) {
