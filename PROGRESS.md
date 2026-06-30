@@ -1,7 +1,7 @@
 # TaxWijs — Build Progress Log
 
-> This file tracks what has been built, tested, and shipped.
-> Last updated: 30 Jun 2026 — Full-stack audit sprint: all 25 issues fixed and merged
+ > This file tracks what has been built, tested, and shipped.
+> Last updated: 1 Jul 2026 — Celery worker deployed on Railway ✅
 
 ---
 
@@ -40,6 +40,40 @@
 
 New files: `frontend/src/utils/pkce.ts`, `frontend/src/hooks/useVisibleInterval.ts`,
            `Dockerfile.celery`, `scripts/start-celery.sh`
+
+---
+
+## Session — 1 Jul 2026 · Celery Worker Deployment ✅
+
+### Commits: `491a663` → `b3bf13f` (all on `master`)
+
+Deployed the Celery worker service on Railway. All 10 scheduled tasks now fire.
+
+### What was fixed / how
+
+| Problem | Fix |
+|---------|-----|
+| `RAILWAY_SERVICE_NAME` not injected at runtime | Added `IS_CELERY_WORKER=1` as user env var on the celery-worker service |
+| `start-celery.sh: cannot execute binary file` | Railway had start command set to `/app/start-celery.sh` (no `bash`); changed `Dockerfile.celery CMD` to inline `/bin/bash -c "..."` |
+| `SyntaxError: source code string cannot contain null bytes` | `railway up` corrupts CRLF Python files during upload; fixed by (1) normalizing 63 Python files CRLF→LF locally, (2) adding `*.py text eol=lf` to `.gitattributes`, (3) switching to **GitHub-based auto-deploy** (not `railway up`) |
+
+### Final deployment state
+
+- **Service**: `celery-worker` (Railway ID: `0f8e1b7a`)
+- **Build**: GitHub auto-deploy from `master` branch using `Dockerfile.celery`
+- **Status**: `celery@bf3b30d7bed2 ready.` — connected to Redis, beat started
+- **Scheduled tasks running**:
+  - `purge_expired_documents` — daily 02:00 Amsterdam
+  - `send_btw_reminders` — daily 08:15
+  - `send_ib_reminder` — daily 08:20
+  - `send_monthly_reserve_reminder` — 1st of month 09:00
+  - `send_rule_change_notifications` — daily 09:30
+  - `sync_all_google_calendars` — daily 07:00
+  - `push_google_calendar_task`, `quarterly_vat_summary_task`, `process_document_task`, `generate_response`
+
+### Key lesson
+
+`railway up` corrupts CRLF text files during upload (converts them to files with null bytes). Always use GitHub-based auto-deploy. Never use `railway up` for Railway services that have CRLF files.
 
 ---
 
