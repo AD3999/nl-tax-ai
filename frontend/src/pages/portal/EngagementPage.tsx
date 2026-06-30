@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { formatDate, formatEur } from "../../lib/utils";
 import { ChevronRight, Download, FileText, RefreshCw, X, AlertTriangle, Bot } from "lucide-react";
@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { useMobile } from "../../hooks/useMobile";
+import { useVisibleInterval } from "../../hooks/useVisibleInterval";
 import Modal from "../../components/ui/Modal";
 import ReadinessCard from "../../components/ui/ReadinessCard";
 import CopilotCard from "../../components/ui/CopilotCard";
@@ -456,9 +457,10 @@ export default function EngagementPage() {
     if (!user || !engId) return;
     void loadAll();
     if (initialTab === "messages") void loadMessages();
-    const pollId = setInterval(() => void loadLive(), 10_000);
-    return () => clearInterval(pollId);
   }, [user, engId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pollLive = useCallback(() => void loadLive(), []); // eslint-disable-line react-hooks/exhaustive-deps
+  useVisibleInterval(pollLive, 10_000);
 
   async function loadAll(silent = false) {
     if (!silent) setLoading(true);

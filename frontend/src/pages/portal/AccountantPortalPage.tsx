@@ -1,9 +1,10 @@
-import { useEffect, useState, Component, type ReactNode } from "react";
+import { useEffect, useState, Component, useCallback, type ReactNode } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Users, CheckCircle2, AlertCircle, AlertTriangle, ArrowRight, Zap, X, RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../context/AuthContext";
 import { useMobile } from "../../hooks/useMobile";
+import { useVisibleInterval } from "../../hooks/useVisibleInterval";
 import {
   fetchClients, fetchEngagements, disconnectClient, reactivateClient,
 } from "../../api/portal/client";
@@ -277,9 +278,10 @@ export default function AccountantPortalPage() {
     if (loading) return;
     if (!user) return;
     void loadData();
-    const id = setInterval(() => void loadData(true), 20_000);
-    return () => clearInterval(id);
   }, [user, loading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const silentLoadData = useCallback(() => void loadData(true), []); // eslint-disable-line react-hooks/exhaustive-deps
+  useVisibleInterval(silentLoadData, 20_000);
 
   async function loadData(silent = false) {
     if (!silent) setLoadingData(true);

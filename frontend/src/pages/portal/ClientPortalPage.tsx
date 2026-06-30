@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { CheckSquare, FolderOpen, AlertTriangle, Wrench, RefreshCw, User, TrendingUp, FileWarning, MessageSquare, Bot } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useMobile } from "../../hooks/useMobile";
+import { useVisibleInterval } from "../../hooks/useVisibleInterval";
 import { fetchClientProfile, fetchClientEngagement, fetchClientTasks } from "../../api/portal/client";
 import type { ClientProfile, TaxEngagement } from "../../api/portal/types";
 import ReadinessCard from "../../components/ui/ReadinessCard";
@@ -108,9 +109,10 @@ export default function ClientPortalPage() {
   useEffect(() => {
     if (!user) return;
     void load();
-    const id = setInterval(() => void load(true), 15_000);
-    return () => clearInterval(id);
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const silentLoad = useCallback(() => void load(true), []); // eslint-disable-line react-hooks/exhaustive-deps
+  useVisibleInterval(silentLoad, 15_000);
 
   useEffect(() => {
     function handleReactivation() { void load(); }
