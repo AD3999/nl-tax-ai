@@ -53,10 +53,12 @@ class AdminUserDetailView(APIView):
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        allowed = ["plan", "user_type", "preferred_language", "is_active", "is_staff", "tax_year"]
+        allowed = ["plan", "user_type", "preferred_language", "is_active", "is_staff", "tax_year", "role"]
         for field in allowed:
             if field in request.data:
                 setattr(user, field, request.data[field])
+        if "password" in request.data and request.data["password"]:
+            user.set_password(request.data["password"])
         user.save()
         return Response(_serialize_user(user, full=True))
 
@@ -71,6 +73,7 @@ def _serialize_user(u, full=False):
         "preferred_language": u.preferred_language,
         "tax_year": u.tax_year,
         "is_active": u.is_active,
+        "role": getattr(u, "role", "client"),
         "is_staff": u.is_staff,
         "is_superuser": u.is_superuser,
         "date_joined": u.date_joined.isoformat(),
