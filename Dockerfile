@@ -34,7 +34,8 @@ COPY backend/  ./backend/
 COPY phase1/   ./phase1/
 COPY phase2/   ./phase2/
 COPY scripts/start.sh ./start.sh
-RUN chmod +x start.sh
+COPY scripts/start-celery.sh ./start-celery.sh
+RUN chmod +x start.sh start-celery.sh
 
 # Whitenoise serves frontend from /app/frontend/dist (WHITENOISE_ROOT in settings.py)
 COPY --from=frontend-build /app/frontend/dist ./frontend/dist/
