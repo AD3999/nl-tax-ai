@@ -30,17 +30,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const inactivityTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    fetchProfile().then((u) => {
-      setUser(u);
-      setLoading(false);
-      if (u) {
-        updateLastActive();
-      } else {
-        // Token missing or expired — wipe all session data so stale user-id
-        // never causes another visitor to read the previous user's chat history.
+    fetchProfile()
+      .then((u) => {
+        setUser(u);
+        if (u) {
+          updateLastActive();
+        } else {
+          // Token missing or expired — wipe all session data so stale user-id
+          // never causes another visitor to read the previous user's chat history.
+          apiLogout();
+        }
+      })
+      .catch(() => {
+        // Network error or unexpected throw — ensure loading clears so the app
+        // doesn't hang on the loading screen indefinitely.
         apiLogout();
-      }
-    });
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const logout = () => {

@@ -70,7 +70,13 @@ export default function LoginPage() {
         lang === "nl" ? "Ingelogd! Welkom terug" : lang === "fa" ? "وارد شدید! خوش آمدید" : "Logged in! Welcome back",
         "success",
       );
-      if (profile.role === "accountant") {
+      // Honour ?next= redirect (e.g. from AcceptInvitationPage or AppLayout deep-link)
+      const next = searchParams.get("next");
+      if (next) {
+        navigate(decodeURIComponent(next), { replace: true });
+      } else if (profile.is_admin) {
+        navigate("/admin");
+      } else if (profile.role === "accountant") {
         navigate("/accountant/portal");
       } else if (profile.has_accountant) {
         navigate("/client");

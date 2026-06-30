@@ -48,10 +48,17 @@ client.interceptors.response.use(
       original._retry = true;
       const refresh = localStorage.getItem("refresh_token");
       if (refresh) {
-        const { data } = await axios.post(`${API_BASE}/auth/token/refresh/`, { refresh });
-        localStorage.setItem("access_token", data.access);
-        original.headers.Authorization = `Bearer ${data.access}`;
-        return client(original);
+        try {
+          const { data } = await axios.post(`${API_BASE}/auth/token/refresh/`, { refresh });
+          localStorage.setItem("access_token", data.access);
+          original.headers.Authorization = `Bearer ${data.access}`;
+          return client(original);
+        } catch {
+          // Refresh token expired or invalid — clear session and redirect to login
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("refresh_token");
+          window.location.href = "/login";
+        }
       }
     }
 
