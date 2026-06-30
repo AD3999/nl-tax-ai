@@ -40,24 +40,4 @@ ENV PYTHONPATH=/app/backend
 
 WORKDIR /app/backend
 
-# Diagnose null bytes in Python files and test app imports at build time
-RUN python3 - <<'PYEOF'
-import os, sys
-sys.path.insert(0, '/app/backend')
-null_found = []
-for root, dirs, files in os.walk('/app/backend'):
-    dirs[:] = [d for d in dirs if d != '__pycache__']
-    for f in files:
-        if f.endswith('.py'):
-            path = os.path.join(root, f)
-            data = open(path, 'rb').read()
-            if b'\x00' in data:
-                null_found.append(path)
-if null_found:
-    print("NULL BYTES IN:", null_found)
-    sys.exit(1)
-else:
-    print("No null bytes found in Python files")
-PYEOF
-
 CMD ["/bin/bash", "-c", "python3 /app/backend/manage.py migrate --noinput && exec python3 -m celery -A config worker --beat --loglevel=INFO --concurrency=2"]
