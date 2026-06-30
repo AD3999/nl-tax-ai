@@ -81,6 +81,23 @@ export const googleAuth = async (accessToken: string, userType = "zzp"): Promise
   return data;
 };
 
+export const googleAuthCode = async (
+  code: string,
+  codeVerifier: string,
+  redirectUri: string,
+  userType = "zzp",
+): Promise<GoogleAuthResponse> => {
+  const { data } = await client.post<GoogleAuthResponse>("/users/auth/google/", {
+    code,
+    code_verifier: codeVerifier,
+    redirect_uri: redirectUri,
+    user_type: userType,
+  });
+  localStorage.setItem("access_token", data.access);
+  localStorage.setItem("refresh_token", data.refresh);
+  return data;
+};
+
 /** All localStorage keys that belong to the authenticated session.
  *  Must be cleared on logout so user A's data never leaks to user B
  *  on a shared device. Add new keys here whenever a new feature writes
