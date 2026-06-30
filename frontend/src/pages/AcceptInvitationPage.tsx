@@ -241,7 +241,7 @@ export default function AcceptInvitationPage() {
             <button className="btn btn-accent" style={{ width: "100%", justifyContent: "center", marginBottom: "var(--sp-3)" }} onClick={() => navigate(regUrl)}>
               {tx.registerBtn}
             </button>
-            <Link to={`/login?next=/portal/accept-invitation?token=${token}`} style={{ display: "block", fontSize: "var(--text-sm)", color: "var(--ink-4)" }}>
+            <Link to={`/login?next=${encodeURIComponent(`/portal/accept-invitation?token=${token}`)}`} style={{ display: "block", fontSize: "var(--text-sm)", color: "var(--ink-4)" }}>
               {tx.loginBtn}
             </Link>
           </>
