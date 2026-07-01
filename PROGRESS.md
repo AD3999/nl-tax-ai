@@ -1,7 +1,62 @@
 # TaxWijs — Build Progress Log
 
  > This file tracks what has been built, tested, and shipped.
-> Last updated: 1 Jul 2026 — Celery worker deployed on Railway ✅
+> Last updated: 1 Jul 2026 — QA Audit v7 (28 issues) fully fixed and deployed ✅
+
+---
+
+## Session — 1 Jul 2026 · QA Audit v7 — 28 Issues Fixed ✅
+
+### Branch: `fix/qa-audit-v7-all-issues` → merged to `master` (8e449e8 + fixes cd5e492, 3ab508d)
+
+All 28 issues from QA audit v7 resolved. Deployed to Railway and verified.
+
+| ID | Fix |
+|----|-----|
+| C-1 | Added `is_system` BooleanField to `PortalMessage` model + migration 0018 + serializer |
+| C-2 | Added `invitation_declined` to `Notification.NOTIFICATION_TYPE_CHOICES`; fixed 4 wrong `status_update` usages |
+| H-1 | `ClientMyAccountantView.delete()` now revokes `AccountantClientProfile.status="deactivated"` too |
+| H-3 | Legacy `AccountantInvitation` accept path creates `TaxEngagement` + calls `create_checklist_for_engagement()` |
+| H-4 | `ChecklistItemSerializer` now exposes `task_type` field |
+| H-5 | `TaxEngagementSerializer` now exposes `ready_to_file` and `accountant_confirmed` fields |
+| H-6 | `PortalInvitationPreviewView` added (`GET /api/portal/invitations/preview/?token=...`); `AcceptInvitationPage` shows accountant name/firm before accept |
+| H-7 | Deferred (strategic) — dual invitation model consolidation noted as outstanding |
+| M-1 | Offset pagination added to `AccountantClientListView`, `EngagementListView`, `InAppNotificationsView`; frontend unwraps `{count, page, page_size, results}` envelope |
+| M-2 | Rate limit (20/hour) on `PortalInvitationSendView`, returns 429 |
+| M-3 | Already implemented (copy button was present) — skipped |
+| M-4 | `decline_portal_invitation()` extracted to `portal/services/invitation_service.py` shared service |
+| M-5 | `NotificationBell` exponential WS reconnect (1s→2s→4s→…→30s max), grey dot indicator when disconnected |
+| M-6 | Client-type-aware action message templates in `accountant_actions.py` (ZZP/employee/expat/DGA) |
+| M-7 | `ClientPortalProfileView` returns 403 if no active `AccountantClientProfile` |
+| M-8 | `AccountantClientDetailView.patch()` regenerates checklist when `client_type` changes |
+| L-1 | `invitation_declined` icon added to `NotificationBell.TYPE_ICONS` |
+| L-2 | `AccountantClientListView` uses `Prefetch('engagements')` to eliminate N+1 |
+| L-3 | `ClientPortalTaskUpdateView` replaces bare `except: pass` with proper logging + `zzp_sync_warning` |
+| L-4 | `BottomNav` shows accountant tabs (Portal/Inbox/Review/AI/Profile) when `role=accountant` |
+| L-5 | Review tab disabled with tooltip until all tasks done and not `needs_review` |
+| L-6 | Already fixed (duplicate access request guard) — skipped |
+| MK-1 | `send_portal_email_task` Celery task; fired from `create_notification()` for `document_approved`, `document_rejected`, `engagement_ready`, `invitation_accepted`, `readiness_milestone` (respects `email_enabled` pref) |
+| MK-2 | Recommendation only (accountant fast-track) — no code required |
+| MK-3 | `rollover_engagements` management command (`--from-year`, `--to-year`, `--dry-run`) |
+| MK-4 | `settings.py` warns (not hard-fails) if `BSN_ENCRYPTION_KEY` missing; `HealthView` exposes `bsn_ready` field |
+| MK-5 | `process_document_task` sets `extraction_failed` on retry exhaustion; `ClientDocumentsPage` + `EngagementPage` show trilingual `extraction_failed` status |
+
+### Deployment issues encountered and fixed
+| Problem | Fix |
+|---------|-----|
+| `ImproperlyConfigured` raised at boot if `BSN_ENCRYPTION_KEY` not set in Railway env | Changed to `RuntimeWarning` so app can start while key is pending |
+| `TS2345` TypeScript error in `NotificationBell.tsx` line 109 (`token` typed as `string\|null` in closure) | Cast to `token as string` — build passes |
+
+### Post-deploy verification (curl + browser)
+| Check | Result |
+|-------|--------|
+| `GET /api/users/health/` → `bsn_ready: false` | ✅ PASS |
+| `GET /api/users/inapp-notifications/` → `{count, page, page_size, results}` | ✅ PASS |
+| `GET /api/portal/client/profile/` (no accountant) → 403 + `has_accountant: false` | ✅ PASS |
+| `GET /api/portal/invitations/preview/?token=invalid` → 404 "Invalid invitation." | ✅ PASS |
+| `GET /api/users/inapp-notifications/unread-count/` → 200 | ✅ PASS |
+| Dashboard loads, notification bell opens, "No notifications" panel shown | ✅ PASS |
+| No console errors on dashboard page load | ✅ PASS |
 
 ---
 
