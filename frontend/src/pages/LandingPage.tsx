@@ -116,18 +116,18 @@ const TX = {
     h2:      { nl: "Van vraag tot goedgekeurde aangifte", en: "From question to approved filing", fa: "از سؤال تا اظهارنامه تأییدشده" },
     steps:   {
       nl: [
-        { n: "01", title: "Vertel uw situatie",    body: "Vul uw profiel in — ZZP, werknemer, expat of DGA. AI stelt de juiste vragen en leidt u door de intake" },
-        { n: "02", title: "AI analyseert & regels berekenen", body: "Geverifieerde belastingregels berekenen uw Box 1, 2 en 3. AI legt elke stap uit met een citaat" },
+        { n: "01", title: "Vertel uw ZZP-situatie",    body: "Vul uw profiel in — omzet, uren en kosten. AI stelt de juiste vragen en leidt u door de intake" },
+        { n: "02", title: "AI analyseert & regels berekenen", body: "Geverifieerde belastingregels berekenen uw Box 1 en Box 3. AI legt elke stap uit met een citaat" },
         { n: "03", title: "Accountant keurt goed & dient in", body: "Uw accountant beoordeelt de volledige dossier, keurt documenten goed en dient de aangifte in" },
       ],
       en: [
-        { n: "01", title: "Tell us your situation",   body: "Complete your profile — ZZP, employee, expat, or DGA. AI asks the right questions and guides you through intake" },
-        { n: "02", title: "AI analyzes & rules calculate", body: "Verified tax rules calculate your Box 1, 2, and 3. AI explains every step with a citation" },
+        { n: "01", title: "Tell us your ZZP situation",   body: "Complete your profile — revenue, hours, expenses. AI asks the right questions and guides you through intake" },
+        { n: "02", title: "AI analyzes & rules calculate", body: "Verified tax rules calculate your Box 1 and Box 3. AI explains every step with a citation" },
         { n: "03", title: "Accountant approves & files", body: "Your accountant reviews the complete file, approves documents, and submits the tax return" },
       ],
       fa: [
-        { n: "01", title: "وضعیت خود را بگویید",        body: "پروفایل خود را تکمیل کنید — ZZP، کارمند، مهاجر یا DGA. هوش مصنوعی سؤالات درست می‌پرسد" },
-        { n: "02", title: "هوش مصنوعی تحلیل می‌کند",   body: "قوانین مالیاتی تأییدشده باکس ۱، ۲ و ۳ شما را محاسبه می‌کنند. هوش مصنوعی هر مرحله را توضیح می‌دهد" },
+        { n: "01", title: "وضعیت ZZP خود را بگویید",        body: "پروفایل خود را تکمیل کنید — درآمد، ساعات و هزینه‌ها. هوش مصنوعی سؤالات درست می‌پرسد" },
+        { n: "02", title: "هوش مصنوعی تحلیل می‌کند",   body: "قوانین مالیاتی تأییدشده باکس ۱ و ۳ شما را محاسبه می‌کنند. هوش مصنوعی هر مرحله را توضیح می‌دهد" },
         { n: "03", title: "حسابدار تأیید و ارسال می‌کند", body: "حسابدار شما پرونده کامل را بررسی، اسناد را تأیید و اظهارنامه مالیاتی را ارسال می‌کند" },
       ],
     },
@@ -136,25 +136,16 @@ const TX = {
   userTypes: {
     eyebrow: { nl: "Voor wie", en: "Who it's for", fa: "برای چه کسانی" },
     h2:      { nl: "Gebouwd voor uw situatie", en: "Built for your situation", fa: "ساخته شده برای وضعیت شما" },
-    tabs:    { nl: ["ZZP", "Werknemer", "Expat", "DGA / BV"], en: ["ZZP", "Employee", "Expat", "DGA / BV"], fa: ["ZZP", "کارمند", "مهاجر", "DGA / BV"] },
+    tabs:    { nl: ["ZZP"], en: ["ZZP"], fa: ["ZZP"] },
     items:   {
       nl: [
-        { sub: "Zelfstandig ondernemer", color: "blue",   items: ["Zelfstandigenaftrek €1.200", "MKB-winstvrijstelling 12,7%", "ZVW bijdrage 4,85%", "Wet DBA risicoscore", "Startersaftrek (laatste jaar 2026)", "Maandelijkse belastingreservering"] },
-        { sub: "In loondienst",          color: "ok",     items: ["Arbeidskorting €5.685", "IACK werkende ouders €3.032", "Reiskostenvergoeding 2026", "Pensioenjaarruimte", "Zorgtoeslag grens €40.857", "Huurtoeslag (hervormd 2026)"] },
-        { sub: "Buitenlandse werker",    color: "warn",   items: ["30%-regeling 5-jaar afbouw", "Eerste IB-aangifte begeleiding", "Zorgtoeslag €129/maand", "Belastingverdrag-analyse", "Box 3 drempel €59.357", "Nalevingsdeadlines"] },
-        { sub: "Directeur-aandeelhouder", color: "purple", items: ["Gebruikelijk loon €56.000", "Dividend vs salaris analyse", "Box 2 tarieven 24,5%/31%", "BV-optimalisatietips", "DGA loonheffing 2026", "Pensioen in eigen beheer"] },
+        { sub: "Zelfstandig ondernemer", color: "blue", items: ["Zelfstandigenaftrek €1.200", "MKB-winstvrijstelling 12,7%", "ZVW bijdrage 4,85%", "Wet DBA risicoscore", "Startersaftrek (laatste jaar 2026)", "Maandelijkse belastingreservering"] },
       ],
       en: [
-        { sub: "Self-employed freelancer", color: "blue",   items: ["Self-employed deduction €1,200", "MKB profit exemption 12.7%", "ZVW health contribution 4.85%", "Wet DBA risk score", "Starter deduction (last year 2026)", "Monthly tax reserve calculation"] },
-        { sub: "Salaried employee",        color: "ok",     items: ["Labour tax credit €5,685", "IACK childcare credit €3,032", "Commuting allowance 2026", "Pension contribution space", "Healthcare allowance threshold €40,857", "Rent allowance (2026 reform)"] },
-        { sub: "Foreign worker",           color: "warn",   items: ["30% ruling 5-year phase-down", "First IB return guided walkthrough", "Zorgtoeslag €129/month", "Tax treaty analysis", "Box 3 threshold €59,357", "Compliance deadline tracking"] },
-        { sub: "Director-shareholder",     color: "purple", items: ["Minimum salary €56,000", "Dividend vs salary analysis", "Box 2 rates 24.5% / 31%", "BV optimisation tips", "DGA payroll tax 2026", "Pension-in-own-management"] },
+        { sub: "Self-employed freelancer", color: "blue", items: ["Self-employed deduction €1,200", "MKB profit exemption 12.7%", "ZVW health contribution 4.85%", "Wet DBA risk score", "Starter deduction (last year 2026)", "Monthly tax reserve calculation"] },
       ],
       fa: [
-        { sub: "کارآفرین مستقل",   color: "blue",   items: ["کسر کارآفرینی €۱٬۲۰۰", "معافیت سود MKB 12.7%", "کمک بهداشت ZVW 4.85%", "امتیاز ریسک Wet DBA", "کسر استارتر (آخرین سال ۲۰۲۶)", "محاسبه ذخیره مالیات ماهانه"] },
-        { sub: "کارمند استخدامی",  color: "ok",     items: ["اعتبار مالیاتی کار €۵٬۶۸۵", "اعتبار IACK €۳٬۰۳۲", "کمک هزینه رفت‌وآمد ۲۰۲۶", "فضای مشارکت بازنشستگی", "آستانه zorgtoeslag €۴۰٬۸۵۷", "اصلاحات huurtoeslag ۲۰۲۶"] },
-        { sub: "کارگر خارجی",      color: "warn",   items: ["کاهش ۵ ساله قانون ۳۰٪", "راهنمای اولین اظهارنامه IB", "zorgtoeslag €۱۲۹/ماه", "تحلیل معاهده مالیاتی", "آستانه باکس ۳ €۵۹٬۳۵۷", "پیگیری مهلت‌های انطباق"] },
-        { sub: "مدیر سهامدار",     color: "purple", items: ["حداقل حقوق €۵۶٬۰۰۰", "تحلیل سود سهام در مقابل حقوق", "نرخ‌های باکس ۲: 24.5% / 31%", "نکات بهینه‌سازی BV", "مالیات حقوق DGA ۲۰۲۶", "بازنشستگی در مدیریت خود"] },
+        { sub: "کارآفرین مستقل", color: "blue", items: ["کسر کارآفرینی €۱٬۲۰۰", "معافیت سود MKB 12.7%", "کمک بهداشت ZVW 4.85%", "امتیاز ریسک Wet DBA", "کسر استارتر (آخرین سال ۲۰۲۶)", "محاسبه ذخیره مالیات ماهانه"] },
       ],
     },
   },
@@ -167,19 +158,19 @@ const TX = {
       nl: [
         { icon: "bar",     title: "Gereedheids-dashboard",    body: "Zie in één oogopslag welke klanten klaar zijn, wie documenten mist en wat de prioriteit is" },
         { icon: "file",    title: "Documentbeheer",           body: "Bekijk, keur goed of wijs af geüploade documenten. AI extraheert gegevens voor verificatie" },
-        { icon: "clip",    title: "Slimme checklists",        body: "Automatisch gegenereerde checklists per klanttype (ZZP, werknemer, expat, DGA)" },
+        { icon: "clip",    title: "Slimme checklists",        body: "Automatisch gegenereerde 28-punts ZZP-checklist voor elke cliënt" },
         { icon: "msg",     title: "Directe clientchat",       body: "Geïntegreerde berichtenservice — geen e-mail meer voor het opvragen van documenten" },
       ],
       en: [
         { icon: "bar",     title: "Readiness Dashboard",      body: "See at a glance which clients are ready, who has missing documents, and what needs priority" },
         { icon: "file",    title: "Document Management",      body: "View, approve, or reject uploaded documents. AI extracts data for cross-checking" },
-        { icon: "clip",    title: "Smart Checklists",         body: "Auto-generated checklists per client type — ZZP, employee, expat, DGA" },
+        { icon: "clip",    title: "Smart Checklists",         body: "Auto-generated 28-item ZZP checklist for every client" },
         { icon: "msg",     title: "Direct Client Messaging",  body: "Integrated messaging — no more email threads to request documents" },
       ],
       fa: [
         { icon: "bar",     title: "داشبورد آمادگی",          body: "با یک نگاه ببینید کدام مشتریان آماده هستند، چه کسی اسناد ناقص دارد" },
         { icon: "file",    title: "مدیریت اسناد",             body: "اسناد آپلودشده را مشاهده، تأیید یا رد کنید. هوش مصنوعی داده‌ها را استخراج می‌کند" },
-        { icon: "clip",    title: "چک‌لیست‌های هوشمند",      body: "چک‌لیست‌های تولیدشده خودکار برای هر نوع مشتری — ZZP، کارمند، مهاجر، DGA" },
+        { icon: "clip",    title: "چک‌لیست‌های هوشمند",      body: "چک‌لیست ۲۸ موردی ZZP تولیدشده خودکار برای هر مشتری" },
         { icon: "msg",     title: "پیام‌رسانی مستقیم با مشتری", body: "پیام‌رسانی یکپارچه — دیگر نیازی به ایمیل برای درخواست اسناد نیست" },
       ],
     },

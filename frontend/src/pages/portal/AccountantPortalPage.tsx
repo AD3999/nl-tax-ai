@@ -568,11 +568,7 @@ export default function AccountantPortalPage() {
                   <label className="tw-label">{tx.type_label}</label>
                   <select className="tw-input" style={{ width: "100%", fontSize: 16 }}
                     value={addForm.client_type} onChange={e => setAddForm(f => ({ ...f, client_type: e.target.value as ClientType }))}>
-                    <option value="employee">Employee</option>
                     <option value="zzp">ZZP / Freelancer</option>
-                    <option value="expat">Expat</option>
-                    <option value="dga">DGA / Director</option>
-                    <option value="other">Other</option>
                   </select>
                 </div>
                 <div>
@@ -817,11 +813,7 @@ export default function AccountantPortalPage() {
                       value={invClientType}
                       onChange={e => setInvClientType(e.target.value as ClientType)}
                     >
-                      <option value="employee">{lang === "nl" ? "Werknemer" : lang === "fa" ? "کارمند" : "Employee"}</option>
                       <option value="zzp">{lang === "nl" ? "ZZP / Freelancer" : lang === "fa" ? "فریلنسر / ZZP" : "ZZP / Freelancer"}</option>
-                      <option value="expat">{lang === "nl" ? "Expat" : lang === "fa" ? "اکسپت" : "Expat"}</option>
-                      <option value="dga">{lang === "nl" ? "DGA / BV-directeur" : lang === "fa" ? "مدیر BV" : "DGA / BV Director"}</option>
-                      <option value="other">{lang === "nl" ? "Overig" : lang === "fa" ? "سایر" : "Other"}</option>
                     </select>
                   </div>
                 </div>

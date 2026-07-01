@@ -13,11 +13,8 @@ import { generatePKCE } from "../utils/pkce";
 type ApiError = { response?: { data?: Record<string, string[]> } };
 
 const USER_TYPES = {
-  zzp:        { label: "ZZP",        glyph: "ZZ", color: "var(--blue)",          desc: "Freelance · self-employed"   },
-  employee:   { label: "Employee",   glyph: "EM", color: "var(--info)",          desc: "Salaried · payslip"          },
-  expat:      { label: "Expat",      glyph: "EX", color: "var(--warn)",          desc: "30% ruling · foreign income" },
-  dga:        { label: "DGA",        glyph: "DG", color: "var(--purple)",        desc: "Director · own BV"           },
-  accountant: { label: "Accountant", glyph: "AC", color: "var(--danger)",        desc: "Tax advisor · firm"          },
+  zzp:        { label: "ZZP",        glyph: "ZZ", color: "var(--blue)",   desc: "Freelance · self-employed" },
+  accountant: { label: "Accountant", glyph: "AC", color: "var(--danger)", desc: "Tax advisor · firm"        },
 } as const;
 
 const USER_TYPE_TX: Record<string, {
@@ -32,33 +29,6 @@ const USER_TYPE_TX: Record<string, {
       nl: ["Wet DBA-risico bij elke chat", "Zelfstandigenaftrek + MKB automatisch", "Kwartaalherinneringen BTW"],
       en: ["Wet DBA risk check on every chat", "Zelfstandigenaftrek + MKB-vrijstelling auto-applied", "Quarterly VAT reminders"],
       fa: ["بررسی ریسک Wet DBA در هر گفتگو", "اعمال خودکار کسر ZZP و MKB", "یادآوری فصلی BTW"],
-    },
-  },
-  employee: {
-    label: { nl: "Werknemer", en: "Employee", fa: "کارمند" },
-    desc:  { nl: "In loondienst · loonstrook", en: "Salaried · payslip", fa: "حقوق‌بگیر · فیش حقوقی" },
-    benefits: {
-      nl: ["Loonstrookvertaler (loonheffing → netto)", "Box 3-prognose", "Alle standaard belastingkortingen"],
-      en: ["Payslip translator (loonheffing → take-home)", "Box 3 forecast with WOZ inputs", "All standard tax credits"],
-      fa: ["ترجمه فیش حقوقی", "پیش‌بینی باکس ۳", "تمام اعتبارات مالیاتی"],
-    },
-  },
-  expat:    {
-    label: { nl: "Expat", en: "Expat", fa: "مهاجر خارجی" },
-    desc:  { nl: "30%-regeling · buitenlands inkomen", en: "30% ruling · foreign income", fa: "قانون ۳۰٪ · درآمد خارجی" },
-    benefits: {
-      nl: ["30%-regelingsjaartracker (jaren 1–5)", "Verzoening buitenlands inkomen", "NL + FA als eerste taal"],
-      en: ["30%-ruling year tracker (years 1–5)", "Foreign income reconciliation", "EN + FA chat as a first-class language"],
-      fa: ["پیگیری سال قانون ۳۰٪", "تطبیق درآمد خارجی", "پشتیبانی کامل زبان فارسی"],
-    },
-  },
-  dga:      {
-    label: { nl: "DGA", en: "DGA", fa: "DGA" },
-    desc:  { nl: "Directeur · eigen BV", en: "Director · own BV", fa: "مدیرعامل · BV شخصی" },
-    benefits: {
-      nl: ["Optimale salaris-dividendverdeling", "Box 2-berekeningen voor uw BV", "DGA-aftrekken als eerste"],
-      en: ["Optimal salary vs. dividend split", "Box 2 calculations for your BV", "DGA-only deductions surfaced first"],
-      fa: ["بهینه‌سازی حقوق و سود سهام", "محاسبات باکس ۲ برای BV", "نمایش کسورات DGA در اولویت"],
     },
   },
   accountant: {
