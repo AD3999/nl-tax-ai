@@ -6,11 +6,20 @@ import { useAuth } from "../context/AuthContext";
 
 type State = "loading" | "confirm" | "accepting" | "success" | "declined" | "register_required" | "error";
 
+interface InvitationPreview {
+  accountant_name: string;
+  firm_name: string;
+  message: string;
+  expires_at: string | null;
+  client_name: string;
+}
+
 const TX = {
   en: {
     loading:      "Loading invitation…",
     confirmTitle: "You have been invited",
-    confirmBody:  "An accountant has invited you to connect on TaxWijs. Would you like to accept?",
+    confirmBody:  "has invited you to connect on TaxWijs. Would you like to accept?",
+    confirmBodyGeneric: "An accountant has invited you to connect on TaxWijs. Would you like to accept?",
     acceptBtn:    "Accept invitation",
     declineBtn:   "Decline",
     accepting:    "Accepting…",
@@ -28,7 +37,8 @@ const TX = {
   nl: {
     loading:      "Uitnodiging laden…",
     confirmTitle: "U bent uitgenodigd",
-    confirmBody:  "Een accountant heeft u uitgenodigd om verbinding te maken op TaxWijs. Wilt u accepteren?",
+    confirmBody:  "heeft u uitgenodigd om verbinding te maken op TaxWijs. Wilt u accepteren?",
+    confirmBodyGeneric: "Een accountant heeft u uitgenodigd om verbinding te maken op TaxWijs. Wilt u accepteren?",
     acceptBtn:    "Uitnodiging accepteren",
     declineBtn:   "Weigeren",
     accepting:    "Accepteren…",
@@ -46,7 +56,8 @@ const TX = {
   fa: {
     loading:      "بارگذاری دعوتنامه…",
     confirmTitle: "شما دعوت شده‌اید",
-    confirmBody:  "یک حسابدار از شما دعوت کرده تا در TaxWijs متصل شوید. آیا می‌خواهید بپذیرید؟",
+    confirmBody:  "از شما دعوت کرده تا در TaxWijs متصل شوید. آیا می‌خواهید بپذیرید؟",
+    confirmBodyGeneric: "یک حسابدار از شما دعوت کرده تا در TaxWijs متصل شوید. آیا می‌خواهید بپذیرید؟",
     acceptBtn:    "پذیرش دعوتنامه",
     declineBtn:   "رد",
     accepting:    "در حال پذیرش…",
@@ -76,15 +87,27 @@ export default function AcceptInvitationPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [regUrl,   setRegUrl]   = useState("");
   const [acting,   setActing]   = useState<"accept" | "decline" | null>(null);
+  const [preview,  setPreview]  = useState<InvitationPreview | null>(null);
 
-  // On load just show confirm screen — do NOT auto-accept
+  // On load: fetch safe preview info, then show confirm screen
   useEffect(() => {
     if (!token) {
       setState("error");
       setErrorMsg("No invitation token found in the link.");
       return;
     }
-    setState("confirm");
+    void (async () => {
+      try {
+        const res = await fetch(`${apiBase}/portal/invitations/preview/?token=${encodeURIComponent(token)}`);
+        if (res.ok) {
+          const data = await res.json() as InvitationPreview;
+          setPreview(data);
+        }
+      } catch {
+        // Preview is best-effort — fall back to generic text
+      }
+      setState("confirm");
+    })();
   }, [token]);
 
   async function handleAccept() {
@@ -184,9 +207,31 @@ export default function AcceptInvitationPage() {
             <h1 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-xl)", fontWeight: 400, marginBottom: "var(--sp-3)" }}>
               {tx.confirmTitle}
             </h1>
-            <p style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", marginBottom: "var(--sp-6)", lineHeight: 1.6 }}>
-              {tx.confirmBody}
-            </p>
+            {preview ? (
+              <div style={{ marginBottom: "var(--sp-6)", textAlign: "left" }}>
+                <div style={{ background: "var(--bg-2)", border: "1px solid var(--border)", borderRadius: 10, padding: "var(--sp-4)", marginBottom: "var(--sp-4)" }}>
+                  <div style={{ fontSize: "var(--text-xs)", color: "var(--ink-4)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+                    {lang === "nl" ? "Uitnodiging van" : lang === "fa" ? "دعوت از" : "Invitation from"}
+                  </div>
+                  <div style={{ fontWeight: 700, fontSize: "var(--text-base)", color: "var(--ink)" }}>{preview.accountant_name}</div>
+                  {preview.firm_name && (
+                    <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)" }}>{preview.firm_name}</div>
+                  )}
+                </div>
+                {preview.message && (
+                  <div style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", borderLeft: "3px solid var(--border)", paddingLeft: "var(--sp-3)", marginBottom: "var(--sp-3)", lineHeight: 1.6, fontStyle: "italic" }}>
+                    "{preview.message}"
+                  </div>
+                )}
+                <p style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", lineHeight: 1.6 }}>
+                  {preview.accountant_name} {tx.confirmBody}
+                </p>
+              </div>
+            ) : (
+              <p style={{ fontSize: "var(--text-sm)", color: "var(--ink-3)", marginBottom: "var(--sp-6)", lineHeight: 1.6 }}>
+                {tx.confirmBodyGeneric}
+              </p>
+            )}
             <div style={{ display: "flex", flexDirection: "column", gap: "var(--sp-3)" }}>
               <button
                 className="btn btn-accent"

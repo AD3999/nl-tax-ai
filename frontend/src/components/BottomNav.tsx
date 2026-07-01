@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { LayoutDashboard, FolderOpen, CheckSquare, MessageSquare, User } from "lucide-react";
+import { LayoutDashboard, FolderOpen, CheckSquare, MessageSquare, User, Inbox, ClipboardList } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export default function BottomNav() {
@@ -8,13 +8,24 @@ export default function BottomNav() {
   const { user } = useAuth();
   const lang = i18n.language;
   const hasAccountant = !!user?.has_accountant;
+  const isAccountant = user?.role === "accountant";
 
   const L = (nl: string, en: string, fa: string) =>
     lang === "nl" ? nl : lang === "fa" ? fa : en;
 
   const profileItem = { to: "/client/profile", icon: <User size={20} />, label: L("Profiel", "Profile", "پروفایل") };
 
-  const items = hasAccountant
+  const accountantItems = [
+    { to: "/accountant/portal",  icon: <LayoutDashboard size={20} />, label: L("Portaal", "Portal",   "پورتال") },
+    { to: "/accountant/inbox",   icon: <Inbox size={20} />,           label: L("Inbox",   "Inbox",    "صندوق") },
+    { to: "/accountant/review",  icon: <ClipboardList size={20} />,   label: L("Review",  "Review",   "بررسی") },
+    { to: "/chat",               icon: <MessageSquare size={20} />,   label: L("AI",      "AI",       "هوش مصنوعی") },
+    { to: "/profile",            icon: <User size={20} />,            label: L("Profiel", "Profile",  "پروفایل") },
+  ];
+
+  const items = isAccountant
+    ? accountantItems
+    : hasAccountant
     ? [
         { to: "/dashboard",        icon: <LayoutDashboard size={20} />, label: L("Home",       "Home",       "خانه") },
         { to: "/client/tasks",     icon: <CheckSquare size={20} />,     label: L("Taken",      "Tasks",      "کارها") },

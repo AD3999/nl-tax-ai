@@ -178,11 +178,13 @@ class TaxEngagementSerializer(serializers.ModelSerializer):
             "id", "accountant", "client_profile", "client_profile_display",
             "tax_year", "engagement_type", "status", "deadline_date",
             "readiness_score", "missing_items_count", "risk_level",
+            "ready_to_file", "accountant_confirmed",
             "summary_json", "created_at", "updated_at",
         ]
         read_only_fields = [
             "id", "accountant", "readiness_score", "missing_items_count",
-            "risk_level", "created_at", "updated_at", "client_profile_display",
+            "risk_level", "ready_to_file", "accountant_confirmed",
+            "created_at", "updated_at", "client_profile_display",
         ]
 
 
@@ -284,10 +286,10 @@ class ChecklistItemSerializer(serializers.ModelSerializer):
         model = ChecklistItem
         fields = [
             "id", "engagement", "client_profile", "title", "description",
-            "category", "required", "status", "source", "priority",
+            "category", "required", "status", "task_type", "source", "priority",
             "stable_key", "meta_value", "created_at", "updated_at",
         ]
-        read_only_fields = ["id", "stable_key", "source", "created_at", "updated_at"]
+        read_only_fields = ["id", "stable_key", "source", "task_type", "created_at", "updated_at"]
 
 
 class AccountantActionSerializer(serializers.ModelSerializer):
@@ -373,7 +375,7 @@ class PortalMessageSerializer(serializers.ModelSerializer):
         model = PortalMessage
         fields = [
             "id", "engagement", "client_profile", "sender", "sender_email",
-            "sender_name", "client_name", "is_own", "body", "is_read", "read_at", "created_at",
+            "sender_name", "client_name", "is_own", "body", "is_read", "is_system", "read_at", "created_at",
         ]
         read_only_fields = [
             "id", "sender", "sender_email", "sender_name", "is_own",

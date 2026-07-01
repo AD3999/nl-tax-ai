@@ -38,11 +38,16 @@ def generate_accountant_actions(engagement) -> dict:
     profile = engagement.client_profile
     lang = profile.preferred_language or "en"
 
-    CLIENT_MESSAGES = {
+    name       = profile.first_name or None
+    client_type = getattr(profile, "client_type", "other") or "other"
+    year        = engagement.tax_year
+
+    # Generic fallback messages per action type (all languages)
+    _GENERIC = {
         "request_document": {
-            "nl": f"Beste {profile.first_name or 'klant'},\n\nWij hebben nog aanvullende documenten nodig voor uw belastingaangifte {engagement.tax_year}. Kunt u deze zo snel mogelijk uploaden via uw TaxWijs portal?\n\nMet vriendelijke groet,\nUw accountant",
-            "en": f"Dear {profile.first_name or 'client'},\n\nWe still need some documents for your {engagement.tax_year} tax return. Please upload them through your TaxWijs portal at your earliest convenience.\n\nKind regards,\nYour accountant",
-            "fa": f"با احترام {profile.first_name or 'مشتری گرامی'},\n\nبرای اظهارنامه مالیاتی {engagement.tax_year} شما هنوز به برخی مدارک نیاز داریم. لطفاً آن‌ها را از طریق پورتال TaxWijs خود آپلود کنید.\n\nبا احترام،\nحسابدار شما",
+            "nl": f"Beste {name or 'klant'},\n\nWij hebben nog aanvullende documenten nodig voor uw belastingaangifte {year}. Kunt u deze zo snel mogelijk uploaden via uw TaxWijs portal?\n\nMet vriendelijke groet,\nUw accountant",
+            "en": f"Dear {name or 'client'},\n\nWe still need some documents for your {year} tax return. Please upload them through your TaxWijs portal at your earliest convenience.\n\nKind regards,\nYour accountant",
+            "fa": f"با احترام {name or 'مشتری گرامی'},\n\nبرای اظهارنامه مالیاتی {year} شما هنوز به برخی مدارک نیاز داریم. لطفاً آن‌ها را از طریق پورتال TaxWijs خود آپلود کنید.\n\nبا احترام،\nحسابدار شما",
         },
         "review_document": {
             "nl": "Geüploade documenten wachten op beoordeling door de accountant.",
@@ -54,6 +59,53 @@ def generate_accountant_actions(engagement) -> dict:
             "en": "Possible tax deduction found — verify if applicable.",
             "fa": "کسر مالیاتی احتمالی یافت شد — بررسی کنید که آیا قابل اعمال است.",
         },
+        "prepare_filing": {
+            "nl": f"Het dossier voor belastingaangifte {year} is compleet en klaar voor indiening.",
+            "en": f"The {year} tax return file is complete and ready to file.",
+            "fa": f"پرونده اظهارنامه مالیاتی {year} کامل است و آماده ارسال می‌باشد.",
+        },
+    }
+
+    # Client-type-specific overrides for request_document
+    _TYPE_OVERRIDES: dict[str, dict[str, dict[str, str]]] = {
+        "zzp": {
+            "request_document": {
+                "nl": f"Beste {name or 'klant'},\n\nVoor uw aangifte als zzp'er {year} hebben wij nog documenten nodig: urenregistratie (voor de zelfstandigenaftrek van €1.200, minimaal 1.225 uur), BTW-aangiftes en een overzicht van uw winst en verlies. Upload deze via uw TaxWijs portal.\n\nLet op: ZVW-bijdrage (4,85% over nettowinst) is dit jaar ook verschuldigd.\n\nMet vriendelijke groet,\nUw accountant",
+                "en": f"Dear {name or 'client'},\n\nFor your {year} self-employed (zzp) tax return we still need: your hour log (required for the €1,200 zelfstandigenaftrek — min. 1,225 hrs), BTW returns, and a profit/loss statement. Please upload via TaxWijs.\n\nNote: ZVW health contribution (4.85% on net profit) is also due this year.\n\nKind regards,\nYour accountant",
+                "fa": f"با احترام {name or 'مشتری گرامی'},\n\nبرای اظهارنامه مالیاتی {year} به عنوان فریلنسر (zzp) هنوز به مدارک زیر نیاز داریم: ثبت ساعات کار (برای کسر ۱٬۲۰۰ یورویی، حداقل ۱٬۲۲۵ ساعت)، اظهارنامه‌های BTW و صورت سود و زیان. لطفاً از طریق پورتال TaxWijs آپلود کنید.\n\nتوجه: مشارکت ZVW (۴٫۸۵٪ از سود خالص) نیز امسال باید پرداخت شود.\n\nبا احترام،\nحسابدار شما",
+            },
+        },
+        "employee": {
+            "request_document": {
+                "nl": f"Beste {name or 'klant'},\n\nVoor uw belastingaangifte {year} als werknemer hebben wij nog uw jaaropgave nodig van uw werkgever(s). Heeft u ook aftrekposten (hypotheekrente, alimentatie, giften)? Upload dan ook de bijbehorende documenten.\n\nMet vriendelijke groet,\nUw accountant",
+                "en": f"Dear {name or 'client'},\n\nFor your {year} employee tax return we still need your annual income statement (jaaropgave) from your employer(s). If you have deductions (mortgage interest, alimony, donations), please upload those documents too.\n\nKind regards,\nYour accountant",
+                "fa": f"با احترام {name or 'مشتری گرامی'},\n\nبرای اظهارنامه مالیاتی {year} به عنوان کارمند، هنوز به جاروپگاوه (گواهی درآمد سالانه) از کارفرمای شما نیاز داریم. اگر کسورات دارید (بهره وام مسکن، نفقه، اهدا)، اسناد مربوطه را نیز آپلود کنید.\n\nبا احترام،\nحسابدار شما",
+            },
+        },
+        "expat": {
+            "request_document": {
+                "nl": f"Beste {name or 'klant'},\n\nVoor uw aangifte als expat {year} hebben wij de volgende documenten nodig: uw 30%-ruling beschikking (indien van toepassing), jaaropgave, en indien u halverwege het jaar in Nederland bent aangekomen, de M-form gegevens. Upload alles via TaxWijs.\n\nMet vriendelijke groet,\nUw accountant",
+                "en": f"Dear {name or 'client'},\n\nFor your {year} expat tax return we need: your 30% ruling decision letter (if applicable), annual income statement (jaaropgave), and if you arrived in the Netherlands mid-year, your M-form details. Please upload via TaxWijs.\n\nKind regards,\nYour accountant",
+                "fa": f"با احترام {name or 'مشتری گرامی'},\n\nبرای اظهارنامه مالیاتی {year} به عنوان اکسپت به مدارک زیر نیاز داریم: حکم ۳۰٪ (در صورت اعمال)، جاروپگاوه و در صورتی که در میان سال وارد هلند شده‌اید، اطلاعات فرم M. لطفاً از طریق TaxWijs آپلود کنید.\n\nبا احترام،\nحسابدار شما",
+            },
+        },
+        "dga": {
+            "request_document": {
+                "nl": f"Beste {name or 'klant'},\n\nVoor uw aangifte als DGA {year} hebben wij het volgende nodig: salarisstroken (gebruikelijk loon min. €56.000), de jaarrekening van de BV, en dividendbesluiten. Upload deze documenten via TaxWijs.\n\nMet vriendelijke groet,\nUw accountant",
+                "en": f"Dear {name or 'client'},\n\nFor your {year} DGA (director-shareholder) tax return we need: your payslips (gebruikelijk loon, min. €56,000), the BV annual accounts (jaarrekening), and any dividend resolutions. Please upload via TaxWijs.\n\nKind regards,\nYour accountant",
+                "fa": f"با احترام {name or 'مشتری گرامی'},\n\nبرای اظهارنامه مالیاتی {year} به عنوان DGA به مدارک زیر نیاز داریم: فیش‌های حقوقی (حداقل ۵۶٬۰۰۰ یورو)، صورت‌های مالی سالانه BV و تصمیمات تقسیم سود. لطفاً از طریق TaxWijs آپلود کنید.\n\nبا احترام،\nحسابدار شما",
+            },
+        },
+    }
+
+    type_overrides = _TYPE_OVERRIDES.get(client_type, {})
+
+    def _resolve_message(action_type: str) -> dict[str, str]:
+        return type_overrides.get(action_type) or _GENERIC.get(action_type) or {}
+
+    CLIENT_MESSAGES = {
+        action_type: _resolve_message(action_type)
+        for action_type in ("request_document", "review_document", "check_deduction", "prepare_filing")
     }
 
     action_list = []

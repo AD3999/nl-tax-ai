@@ -21,8 +21,14 @@ class HealthView(APIView):
     throttle_classes = []
 
     def get(self, request):
+        import os
         from .push_utils import check_vapid_config
-        return Response({"status": "ok", "vapid": check_vapid_config()})
+        bsn_key_set = bool(os.environ.get("BSN_ENCRYPTION_KEY", ""))
+        return Response({
+            "status":    "ok",
+            "vapid":     check_vapid_config(),
+            "bsn_ready": bsn_key_set,
+        })
 
 
 class AlertsView(APIView):
@@ -991,47 +997,8 @@ class ClientInvitationsView(APIView):
                 return Response({"error": "Not your invitation."}, status=403)
 
             if action == "decline":
-                inv.status = "declined"
-                inv.save(update_fields=["status"])
-
-                # ── Remove the pre-created shell profile so accountant no longer sees
-                # this person as "Invited" after they explicitly declined ───────────────
-                try:
-                    declined_profile = AccountantClientProfile.objects.filter(
-                        accountant_user=inv.sent_by,
-                        email__iexact=inv.client_email,
-                        client_user__isnull=True,   # only the un-linked shell
-                    ).first()
-                    if declined_profile:
-                        has_eng = TaxEngagement.objects.filter(
-                            client_profile=declined_profile
-                        ).exists()
-                        if has_eng:
-                            declined_profile.status = "archived"
-                            declined_profile.save(update_fields=["status", "updated_at"])
-                        else:
-                            declined_profile.delete()
-                except Exception:
-                    logger.exception("Failed to clean up shell profile on portal invitation decline (inv=%s)", inv.id)
-
-                # ── Notify the accountant in-app ─────────────────────────────────────
-                try:
-                    from apps.users.notification_utils import create_notification
-                    create_notification(
-                        user       = inv.sent_by,
-                        notif_type = "status_update",
-                        title      = f"{inv.client_name or inv.client_email} declined your invitation",
-                        body       = (
-                            f"{inv.client_name or inv.client_email} has declined "
-                            f"your TaxWijs portal invitation."
-                        ),
-                        action_url = "/accountant/portal",
-                        metadata   = {"invitation_id": inv.id},
-                    )
-                except Exception:
-                    logger.warning("Failed to send invitation_declined notification (inv=%s)", inv.id)
-                # ─────────────────────────────────────────────────────────────────────
-
+                from apps.portal.services.invitation_service import decline_portal_invitation
+                decline_portal_invitation(inv)
                 return Response({"status": "declined"})
 
             # Accept
@@ -1152,13 +1119,15 @@ class ClientInvitationsView(APIView):
 
             # Create the portal AccountantClientProfile (idempotent via accountant+client pair)
             try:
-                from apps.portal.models import AccountantClientProfile
+                from apps.portal.models import AccountantClientProfile, TaxEngagement
+                from apps.portal.services.accountant_checklists import create_checklist_for_engagement
+                from django.utils import timezone as tz
                 intake = request.user.intake_profile or {}
                 raw_type = intake.get("user_type", "other")
                 raw_lang = intake.get("language", "nl")
                 client_type = raw_type if raw_type in ("employee", "zzp", "expat", "dga") else "other"
                 preferred_language = raw_lang if raw_lang in ("nl", "en", "fa") else "nl"
-                AccountantClientProfile.objects.get_or_create(
+                profile, _created = AccountantClientProfile.objects.get_or_create(
                     accountant_user=inv.accountant.user,
                     client_user=request.user,
                     defaults={
@@ -1170,8 +1139,20 @@ class ClientInvitationsView(APIView):
                         "status":             "active",
                     },
                 )
+                # Create engagement + checklist if none exists yet
+                engagement, eng_created = TaxEngagement.objects.get_or_create(
+                    accountant=inv.accountant,
+                    client_profile=profile,
+                    tax_year=tz.now().year,
+                    defaults={"status": "collecting", "engagement_type": "income_tax"},
+                )
+                if eng_created:
+                    try:
+                        create_checklist_for_engagement(engagement)
+                    except Exception:
+                        logger.warning("Failed to generate checklist for legacy inv accept (inv=%s)", inv.id)
             except Exception:
-                pass
+                logger.exception("Failed to create portal profile/engagement for legacy inv (inv=%s)", inv.id)
 
             # Push notification to accountant
             firm = inv.accountant.firm_name or inv.accountant.user.email
@@ -1271,7 +1252,22 @@ class ClientMyAccountantView(APIView):
 
     def delete(self, request, pk=None):
         from .models import AccountantClient
-        AccountantClient.objects.filter(pk=pk, client_user=request.user).delete()
+        from django.utils import timezone
+        link_qs = AccountantClient.objects.filter(pk=pk, client_user=request.user)
+        accountant_user_id = link_qs.values_list("accountant__user_id", flat=True).first()
+        link_qs.delete()
+        if accountant_user_id:
+            try:
+                from apps.portal.models import AccountantClientProfile
+                AccountantClientProfile.objects.filter(
+                    client_user=request.user,
+                    accountant_user_id=accountant_user_id,
+                ).exclude(status__in=["deactivated", "archived"]).update(
+                    status="deactivated",
+                    deactivated_at=timezone.now(),
+                )
+            except Exception:
+                pass
         return Response(status=204)
 
 
@@ -1336,19 +1332,24 @@ class DataExportView(APIView):
 
 class InAppNotificationsView(APIView):
     """
-    GET  /api/users/inapp-notifications/          — list (newest first, max 50)
-    POST /api/users/inapp-notifications/read-all/ — mark all as read
+    GET  /api/users/inapp-notifications/?page=1&page_size=50  — paginated list (newest first)
     """
     authentication_classes = [SoftJWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         from .models import Notification
-        notifs = (
-            Notification.objects
-            .filter(user=request.user)
-            .order_by("-created_at")[:50]
-        )
+        try:
+            page      = max(1, int(request.query_params.get("page", 1)))
+            page_size = min(100, max(1, int(request.query_params.get("page_size", 50))))
+        except (ValueError, TypeError):
+            page, page_size = 1, 50
+
+        qs    = Notification.objects.filter(user=request.user).order_by("-created_at")
+        total = qs.count()
+        offset = (page - 1) * page_size
+        notifs = qs[offset: offset + page_size]
+
         data = [
             {
                 "id":                n.id,
@@ -1361,7 +1362,7 @@ class InAppNotificationsView(APIView):
             }
             for n in notifs
         ]
-        return Response(data)
+        return Response({"count": total, "page": page, "page_size": page_size, "results": data})
 
 
 class InAppNotificationReadAllView(APIView):

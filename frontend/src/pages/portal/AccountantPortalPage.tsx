@@ -270,6 +270,8 @@ export default function AccountantPortalPage() {
   // Invitation form state
   const [invEmail, setInvEmail] = useState("");
   const [invMessage, setInvMessage] = useState("");
+  const [invClientName, setInvClientName] = useState("");
+  const [invClientType, setInvClientType] = useState<ClientType>("other");
   const [invSending, setInvSending] = useState(false);
 
   // Upgrade gate state
@@ -307,11 +309,15 @@ export default function AccountantPortalPage() {
       const result = await sendPortalInvitation({
         email:              invEmail.trim(),
         message:            invMessage.trim(),
+        client_name:        invClientName.trim() || undefined,
+        client_type:        invClientType,
         preferred_language: lang,
       });
       setInvitations(prev => [result, ...prev]);
       setInvEmail("");
       setInvMessage("");
+      setInvClientName("");
+      setInvClientType("other");
       showToast(tx.invite_sent, "success");
       if (result.accept_url && navigator.clipboard) {
         try {
@@ -787,6 +793,37 @@ export default function AccountantPortalPage() {
                     onChange={e => setInvEmail(e.target.value)}
                     placeholder="client@example.nl"
                   />
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "var(--sp-3)" }}>
+                  <div>
+                    <label className="tw-label">
+                      {lang === "nl" ? "Naam cliënt" : lang === "fa" ? "نام مشتری" : "Client name"}
+                    </label>
+                    <input
+                      type="text" className="tw-input"
+                      style={{ width: "100%", fontSize: 16 }}
+                      value={invClientName}
+                      onChange={e => setInvClientName(e.target.value)}
+                      placeholder={lang === "nl" ? "Jan de Vries" : lang === "fa" ? "نام و نام خانوادگی" : "Jane Smith"}
+                    />
+                  </div>
+                  <div>
+                    <label className="tw-label">
+                      {lang === "nl" ? "Type cliënt" : lang === "fa" ? "نوع مشتری" : "Client type"}
+                    </label>
+                    <select
+                      className="tw-input"
+                      style={{ width: "100%", fontSize: 16 }}
+                      value={invClientType}
+                      onChange={e => setInvClientType(e.target.value as ClientType)}
+                    >
+                      <option value="employee">{lang === "nl" ? "Werknemer" : lang === "fa" ? "کارمند" : "Employee"}</option>
+                      <option value="zzp">{lang === "nl" ? "ZZP / Freelancer" : lang === "fa" ? "فریلنسر / ZZP" : "ZZP / Freelancer"}</option>
+                      <option value="expat">{lang === "nl" ? "Expat" : lang === "fa" ? "اکسپت" : "Expat"}</option>
+                      <option value="dga">{lang === "nl" ? "DGA / BV-directeur" : lang === "fa" ? "مدیر BV" : "DGA / BV Director"}</option>
+                      <option value="other">{lang === "nl" ? "Overig" : lang === "fa" ? "سایر" : "Other"}</option>
+                    </select>
+                  </div>
                 </div>
                 <div>
                   <label className="tw-label">{tx.invite_message}</label>

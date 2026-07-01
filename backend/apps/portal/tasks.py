@@ -34,7 +34,56 @@ def process_document_task(self, document_id: int):
                     document_id, result.get("document_type"), result.get("confidence", 0))
     except Exception as exc:
         logger.error("process_document_task failed for document %d: %s", document_id, exc)
-        self.retry(exc=exc, countdown=60)
+        # On final retry exhaustion, mark document as extraction_failed so the
+        # accountant can see it in the UI rather than it silently staying "uploaded".
+        if self.request.retries >= self.max_retries:
+            try:
+                from apps.portal.models import ClientDocument
+                ClientDocument.objects.filter(
+                    pk=document_id, processing_status="processing"
+                ).update(processing_status="extraction_failed")
+                logger.warning("Document %d marked extraction_failed after %d retries.",
+                               document_id, self.max_retries)
+            except Exception:
+                pass
+        else:
+            self.retry(exc=exc, countdown=60)
+
+
+@shared_task
+def send_portal_email_task(user_id: int, subject: str, body: str):
+    """
+    Send an email notification to user if they have email_enabled=True.
+    Queued asynchronously so it never blocks the primary action.
+    """
+    try:
+        from django.contrib.auth import get_user_model
+        from django.core.mail import send_mail
+        from django.conf import settings
+
+        User = get_user_model()
+        user = User.objects.select_related("notification_prefs").get(pk=user_id)
+        prefs = getattr(user, "notification_prefs", None)
+
+        if not prefs or not prefs.email_enabled:
+            logger.debug("Email skipped for user %d — email_enabled is False.", user_id)
+            return
+
+        if not user.email:
+            logger.debug("Email skipped for user %d — no email address.", user_id)
+            return
+
+        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "noreply@taxwijs.nl")
+        send_mail(
+            subject=subject,
+            message=body,
+            from_email=from_email,
+            recipient_list=[user.email],
+            fail_silently=False,
+        )
+        logger.info("Portal email sent to user %d: %s", user_id, subject)
+    except Exception as exc:
+        logger.error("send_portal_email_task failed for user %d: %s", user_id, exc)
 
 
 @shared_task
