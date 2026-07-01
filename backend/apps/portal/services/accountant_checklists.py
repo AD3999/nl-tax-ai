@@ -8,23 +8,6 @@ from typing import List, Dict, Any
 
 
 CHECKLISTS: Dict[str, List[Dict[str, Any]]] = {
-    "employee": [
-        {"stable_key": "emp_personal_details",   "title": "Personal details",                    "description": "Full name, BSN, address, date of birth",                           "category": "identity",   "required": True,  "priority": "high"},
-        {"stable_key": "emp_bsn",                "title": "BSN / identification confirmation",   "description": "Dutch social security number confirmed or ID copy",                "category": "identity",   "required": True,  "priority": "high"},
-        {"stable_key": "emp_jaaropgave",         "title": "Jaaropgave (year statement)",         "description": "Annual income statement from employer — required for IB return",   "category": "income",     "required": True,  "priority": "high"},
-        {"stable_key": "emp_payslips",           "title": "Payslips (if jaaropgave missing)",    "description": "Monthly payslips as alternative to jaaropgave",                   "category": "income",     "required": False, "priority": "medium"},
-        {"stable_key": "emp_partner_info",       "title": "Partner information",                 "description": "Partner BSN, income, and employment status if applicable",        "category": "household",  "required": False, "priority": "medium"},
-        {"stable_key": "emp_mortgage",           "title": "Mortgage annual statement",           "description": "Hypotheekrente — annual mortgage statement from lender",          "category": "property",   "required": False, "priority": "high"},
-        {"stable_key": "emp_woz",                "title": "WOZ value of home",                   "description": "WOZ-beschikking for the reference year",                           "category": "property",   "required": False, "priority": "high"},
-        {"stable_key": "emp_box3_bank",          "title": "Bank/savings balances (Box 3)",       "description": "All bank and savings balances on 1 January",                      "category": "box3",       "required": False, "priority": "medium"},
-        {"stable_key": "emp_box3_investments",   "title": "Investment portfolio values (Box 3)", "description": "Value of shares, bonds, funds on 1 January",                      "category": "box3",       "required": False, "priority": "medium"},
-        {"stable_key": "emp_pension",            "title": "Pension / lijfrente statement",       "description": "Paid pension premiums or lijfrente for jaarruimte deduction",     "category": "pension",    "required": False, "priority": "medium"},
-        {"stable_key": "emp_medical",            "title": "Healthcare / medical deductions",     "description": "Medical expenses exceeding the drempel (threshold)",              "category": "deductions", "required": False, "priority": "low"},
-        {"stable_key": "emp_donations",          "title": "Donation receipts",                   "description": "ANBI-registered charity donations for giftenaftrek",              "category": "deductions", "required": False, "priority": "low"},
-        {"stable_key": "emp_childcare",          "title": "Childcare / family information",      "description": "Number of children, ages, kinderopvang costs",                   "category": "household",  "required": False, "priority": "medium"},
-        {"stable_key": "emp_toeslagen",          "title": "Toeslagen information",               "description": "Current toeslagen received — zorgtoeslag, huurtoeslag",           "category": "toeslagen",  "required": False, "priority": "medium"},
-    ],
-
     "zzp": [
         {"stable_key": "zzp_kvk",               "title": "KVK number",                          "description": "Chamber of Commerce registration number",                          "category": "identity",   "required": True,  "priority": "high", "task_type": "info"},
         {"stable_key": "zzp_btw",               "title": "BTW (VAT) number",                    "description": "OB-nummer for VAT returns",                                        "category": "identity",   "required": True,  "priority": "high", "task_type": "info"},
@@ -49,37 +32,6 @@ CHECKLISTS: Dict[str, List[Dict[str, Any]]] = {
         {"stable_key": "zzp_wet_dba_contracts", "title": "Wet DBA — contract type",             "description": "Free-text or formal contracts with main clients",                "category": "compliance", "required": False, "priority": "medium"},
     ],
 
-    "expat": [
-        {"stable_key": "exp_employment_contract","title": "Employment contract",               "description": "Contract with Dutch employer",                                     "category": "income",     "required": True,  "priority": "high"},
-        {"stable_key": "exp_jaaropgave",         "title": "Jaaropgave",                         "description": "Annual income statement from Dutch employer",                     "category": "income",     "required": True,  "priority": "high"},
-        {"stable_key": "exp_30pct_ruling",       "title": "30% ruling decision letter",         "description": "Beslissing 30%-regeling if applicable",                          "category": "deductions", "required": False, "priority": "high"},
-        {"stable_key": "exp_start_date",         "title": "Start date in the Netherlands",      "description": "Date of first arrival / work start in NL",                       "category": "identity",   "required": True,  "priority": "high", "task_type": "info"},
-        {"stable_key": "exp_prev_country",       "title": "Previous country of residence",      "description": "Country of tax residency before moving to NL",                   "category": "identity",   "required": True,  "priority": "high", "task_type": "info"},
-        {"stable_key": "exp_foreign_income",     "title": "Foreign income",                     "description": "Any income received from abroad during the year",                "category": "income",     "required": False, "priority": "high"},
-        {"stable_key": "exp_foreign_assets",     "title": "Foreign assets (Box 3)",             "description": "Bank accounts, property, investments held abroad on 1 January",  "category": "box3",       "required": False, "priority": "high"},
-        {"stable_key": "exp_partner_family",     "title": "Partner / family information",       "description": "Partner and dependent children status",                          "category": "household",  "required": False, "priority": "medium"},
-        {"stable_key": "exp_m_form",             "title": "M-form relevance",                   "description": "Partial-year resident — M-form may apply instead of C-form",    "category": "compliance", "required": False, "priority": "high"},
-        {"stable_key": "exp_housing",            "title": "Housing / mortgage / rent",          "description": "Dutch housing costs — mortgage or rent amount",                  "category": "property",   "required": False, "priority": "medium"},
-        {"stable_key": "exp_box3",               "title": "Box 3 assets (NL)",                  "description": "Dutch bank and investment balances on 1 January",                "category": "box3",       "required": False, "priority": "medium"},
-        {"stable_key": "exp_pension",            "title": "Pension / lijfrente",                "description": "NL and foreign pension contributions",                           "category": "pension",    "required": False, "priority": "medium"},
-        {"stable_key": "exp_residency",          "title": "Tax residency notes",                "description": "Formal tax residency position if dual-residency risk",           "category": "compliance", "required": False, "priority": "medium"},
-    ],
-
-    "dga": [
-        {"stable_key": "dga_bv_details",         "title": "BV company details",                 "description": "BV name, KVK number, RSIN",                                      "category": "identity",   "required": True,  "priority": "high"},
-        {"stable_key": "dga_kvk",                "title": "KVK extract BV",                     "description": "Current KVK Uittreksel for the BV",                              "category": "identity",   "required": True,  "priority": "high"},
-        {"stable_key": "dga_shareholding",       "title": "Shareholding percentage",            "description": "DGA's % in the BV (≥5% = AB-houder for Box 2)",                 "category": "box2",       "required": True,  "priority": "high", "task_type": "info"},
-        {"stable_key": "dga_salary",             "title": "DGA salary (gebruikelijk loon)",     "description": "Actual salary paid by BV — minimum €58,000 in 2026 (Ministerie van Financiën norm)", "category": "income",     "required": True,  "priority": "high", "task_type": "info"},
-        {"stable_key": "dga_annual_accounts",    "title": "Annual accounts BV",                 "description": "Statutory accounts for the BV (jaarrekening)",                  "category": "business",   "required": True,  "priority": "high"},
-        {"stable_key": "dga_dividend",           "title": "Dividend payments",                  "description": "Dividends declared / paid to DGA — Box 2 income",               "category": "box2",       "required": True,  "priority": "high"},
-        {"stable_key": "dga_payroll",            "title": "Payroll documents",                  "description": "Loonheffingen declarations for DGA salary",                      "category": "payroll",    "required": True,  "priority": "high"},
-        {"stable_key": "dga_rekening_courant",   "title": "Current account director / R-C",     "description": "Rekening-courant balance between DGA and BV",                   "category": "business",   "required": False, "priority": "high"},
-        {"stable_key": "dga_company_expenses",   "title": "Company expenses",                   "description": "BV expenses relevant to personal tax return",                    "category": "expense",    "required": False, "priority": "medium"},
-        {"stable_key": "dga_pension",            "title": "Pension arrangements",               "description": "Pensioen in eigen beheer or external pension",                   "category": "pension",    "required": False, "priority": "medium"},
-        {"stable_key": "dga_partner_split",      "title": "Partner / shareholder split",        "description": "Dividends or salaries paid to partner shareholder",              "category": "household",  "required": False, "priority": "medium"},
-        {"stable_key": "dga_gebruikelijk_loon",  "title": "Gebruikelijk loon check",            "description": "Confirm DGA salary meets €58,000 minimum (2026 norm) or has approved waiver", "category": "compliance", "required": True,  "priority": "high"},
-    ],
-
     "other": [
         {"stable_key": "oth_identity",           "title": "Identity document",                  "description": "Valid passport or Dutch ID",                                     "category": "identity",   "required": True,  "priority": "high"},
         {"stable_key": "oth_income_sources",     "title": "Income sources",                     "description": "Overview of all income received during the tax year",           "category": "income",     "required": True,  "priority": "high"},
@@ -97,8 +49,8 @@ def generate_checklist_for_engagement(engagement) -> list:
     Uses the client_profile.client_type to pick the template.
     Does NOT write to DB — caller does that.
     """
-    client_type = engagement.client_profile.client_type or "other"
-    template = CHECKLISTS.get(client_type, CHECKLISTS["other"])
+    client_type = engagement.client_profile.client_type or "zzp"
+    template = CHECKLISTS.get(client_type, CHECKLISTS["zzp"])
 
     items = []
     for item in template:

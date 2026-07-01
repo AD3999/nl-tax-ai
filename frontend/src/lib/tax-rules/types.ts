@@ -1,5 +1,5 @@
 export type VerificationStatus = "verified" | "pending_review" | "draft" | "expired";
-export type UserType = "zzp" | "employee" | "expat" | "dga" | "accountant" | "all";
+export type UserType = "zzp" | "accountant" | "all";
 export type RuleCategory =
   | "bracket"
   | "deduction"

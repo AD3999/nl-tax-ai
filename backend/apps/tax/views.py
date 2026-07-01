@@ -206,17 +206,10 @@ class RecentRuleChangesView(APIView):
 
         qs = TaxRule.objects.filter(
             verification_status="verified",
+            is_active=True,
             updated_at__gte=since,
             year=2026,
         ).order_by("-updated_at")
-
-        if user_type:
-            # Filter rules that apply to this user type or to all users
-            matching_ids = [
-                r.pk for r in qs
-                if not r.user_types or user_type in r.user_types
-            ]
-            qs = qs.filter(pk__in=matching_ids)
 
         results = [
             {

@@ -99,9 +99,6 @@ def send_btw_reminders():
     notified = 0
     for user, prefs in _get_users_with_prefs("inapp_enabled"):
         profile = user.intake_profile or {}
-        user_type = profile.get("user_type", "")
-        if user_type not in ("zzp", "dga"):
-            continue
         lang = user.preferred_language or "nl"
         lead = prefs.reminder_lead_days or 7
 
@@ -175,9 +172,6 @@ def send_monthly_reserve_reminder():
         if not prefs.email_reserve and not prefs.inapp_enabled:
             continue
         profile = user.intake_profile or {}
-        user_type = profile.get("user_type", "")
-        if user_type not in ("zzp", "dga"):
-            continue
         lang = user.preferred_language or "nl"
 
         # Try to get reserve from last known calculation
@@ -224,6 +218,7 @@ def send_rule_change_notifications():
     since = timezone.now() - timedelta(hours=25)  # 25h to catch any timing edge
     new_rules = list(TaxRule.objects.filter(
         verification_status="verified",
+        is_active=True,
         updated_at__gte=since,
     ))
     if not new_rules:
@@ -233,11 +228,9 @@ def send_rule_change_notifications():
     for user, prefs in _get_users_with_prefs("inapp_enabled"):
         if not prefs.email_rule_change and not prefs.inapp_enabled:
             continue
-        profile = user.intake_profile or {}
-        user_type = profile.get("user_type", "")
         lang = user.preferred_language or "nl"
 
-        relevant = [r for r in new_rules if not r.user_types or user_type in (r.user_types or [])]
+        relevant = [r for r in new_rules if not r.user_types or "zzp" in (r.user_types or [])]
         if not relevant:
             continue
 

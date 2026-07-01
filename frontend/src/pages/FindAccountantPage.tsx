@@ -52,7 +52,7 @@ const TX: Record<Lang, {
     book: "Afspraak boeken",
     reviews: "reviews",
     rating: "Beoordeling",
-    specializations: { zzp: "ZZP", employee: "Werknemer", expat: "Expat / 30%", dga: "DGA / BV" },
+    specializations: { it_tech: "IT & Tech", creative_media: "Creatief & Media", consulting: "Consulting", trades_construction: "Ambacht & Bouw", healthcare_wellness: "Zorg & Wellness", international: "ZZP met internationale achtergrond", other: "Overig" },
   },
   en: {
     title: "Find a Tax Advisor",
@@ -70,7 +70,7 @@ const TX: Record<Lang, {
     book: "Book a call",
     reviews: "reviews",
     rating: "Rating",
-    specializations: { zzp: "ZZP / Freelancer", employee: "Employee", expat: "Expat / 30% ruling", dga: "DGA / BV" },
+    specializations: { it_tech: "IT & Tech", creative_media: "Creative & Media", consulting: "Consulting", trades_construction: "Trades / Construction", healthcare_wellness: "Healthcare / Wellness", international: "International-background ZZP", other: "Other" },
   },
   fa: {
     title: "یافتن مشاور مالیاتی",
@@ -88,7 +88,7 @@ const TX: Record<Lang, {
     book: "رزرو جلسه",
     reviews: "نظر",
     rating: "امتیاز",
-    specializations: { zzp: "ZZP / آزادکار", employee: "کارمند", expat: "اکسپت / ۳۰٪", dga: "DGA / BV" },
+    specializations: { it_tech: "IT و فناوری", creative_media: "خلاق و رسانه", consulting: "مشاوره", trades_construction: "پیشه و ساختمان", healthcare_wellness: "بهداشت و سلامت", international: "ZZP با پیشینه بین‌المللی", other: "سایر" },
   },
 };
 
@@ -123,7 +123,7 @@ export default function FindAccountantPage() {
       .catch(() => { setError(true); setLoading(false); });
   }, [lang, spec]);
 
-  const specs = ["all", "zzp", "employee", "expat", "dga"];
+  const specs = ["all", "it_tech", "creative_media", "consulting", "trades_construction", "healthcare_wellness", "international", "other"];
 
   return (
     <main style={{ background: "var(--paper)", flex: 1 }} dir={isRtl ? "rtl" : "ltr"}>

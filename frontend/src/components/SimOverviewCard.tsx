@@ -21,7 +21,7 @@ export function SimOverviewCard({ answers, lang, isMobile, onGoToChat }: SimOver
 
     // Guard: if no income was entered at all, show a clear actionable message
     // instead of a cryptic API error
-    const totalIncome = Number(profile.annual_revenue_zzp ?? 0) + Number(profile.employment_income ?? 0);
+    const totalIncome = Number(profile.annual_revenue_zzp ?? 0);
     if (totalIncome <= 0) {
       setError(
         lang === "nl"

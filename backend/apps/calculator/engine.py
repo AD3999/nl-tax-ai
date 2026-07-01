@@ -149,29 +149,16 @@ def calc_wet_dba(single_client_pct) -> str:
 
 def calculate(profile: dict) -> dict:
     """
-    Run the full Dutch 2026 income tax calculation for a user profile.
+    ZZP-only 2026 income tax calculation. No Box 2 support — Box 2 income implies
+    DGA/substantial-shareholding status, which is out of scope for this platform.
     Returns a dict with 'calculation' (all intermediate steps) and 'result' (summary).
     """
-    user_type = str(profile.get("user_type") or "").strip().lower()
-    if user_type not in ("zzp", "employee", "expat", "dga"):
-        raise ValueError(f"user_type is required — must be one of: zzp, employee, expat, dga. Got: {user_type!r}")
-    aow_age   = bool(profile.get("aow_age", False))
+    aow_age = bool(profile.get("aow_age", False))
 
     # ── 1. Gross income ─────────────────────────────────────────────
-    if user_type == "zzp":
-        gross_revenue = float(profile.get("annual_revenue_zzp") or 0)
-        expenses      = float(profile.get("business_expenses") or 0)
-    else:
-        gross_revenue = float(profile.get("employment_income") or 0)
-        expenses      = 0.0
-
-    gross_profit = gross_revenue - expenses
-
-    # 30% ruling (expat employees)
-    if profile.get("uses_30pct_ruling"):
-        ruling_year  = int(profile.get("ruling_year") or 1)
-        exempt_pct   = 0.30 if ruling_year <= 3 else (0.20 if ruling_year == 4 else 0.10)
-        gross_profit = gross_revenue * (1 - exempt_pct)
+    gross_revenue = float(profile.get("annual_revenue_zzp") or 0)
+    expenses      = float(profile.get("business_expenses") or 0)
+    gross_profit  = gross_revenue - expenses
 
     # ── 2. ZZP deductions ───────────────────────────────────────────
     hours      = int(profile.get("hours_per_year") or 0)
@@ -179,18 +166,17 @@ def calculate(profile: dict) -> dict:
     kia_invest = float(profile.get("kia_investments") or 0)
     pension    = float(profile.get("pension_contribution") or 0)
 
-    meets_uren = (user_type == "zzp" and hours >= 1225)
-    za  = _rv("ZA-2026-001", "value")  if meets_uren                    else 0.0  # 1200
-    sa  = _rv("SA-2026-001", "value")  if (meets_uren and is_starter)   else 0.0  # 2123
-    kia = float(calc_kia(kia_invest))  if user_type == "zzp"            else 0.0
+    meets_uren = hours >= 1225
+    za  = _rv("ZA-2026-001", "value") if meets_uren                  else 0.0  # 1200
+    sa  = _rv("SA-2026-001", "value") if (meets_uren and is_starter) else 0.0  # 2123
+    kia = float(calc_kia(kia_invest))
 
     ondernemers     = za + sa + kia
     profit_after_oa = gross_profit - ondernemers
 
-    mkb = _eur(profit_after_oa * (_rv("MKB-2026-001", "value") / 100)) if user_type == "zzp" else 0
+    mkb = _eur(profit_after_oa * (_rv("MKB-2026-001", "value") / 100))
 
     # ZVW bijdrage: Wfsv base = profit_after_OA (before MKB), per belastingdienst.nl
-    # Taxable Box 1 still subtracts MKB and pension
     zvw_base     = profit_after_oa
     taxable_box1 = profit_after_oa - mkb - pension
 
@@ -205,22 +191,18 @@ def calculate(profile: dict) -> dict:
     income_tax = max(0, b1["raw"] - ahk - ak - iack)
 
     # ── 5. ZVW ──────────────────────────────────────────────────────
-    zvw = calc_zvw(zvw_base) if user_type == "zzp" else 0
+    zvw = calc_zvw(zvw_base)
 
-    # ── 6. Box 2 ────────────────────────────────────────────────────
-    box2_dividend = float(profile.get("box2_dividend") or 0)
-    box2_tax      = calc_box2(box2_dividend) if box2_dividend > 0 else 0
-
-    # ── 7. Box 3 ────────────────────────────────────────────────────
+    # ── 6. Box 3 ────────────────────────────────────────────────────
     net_assets   = float(profile.get("net_assets_box3") or 0)
     has_partner  = bool(profile.get("has_partner", False))
     savings_frac = float(profile.get("savings_fraction") or 0.0)
     box3_tax     = calc_box3(net_assets, has_partner, savings_frac)
 
-    # ── 8. Totals ───────────────────────────────────────────────────
-    total_tax   = income_tax + zvw + box2_tax + box3_tax
+    # ── 7. Totals ───────────────────────────────────────────────────
+    total_tax   = income_tax + zvw + box3_tax
     eff_rate    = round(total_tax / max(gross_profit, 1), 3)
-    monthly_res = _eur(total_tax / 12) if user_type == "zzp" else 0
+    monthly_res = _eur(total_tax / 12)
     dba_risk    = calc_wet_dba(profile.get("single_client_percentage"))
 
     return {
@@ -245,7 +227,6 @@ def calculate(profile: dict) -> dict:
             "iack":                     iack,
             "income_tax_after_credits": income_tax,
             "zvw_contribution":         zvw,
-            "box2_tax":                 box2_tax,
             "box3_tax":                 box3_tax,
             "total_tax_due":            total_tax,
             "effective_rate":           eff_rate,

@@ -16,9 +16,6 @@ import {
 const USER_TYPE_OPTIONS = [
   { value: "all", label: "All user types" },
   { value: "zzp",       label: "ZZP (freelance)" },
-  { value: "employee",  label: "Employee" },
-  { value: "expat",     label: "Expat" },
-  { value: "dga",       label: "DGA" },
   { value: "accountant",label: "Accountant" },
 ];
 

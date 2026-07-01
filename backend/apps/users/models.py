@@ -6,9 +6,6 @@ from django.db import models
 class User(AbstractUser):
     USER_TYPES = [
         ("zzp", "ZZP / Freelancer"),
-        ("employee", "Employee"),
-        ("expat", "Expat"),
-        ("dga", "DGA / Director"),
     ]
 
     LANGUAGES = [
@@ -25,7 +22,7 @@ class User(AbstractUser):
         ("admin",      "Admin"),
     ]
 
-    user_type = models.CharField(max_length=20, choices=USER_TYPES, blank=True)
+    user_type = models.CharField(max_length=20, choices=USER_TYPES, default="zzp")
     role      = models.CharField(max_length=20, choices=ROLES, default="client")
     preferred_language = models.CharField(max_length=5, choices=LANGUAGES, default="nl")
     tax_year = models.PositiveIntegerField(default=2026)
@@ -317,9 +314,8 @@ class TaxReminder(models.Model):
     """
     Smart Calendar / Reminder Engine — a single tax event / deadline.
 
-    Covers all 21 reminder categories from the spec:
-    income_tax, vat, payroll, corporate_tax, dividend_tax, toeslagen,
-    provisional_assessment, box3, expat, admin, documents, zzp_admin.
+    Covers ZZP reminder categories:
+    income_tax, vat, toeslagen, provisional_assessment, box3, admin, documents, zzp_admin.
 
     Seeded via management command seed_reminders. Admin can add/edit.
     Frontend reads via GET /api/users/reminders/.
@@ -327,17 +323,12 @@ class TaxReminder(models.Model):
     CATEGORY_CHOICES = [
         ("income_tax",            "Income Tax"),
         ("vat",                   "VAT / BTW"),
-        ("payroll",               "Payroll"),
-        ("corporate_tax",         "Corporate Tax"),
-        ("dividend_tax",          "Dividend Tax"),
         ("toeslagen",             "Toeslagen"),
         ("provisional_assessment","Voorlopige Aanslag"),
         ("box3",                  "Box 3"),
-        ("expat",                 "Expat"),
         ("admin",                 "Admin"),
         ("documents",             "Documents"),
         ("zzp_admin",             "ZZP Admin"),
-        ("dga",                   "DGA"),
     ]
     SOURCE_STATUS_CHOICES = [
         ("official",     "Official Belastingdienst source"),
@@ -377,7 +368,8 @@ class TaxReminder(models.Model):
     description_fa = models.TextField(blank=True)
 
     category   = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
-    user_types = models.JSONField(default=list)  # ["zzp"], ["employee","expat"], etc.
+    user_types = models.JSONField(default=list)  # always ["zzp"]
+    is_active  = models.BooleanField(default=True)
 
     tax_year = models.PositiveIntegerField(default=2026)
     due_date = models.DateField()
@@ -532,7 +524,7 @@ class AccountantListing(models.Model):
     bio_fa = models.TextField(blank=True)
     specializations = models.JSONField(
         default=list,
-        help_text='e.g. ["zzp", "expat", "dga"]'
+        help_text='ZZP niche tags: e.g. ["it_tech", "creative_media", "consulting", "trades_construction", "healthcare_wellness", "international", "other"]'
     )
     languages = models.JSONField(
         default=list,

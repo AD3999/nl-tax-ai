@@ -6,7 +6,7 @@
 export interface IBAnswers {
   "1a"?: string | null;   // Salary
   "1b"?: string | null;   // Other work income
-  "1c"?: string | null;   // Business profit (ZZP/DGA)
+  "1c"?: string | null;   // Business profit (ZZP)
   "1d"?: string | null;   // Startersaftrek (yes/no)
   "1e"?: string | null;   // Zelfstandigenaftrek (yes/no)
   "2a"?: string | null;   // Box 2 dividend

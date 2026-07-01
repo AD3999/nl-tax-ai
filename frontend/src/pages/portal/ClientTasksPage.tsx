@@ -31,21 +31,15 @@ interface Task {
 const INLINE_INFO_KEYS = new Set([
   // ZZP identity + info
   "zzp_kvk", "zzp_btw", "zzp_start_date", "zzp_revenue", "zzp_wet_dba_clients", "zzp_hours",
-  // Employee identity
-  "emp_bsn", "emp_personal_details",
-  // Expat identity
-  "exp_start_date", "exp_prev_country",
-  // DGA identity + compliance
-  "dga_bv_details", "dga_shareholding", "dga_salary", "dga_gebruikelijk_loon",
   // Other
   "oth_employment_status",
 ]);
 
 // Inline inputs that render as <input type="date">
-const DATE_KEYS = new Set(["zzp_start_date", "exp_start_date"]);
+const DATE_KEYS = new Set(["zzp_start_date"]);
 
 // Inline inputs that render as <input type="number">
-const NUMBER_KEYS = new Set(["zzp_revenue", "dga_salary", "dga_shareholding", "zzp_hours"]);
+const NUMBER_KEYS = new Set(["zzp_revenue", "zzp_hours"]);
 
 function isInfoTask(task: Task): boolean {
   if (INLINE_INFO_KEYS.has(task.stable_key ?? "")) return true;
@@ -123,8 +117,7 @@ const CATEGORY_ROUTE: Record<string, string> = {
   bank:       "/client/documents",
   property:   "/client/documents",   // mortgage statements, WOZ
   box3:       "/client/documents",   // bank/savings/investment statements
-  box2:       "/client/documents",   // dividend/shareholding docs (DGA)
-  business:   "/client/documents",   // BV annual accounts, KVK extract
+  business:   "/client/documents",   // KVK extract, annual accounts
   payroll:    "/client/documents",   // loonheffingen declarations
   household:  "/client/documents",   // partner/family documents
 

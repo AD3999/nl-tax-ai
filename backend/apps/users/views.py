@@ -59,21 +59,19 @@ class AlertsView(APIView):
             return Response([])
 
         alerts = generate_alerts(profile, calc_result, lang)
-        alerts += self._rule_change_alerts(profile.get("user_type", ""), lang)
+        alerts += self._rule_change_alerts(lang)
         return Response(alerts)
 
-    def _rule_change_alerts(self, user_type: str, lang: str) -> list:
-        """Query DB for recently updated verified rules relevant to this user_type."""
+    def _rule_change_alerts(self, lang: str) -> list:
+        """Query DB for recently updated verified ZZP rules."""
         try:
             from django.utils import timezone
             from datetime import timedelta
             from apps.tax.models import TaxRule
             since = timezone.now() - timedelta(days=30)
-            qs = TaxRule.objects.filter(verification_status="verified", updated_at__gte=since, year=2026)
+            qs = TaxRule.objects.filter(verification_status="verified", is_active=True, updated_at__gte=since, year=2026)
             result = []
             for rule in qs[:5]:
-                if rule.user_types and user_type and user_type not in rule.user_types:
-                    continue
                 body_nl = rule.plain_nl[:200] if rule.plain_nl else ""
                 body_en = rule.plain_en[:200] if rule.plain_en else ""
                 body_fa = rule.plain_fa[:200] if rule.plain_fa else ""
@@ -107,7 +105,7 @@ class AlertsView(APIView):
             except Exception:
                 pass
         alerts = generate_alerts(profile, calc_result, lang)
-        alerts += self._rule_change_alerts(profile.get("user_type", ""), lang)
+        alerts += self._rule_change_alerts(lang)
         return Response(alerts)
 
 
@@ -546,19 +544,14 @@ class RemindersView(APIView):
 
         qs = TaxReminder.objects.filter(
             verification_status="verified",
+            is_active=True,
             tax_year=2026,
             due_date__gte=today,
             due_date__lte=cutoff,
         )
 
-        user_type = None
-        if request.user.is_authenticated and request.user.intake_profile:
-            user_type = request.user.intake_profile.get("user_type")
-
         result = []
         for r in qs:
-            if user_type and r.user_types and user_type not in r.user_types:
-                continue
             days_until = (r.due_date - today).days
             result.append({
                 "id": r.id,
@@ -629,14 +622,11 @@ class ICSCalendarView(APIView):
 
         qs = TaxReminder.objects.filter(
             verification_status="verified",
+            is_active=True,
             tax_year=2026,
             due_date__gte=today,
             due_date__lte=cutoff,
         )
-
-        user_type = None
-        if request.user.is_authenticated and request.user.intake_profile:
-            user_type = request.user.intake_profile.get("user_type")
 
         lines = [
             "BEGIN:VCALENDAR",
@@ -752,10 +742,7 @@ class AccountantView(APIView):
                     pass
                 today = date.today()
                 cutoff = today + timedelta(days=60)
-                user_type = client_user.intake_profile.get("user_type", "")
-                for r in TaxReminder.objects.filter(verification_status="verified", due_date__gte=today, due_date__lte=cutoff):
-                    if user_type and r.user_types and user_type not in r.user_types:
-                        continue
+                for r in TaxReminder.objects.filter(verification_status="verified", is_active=True, due_date__gte=today, due_date__lte=cutoff):
                     reminders.append({"title": r.title_en, "due_date": r.due_date.isoformat(), "category": r.category})
             return Response({
                 "id": link.id,
@@ -1125,7 +1112,7 @@ class ClientInvitationsView(APIView):
                 intake = request.user.intake_profile or {}
                 raw_type = intake.get("user_type", "other")
                 raw_lang = intake.get("language", "nl")
-                client_type = raw_type if raw_type in ("employee", "zzp", "expat", "dga") else "other"
+                client_type = "zzp"
                 preferred_language = raw_lang if raw_lang in ("nl", "en", "fa") else "nl"
                 profile, _created = AccountantClientProfile.objects.get_or_create(
                     accountant_user=inv.accountant.user,
@@ -1423,7 +1410,7 @@ class AccountantMarketplaceView(APIView):
 
     Supports optional filters via query params:
       ?lang=nl|en|fa            — language preference (affects bio returned)
-      ?specialization=zzp|expat|dga|employee  — filter by specialization
+      ?specialization=zzp|it_tech|creative_media|consulting|trades_construction|healthcare_wellness|international|other  — filter by specialization
       ?languages=nl,fa          — comma-separated: accountant must speak these
     Returns up to 20 results ordered by rating desc.
     """

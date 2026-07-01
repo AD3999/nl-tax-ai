@@ -102,66 +102,6 @@ const RESULT_QUESTIONS: Record<string, Record<string, { q: string; tag: string }
       { q: "معافیت سود ۱۲.۷٪ چگونه اعمال می‌شود؟",                  tag: "کسر" },
     ],
   },
-  employee: {
-    nl: [
-      { q: "Leg mijn belastingberekening uit in eenvoudige woorden",     tag: "Overzicht" },
-      { q: "Wat is mijn effectieve belastingtarief?",                    tag: "Tarief" },
-      { q: "Hoe werkt de arbeidskorting in mijn situatie?",              tag: "Korting" },
-      { q: "Heb ik recht op zorgtoeslag met mijn inkomen?",              tag: "Toeslag" },
-      { q: "Kom ik in aanmerking voor de IACK als ik kinderen heb?",     tag: "IACK" },
-    ],
-    en: [
-      { q: "Explain my tax calculation in simple words",                 tag: "Overview" },
-      { q: "What is my effective tax rate and what does it mean?",       tag: "Rate" },
-      { q: "How does the labour tax credit (arbeidskorting) help me?",   tag: "Credit" },
-      { q: "Am I entitled to healthcare allowance (zorgtoeslag)?",       tag: "Allowance" },
-      { q: "Do I qualify for the childcare credit (IACK) with children?",tag: "IACK" },
-    ],
-    fa: [
-      { q: "محاسبه مالیات من را به زبان ساده توضیح دهید",             tag: "خلاصه" },
-      { q: "نرخ مؤثر مالیاتی من چقدر است؟",                          tag: "نرخ" },
-      { q: "اعتبار مالیاتی کار (arbeidskorting) چگونه به من کمک می‌کند؟", tag: "اعتبار" },
-      { q: "آیا با این درآمد مشمول کمک هزینه مراقبت بهداشتی می‌شوم؟", tag: "کمک هزینه" },
-    ],
-  },
-  expat: {
-    nl: [
-      { q: "Hoe beïnvloedt de 30%-regeling mijn belasting dit jaar?",   tag: "30%-regeling" },
-      { q: "Leg mijn totale belastingrekening uit",                      tag: "Overzicht" },
-      { q: "Wat verandert er in jaar 4 en 5 van de 30%-regeling?",      tag: "Fase-out" },
-      { q: "Hoe werkt de arbeidskorting bij een 30%-regeling?",         tag: "Korting" },
-    ],
-    en: [
-      { q: "How does the 30% ruling affect my tax this year?",          tag: "30% ruling" },
-      { q: "Explain my total tax bill in simple words",                 tag: "Overview" },
-      { q: "What changes in year 4 and 5 of the 30% ruling?",          tag: "Phase-out" },
-      { q: "How does the labour tax credit apply with the 30% ruling?", tag: "Credit" },
-    ],
-    fa: [
-      { q: "قانون ۳۰٪ چگونه مالیات من را تحت تأثیر قرار می‌دهد؟",  tag: "قانون ۳۰٪" },
-      { q: "مجموع مالیات من را توضیح دهید",                          tag: "خلاصه" },
-      { q: "در سال ۴ و ۵ قانون ۳۰٪ چه تغییری ایجاد می‌شود؟",       tag: "مرحله‌بندی" },
-    ],
-  },
-  dga: {
-    nl: [
-      { q: "Leg het verschil uit tussen mijn Box 1 en Box 2 belasting", tag: "Box 1/2" },
-      { q: "Waarom betaal ik dividendbelasting en hoeveel is dat?",      tag: "Dividend" },
-      { q: "Leg mijn totale belastingrekening uit in eenvoudige woorden",tag: "Overzicht" },
-      { q: "Wat is de minimum DGA-salarisverplichting voor 2026?",       tag: "Salaris" },
-    ],
-    en: [
-      { q: "Explain the difference between my Box 1 and Box 2 tax",     tag: "Box 1/2" },
-      { q: "Why do I pay dividend tax and how much is it?",              tag: "Dividend" },
-      { q: "Explain my total tax bill in simple words",                  tag: "Overview" },
-      { q: "What is the minimum DGA salary requirement for 2026?",       tag: "Salary" },
-    ],
-    fa: [
-      { q: "تفاوت بین مالیات Box 1 و Box 2 من را توضیح دهید",        tag: "باکس ۱/۲" },
-      { q: "چرا مالیات سود سهام می‌پردازم و چقدر است؟",              tag: "سود سهام" },
-      { q: "مجموع مالیات من را به زبان ساده توضیح دهید",             tag: "خلاصه" },
-    ],
-  },
 };
 
 function getCards(userType: string, lang: string) {
@@ -170,17 +110,14 @@ function getCards(userType: string, lang: string) {
 }
 
 const USER_TYPE_META: Record<string, { color: string; glyph: string }> = {
-  zzp:      { color: "var(--blue)",   glyph: "ZZ" },
-  employee: { color: "var(--info)",   glyph: "EM" },
-  expat:    { color: "var(--warn)",   glyph: "EX" },
-  dga:      { color: "var(--purple)", glyph: "DG" },
+  zzp: { color: "var(--blue)", glyph: "ZZ" },
 };
 
 // Greeting the bot sends when there's no profile — starts the conversational intake
 const INTAKE_GREETING: Record<string, string> = {
-  nl: "Hallo! Ik ben TaxWijs, uw Nederlandse belastingassistent voor 2026.\n\nOm uw belastingsituatie te berekenen, stel ik u een paar korte vragen.\n\n**Wat is uw werksituatie?**\n- **ZZP** — Freelancer / zelfstandige\n- **Werknemer** — In loondienst\n- **Expat** — Met 30%-regeling\n- **DGA** — Directeur-grootaandeelhouder",
-  en: "Hello! I'm TaxWijs, your Dutch tax assistant for 2026.\n\nTo calculate your tax situation, I'll ask you a few quick questions.\n\n**What is your work situation?**\n- **ZZP** — Freelancer / self-employed\n- **Employee** — Salaried employee\n- **Expat** — With 30% ruling\n- **DGA** — Director with own company",
-  fa: "سلام! من TaxWijs هستم، دستیار مالیاتی هلندی شما برای سال ۲۰۲۶.\n\nبرای محاسبه وضعیت مالیاتی شما، چند سؤال کوتاه می‌پرسم.\n\n**وضعیت شغلی شما چیست؟**\n- **ZZP** — آزادکار / کارآفرین مستقل\n- **کارمند** — حقوق‌بگیر\n- **مهاجر خارجی** — مشمول قانون ۳۰٪\n- **DGA** — مدیرعامل شرکت",
+  nl: "Hallo! Ik ben TaxWijs, uw Nederlandse belastingassistent voor ZZP-ondernemers.\n\nOm uw belastingsituatie te berekenen als freelancer, stel ik u een paar korte vragen.\n\nKlik op **ZZP** hieronder om te beginnen.",
+  en: "Hello! I'm TaxWijs, your Dutch tax assistant for ZZP freelancers.\n\nTo calculate your tax situation as a self-employed professional, I'll ask you a few quick questions.\n\nClick **ZZP** below to get started.",
+  fa: "سلام! من TaxWijs هستم، دستیار مالیاتی هلندی شما برای کارآفرینان ZZP.\n\nبرای محاسبه وضعیت مالیاتی شما به عنوان آزادکار، چند سؤال کوتاه می‌پرسم.\n\nروی **ZZP** در زیر کلیک کنید تا شروع کنیم.",
 };
 
 export default function ChatPage() {
@@ -848,21 +785,13 @@ export default function ChatPage() {
                   )}
                   {!msg.streaming && msg.id === "intake-greeting" && (
                     <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--hairline)", display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {([
-                        { key: "zzp",      nl: "ZZP",         en: "ZZP",      fa: "ZZP" },
-                        { key: "employee", nl: "Werknemer",   en: "Employee", fa: "کارمند" },
-                        { key: "expat",    nl: "Expat",       en: "Expat",    fa: "مهاجر خارجی" },
-                        { key: "dga",      nl: "DGA",         en: "DGA",      fa: "DGA" },
-                      ] as { key: string; nl: string; en: string; fa: string }[]).map(opt => (
-                        <button
-                          key={opt.key}
-                          onClick={() => void submit(opt[lang] ?? opt.en, true)}
-                          disabled={loading}
-                          style={{ padding: "7px 16px", borderRadius: 999, border: "1px solid var(--hairline-2)", background: "var(--paper-3)", color: "var(--ink-2)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-                        >
-                          {opt[lang] ?? opt.en}
-                        </button>
-                      ))}
+                      <button
+                        onClick={() => void submit("ZZP", true)}
+                        disabled={loading}
+                        style={{ padding: "7px 16px", borderRadius: 999, border: "1px solid var(--hairline-2)", background: "var(--paper-3)", color: "var(--ink-2)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                      >
+                        ZZP
+                      </button>
                     </div>
                   )}
                   {!msg.streaming && !msg.isIntake && (

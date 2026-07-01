@@ -9,13 +9,12 @@ import {
   trackDeductionCheckerCompleted,
   trackCheckerStepCompleted,
   trackCheckerResultsViewed,
-  trackCheckerWaitlistSubmitted,
 } from "../lib/analytics";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 type Lang = "nl" | "en" | "fa";
 type EligStatus = "likely" | "needs_info" | "not_likely";
-type UserType = "zzp" | "employee" | "expat" | "dga";
+type UserType = "zzp";
 
 interface Answers {
   user_type?: UserType;
@@ -56,10 +55,6 @@ const TX: Record<Lang, Record<string, string | ((n: number) => string)>> = {
     result_count: (n: number) => `${n} mogelijke kansen gevonden`,
     cta_calc: "Bereken exacte belasting →",
     cta_chat: "Vraag de belasting-AI →",
-    non_zzp_title: "Deze scanner is geoptimaliseerd voor ZZP'ers",
-    non_zzp_sub: "We bouwen flows voor werknemers, expats en DGA's. Laat uw e-mail achter om als eerste te weten wanneer dit beschikbaar is",
-    non_zzp_cta: "Stel mij op de hoogte",
-    waitlist_done: "Bedankt — we sturen u een bericht zodra uw profiel beschikbaar is",
     email_placeholder: "uw@email.nl",
     // Step labels
     q_user_type: "Wat beschrijft uw situatie het beste?",
@@ -97,10 +92,6 @@ const TX: Record<Lang, Record<string, string | ((n: number) => string)>> = {
     result_count: (n: number) => `${n} possible opportunities found`,
     cta_calc: "Calculate exact tax →",
     cta_chat: "Ask the tax AI →",
-    non_zzp_title: "This checker is currently optimised for ZZP freelancers",
-    non_zzp_sub: "We are building flows for employees, expats, and DGA directors. Leave your email to be first to know when it launches",
-    non_zzp_cta: "Notify me",
-    waitlist_done: "Thank you — we will notify you when your profile type is available",
     email_placeholder: "your@email.com",
     q_user_type: "What best describes your situation?",
     q_profit: "What is your estimated yearly profit after business expenses?",
@@ -137,10 +128,6 @@ const TX: Record<Lang, Record<string, string | ((n: number) => string)>> = {
     result_count: (n: number) => `${n} فرصت احتمالی یافت شد`,
     cta_calc: "محاسبه مالیات دقیق ←",
     cta_chat: "از هوش مصنوعی بپرس ←",
-    non_zzp_title: "این اسکنر در حال حاضر برای ZZP‌ها بهینه شده است",
-    non_zzp_sub: "در حال ساخت جریان‌هایی برای کارمندان، اکسپت‌ها و مدیران DGA هستیم. ایمیلتان را بگذارید",
-    non_zzp_cta: "اطلاع‌رسانی کنید",
-    waitlist_done: "ممنون — وقتی پروفایل شما در دسترس باشد اطلاع می‌دهیم",
     email_placeholder: "ایمیل@شما.com",
     q_user_type: "وضعیت شما را بهتر توصیف می‌کند؟",
     q_profit: "سود سالانه تخمینی شما پس از هزینه‌های تجاری چقدر است؟",
@@ -164,12 +151,6 @@ const TX: Record<Lang, Record<string, string | ((n: number) => string)>> = {
 };
 
 // ─── Option sets ───────────────────────────────────────────────────────────────
-const USER_TYPE_OPTS = [
-  { value: "zzp",      nl: "ZZP / Freelancer",      en: "ZZP / Freelancer",     fa: "ZZP / فریلنسر" },
-  { value: "employee", nl: "Werknemer",              en: "Employee",              fa: "کارمند" },
-  { value: "expat",    nl: "Expat",                  en: "Expat",                 fa: "اکسپت" },
-  { value: "dga",      nl: "DGA / BV-directeur",     en: "DGA / BV director",     fa: "DGA / مدیر BV" },
-];
 
 const HOURS_OPTS = [
   { value: "lt500",   nl: "Minder dan 500 uur",  en: "Less than 500 hours", fa: "کمتر از ۵۰۰ ساعت" },
@@ -227,13 +208,11 @@ const PENSION_OPTS = [
 
 // ─── Step flow (conditional) ────────────────────────────────────────────────────
 type StepId =
-  | "user_type" | "profit" | "hours" | "is_starter" | "starter_times"
+  | "profit" | "hours" | "is_starter" | "starter_times"
   | "expenses" | "has_assets" | "asset_amount" | "btw_status" | "pension";
 
 function getStepIds(answers: Answers): StepId[] {
-  const steps: StepId[] = ["user_type"];
-  if (answers.user_type !== "zzp") return steps;
-  steps.push("profit", "hours", "is_starter");
+  const steps: StepId[] = ["profit", "hours", "is_starter"];
   if (answers.is_starter !== "no") steps.push("starter_times");
   steps.push("expenses", "has_assets");
   if (answers.has_assets === "yes") steps.push("asset_amount");
@@ -457,9 +436,6 @@ export default function DeductionCheckerPage() {
   const [done, setDone] = useState(false);
   const [profitInput, setProfitInput] = useState("");
   const [assetInput, setAssetInput] = useState("");
-  const [waitlistEmail, setWaitlistEmail] = useState("");
-  const [waitlistDone, setWaitlistDone] = useState(false);
-  const [waitlistLoading, setWaitlistLoading] = useState(false);
   // Email gate — shown between last question and results for anonymous users
   const [gateEmail, setGateEmail] = useState("");
   const [gateSubmitted, setGateSubmitted] = useState(false);
@@ -503,8 +479,6 @@ export default function DeductionCheckerPage() {
     setDone(false);
     setProfitInput("");
     setAssetInput("");
-    setWaitlistEmail("");
-    setWaitlistDone(false);
   }
 
   async function submitGate() {
@@ -517,20 +491,8 @@ export default function DeductionCheckerPage() {
     setGateSubmitted(true);
   }
 
-  async function submitWaitlist() {
-    if (!waitlistEmail) return;
-    setWaitlistLoading(true);
-    try {
-      await captureEmail(waitlistEmail, `waitlist_${answers.user_type}`, answers.user_type ?? "");
-      trackCheckerWaitlistSubmitted(answers.user_type ?? "unknown");
-    } catch { /* fail silently */ }
-    setWaitlistLoading(false);
-    setWaitlistDone(true);
-  }
-
   // ── Results ──
-  const isNonZzp = answers.user_type && answers.user_type !== "zzp";
-  const deductions = done && !isNonZzp ? computeDeductions(answers, lang) : [];
+  const deductions = done ? computeDeductions(answers, lang) : [];
   const likelyCount = deductions.filter(d => d.status === "likely").length;
 
   // ── Step renderer ──
@@ -579,15 +541,6 @@ export default function DeductionCheckerPage() {
     }
 
     switch (currentStep) {
-      case "user_type":
-        return (
-          <ChoiceStep
-            questionKey="q_user_type"
-            options={USER_TYPE_OPTS}
-            onChoose={v => advance({ user_type: v as UserType, expenses: answers.expenses })}
-          />
-        );
-
       case "profit":
         return (
           <div>
@@ -781,48 +734,6 @@ export default function DeductionCheckerPage() {
     }
   }
 
-  // ── Non-ZZP waitlist screen ──
-  if (done && isNonZzp) {
-    return (
-      <main style={{ background: "var(--paper)", flex: 1 }}>
-        <div style={{ maxWidth: 560, margin: "0 auto", padding: isMobile ? "var(--sp-10) var(--sp-4)" : "var(--sp-16) var(--sp-6)", textAlign: "center" }}>
-          <div style={{ fontSize: 48, marginBottom: "var(--sp-4)" }}>🔜</div>
-          <h2 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-3xl)", fontWeight: 400, color: "var(--ink)", marginBottom: "var(--sp-3)" }}>
-            {tx("non_zzp_title")}
-          </h2>
-          <p style={{ color: "var(--ink-3)", fontSize: "var(--text-md)", marginBottom: "var(--sp-6)" }}>
-            {tx("non_zzp_sub")}
-          </p>
-          {waitlistDone ? (
-            <p style={{ color: "var(--sage-700)", fontWeight: 500 }}>{tx("waitlist_done")}</p>
-          ) : (
-            <div style={{ display: "flex", gap: "var(--sp-2)", maxWidth: 400, margin: "0 auto" }}>
-              <input
-                className="tw-input"
-                type="email"
-                value={waitlistEmail}
-                onChange={e => setWaitlistEmail(e.target.value)}
-                placeholder={tx("email_placeholder")}
-                style={{ flex: 1 }}
-                onKeyDown={e => { if (e.key === "Enter") submitWaitlist(); }}
-              />
-              <button
-                className="btn btn-accent"
-                onClick={submitWaitlist}
-                disabled={waitlistLoading || !waitlistEmail}
-              >
-                {tx("non_zzp_cta")}
-              </button>
-            </div>
-          )}
-          <button className="btn btn-ghost btn-sm" style={{ marginTop: "var(--sp-6)", color: "var(--ink-4)" }} onClick={reset}>
-            {tx("start_over")}
-          </button>
-        </div>
-      </main>
-    );
-  }
-
   // ── Email gate (anonymous users only) ──
   const GATE = {
     nl: { title: "Bijna klaar — waar sturen we uw resultaten naartoe?",
@@ -839,7 +750,7 @@ export default function DeductionCheckerPage() {
           skip: "رد کردن و مشاهده همین الان" },
   };
 
-  if (done && !isNonZzp && !user && !gateSubmitted) {
+  if (done && !user && !gateSubmitted) {
     const g = GATE[lang];
     return (
       <main style={{ background: "var(--paper)", flex: 1 }}>

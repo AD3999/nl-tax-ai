@@ -52,11 +52,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["email", "username", "password", "user_type", "role", "preferred_language",
+        fields = ["email", "username", "password", "role", "preferred_language",
                   "firm_name", "kvk_number"]
 
     def validate_role(self, value):
-        if value not in ("client",):
+        if value not in ("client", "accountant"):
             raise serializers.ValidationError(
                 "Accountant registration requires admin approval. "
                 "Please use the accountant request-access form."
@@ -71,6 +71,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop("firm_name", "")
         validated_data.pop("kvk_number", "")
+        validated_data["user_type"] = "zzp"
 
         validated_data.setdefault("username", validated_data["email"])
         user = User.objects.create_user(**validated_data)

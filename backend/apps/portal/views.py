@@ -36,12 +36,7 @@ from apps.users.models import User
 from apps.users.push_utils import send_push_notification
 from apps.users.notification_utils import create_notification
 from apps.portal.services.tax_constants import (
-    DGA_GEBRUIKELIJK_LOON_MIN,
-    BOX2_RATE_LOW_THRESHOLD,
-    BOX2_RATE_LOW,
-    BOX2_RATE_HIGH,
     BOX3_VRIJSTELLING,
-    RULING_30_PCT_CAP,
 )
 from .serializers import (
     AccountantClientProfileSerializer, TaxEngagementSerializer,
@@ -1253,11 +1248,10 @@ class RisksDeductionsView(APIView):
 
 def _build_risks_and_deductions(engagement) -> dict:
     """
-    Build deduction opportunities and risk warnings for a given engagement.
+    Build deduction opportunities and risk warnings for a ZZP engagement.
     Flags are: likely / needs_confirmation / not_enough_info / needs_accountant_review
     """
     profile = engagement.client_profile
-    ct = profile.client_type or "other"
 
     checklist_map = {
         item.stable_key: item.status
@@ -1269,159 +1263,70 @@ def _build_risks_and_deductions(engagement) -> dict:
     opportunities = []
     risks = []
 
-    if ct == "zzp":
-        hours_ok = has("zzp_hours") or has("det_zzp_hours")
-        opportunities.append({
-            "id": "zelfstandigenaftrek",
-            "title": "Zelfstandigenaftrek €1,200",
-            "description": "Deduction for self-employed workers with 1,225+ hours/year.",
-            "confidence": "likely" if hours_ok else "needs_confirmation",
+    hours_ok = has("zzp_hours") or has("det_zzp_hours")
+    opportunities.append({
+        "id": "zelfstandigenaftrek",
+        "title": "Zelfstandigenaftrek €1,200",
+        "description": "Deduction for self-employed workers with 1,225+ hours/year.",
+        "confidence": "likely" if hours_ok else "needs_confirmation",
+        "rule_id": "ZA-2026-001",
+        "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/zelfstandigenaftrek/",
+    })
+    opportunities.append({
+        "id": "mkb_winstvrijstelling",
+        "title": "MKB-winstvrijstelling 12.7%",
+        "description": "12.7% profit exemption after ondernemersaftrek. No hours requirement.",
+        "confidence": "likely",
+        "rule_id": "MKB-2026-001",
+        "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/mkb_winstvrijstelling/",
+    })
+    kia_ok = has("zzp_kia")
+    opportunities.append({
+        "id": "kia",
+        "title": "Kleinschaligheidsinvesteringsaftrek (KIA) 28%",
+        "description": "28% deduction on business investments €2,901–€70,602.",
+        "confidence": "needs_confirmation" if kia_ok else "not_enough_info",
+        "rule_id": "KIA-2026-001",
+        "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/investeringsaftrek/kleinschaligheidsinvesteringsaftrek/",
+    })
+    pension_ok = has("zzp_pension")
+    opportunities.append({
+        "id": "lijfrente",
+        "title": "Pension / lijfrente jaarruimte",
+        "description": "ZZP workers can deduct voluntary pension premiums (30% × (income − €19,172)).",
+        "confidence": "needs_confirmation" if pension_ok else "not_enough_info",
+        "rule_id": "LR-2026-001",
+        "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/",
+    })
+    opportunities.append({
+        "id": "zvw_reminder",
+        "title": "ZVW bijdrage 4.85%",
+        "description": "Health insurance contribution on ZZP profit — often forgotten. Max €3,851/year.",
+        "confidence": "likely",
+        "rule_id": "ZVW-2026-001",
+        "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/",
+    })
+    wetdba_ok = has("zzp_wet_dba_clients")
+    risks.append({
+        "id": "wet_dba",
+        "title": "Wet DBA enforcement risk",
+        "description": "Active enforcement since Jan 2025. Single client >65% = medium risk.",
+        "level": "needs_confirmation" if wetdba_ok else "not_enough_info",
+        "rule_id": "WD-2026-001",
+        "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/ondernemen/",
+    })
+    if not hours_ok:
+        risks.append({
+            "id": "hours_missing",
+            "title": "Hours registration not confirmed",
+            "description": "Zelfstandigenaftrek is at risk if 1,225 hours cannot be proven.",
+            "level": "needs_accountant_review",
             "rule_id": "ZA-2026-001",
             "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/zelfstandigenaftrek/",
         })
-        opportunities.append({
-            "id": "mkb_winstvrijstelling",
-            "title": "MKB-winstvrijstelling 12.7%",
-            "description": "12.7% profit exemption after ondernemersaftrek. No hours requirement.",
-            "confidence": "likely",
-            "rule_id": "MKB-2026-001",
-            "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/mkb_winstvrijstelling/",
-        })
-        kia_ok = has("zzp_kia")
-        opportunities.append({
-            "id": "kia",
-            "title": "Kleinschaligheidsinvesteringsaftrek (KIA) 28%",
-            "description": "28% deduction on business investments €2,901–€70,602.",
-            "confidence": "needs_confirmation" if kia_ok else "not_enough_info",
-            "rule_id": "KIA-2026-001",
-            "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/investeringsaftrek/kleinschaligheidsinvesteringsaftrek/",
-        })
-        pension_ok = has("zzp_pension")
-        opportunities.append({
-            "id": "lijfrente",
-            "title": "Pension / lijfrente jaarruimte",
-            "description": "ZZP workers can deduct voluntary pension premiums (30% × (income − €19,172)).",
-            "confidence": "needs_confirmation" if pension_ok else "not_enough_info",
-            "rule_id": "LR-2026-001",
-            "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/inkomstenbelasting/heffingskortingen_boxen_tarieven/",
-        })
-        opportunities.append({
-            "id": "zvw_reminder",
-            "title": "ZVW bijdrage 4.85%",
-            "description": "Health insurance contribution on ZZP profit — often forgotten. Max €3,851/year.",
-            "confidence": "likely",
-            "rule_id": "ZVW-2026-001",
-            "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/",
-        })
-        # Wet DBA risk
-        wetdba_ok = has("zzp_wet_dba_clients")
-        risks.append({
-            "id": "wet_dba",
-            "title": "Wet DBA enforcement risk",
-            "description": "Active enforcement since Jan 2025. Single client >65% = medium risk.",
-            "level": "needs_confirmation" if wetdba_ok else "not_enough_info",
-            "rule_id": "WD-2026-001",
-            "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/ondernemen/",
-        })
-        if not has("zzp_hours"):
-            risks.append({
-                "id": "hours_missing",
-                "title": "Hours registration not confirmed",
-                "description": "Zelfstandigenaftrek is at risk if 1,225 hours cannot be proven.",
-                "level": "needs_accountant_review",
-                "rule_id": "ZA-2026-001",
-                "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/ondernemersaftrek/zelfstandigenaftrek/",
-            })
-
-    elif ct == "employee":
-        if not has("emp_jaaropgave"):
-            risks.append({
-                "id": "jaaropgave_missing",
-                "title": "Jaaropgave not received",
-                "description": "Cannot complete IB return without the annual income statement.",
-                "level": "needs_accountant_review",
-                "rule_id": "BR1-2026-001",
-                "source_url": "https://www.belastingdienst.nl",
-            })
-        pension_ok = has("emp_pension")
-        opportunities.append({
-            "id": "lijfrente",
-            "title": "Pension / lijfrente deduction",
-            "description": "Voluntary pension premiums may be deductible via jaarruimte calculation.",
-            "confidence": "needs_confirmation" if pension_ok else "not_enough_info",
-            "rule_id": "LR-2026-001",
-            "source_url": "https://www.belastingdienst.nl",
-        })
-        mortgage_ok = has("emp_mortgage")
-        opportunities.append({
-            "id": "mortgage_interest",
-            "title": "Hypotheekrenteaftrek",
-            "description": "Mortgage interest deduction if client is homeowner.",
-            "confidence": "likely" if mortgage_ok else "not_enough_info",
-            "rule_id": "BR1-2026-001",
-            "source_url": "https://www.belastingdienst.nl",
-        })
-        box3 = has("emp_box3_bank") or has("emp_box3_investments")
-        opportunities.append({
-            "id": "box3_exemption",
-            "title": f"Box 3 exemption €{BOX3_VRIJSTELLING:,}",
-            "description": f"Assets below €{BOX3_VRIJSTELLING:,}/person are exempt from Box 3 wealth tax.",
-            "confidence": "needs_confirmation" if box3 else "not_enough_info",
-            "rule_id": "B3R-2026-001",
-            "source_url": "https://www.belastingdienst.nl",
-        })
-
-    elif ct == "expat":
-        ruling_ok = has("exp_30pct_ruling")
-        opportunities.append({
-            "id": "30pct_ruling",
-            "title": "30% ruling expat exemption",
-            "description": "Years 1-3: 30%, Year 4: 20%, Year 5: 10% exemption on salary.",
-            "confidence": "likely" if ruling_ok else "needs_confirmation",
-            "rule_id": "EXP-2026-001",
-            "source_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/werk_en_inkomen/buitenlandse_werknemers_in_nederland/",
-        })
-        mform_ok = has("exp_m_form")
-        risks.append({
-            "id": "m_form",
-            "title": "M-form for partial-year resident",
-            "description": "If arrived after 1 Jan, M-form applies. Risk of incorrect form type.",
-            "level": "needs_confirmation" if mform_ok else "needs_accountant_review",
-            "rule_id": "DL-2026-002",
-            "source_url": "https://www.belastingdienst.nl",
-        })
-        foreign_assets = has("exp_foreign_assets")
-        risks.append({
-            "id": "foreign_assets",
-            "title": "Foreign assets Box 3 reporting",
-            "description": "Foreign bank accounts and property must be reported on 1 January reference date.",
-            "level": "needs_confirmation" if foreign_assets else "not_enough_info",
-            "rule_id": "B3R-2026-001",
-            "source_url": "https://www.belastingdienst.nl",
-        })
-
-    elif ct == "dga":
-        salary_ok = has("dga_salary") or has("det_dga_salary")
-        risks.append({
-            "id": "gebruikelijk_loon",
-            "title": f"Gebruikelijk loon €{DGA_GEBRUIKELIJK_LOON_MIN:,} minimum (2026)",
-            "description": f"DGA must pay at least €{DGA_GEBRUIKELIJK_LOON_MIN:,} salary in 2026. Lower = risk of Belastingdienst correction.",
-            "level": "needs_confirmation" if salary_ok else "needs_accountant_review",
-            "rule_id": "DGA-2026-001",
-            "source_url": "https://www.belastingdienst.nl",
-        })
-        dividend_ok = has("dga_dividend")
-        opportunities.append({
-            "id": "dividend_box2",
-            "title": f"Box 2 dividend — {BOX2_RATE_LOW}% up to €{BOX2_RATE_LOW_THRESHOLD:,}",
-            "description": f"Lower Box 2 rate applies on first €{BOX2_RATE_LOW_THRESHOLD:,} of dividend income.",
-            "confidence": "likely" if dividend_ok else "needs_confirmation",
-            "rule_id": "B2R-2026-001",
-            "source_url": "https://www.belastingdienst.nl",
-        })
 
     return {
-        "client_type": ct,
+        "client_type": "zzp",
         "opportunities": opportunities,
         "risks": risks,
     }
@@ -1684,10 +1589,6 @@ class ClientPortalEngagementView(APIView):
 
 _INFO_TASK_STABLE_KEYS = frozenset({
     "zzp_kvk", "zzp_btw", "zzp_start_date", "zzp_revenue", "zzp_wet_dba_clients", "zzp_hours",
-    "emp_bsn", "emp_personal_details",
-    "exp_start_date", "exp_prev_country",
-    "dga_bv_details", "dga_shareholding", "dga_salary", "dga_gebruikelijk_loon",
-    "oth_employment_status",
 })
 
 

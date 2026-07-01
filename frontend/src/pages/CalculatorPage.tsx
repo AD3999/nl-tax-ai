@@ -9,20 +9,12 @@ import { useMobile } from "../hooks/useMobile";
 type Lang = "nl" | "en" | "fa";
 const T = (tx: Record<Lang, string>, l: Lang) => tx[l] ?? tx.en;
 
-type UserType = "zzp" | "employee" | "expat" | "dga";
-
 import { formatEUR, formatPct } from "../lib/format";
 import TrustStrip from "../components/TrustStrip";
 
 const EUR = (n: number) => formatEUR(n);
 const PCT = (n: number) => formatPct(n);
 
-const USER_TYPES = {
-  zzp:      { color: "var(--blue)",    dot: "var(--blue)",    labels: { nl: "ZZP",        en: "ZZP",      fa: "ZZP"            } },
-  employee: { color: "var(--info)",    dot: "var(--info)",    labels: { nl: "Werknemer",  en: "Employee", fa: "کارمند"         } },
-  expat:    { color: "var(--warn)",    dot: "var(--warn)",    labels: { nl: "Expat",      en: "Expat",    fa: "مهاجر خارجی"   } },
-  dga:      { color: "var(--purple)",  dot: "var(--purple)",  labels: { nl: "DGA",        en: "DGA",      fa: "DGA"            } },
-} as const;
 
 const DBA_TONE: Record<string, string> = {
   high: "var(--danger)", medium: "var(--warn)", low: "var(--ok)",
@@ -30,11 +22,11 @@ const DBA_TONE: Record<string, string> = {
 
 type FormState = Record<string, string | boolean>;
 const DEFAULT_FORM: FormState = {
-  annual_revenue_zzp: "", employment_income: "", business_expenses: "",
+  annual_revenue_zzp: "", business_expenses: "",
   hours_per_year: "", is_starter: false, has_partner: false, partner_income: "",
   children_under_12: "0", net_assets_box3: "", savings_fraction: "0",
-  box2_dividend: "", pension_contribution: "", kia_investments: "",
-  uses_30pct_ruling: false, ruling_year: "1", single_client_percentage: "",
+  pension_contribution: "", kia_investments: "",
+  single_client_percentage: "",
 };
 
 function CalcField({ label, k, form, set, placeholder, unit, hint }: {
@@ -110,10 +102,6 @@ const CALC_TX = {
   fKia:        { nl: "KIA-investeringen",        en: "KIA investments",       fa: "سرمایه‌گذاری‌های KIA" },
   fSingleClient:{ nl: "Klantconcentratie %",     en: "Single client %",       fa: "سهم مشتری واحد %" },
   fStarter:    { nl: "Starterjaar?",             en: "Starter year?",         fa: "سال اول کارآفرینی؟" },
-  fEmpIncome:  { nl: "Arbeidsinkomen",           en: "Employment income",     fa: "درآمد کارمندی" },
-  f30pct:      { nl: "30%-regeling actief?",     en: "30% ruling active?",    fa: "قانون ۳۰٪ فعال است؟" },
-  fRulingYear: { nl: "Regelingsjaar (1–5)",      en: "Ruling year (1–5)",     fa: "سال قانون (۱–۵)" },
-  fBox2Div:    { nl: "Box 2 dividend",           en: "Box 2 dividend",        fa: "سود سهام باکس ۲" },
   fPension:    { nl: "Pensioenaftrek",           en: "Pension contribution",  fa: "حق بیمه بازنشستگی" },
   fBox3:       { nl: "Nettovermogen Box 3",      en: "Net assets Box 3",      fa: "دارایی خالص باکس ۳" },
   fSavings:    { nl: "Spaarspaardeel %",         en: "Savings fraction %",    fa: "سهم پس‌انداز %" },
@@ -149,7 +137,6 @@ export default function CalculatorPage() {
   const lang = i18n.language as Lang;
   const navigate = useNavigate();
   const isMobile = useMobile();
-  const [userType, setUserType] = useState<UserType | null>(null);
   const [form, setForm]         = useState<FormState>(DEFAULT_FORM);
   const [result, setResult]     = useState<CalcResult | null>(null);
   const [loading, setLoading]   = useState(false);
@@ -167,19 +154,15 @@ export default function CalculatorPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userType) return;
     // Validate required income field
-    const incomeEmpty = userType === "zzp"
-      ? !form.annual_revenue_zzp || parseFloat(form.annual_revenue_zzp as string) <= 0
-      : !form.employment_income  || parseFloat(form.employment_income  as string) <= 0;
+    const incomeEmpty = !form.annual_revenue_zzp || parseFloat(form.annual_revenue_zzp as string) <= 0;
     if (incomeEmpty) { setError(INCOME_REQUIRED[lang]); return; }
     setLoading(true);
     setError(null);
     try {
       const input: CalcInput = {
-        user_type: userType, year: 2026,
-        annual_revenue_zzp: userType === "zzp" ? num("annual_revenue_zzp") ?? null : null,
-        employment_income:  userType !== "zzp" ? num("employment_income") ?? null : null,
+        user_type: "zzp", year: 2026,
+        annual_revenue_zzp: num("annual_revenue_zzp") ?? null,
         business_expenses: num("business_expenses") ?? 0,
         hours_per_year: int("hours_per_year") ?? null,
         is_starter: form.is_starter as boolean,
@@ -188,11 +171,8 @@ export default function CalculatorPage() {
         children_under_12: int("children_under_12") ?? 0,
         net_assets_box3: num("net_assets_box3") ?? 0,
         savings_fraction: parseFloat((form.savings_fraction as string) || "0") / 100,
-        box2_dividend: num("box2_dividend") ?? 0,
         pension_contribution: num("pension_contribution") ?? 0,
         kia_investments: num("kia_investments") ?? 0,
-        uses_30pct_ruling: form.uses_30pct_ruling as boolean,
-        ruling_year: int("ruling_year") ?? 1,
         single_client_percentage: num("single_client_percentage") ?? null,
       };
       const data = await calculateTax(input);
@@ -232,39 +212,7 @@ export default function CalculatorPage() {
           </button>
         </div>
 
-        {/* Type selector */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-            <span style={{ fontSize: "var(--text-xs)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: userType ? "var(--ink-4)" : "var(--sage-700)" }}>
-              {userType
-                ? (lang === "nl" ? "Type gekozen" : lang === "fa" ? "نوع انتخاب شد" : "Type selected")
-                : (lang === "nl" ? "Kies uw belastingprofiel ✱" : lang === "fa" ? "نوع مالیاتی خود را انتخاب کنید ✱" : "Choose your tax profile ✱")}
-            </span>
-          </div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {(Object.entries(USER_TYPES) as [UserType, typeof USER_TYPES[UserType]][]).map(([k, v]) => (
-              <button key={k} type="button" onClick={() => { setUserType(k); setError(null); }} style={{
-                padding: "8px 16px", borderRadius: 999, fontSize: "var(--text-sm)", fontWeight: 500, cursor: "pointer",
-                border: `1px solid ${userType === k ? "transparent" : "var(--hairline-2)"}`,
-                background: userType === k ? "var(--ink)" : "var(--paper)",
-                color: userType === k ? "var(--paper)" : "var(--ink-3)",
-                display: "inline-flex", alignItems: "center", gap: 8, transition: "all .15s",
-              }}>
-                <span style={{ width: 6, height: 6, borderRadius: 999, background: userType === k ? v.dot : "var(--hairline-2)" }} />
-                {v.labels[lang] ?? v.labels.en}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Prompt when no type selected */}
-        {!userType && (
-          <div style={{ padding: "32px 0", textAlign: "center", color: "var(--ink-3)", fontSize: 14 }}>
-            {lang === "nl" ? "Kies hierboven uw profiel om te beginnen" : lang === "fa" ? "برای شروع، نوع مالیاتی خود را از بالا انتخاب کنید" : "Select your profile above to start the calculation"}
-          </div>
-        )}
-
-        {userType && <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1.05fr", gap: isMobile ? 16 : 24, alignItems: "flex-start" }}>
             {/* Form card */}
             <div className="card" style={{ padding: 26 }}>
@@ -272,26 +220,12 @@ export default function CalculatorPage() {
               <h2 style={{ marginTop: 4, fontSize: 18, color: "var(--ink)", fontWeight: 500 }}>{T(CALC_TX.yourSit, lang)}</h2>
 
               <div style={{ marginTop: 18, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 }}>
-                {userType === "zzp" && <>
-                  <CalcField label={T(CALC_TX.fAnnualRev, lang)} k="annual_revenue_zzp" form={form} set={set} unit="€" placeholder="72000" />
-                  <CalcField label={T(CALC_TX.fBizExp, lang)} k="business_expenses" form={form} set={set} unit="€" placeholder="9500" />
-                  <CalcField label={T(CALC_TX.fHours, lang)} k="hours_per_year" form={form} set={set} unit="h" placeholder="1380" hint="≥ 1,225 h" />
-                  <CalcField label={T(CALC_TX.fKia, lang)} k="kia_investments" form={form} set={set} unit="€" placeholder="0" />
-                  <CalcField label={T(CALC_TX.fSingleClient, lang)} k="single_client_percentage" form={form} set={set} unit="%" placeholder="0" hint="Wet DBA test" />
-                  <Toggle label={T(CALC_TX.fStarter, lang)} k="is_starter" form={form} set={(k, v) => set(k, v)} lang={lang} yesNo={CALC_TX.yesNo[lang] as [string, string]} />
-                </>}
-                {userType !== "zzp" && (
-                  <div style={{ gridColumn: "1 / -1" }}>
-                    <CalcField label={T(CALC_TX.fEmpIncome, lang)} k="employment_income" form={form} set={set} unit="€" placeholder="48000" />
-                  </div>
-                )}
-                {userType === "expat" && <>
-                  <Toggle label={T(CALC_TX.f30pct, lang)} k="uses_30pct_ruling" form={form} set={(k, v) => set(k, v)} lang={lang} yesNo={CALC_TX.yesNo[lang] as [string, string]} />
-                  {form.uses_30pct_ruling && <CalcField label={T(CALC_TX.fRulingYear, lang)} k="ruling_year" form={form} set={set} placeholder="1" />}
-                </>}
-                {userType === "dga" && (
-                  <CalcField label={T(CALC_TX.fBox2Div, lang)} k="box2_dividend" form={form} set={set} unit="€" placeholder="24000" />
-                )}
+                <CalcField label={T(CALC_TX.fAnnualRev, lang)} k="annual_revenue_zzp" form={form} set={set} unit="€" placeholder="72000" />
+                <CalcField label={T(CALC_TX.fBizExp, lang)} k="business_expenses" form={form} set={set} unit="€" placeholder="9500" />
+                <CalcField label={T(CALC_TX.fHours, lang)} k="hours_per_year" form={form} set={set} unit="h" placeholder="1380" hint="≥ 1,225 h" />
+                <CalcField label={T(CALC_TX.fKia, lang)} k="kia_investments" form={form} set={set} unit="€" placeholder="0" />
+                <CalcField label={T(CALC_TX.fSingleClient, lang)} k="single_client_percentage" form={form} set={set} unit="%" placeholder="0" hint="Wet DBA test" />
+                <Toggle label={T(CALC_TX.fStarter, lang)} k="is_starter" form={form} set={(k, v) => set(k, v)} lang={lang} yesNo={CALC_TX.yesNo[lang] as [string, string]} />
               </div>
 
               <div className="dots" style={{ margin: "22px 0" }} />
@@ -409,7 +343,7 @@ export default function CalculatorPage() {
               </div>
             )}
           </div>
-        </form>}
+        </form>
       </div>
       </div>
     </div>
