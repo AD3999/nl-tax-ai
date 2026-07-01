@@ -8,17 +8,16 @@ import { useToast } from "../context/ToastContext";
 import { useAuth } from "../context/AuthContext";
 import { useMobile } from "../hooks/useMobile";
 
-type UserType = "zzp" | "employee" | "expat" | "dga";
-
-const USER_TYPES = {
-  zzp:      { label: "ZZP",      glyph: "ZZ", desc: "Freelance · self-employed",   color: "var(--blue)",   tags: ["Wet DBA", "Zelfstandigenaftrek", "MKB"] },
-  employee: { label: "Employee", glyph: "EM", desc: "Salaried · payslip",          color: "var(--info)",   tags: ["Loonheffing", "IACK"] },
-  expat:    { label: "Expat",    glyph: "EX", desc: "30% ruling · foreign income", color: "var(--warn)",   tags: ["30% ruling", "Foreign income"] },
-  dga:      { label: "DGA",      glyph: "DG", desc: "Director · own BV",           color: "var(--purple)", tags: ["Box 2", "Salary + dividend"] },
-} as const;
+const ZZP_INFO = {
+  label: "ZZP / Freelancer",
+  glyph: "ZZ",
+  desc: "Freelance · self-employed",
+  color: "var(--blue)",
+  tags: ["Wet DBA", "Zelfstandigenaftrek", "MKB", "BTW"],
+};
 
 const WHY_TEXT: Record<number, string> = {
-  1: "Your tax type changes everything — deductions, credits, even what questions the chat shows you",
+  1: "As a ZZP freelancer you get deductions employees don't — zelfstandigenaftrek, MKB-winstvrijstelling, and more",
   2: "Income drives every Box 1 calculation — we round to the cent on the official 2026 brackets",
   3: "Partner, kids, and Box 3 assets unlock IACK, heffingskorting transfers and the savings threshold",
 };
@@ -71,17 +70,13 @@ export default function IntakePage() {
 
   const isMobile = useMobile();
   const [step, setStep]         = useState<1 | 2 | 3>(1);
-  const [userType, setUserType] = useState<UserType | null>(null);
   const [loading, setLoading]   = useState(false);
   const [incomeError, setIncomeError] = useState(false);
 
-  const [revenue, setRevenue]         = useState("");
-  const [expenses, setExpenses]       = useState("");
-  const [hours, setHours]             = useState("1300");
-  const [salary, setSalary]           = useState("");
-  const [dividend, setDividend]       = useState("");
-  const [rulingYear, setRulingYear]   = useState("1");
-  const [isStarter, setIsStarter]     = useState(false);
+  const [revenue, setRevenue]   = useState("");
+  const [expenses, setExpenses] = useState("");
+  const [hours, setHours]       = useState("1300");
+  const [isStarter, setIsStarter] = useState(false);
 
   const [hasPartner, setHasPartner]       = useState(false);
   const [partnerIncome, setPartnerIncome] = useState("");
@@ -90,18 +85,15 @@ export default function IntakePage() {
   const [pension, setPension]             = useState("");
 
   const handleFinish = async () => {
-    if (!userType) return;
-    const primaryIncome = userType === "zzp" ? revenue : salary;
-    if (!primaryIncome || parseFloat(primaryIncome) <= 0) { setIncomeError(true); return; }
+    if (!revenue || parseFloat(revenue) <= 0) { setIncomeError(true); return; }
     setIncomeError(false);
     setLoading(true);
     const input: CalcInput = {
-      user_type: userType,
+      user_type: "zzp",
       year: 2026,
-      annual_revenue_zzp:   userType === "zzp" ? (parseFloat(revenue) || null) : null,
-      employment_income:    userType !== "zzp" ? (parseFloat(salary) || null) : null,
+      annual_revenue_zzp:   parseFloat(revenue) || null,
       business_expenses:    parseFloat(expenses) || 0,
-      hours_per_year:       userType === "zzp" ? (parseInt(hours) || 1300) : null,
+      hours_per_year:       parseInt(hours) || 1300,
       is_starter:           isStarter,
       has_partner:          hasPartner,
       partner_income:       hasPartner ? (parseFloat(partnerIncome) || null) : null,
@@ -109,9 +101,6 @@ export default function IntakePage() {
       net_assets_box3:      parseFloat(assets) || 0,
       savings_fraction:     0.5,
       pension_contribution: parseFloat(pension) || 0,
-      box2_dividend:        userType === "dga" ? (parseFloat(dividend) || 0) : 0,
-      uses_30pct_ruling:    userType === "expat",
-      ruling_year:          userType === "expat" ? (parseInt(rulingYear) || 1) : 1,
       single_client_percentage: null,
       kia_investments: 0,
     };
@@ -218,90 +207,58 @@ export default function IntakePage() {
             </div>
           )}
 
-          {/* Step 1 */}
+          {/* Step 1 — ZZP confirmation */}
           {step === 1 && (
             <div style={{ marginTop: "var(--sp-6)" }}>
               <h1 style={{ fontFamily: "var(--serif)", fontSize: isMobile ? "var(--text-3xl)" : "var(--text-4xl)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
                 {t("intake.step1_title")}
               </h1>
               <p style={{ marginTop: "var(--sp-2)", color: "var(--ink-3)", fontSize: "var(--text-base)" }}>{t("intake.step1_subtitle")}</p>
-              {!userType && (
-                <div style={{ marginTop: "var(--sp-3)", fontSize: 12, color: "var(--sage-700)", fontWeight: 600 }}>
-                  {lang === "nl" ? "✱ Kies een profiel om door te gaan" : lang === "fa" ? "✱ برای ادامه یک نوع را انتخاب کنید" : "✱ Select a profile to continue"}
+              <div style={{ marginTop: "var(--sp-6)" }}>
+                <div style={{
+                  textAlign: "start", padding: "18px 20px", borderRadius: "var(--r)",
+                  border: "1px solid var(--sage-600)", background: "var(--accent-soft)",
+                  display: "flex", flexDirection: "column", gap: 12, position: "relative",
+                }}>
+                  <span style={{ position: "absolute", top: 14, insetInlineEnd: 14, width: 18, height: 18, borderRadius: 999, background: "var(--sage-600)", color: "white", display: "grid", placeItems: "center" }}>
+                    <Icon.check style={{ width: 10, height: 10 }} />
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ width: 38, height: 38, borderRadius: 10, background: ZZP_INFO.color, color: "white", display: "grid", placeItems: "center", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em" }}>
+                      {ZZP_INFO.glyph}
+                    </span>
+                    <div>
+                      <div style={{ fontFamily: "var(--serif)", fontSize: 22, color: "var(--ink)" }}>{ZZP_INFO.label}</div>
+                      <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{ZZP_INFO.desc}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {ZZP_INFO.tags.map(tag => (
+                      <span key={tag} className="eyebrow" style={{ padding: "3px 7px", background: "var(--paper-3)", borderRadius: 999 }}>{tag}</span>
+                    ))}
+                  </div>
                 </div>
-              )}
-              <div style={{ marginTop: "var(--sp-6)", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
-                {(Object.entries(USER_TYPES) as [UserType, typeof USER_TYPES[UserType]][]).map(([k, v]) => {
-                  const on = userType === k;
-                  return (
-                    <button key={k} onClick={() => setUserType(k)} style={{
-                      textAlign: "start", padding: "18px 20px", borderRadius: "var(--r)",
-                      border: `1px solid ${on ? "var(--sage-600)" : "var(--hairline-2)"}`,
-                      background: on ? "var(--accent-soft)" : "var(--paper)",
-                      display: "flex", flexDirection: "column", gap: 12, cursor: "pointer", minHeight: 150, position: "relative",
-                    }}>
-                      {on && (
-                        <span style={{ position: "absolute", top: 14, insetInlineEnd: 14, width: 18, height: 18, borderRadius: 999, background: "var(--sage-600)", color: "white", display: "grid", placeItems: "center" }}>
-                          <Icon.check style={{ width: 10, height: 10 }} />
-                        </span>
-                      )}
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <span style={{ width: 38, height: 38, borderRadius: 10, background: v.color, color: "white", display: "grid", placeItems: "center", fontSize: 12, fontWeight: 700, letterSpacing: "0.04em" }}>
-                          {v.glyph}
-                        </span>
-                        <div>
-                          <div style={{ fontFamily: "var(--serif)", fontSize: 22, color: "var(--ink)" }}>{v.label}</div>
-                          <div style={{ fontSize: 12, color: "var(--ink-3)" }}>{v.desc}</div>
-                        </div>
-                      </div>
-                      <div style={{ marginTop: "auto", display: "flex", gap: 6, flexWrap: "wrap" }}>
-                        {v.tags.map(tag => (
-                          <span key={tag} className="eyebrow" style={{ padding: "3px 7px", background: "var(--paper-3)", borderRadius: 999 }}>{tag}</span>
-                        ))}
-                      </div>
-                    </button>
-                  );
-                })}
               </div>
             </div>
           )}
 
           {/* Step 2 */}
-          {step === 2 && userType && (
+          {step === 2 && (
             <div style={{ marginTop: "var(--sp-6)" }}>
               <h1 style={{ fontFamily: "var(--serif)", fontSize: isMobile ? "var(--text-3xl)" : "var(--text-4xl)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-                {lang === "nl" ? "Uw " : lang === "fa" ? "درآمد " : "Your "}
-                <span style={{ color: "var(--sage-700)", fontWeight: 600 }}>{USER_TYPES[userType].label}</span>
-                {lang === "nl" ? " inkomen" : lang === "fa" ? "" : " income"}
+                {lang === "nl" ? "Uw ZZP-inkomen" : lang === "fa" ? "درآمد ZZP شما" : "Your ZZP income"}
               </h1>
               <p style={{ marginTop: "var(--sp-2)", color: "var(--ink-3)", fontSize: "var(--text-base)" }}>
                 {lang === "nl" ? "Getallen blijven op uw apparaat tot u een account aanmaakt" : lang === "fa" ? "اعداد روی دستگاه شما می‌مانند تا زمانی که حساب کاربری ایجاد کنید" : "Numbers stay on your device until you create an account"}
               </p>
               <div style={{ marginTop: 24, display: "flex", flexDirection: "column", gap: 16 }}>
-                {userType === "zzp" && <>
-                  <UnitInput label={t("intake.revenue")} unit="€" value={revenue} onChange={setRevenue} placeholder="72000" hint="Gross before expenses" />
-                  <UnitInput label={t("intake.expenses")} unit="€" value={expenses} onChange={setExpenses} placeholder="8000" hint="Software, travel, materials" />
-                  <UnitInput label="Hours per year" unit="h" value={hours} onChange={setHours} placeholder="1500" hint="Need 1,225 h for zelfstandigenaftrek" />
-                  <label style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", background: "var(--paper-3)", borderRadius: "var(--r-sm)", fontSize: 13.5, cursor: "pointer" }}>
-                    <input type="checkbox" checked={isStarter} onChange={e => setIsStarter(e.target.checked)} />
-                    <span><strong style={{ color: "var(--ink)" }}>Starter year?</strong> {t("intake.is_starter")} (€2,123 — last year 2026)</span>
-                  </label>
-                </>}
-                {(userType === "employee" || userType === "dga") && (
-                  <UnitInput label={t("intake.salary")} unit="€" value={salary} onChange={setSalary} placeholder={userType === "dga" ? "56000" : "48000"} />
-                )}
-                {userType === "dga" && (
-                  <UnitInput label={t("intake.dividend")} unit="€" value={dividend} onChange={setDividend} placeholder="12000" />
-                )}
-                {userType === "expat" && <>
-                  <UnitInput label={t("intake.salary")} unit="€" value={salary} onChange={setSalary} placeholder="90000" />
-                  <div>
-                    <label htmlFor="intake-ruling-year" className="tw-label">{t("intake.ruling_year")}</label>
-                    <select id="intake-ruling-year" className="tw-input" autoComplete="off" value={rulingYear} onChange={e => setRulingYear(e.target.value)} style={{ fontSize: 16 }}>
-                      {[1, 2, 3, 4, 5].map(y => <option key={y} value={y}>{t("intake.year_n", { n: y })}</option>)}
-                    </select>
-                  </div>
-                </>}
+                <UnitInput label={t("intake.revenue")} unit="€" value={revenue} onChange={setRevenue} placeholder="72000" hint="Gross before expenses" />
+                <UnitInput label={t("intake.expenses")} unit="€" value={expenses} onChange={setExpenses} placeholder="8000" hint="Software, travel, materials" />
+                <UnitInput label="Hours per year" unit="h" value={hours} onChange={setHours} placeholder="1500" hint="Need 1,225 h for zelfstandigenaftrek" />
+                <label style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", background: "var(--paper-3)", borderRadius: "var(--r-sm)", fontSize: 13.5, cursor: "pointer" }}>
+                  <input type="checkbox" checked={isStarter} onChange={e => setIsStarter(e.target.checked)} />
+                  <span><strong style={{ color: "var(--ink)" }}>Starter year?</strong> {t("intake.is_starter")} (€2,123 — last year 2026)</span>
+                </label>
               </div>
             </div>
           )}
@@ -361,11 +318,9 @@ export default function IntakePage() {
               {step < 3 ? (
                 <button
                   className="btn btn-accent"
-                  disabled={step === 1 && !userType}
                   onClick={() => {
                     if (step === 2) {
-                      const val = userType === "zzp" ? revenue : salary;
-                      if (!val || parseFloat(val) <= 0) { setIncomeError(true); return; }
+                      if (!revenue || parseFloat(revenue) <= 0) { setIncomeError(true); return; }
                       setIncomeError(false);
                     }
                     setStep((step + 1) as 2|3);

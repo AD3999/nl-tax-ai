@@ -12,9 +12,6 @@ const PLAN_COLORS: Record<string, string> = {
 
 const TYPE_COLORS: Record<string, string> = {
   zzp: "bg-blue-100 text-blue-700",
-  employee: "bg-green-100 text-green-700",
-  expat: "bg-purple-100 text-purple-700",
-  dga: "bg-orange-100 text-orange-700",
 };
 
 import { formatDate } from "../../lib/utils";
@@ -113,9 +110,6 @@ function UserDetailDrawer({
               >
                 <option value="">—</option>
                 <option value="zzp">ZZP (Freelancer)</option>
-                <option value="employee">Employee</option>
-                <option value="expat">Expat</option>
-                <option value="dga">DGA</option>
               </select>
             </div>
 
@@ -261,9 +255,6 @@ export default function AdminUsersPage() {
         >
           <option value="">All types</option>
           <option value="zzp">ZZP</option>
-          <option value="employee">Employee</option>
-          <option value="expat">Expat</option>
-          <option value="dga">DGA</option>
         </select>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />

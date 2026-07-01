@@ -1144,35 +1144,23 @@ export function visibleSteps(answers: Answers): SimStep[] {
 // ── Answer → Calculator profile mapper ─────────────────────────────────────
 
 export function answersToCalcProfile(a: Answers) {
-  const isZzp  = bool(a, "is_zzp");
-  const isDga  = bool(a, "has_substantial_interest");
-  const isExpat = bool(a, "uses_30pct_ruling");
-
-  const user_type =
-    isZzp ? "zzp" :
-    isDga ? "dga" :
-    isExpat ? "expat" : "employee";
-
   const netAssets = Math.max(0,
     num(a, "savings_balance") +
     num(a, "investments_value") +
     num(a, "other_assets") -
-    num(a, "green_investments") * 0 - // green investments reduce taxable portion
     num(a, "debts")
   );
 
-  const totalIncome = isZzp
-    ? num(a, "annual_revenue_zzp") - num(a, "business_expenses")
-    : num(a, "employment_income") + num(a, "benefit_amount");
+  const revenue = num(a, "annual_revenue_zzp") || num(a, "employment_income") || 0;
+  const totalIncome = revenue - num(a, "business_expenses");
 
   const savingsFrac = netAssets > 0
     ? Math.min(1, num(a, "savings_balance") / netAssets)
     : 1;
 
   return {
-    user_type,
-    annual_revenue_zzp:       isZzp ? num(a, "annual_revenue_zzp") : null,
-    employment_income:        !isZzp ? (num(a, "employment_income") || num(a, "benefit_amount")) : null,
+    user_type:                "zzp" as const,
+    annual_revenue_zzp:       revenue || null,
     business_expenses:        num(a, "business_expenses"),
     hours_per_year:           num(a, "hours_per_year"),
     is_starter:               bool(a, "is_starter"),
@@ -1181,13 +1169,10 @@ export function answersToCalcProfile(a: Answers) {
     children_under_12:        num(a, "children_under_12"),
     net_assets_box3:          netAssets,
     savings_fraction:         savingsFrac,
-    box2_dividend:            num(a, "box2_dividend"),
     pension_contribution:     num(a, "pension_contribution"),
     kia_investments:          num(a, "kia_investments"),
-    uses_30pct_ruling:        isExpat,
-    ruling_year:              Number(a["ruling_year"] ?? 1),
     single_client_percentage: num(a, "single_client_percentage"),
-    _total_income:            totalIncome, // for display only
+    _total_income:            totalIncome,
     _had_voorlopige:          bool(a, "had_voorlopige_aanslag"),
     _voorlopige_amount:       num(a, "voorlopige_aanslag_amount"),
   } as const;

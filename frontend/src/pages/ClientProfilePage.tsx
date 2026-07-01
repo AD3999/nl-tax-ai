@@ -412,12 +412,9 @@ export default function ClientProfilePage() {
 
           <div>
             <label style={LABEL_STYLE}>{T.taxType}</label>
-            <select className="tw-input" value={form.tax_type ?? ""} onChange={set("tax_type")}>
-              <option value="zzp">ZZP / Freelancer</option>
-              <option value="employee">{isNL ? "Werknemer" : isFA ? "کارمند" : "Employee"}</option>
-              <option value="expat">Expat</option>
-              <option value="dga">DGA</option>
-            </select>
+            <div className="tw-input" style={{ background: "var(--bg-3)", color: "var(--ink-3)", cursor: "default" }}>
+              ZZP / Freelancer
+            </div>
           </div>
         </div>
       </div>

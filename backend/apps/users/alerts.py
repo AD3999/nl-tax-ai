@@ -9,7 +9,7 @@ from typing import Any
 
 def generate_alerts(profile: dict[str, Any], calc_result: dict[str, Any], lang: str = "en") -> list[dict]:
     """
-    Returns a list of alert dicts:
+    Returns a list of alert dicts for a ZZP freelancer:
       { id, category, severity, title, body, action_label, action_url }
 
     Categories: deadline | risk | opportunity | missing_data | cashflow | compliance
@@ -19,37 +19,29 @@ def generate_alerts(profile: dict[str, Any], calc_result: dict[str, Any], lang: 
     today = date.today()
     result = calc_result.get("result", {}) if calc_result else {}
     calc = calc_result.get("calculation", {}) if calc_result else {}
-    user_type = profile.get("user_type", "")
-    income = (
-        profile.get("annual_revenue_zzp") or
-        profile.get("employment_income") or 0
-    )
+    income = profile.get("annual_revenue_zzp") or 0
 
     # ── 1. Upcoming deadlines ───────────────────────────────────────────────────
-    _check_deadlines(alerts, today, user_type, lang)
+    _check_deadlines(alerts, today, lang)
 
     # ── 2. Wet DBA risk ─────────────────────────────────────────────────────────
-    if user_type == "zzp":
-        _check_wet_dba(alerts, profile, result, lang)
+    _check_wet_dba(alerts, profile, result, lang)
 
     # ── 3. ZVW contribution warning (most ZZP workers miss this) ────────────────
-    if user_type == "zzp":
-        _check_zvw(alerts, calc, lang)
+    _check_zvw(alerts, calc, lang)
 
     # ── 4. Zorgtoeslag cliff edge ────────────────────────────────────────────────
     _check_zorgtoeslag(alerts, income, lang)
 
     # ── 5. Urencriterium risk ────────────────────────────────────────────────────
-    if user_type == "zzp":
-        _check_urencriterium(alerts, profile, lang)
+    _check_urencriterium(alerts, profile, lang)
 
     # ── 6. Startersaftrek last year ──────────────────────────────────────────────
-    if user_type == "zzp" and profile.get("is_starter"):
+    if profile.get("is_starter"):
         _check_startersaftrek(alerts, lang)
 
     # ── 7. Monthly reserve check ─────────────────────────────────────────────────
-    if user_type in ("zzp", "dga"):
-        _check_cashflow(alerts, result, lang)
+    _check_cashflow(alerts, result, lang)
 
     # ── 8. Profile completeness ──────────────────────────────────────────────────
     _check_profile_completeness(alerts, profile, lang)
@@ -57,45 +49,33 @@ def generate_alerts(profile: dict[str, Any], calc_result: dict[str, Any], lang: 
     # ── 9. Box 3 opportunity ─────────────────────────────────────────────────────
     _check_box3(alerts, profile, lang)
 
-    # ── 10. 30% ruling phase-out warning ────────────────────────────────────────
-    if user_type == "expat":
-        _check_30pct(alerts, profile, lang)
-
-    # ── 11. Pension jaarruimte opportunity ───────────────────────────────────────
+    # ── 10. Pension jaarruimte opportunity ───────────────────────────────────────
     _check_pension_opportunity(alerts, profile, lang)
 
-    # ── 12. KIA investment opportunity ───────────────────────────────────────────
-    if user_type == "zzp":
-        _check_kia_opportunity(alerts, profile, lang)
+    # ── 11. KIA investment opportunity ───────────────────────────────────────────
+    _check_kia_opportunity(alerts, profile, lang)
 
-    # ── 13. Voorlopige aanslag opportunity ───────────────────────────────────────
-    if user_type in ("zzp", "dga"):
-        _check_voorlopige_opportunity(alerts, result, lang)
+    # ── 12. Voorlopige aanslag opportunity ───────────────────────────────────────
+    _check_voorlopige_opportunity(alerts, result, lang)
 
-    # ── 14. DGA compliance: gebruikelijk loon ─────────────────────────────────────
-    if user_type == "dga":
-        _check_dga_compliance(alerts, profile, lang)
+    # ── 13. MKB-winstvrijstelling awareness ───────────────────────────────────────
+    _check_mkb_opportunity(alerts, calc, lang)
 
-    # ── 15. MKB-winstvrijstelling awareness ───────────────────────────────────────
-    if user_type == "zzp":
-        _check_mkb_opportunity(alerts, calc, lang)
-
-    # ── 16. Partner income optimization ──────────────────────────────────────────
+    # ── 14. Partner income optimization ──────────────────────────────────────────
     _check_partner_optimization(alerts, profile, income, lang)
 
-    # ── 17. Year-end tax optimization window (Q4 only) ───────────────────────────
+    # ── 15. Year-end tax optimization window (Q4 only) ───────────────────────────
     _check_year_end_opportunities(alerts, profile, calc, result, today, lang)
 
-    # ── 18. Deductible expenses likely missing ────────────────────────────────────
-    if user_type in ("zzp", "dga"):
-        _check_deductible_expenses(alerts, profile, lang)
+    # ── 16. Deductible expenses likely missing ────────────────────────────────────
+    _check_deductible_expenses(alerts, profile, lang)
 
     return alerts
 
 
 # ── Individual check functions ──────────────────────────────────────────────────
 
-def _check_deadlines(alerts, today, user_type, lang):
+def _check_deadlines(alerts, today, lang):
     DEADLINES = [
         {
             "id": "dl-btw-q1",
@@ -103,7 +83,6 @@ def _check_deadlines(alerts, today, user_type, lang):
             "title": {"nl": "BTW Q1 aangifte vervalt 30 april", "en": "VAT Q1 return due 30 April", "fa": "اظهارنامه مالیات Q1 تا ۳۰ آوریل"},
             "body": {"nl": "Dien uw BTW-aangifte voor Q1 op tijd in. Te laat = automatische boete.", "en": "Submit your Q1 VAT return on time. Late filing triggers an automatic penalty even on a zero return.", "fa": "اظهارنامه VAT Q1 خود را به موقع ارسال کنید. تأخیر جریمه خودکار دارد."},
             "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/btw_aangifte_doen_en_betalen/wanneer_aangifte_doen/",
-            "user_types": ["zzp", "dga"],
         },
         {
             "id": "dl-ib",
@@ -111,7 +90,6 @@ def _check_deadlines(alerts, today, user_type, lang):
             "title": {"nl": "IB-aangifte 2025 vervalt 1 mei", "en": "IB return 2025 due 1 May", "fa": "اظهارنامه مالیات بر درآمد ۲۰۲۵ تا ۱ مه"},
             "body": {"nl": "Uw inkomstenbelasting aangifte voor 2025 moet voor 1 mei 2026 worden ingediend.", "en": "Your income tax return for 2025 must be filed before 1 May 2026.", "fa": "اظهارنامه مالیات بر درآمد ۲۰۲۵ باید قبل از ۱ مه ۲۰۲۶ ارسال شود."},
             "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/aangifte_doen/",
-            "user_types": None,  # all
         },
         {
             "id": "dl-btw-q2",
@@ -119,13 +97,10 @@ def _check_deadlines(alerts, today, user_type, lang):
             "title": {"nl": "BTW Q2 aangifte vervalt 31 juli", "en": "VAT Q2 return due 31 July", "fa": "اظهارنامه مالیات Q2 تا ۳۱ جولای"},
             "body": {"nl": "Dien uw BTW-aangifte voor Q2 op tijd in.", "en": "Submit your Q2 VAT return on time.", "fa": "اظهارنامه VAT Q2 خود را به موقع ارسال کنید."},
             "url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/btw/",
-            "user_types": ["zzp", "dga"],
         },
     ]
 
     for d in DEADLINES:
-        if d["user_types"] and user_type not in d["user_types"]:
-            continue
         days_left = (d["date"] - today).days
         if days_left < 0:
             continue  # past
@@ -246,25 +221,11 @@ def _check_box3(alerts, profile, lang):
         })
 
 
-def _check_30pct(alerts, profile, lang):
-    year = int(profile.get("ruling_year") or profile.get("ruling_year_number") or 1)
-    if year >= 4:
-        pct = 20 if year == 4 else 10
-        alerts.append({
-            "id": "30pct-phaseout", "category": "risk", "severity": "warning",
-            "title": {"nl": f"30%-regeling fase-out: nu {pct}%", "en": f"30% ruling phase-out: now {pct}%", "fa": f"کاهش قانون ۳۰٪: اکنون {pct}٪"}.get(lang),
-            "body": {"nl": f"U zit in jaar {year} van de 30%-regeling. Het belastingvrije percentage is nu {pct}%. Plan uw situatie na afloop van de regeling.", "en": f"You're in year {year} of the 30% ruling. The tax-free percentage is now {pct}%. Start planning for life after the ruling ends.", "fa": f"شما در سال {year} قانون ۳۰٪ هستید. درصد معاف از مالیات اکنون {pct}٪ است."}.get(lang),
-            "action_label": {"nl": "30%-regeling info", "en": "30% ruling info", "fa": "اطلاعات قانون ۳۰٪"}.get(lang),
-            "action_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/werk_en_inkomen/loon_en_andere_uitkeringen/bijzondere_beloningen/30_procentsregeling/",
-        })
-
-
 def _check_pension_opportunity(alerts, profile, lang):
-    user_type = profile.get("user_type", "")
-    income = float(profile.get("annual_revenue_zzp") or profile.get("employment_income") or 0)
+    income = float(profile.get("annual_revenue_zzp") or 0)
     pension = float(profile.get("pension_deduction") or 0)
     BASE = 19172
-    if user_type not in ("zzp", "employee") or income <= BASE or pension > 0:
+    if income <= BASE or pension > 0:
         return
     jaarruimte = round((income - BASE) * 0.30)
     if jaarruimte < 500:
@@ -348,29 +309,6 @@ def _check_voorlopige_opportunity(alerts, result, lang):
     })
 
 
-def _check_dga_compliance(alerts, profile, lang):
-    income = float(profile.get("employment_income") or 0)
-    MIN_SALARY = 56000
-    if 0 < income < MIN_SALARY:
-        alerts.append({
-            "id": "dga-gebruikelijk-loon",
-            "category": "compliance",
-            "severity": "critical",
-            "title": {
-                "nl": f"DGA loon te laag: €{income:,.0f} (minimum €{MIN_SALARY:,})",
-                "en": f"DGA salary too low: €{income:,.0f} (minimum €{MIN_SALARY:,})",
-                "fa": f"حقوق DGA خیلی کم: €{income:,.0f} (حداقل €{MIN_SALARY:,})",
-            }.get(lang),
-            "body": {
-                "nl": f"De Belastingdienst vereist een gebruikelijk loon van minimaal EUR{MIN_SALARY:,} voor DGA-directeuren. Uw salaris (EUR{income:,.0f}) is te laag. Dit kan leiden tot correcties en boetes.",
-                "en": f"The Belastingdienst requires a minimum salary of €{MIN_SALARY:,} for DGA directors. Your declared salary (€{income:,.0f}) falls short. This can trigger corrections and penalties.",
-                "fa": f"Belastingdienst حداقل حقوق €{MIN_SALARY:,} برای مدیران DGA الزامی است. حقوق شما (€{income:,.0f}) کمتر است — ممکن است جریمه شوید.",
-            }.get(lang),
-            "action_label": {"nl": "DGA loon info", "en": "DGA salary rules", "fa": "قوانین حقوق DGA"}.get(lang),
-            "action_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/zakelijk/winst/gebruikelijk_loon/",
-        })
-
-
 def _check_mkb_opportunity(alerts, calc, lang):
     mkb = float(calc.get("mkb_winstvrijstelling") or 0)
     gross = float(calc.get("gross_profit") or 0)
@@ -446,8 +384,7 @@ def _check_year_end_opportunities(alerts, profile, calc, result, today, lang):
         return  # irrelevant outside Q4
 
     days_left = (date(today.year, 12, 31) - today).days
-    user_type = profile.get("user_type", "")
-    income = float(profile.get("annual_revenue_zzp") or profile.get("employment_income") or 0)
+    income = float(profile.get("annual_revenue_zzp") or 0)
 
     # 1. Unused pension jaarruimte — contributions made before 31 Dec still count
     pension = float(profile.get("pension_contribution") or 0)
@@ -495,11 +432,10 @@ def _check_year_end_opportunities(alerts, profile, calc, result, today, lang):
             "action_url": "https://www.belastingdienst.nl/wps/wcm/connect/bldcontentnl/belastingdienst/prive/vermogen_en_aanmerkelijk_belang/vermogen/",
         })
 
-    # 3. ZZP: KIA window — investments placed before 31 Dec qualify
-    if user_type == "zzp":
-        kia = float(profile.get("kia_investments") or 0)
-        revenue = float(profile.get("annual_revenue_zzp") or 0)
-        if kia == 0 and revenue > 20000:
+    # 3. KIA window — investments placed before 31 Dec qualify
+    kia = float(profile.get("kia_investments") or 0)
+    revenue = float(profile.get("annual_revenue_zzp") or 0)
+    if kia == 0 and revenue > 20000:
             alerts.append({
                 "id": "year-end-kia",
                 "category": "opportunity",
@@ -521,10 +457,9 @@ def _check_year_end_opportunities(alerts, profile, calc, result, today, lang):
 
 def _check_deductible_expenses(alerts, profile, lang):
     """
-    Nudge ZZP / DGA users who have declared zero or suspiciously low business expenses.
+    Nudge ZZP users who have declared zero or suspiciously low business expenses.
     Most freelancers underreport costs — this is a clear optimization opportunity.
     """
-    user_type = profile.get("user_type", "")
     revenue = float(profile.get("annual_revenue_zzp") or 0)
     expenses = float(profile.get("business_expenses") or 0)
 

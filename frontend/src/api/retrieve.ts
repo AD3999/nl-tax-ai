@@ -8,7 +8,7 @@ export type AiBehavior =
   | 'ask_clarifying_question'
   | 'refer_to_advisor'
 
-export type UserType = 'zzp' | 'employee' | 'expat' | 'dga'
+export type UserType = 'zzp'
 
 export interface RetrievedContext {
   chunk_id: string

@@ -1,10 +1,9 @@
 import { client } from "./client";
 
 export interface CalcInput {
-  user_type: "zzp" | "employee" | "expat" | "dga";
+  user_type: "zzp";
   year?: number;
   annual_revenue_zzp?: number | null;
-  employment_income?: number | null;
   business_expenses?: number;
   hours_per_year?: number | null;
   is_starter?: boolean;
@@ -13,11 +12,8 @@ export interface CalcInput {
   children_under_12?: number;
   net_assets_box3?: number;
   savings_fraction?: number;
-  box2_dividend?: number;
   pension_contribution?: number;
   kia_investments?: number;
-  uses_30pct_ruling?: boolean;
-  ruling_year?: number;
   single_client_percentage?: number | null;
 }
 

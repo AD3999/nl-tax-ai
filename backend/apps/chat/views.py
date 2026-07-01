@@ -23,7 +23,7 @@ _LANG_RULE = {
 # Intake mode prompt body (no f-string — contains literal curly braces in the JSON example)
 _INTAKE_PROMPT_BODY = """You are Alex — a sharp, warm Dutch tax advisor. You talk like a trusted friend who happens to know a lot about tax, not like a government website or a textbook.
 
-Your job: get enough info to run an accurate tax calculation. Make it feel like a quick, natural conversation — not a form.
+Your job: get enough info to run an accurate ZZP tax calculation. Make it feel like a quick, natural conversation — not a form.
 
 YOUR VOICE:
 - Warm and direct. Short sentences. Keep the energy up.
@@ -34,22 +34,23 @@ YOUR VOICE:
 - If they seem unsure, reassure them: "No worries, a rough number is totally fine."
 - In Dutch: sound genuinely Dutch, not translated. In Persian: warm and natural, like a knowledgeable friend.
 
-WHAT TO COLLECT (roughly this order):
-1. Work type: freelancer/ZZP, employee, expat (30%-ruling), or director of own company (DGA)
-2. Main income: annual revenue (ZZP) or gross salary (others)
-3. ZZP only: rough business costs, rough hours this year (do they hit ~1,225?), first year as entrepreneur?
-4. Expat only: which year of their 30%-ruling? (1–5)
-5. DGA only: any dividends taken from the company this year?
-6. Fiscal partner? → rough partner income
-7. Kids under 12?
-8. Savings or investments above ~€57k? (totally fine to skip)
+IMPORTANT: Every user on this platform is a ZZP freelancer. Never ask what type of taxpayer they are — that's already known. Jump straight into ZZP-relevant questions.
 
-Stop at 6–7 questions. Anything not covered → use 0 or null.
+WHAT TO COLLECT (roughly this order):
+1. Annual revenue — "Roughly how much did you earn as a freelancer this year?"
+2. Business expenses — "Any costs you can deduct? Software, equipment, workspace…"
+3. Hours worked this year — "Roughly how many hours did you put into your business? The 1,225 hr mark unlocks a nice deduction."
+4. Is this their first year as entrepreneur? (startersaftrek — last year it exists in 2026!)
+5. Fiscal partner? → rough partner income
+6. Kids under 12?
+7. Savings or investments above ~€57k? (totally fine to skip)
+
+Stop at 5–6 questions. Anything not covered → use 0 or null.
 
 FINISH: Write a short warm summary in 2–3 sentences, then on the very next line output the JSON (one line, valid JSON):
-[INTAKE_COMPLETE: {"user_type": "zzp", "year": 2026, "annual_revenue_zzp": 72000, "employment_income": null, "business_expenses": 8000, "hours_per_year": 1300, "is_starter": false, "has_partner": false, "partner_income": null, "children_under_12": 0, "net_assets_box3": 0, "savings_fraction": 0.5, "pension_contribution": 0, "box2_dividend": 0, "uses_30pct_ruling": false, "ruling_year": 1, "single_client_percentage": null, "kia_investments": 0}]
+[INTAKE_COMPLETE: {"user_type": "zzp", "year": 2026, "annual_revenue_zzp": 72000, "business_expenses": 8000, "hours_per_year": 1300, "is_starter": false, "has_partner": false, "partner_income": null, "children_under_12": 0, "net_assets_box3": 0, "savings_fraction": 0.5, "pension_contribution": 0, "single_client_percentage": null, "kia_investments": 0}]
 
-Use exactly: "zzp", "employee", "expat", or "dga" for user_type. JSON on its own line, nothing after it."""
+user_type is always "zzp" — never ask the user about this. JSON on its own line, nothing after it."""
 
 
 def _intake_system_prompt(language: str) -> str:
@@ -69,7 +70,7 @@ YOUR VOICE:
 - React to each answer: "Perfect, got it." / "That makes sense." / "Okay, good to know."
 - If the user says they don't know or aren't sure: give them a simple way to find out (e.g. "Check your jaaropgave — it's the number on row X").
 - Flag common mistakes naturally: "A lot of people forget to include..." or "Watch out — this is where many people make an error..."
-- If a field clearly doesn't apply (e.g. asking about ZZP profit when user is an employee), skip it gracefully: "Since you're an employee, this one doesn't apply to you — moving on."
+- Skip fields that don't apply based on what the user has shared.
 - Never mention field codes like "1a" or "box 1" to the user — use plain names only.
 - Use the LANGUAGE RULE below. Never switch language.
 
@@ -79,13 +80,12 @@ FIELDS TO COLLECT (in order, skip irrelevant ones):
 3. **Business profit** (field 1c, ZZP/DGA only) — "What was your total business revenue in 2025? And roughly what were your business costs (like software, equipment, workspace)? Your profit is revenue minus costs."
 4. **Startersaftrek** (field 1d, ZZP only, first 3 years) — "Are you in your first, second, or third year as a ZZP'er? If yes, you may be entitled to the startersaftrek — a bonus deduction of €2,123. This is the LAST year it exists (abolished from 2027), so claim it if you can."
 5. **Zelfstandigenaftrek** (field 1e, ZZP only) — "Did you work at least 1,225 hours in your own business in 2025? If yes, you qualify for the zelfstandigenaftrek (self-employed deduction) of €1,200. Hours include all business activities — client work, admin, marketing."
-6. **Box 2 dividends** (field 2a, DGA only) — "Did you take any dividend from your BV company in 2025? If yes, how much? Common mistake: confusing dividends with your salary — they're taxed differently."
-7. **Savings** (field 3a) — "What was the total in your bank and savings accounts on 1 January 2025? Don't include your main home, pension, or business accounts. If it's under €57,000 (or €114,000 with a partner), you don't need to declare Box 3 at all."
+6. **Savings** (field 3a) — "What was the total in your bank and savings accounts on 1 January 2025? Don't include your main home, pension, or business accounts. If it's under €57,000 (or €114,000 with a partner), you don't need to declare Box 3 at all."
 8. **Investments** (field 3b) — "Did you have any investments, shares, or crypto on 1 January 2025? Rough total value is fine. Same threshold applies — under €57,000 combined with savings = no Box 3 tax."
 9. **Mortgage interest** (field 8a) — "Do you have a mortgage on your main home? If yes, how much mortgage interest did you pay in 2025? This is fully deductible and reduces your tax. You'll find this on your annual mortgage statement."
 
 WHEN DONE: After all relevant fields are collected, give a short warm summary (2–3 sentences), then output the completion marker on its own line:
-[IB_COMPLETE: {"1a": "VALUE_OR_null", "1b": "VALUE_OR_null", "1c": "VALUE_OR_null", "1d": "yes_OR_no_OR_null", "1e": "yes_OR_no_OR_null", "2a": "VALUE_OR_null", "3a": "VALUE_OR_null", "3b": "VALUE_OR_null", "8a": "VALUE_OR_null", "user_type": "zzp_OR_employee_OR_expat_OR_dga", "year": 2025, "recommendations": ["TIP_1", "TIP_2", "TIP_3"]}]
+[IB_COMPLETE: {"1a": "VALUE_OR_null", "1b": "VALUE_OR_null", "1c": "VALUE_OR_null", "1d": "yes_OR_no_OR_null", "1e": "yes_OR_no_OR_null", "3a": "VALUE_OR_null", "3b": "VALUE_OR_null", "8a": "VALUE_OR_null", "user_type": "zzp", "year": 2025, "recommendations": ["TIP_1", "TIP_2", "TIP_3"]}]
 
 RECOMMENDATIONS RULES (critical — read carefully):
 - Write 3 to 6 personalized, actionable tips based on THIS user's specific answers. NOT generic tips.
@@ -107,8 +107,7 @@ Use null for any field that was skipped or not applicable. Use string numbers fo
 
 def _ib_return_system_prompt(language: str, user_type: str = "") -> str:
     rule = _LANG_RULE.get(language, _LANG_RULE["en"])
-    user_ctx = f"\nUSER TYPE (already known): {user_type.upper()} — skip questions not relevant to this type.\n" if user_type else ""
-    return f"LANGUAGE RULE (ABSOLUTE — DO NOT IGNORE): {rule}\n{user_ctx}\n" + _IB_RETURN_PROMPT_BODY
+    return f"LANGUAGE RULE (ABSOLUTE — DO NOT IGNORE): {rule}\nUSER TYPE: ZZP — all users are ZZP freelancers. Skip employee/expat/DGA questions entirely.\n\n" + _IB_RETURN_PROMPT_BODY
 
 
 def _result_system_prompt(
@@ -244,18 +243,17 @@ def _build_health_context(alerts: list, health_score: int) -> str:
 def _build_calculator_block(profile: dict, calc_result: dict) -> str:
     r = calc_result.get("result", {})
     c = calc_result.get("calculation", {})
-    user_type = profile.get("user_type", "unknown")
     gross = c.get("gross_profit") or c.get("gross_revenue") or 0
 
     # Identify fields that were not provided and defaulted to 0 — the AI must ask for these
     missing = []
     if not profile.get("net_assets_box3"):
         missing.append("net_assets_box3 — Box 3 savings/investments (user has not provided this; Box 3 tax is currently €0 by default — ask if they have savings or investments above €59,357)")
-    if user_type == "zzp" and not profile.get("hours_per_year"):
+    if not profile.get("hours_per_year"):
         missing.append("hours_per_year — needed to confirm zelfstandigenaftrek eligibility (1,225 hrs minimum)")
     if not profile.get("pension_contribution"):
         missing.append("pension_contribution — lijfrente/AOV (if they contribute, this reduces taxable income)")
-    if user_type == "zzp" and not profile.get("kia_investments"):
+    if not profile.get("kia_investments"):
         missing.append("kia_investments — business equipment purchases (€2,901–€70,602 qualifies for 28% KIA deduction)")
 
     missing_section = ""
@@ -265,7 +263,7 @@ def _build_calculator_block(profile: dict, calc_result: dict) -> str:
 
     return (
         "\n=== CALCULATOR RESULT (verified 2026 engine) ===\n"
-        f"User type: {user_type}\n"
+        "User type: ZZP freelancer\n"
         f"Gross income / profit: €{gross:,.0f}\n"
         f"Taxable income (Box 1): €{c.get('taxable_income_box1', 0):,.0f}\n"
         f"Box 1 tax (before credits): €{c.get('box1_tax_raw', 0):,.0f}\n"
@@ -273,8 +271,7 @@ def _build_calculator_block(profile: dict, calc_result: dict) -> str:
         f"Employment credit (AK): −€{c.get('arbeidskorting', 0):,.0f}\n"
         f"ZZP deductions (ZA+SA+MKB+KIA): −€{(c.get('zelfstandigenaftrek',0)+c.get('startersaftrek',0)+c.get('mkb_winstvrijstelling',0)+c.get('kia_deduction',0)):,.0f}\n"
         f"Income tax after credits: €{c.get('income_tax_after_credits', 0):,.0f}\n"
-        f"ZVW health contribution (ZZP only): €{c.get('zvw_contribution', 0):,.0f}\n"
-        f"Box 2 tax (dividend): €{c.get('box2_tax', 0):,.0f}\n"
+        f"ZVW health contribution: €{c.get('zvw_contribution', 0):,.0f}\n"
         f"Box 3 tax (savings/investments): €{c.get('box3_tax', 0):,.0f}\n"
         f"TOTAL TAX DUE: €{r.get('total_tax_due', 0):,.0f}\n"
         f"Effective rate: {r.get('effective_rate', 0) * 100:.1f}%\n"
@@ -419,7 +416,7 @@ class ChatMessageView(APIView):
 
                     calculator_block = ""
                     calc_result = {}
-                    if user_profile and user_profile.get("user_type"):
+                    if user_profile and user_profile.get("annual_revenue_zzp"):
                         try:
                             from apps.calculator.engine import calculate
                             calc_result = calculate(user_profile)
@@ -463,7 +460,7 @@ class ChatMessageView(APIView):
                     if request.user.is_authenticated and request.user.tax_memory:
                         m = request.user.tax_memory
                         memory_lines = ["\n=== USER'S TAX MEMORY (known facts from prior sessions) ==="]
-                        if m.get("user_type"): memory_lines.append(f"Type: {m['user_type']}")
+                        memory_lines.append("Type: ZZP freelancer")
                         if m.get("income"): memory_lines.append(f"Income: €{m['income']:,}")
                         if m.get("hours_worked"): memory_lines.append(f"Hours worked: {m['hours_worked']}")
                         if m.get("known_deductions"): memory_lines.append(f"Deductions claimed: {', '.join(m['known_deductions'])}")
@@ -483,8 +480,8 @@ class ChatMessageView(APIView):
                             if c_data.get("mkb_winstvrijstelling", 0) > 0: deductions.append("mkb")
                             if c_data.get("kia_deduction", 0) > 0: deductions.append("kia")
                             mem = {
-                                "user_type": user_profile.get("user_type"),
-                                "income": c_data.get("gross_profit") or c_data.get("gross_revenue") or user_profile.get("annual_revenue_zzp") or user_profile.get("employment_income"),
+                                "user_type": "zzp",
+                                "income": c_data.get("gross_profit") or c_data.get("gross_revenue") or user_profile.get("annual_revenue_zzp"),
                                 "hours_worked": user_profile.get("hours_per_year"),
                                 "known_deductions": deductions,
                                 "last_calc_total": r_data.get("total_tax_due"),

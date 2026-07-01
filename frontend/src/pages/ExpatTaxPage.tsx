@@ -3,124 +3,113 @@ import { useMobile } from "../hooks/useMobile";
 
 const SECTIONS = [
   {
-    id: "30pct-ruling",
-    title: "The 30% ruling explained",
-    body: `The 30% ruling (30%-regeling) is a Dutch tax benefit for workers recruited from abroad who have specific expertise that is scarce in the Dutch labour market. It allows your employer to pay you a tax-free allowance of up to 30% of your salary for the first years you work in the Netherlands.
+    id: "kvk-as-foreigner",
+    title: "Registering as a ZZP freelancer as a foreigner",
+    body: `Starting as a ZZP freelancer in the Netherlands as a foreign national is fully possible. Here is what you need before you can operate legally:
 
-**What the 30% ruling does:**
-• Your employer pays up to 30% of your salary as a tax-free expense reimbursement
-• You pay income tax only on the remaining 70% (the "taxable base")
-• This reduces your effective tax rate significantly — a €90,000 salary is taxed as if it were €63,000
+**1. BSN (Burgerservicenummer)**
+Your BSN is your Dutch citizen service number — required for almost everything: bank accounts, taxes, healthcare, and KVK registration. You get your BSN when you register at your local municipality (gemeente). Bring your passport and proof of address.
 
-**Phase-down from 2024 (new rules):**
-From 2024 onwards, the ruling has a 5-year phase-down:
-• Years 1–3: 30% tax-free
-• Year 4: 20% tax-free
-• Year 5: 10% tax-free
-• After 5 years: 0% — the ruling expires
+**2. KVK registration (Kamer van Koophandel)**
+Register your business at the Dutch Chamber of Commerce (KVK). You can do this online or in person. The registration costs €75 (one-time fee). After registration you receive your KVK number, which you put on all invoices.
 
-If you started your ruling before 2024, transitional rules may apply — check your start date carefully.`,
-    source: "belastingdienst.nl/30-procent-regeling",
+**3. BTW (VAT) number**
+After KVK registration, the Dutch tax authority (Belastingdienst) automatically assigns you a BTW number. You use this to charge and file VAT on your services. If your annual turnover is below €20,000, you may qualify for the KOR (small business VAT exemption).
+
+**4. DigiD**
+DigiD is the Dutch digital identity system — you need it to access the Belastingdienst online, file your tax return, and check toeslagen. Apply at digid.nl with your BSN. Non-residents can apply via a special procedure.`,
+    source: "kvk.nl/starten · belastingdienst.nl/btw",
   },
   {
-    id: "who-qualifies",
-    title: "Who qualifies for the 30% ruling?",
-    body: `To qualify for the 30% ruling you must meet all of these conditions:
+    id: "bsn-digid",
+    title: "BSN and DigiD: the basics for internationals",
+    body: `**Getting your BSN**
+Register at your gemeente (city hall) as soon as you arrive. Bring:
+• Valid passport or EU ID card
+• Proof of address in the Netherlands (rental contract, or a declaration from the address owner)
 
-1. **Recruited from abroad** — you must have been living outside the Netherlands (or within 150km of the Dutch border) in the 24 months before your first Dutch employment day
-2. **Specific expertise** — your income must meet the minimum salary threshold (€46,107 gross in 2026, or €35,048 for workers under 30 with a master's degree)
-3. **Dutch employer** — your employer must withhold payroll tax in the Netherlands
-4. **Application within 4 months** — you and your employer must apply within 4 months of your first Dutch working day to get the ruling from day one. Late applications can still be granted but only from the application date.
+You get your BSN on the spot or within a few days. Without a BSN you cannot open a Dutch bank account, receive toeslagen, or register a business.
 
-The ruling is granted per employment — if you change jobs, your new employer must re-apply.`,
-    source: "belastingdienst.nl/30-procent-regeling-voorwaarden",
+**DigiD for non-Dutch nationals**
+You can apply for DigiD even if you are not a Dutch citizen, as long as you have a BSN. The application is at digid.nl. Processing takes 5–7 business days. DigiD gives you access to all Dutch government services including your Belastingdienst account.
+
+**Non-residents**
+If you work in the Netherlands but live abroad, a special procedure exists (Registratie Niet-Ingezetenen / RNI). Contact the nearest RNI desk to get a BSN without a full residence registration.`,
+    source: "government.nl/bsn · digid.nl",
   },
   {
-    id: "ib-return-expat",
-    title: "IB return for expats — the M-form",
-    body: `If you moved to or from the Netherlands during a tax year, you are a **partial-year resident (partieel belastingplichtige)**. You must file the special **M-form (M-biljet)** instead of the standard IB return.
+    id: "income-tax-zzp",
+    title: "Income tax for ZZP freelancers with an international background",
+    body: `As a ZZP freelancer in the Netherlands, you pay income tax (inkomstenbelasting) on your profit, not on your gross revenue.
 
-The M-form covers:
-• The months you were a Dutch tax resident (and your worldwide income)
-• The months you were a non-resident (only Dutch-source income)
+**Key 2026 tax facts for ZZP:**
+• Box 1 bracket 1: 35.75% on profit up to €38,883
+• Box 1 bracket 3: 49.50% on profit above €78,426
+• Zelfstandigenaftrek: €1,200 deduction (requires 1,225 hours/year working in your business)
+• MKB-winstvrijstelling: 12.7% profit exemption (no hours requirement)
+• ZVW contribution: 4.85% health insurance contribution on your profit (often missed!)
 
-**When you become resident:** the day you register at a Dutch municipality (gemeente). Keep this date — it determines your tax residency.
+**Important: the 30% ruling does NOT apply to ZZP freelancers**
+The 30% ruling is an employee benefit — it requires a Dutch employer who withholds payroll tax. Self-employed ZZP workers cannot use it. If you were previously an employee with the 30% ruling and switched to ZZP, the ruling period stops.
 
-**Deadlines:** M-form is typically filed by 1 July of the following year (different from the standard 1 May deadline). You can request an extension.
-
-From your second full year onwards, you file the standard IB return (P-form) like any other Dutch resident.`,
-    source: "belastingdienst.nl/m-biljet",
+**Filing your tax return**
+As a ZZP freelancer, you file an annual income tax return (aangifte inkomstenbelasting) by 1 May each year (for the previous tax year). You can file online via Mijn Belastingdienst using your DigiD.`,
+    source: "belastingdienst.nl/winst-uit-onderneming",
   },
   {
-    id: "box1-expat",
-    title: "Box 1 income tax for expats",
-    body: `With the 30% ruling active, your income tax calculation changes:
+    id: "toeslagen",
+    title: "Toeslagen (allowances) for ZZP internationals",
+    body: `Dutch toeslagen (government allowances) are available to ZZP freelancers — including those with foreign nationality — as long as you live in the Netherlands and have a valid BSN.
 
-1. Your salary splits into: **taxable base (70%)** + **tax-free allowance (30%)**
-2. Box 1 tax brackets apply to the 70% taxable base only
-3. Tax credits (heffingskortingen) still apply in full
+**Zorgtoeslag (healthcare allowance)**
+A monthly contribution towards your health insurance premium. In 2026, the maximum is €129/month. You must be insured under a Dutch health insurance policy (verplichte zorgverzekering). The income cutoff is €40,857 per year (single) — one euro over means zero allowance for the whole year.
 
-**Without 30% ruling:** normal Box 1 rates apply to your full gross salary.
+**Huurtoeslag (rent allowance)**
+Available if you rent a home in the Netherlands. In 2026, the rent ceiling was abolished — any rent now qualifies. Income limits still apply.
 
-Example — €90,000 salary with 30% ruling (year 1):
-• Taxable base: €63,000
-• Box 1 tax on €63,000: approx €21,000 (after credits)
-• Net tax benefit vs. no ruling: approx €7,000–€9,000/year
+**Kinderopvangtoeslag (childcare allowance)**
+Available if you have children in registered childcare. Income and hours-worked conditions apply.
 
-The ruling also exempts you from paying Box 2 and Box 3 tax on foreign assets (partial non-resident status) if you elect this option. Consult a belastingadviseur before electing — it is irrevocable for the year.`,
-    source: "belastingdienst.nl/expat-box1",
-  },
-  {
-    id: "box3-foreign",
-    title: "Box 3 and foreign assets",
-    body: `Box 3 taxes savings, investments and other assets above the exemption threshold (€59,357 per person in 2026).
-
-**Expat-specific option:** While the 30% ruling is active, you can elect to be treated as a **partial non-resident (partieel buitenlandse belastingplichtige)**. Under this status:
-• Foreign Box 3 assets (bank accounts, investments outside NL) are exempt
-• Only Dutch real estate falls into Box 3
-
-This election must be made on your IB return each year. Once elected for a year, it cannot be changed. If you have significant savings outside the Netherlands, this election can save thousands per year.
-
-**Important:** This only applies to Box 3. Box 1 (employment income) is always taxed in full.`,
-    source: "belastingdienst.nl/buitenlandse-belastingplicht",
-  },
-  {
-    id: "zorgtoeslag",
-    title: "Zorgtoeslag and toeslagen eligibility",
-    body: `Zorgtoeslag is a monthly allowance towards your health insurance premium. In 2026, the maximum is **€129/month** (€1,548/year).
-
-**Eligibility for expats:**
-• You must be insured under a Dutch healthcare policy (zorgverzekering)
-• Your income must not exceed **€40,857** (single) or €51,641 (with partner)
-• The hard cutoff is strict — €1 over = €0 zorgtoeslag for the whole year
-• You must have Dutch residency (BSN + municipality registration)
-
-Most expats with 30% ruling and mid-to-high salaries earn above €40,857 and do not qualify.
-
-**Huurtoeslag (rent allowance):** In 2026, the rent ceiling was abolished — any rent now qualifies. Income limits still apply. Worth checking if your salary is below ~€35,000 including partner income.`,
+To check and request toeslagen, log in at toeslagen.nl with your DigiD.`,
     source: "belastingdienst.nl/toeslagen",
   },
   {
-    id: "deadlines-expat",
-    title: "Key 2026 deadlines for expats",
+    id: "find-accountant",
+    title: "Finding an accountant who understands your background",
+    body: `As a ZZP freelancer with an international background, finding the right accountant matters. Look for an advisor who:
+
+• Speaks your language (English, Persian/Farsi, or other)
+• Has experience with ZZP tax returns and knows the urencriterium (hours requirement)
+• Understands cross-border tax situations (if you have income or assets outside the Netherlands)
+• Is registered with a Dutch professional body (NBA, RB, or NOAB)
+
+**Our accountant marketplace** lists verified Dutch tax advisors who work with international ZZP clients. You can filter by specialization including "International-background ZZP" and by language spoken.`,
+    source: "taxwijs.nl/vind-adviseur",
+  },
+  {
+    id: "key-deadlines",
+    title: "Key 2026 tax deadlines for ZZP freelancers",
     body: `| Date | Obligation |
 |---|---|
-| **1 May 2026** | Standard IB return deadline (for full-year residents, tax year 2025) |
-| 1 July 2026 | M-form deadline (partial-year residents 2025) |
-| Within 4 months of start | 30% ruling application (to get backdated to start date) |
-| 31 January 2027 | Check your 30% ruling phase-down year — year 4 drops to 20% |
+| **30 April 2026** | BTW Q1 2026 return deadline |
+| **1 May 2026** | Annual IB return deadline (for tax year 2025) |
+| **31 July 2026** | BTW Q2 2026 return deadline |
+| **31 October 2026** | BTW Q3 2026 return deadline |
+| **31 January 2027** | BTW Q4 2026 return deadline |
 
-You can request a 5-month extension for the standard IB return. M-form extensions are also available but must be requested from the Belastingdienst directly.`,
+You can request a 5-month extension for the annual IB return. Contact the Belastingdienst or use a registered tax advisor to file for an extension.
+
+**Note:** Late BTW returns attract automatic penalties (verzuimboete) even if the amount due is zero. Always file on time, even a nil return.`,
     source: "belastingdienst.nl/aangifte-termijnen",
   },
 ];
 
 const FAQ = [
-  { q: "How much tax does an expat pay in the Netherlands with the 30% ruling?", a: "With the 30% ruling, your effective tax rate on a €90,000 salary is typically 20–25%. Without the ruling, it would be around 30–35%. The exact amount depends on credits, Box 3 assets and your situation. Use our calculator for precise figures." },
-  { q: "When does the 30% ruling expire?", a: "The 30% ruling lasts a maximum of 5 years from your first Dutch working day. Under the 2024 phase-down, years 4 and 5 give you only 20% and 10% tax-free allowance. After 5 years, the ruling expires entirely." },
-  { q: "Do I need to file a Dutch tax return if I have the 30% ruling?", a: "Yes. You must file a standard IB return (P-form) for full years, or an M-form for the year you arrived or left the Netherlands. Your employer handles payroll tax separately, but the IB return accounts for all income and credits." },
-  { q: "What is the 150km rule for the 30% ruling?", a: "To qualify, you must have lived more than 150km from the Dutch border in at least 16 of the 24 months before your first Dutch working day. Living in Belgium, Luxembourg, or parts of Germany too close to the border may disqualify you." },
-  { q: "Can I use the 30% ruling as a freelancer (ZZP)?", a: "No. The 30% ruling requires a Dutch employer who withholds payroll tax. Self-employed ZZP workers cannot use it. However, if you were an employee under the ruling and later become ZZP, the ruling period simply stops." },
+  { q: "Can I start a ZZP business in the Netherlands without Dutch nationality?", a: "Yes. EU/EEA citizens can register immediately. Non-EU nationals need a valid residence permit that allows self-employment. Check your permit conditions — some residence permits restrict work types. Contact the IND (immigration authority) if unsure." },
+  { q: "Do I need a Dutch bank account to be a ZZP freelancer?", a: "Not legally, but in practice most Dutch clients require a Dutch IBAN for invoicing and payments. You can open a Dutch business account with your BSN. Several banks (Bunq, Revolut Business, ING) offer streamlined onboarding for international residents." },
+  { q: "What is the urencriterium and do I have to track hours?", a: "The urencriterium (hours criterion) is the 1,225 hours/year threshold you must meet to claim the zelfstandigenaftrek (€1,200 deduction in 2026). Keep a simple hours log — date, client, hours worked. It does not need to be submitted but you must be able to show it if audited." },
+  { q: "I came to the Netherlands on a work visa with the 30% ruling — can I keep it if I go ZZP?", a: "No. The 30% ruling is tied to employment. If you leave your employer and register as ZZP, the ruling stops from the day your employment ends. There is no ZZP equivalent of the 30% ruling." },
+  { q: "How do I file my first Dutch tax return as ZZP?", a: "Log in to Mijn Belastingdienst (belastingdienst.nl) with your DigiD. Choose 'Aangifte inkomstenbelasting' for the relevant year. If your Dutch is limited, the portal offers some English guidance. For your first year, many international ZZP workers use an accountant to avoid mistakes." },
 ];
 
 export default function ExpatTaxPage() {
@@ -136,21 +125,21 @@ export default function ExpatTaxPage() {
         <div style={{ marginBottom: "var(--sp-10)" }}>
           <span className="pill pill-accent" style={{ marginBottom: "var(--sp-3)", display: "inline-block" }}>2026 Guide</span>
           <h1 style={{ fontFamily: "var(--serif)", fontSize: isMobile ? "var(--text-4xl)" : "var(--text-5xl)", fontWeight: 400, color: "var(--ink)", letterSpacing: "-0.025em", lineHeight: "var(--leading-tight)" }}>
-            Expat Tax in the Netherlands — 2026 Guide
+            ZZP Freelancing in the Netherlands — Guide for Internationals
           </h1>
           <p style={{ marginTop: "var(--sp-3)", fontSize: "var(--text-lg)", color: "var(--ink-2)", maxWidth: 680 }}>
-            The 30% ruling, M-form, Box 3 foreign assets, toeslagen eligibility and key deadlines — explained in plain English.
+            KVK registration, BSN, DigiD, income tax, toeslagen and key deadlines — explained for foreign-background ZZP freelancers.
           </p>
           <div style={{ marginTop: "var(--sp-5)", display: "flex", flexWrap: "wrap", gap: "var(--sp-3)" }}>
             <button className="btn btn-accent" onClick={() => navigate("/chat")}>
-              Ask the expat tax AI →
+              Ask the ZZP tax AI →
             </button>
-            <button className="btn btn-ghost" onClick={() => navigate("/intake")}>
-              Calculate my 2026 expat tax →
+            <button className="btn btn-ghost" onClick={() => navigate("/find-accountant?specialization=international")}>
+              Find an international ZZP advisor →
             </button>
           </div>
           <p style={{ marginTop: "var(--sp-3)", fontSize: "var(--text-xs)", color: "var(--ink-4)" }}>
-            Sources: Belastingdienst.nl · All figures verified for tax year 2026
+            Sources: KVK.nl · Belastingdienst.nl · All figures verified for tax year 2026
           </p>
         </div>
 
@@ -213,17 +202,17 @@ export default function ExpatTaxPage() {
         {/* Bottom CTA */}
         <div className="card" style={{ marginTop: "var(--sp-12)", padding: "var(--sp-8)", textAlign: "center", background: "var(--accent-soft)", border: "1px solid var(--accent-line)" }}>
           <h2 style={{ fontFamily: "var(--serif)", fontSize: "var(--text-2xl)", fontWeight: 400, color: "var(--ink)", marginBottom: "var(--sp-2)" }}>
-            Calculate your expat tax with the 30% ruling
+            Calculate your ZZP tax as an international
           </h2>
           <p style={{ color: "var(--ink-3)", fontSize: "var(--text-sm)", marginBottom: "var(--sp-5)" }}>
-            Our calculator handles the 30% phase-down, M-form scenarios, Box 3 foreign assets and all 2026 tax credits.
+            Our calculator handles ZZP deductions, urencriterium, ZVW contribution, Box 3 and all 2026 tax credits.
           </p>
           <div style={{ display: "flex", gap: "var(--sp-3)", justifyContent: "center", flexWrap: "wrap" }}>
-            <button className="btn btn-accent btn-lg" onClick={() => navigate("/intake")}>
-              Calculate my expat tax →
+            <button className="btn btn-accent btn-lg" onClick={() => navigate("/calculator")}>
+              Calculate my ZZP tax →
             </button>
-            <button className="btn btn-ghost btn-lg" onClick={() => navigate("/chat")}>
-              Ask the AI a question
+            <button className="btn btn-ghost btn-lg" onClick={() => navigate("/find-accountant?specialization=international")}>
+              Find an international ZZP advisor
             </button>
           </div>
         </div>

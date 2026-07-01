@@ -183,18 +183,16 @@ function buildComplianceItems(
       : undefined,
   });
 
-  // BTW Q1 (ZZP/DGA, deadline Apr 30)
-  if (["zzp", "dga"].includes(userType)) {
-    const q1Deadline = new Date(today.getFullYear(), 3, 30); // Apr 30
-    const q1Filed = today > q1Deadline;
-    items.push({
-      label: t("BTW Q1 aangifte", "VAT Q1 return", "اظهارنامه VAT Q1"),
-      ok: q1Filed,
-      note: !q1Filed
-        ? t("Vervalt 30 april 2026", "Due 30 April 2026", "مهلت ۳۰ آوریل ۲۰۲۶")
-        : undefined,
-    });
-  }
+  // BTW Q1 (deadline Apr 30)
+  const q1Deadline = new Date(today.getFullYear(), 3, 30); // Apr 30
+  const q1Filed = today > q1Deadline;
+  items.push({
+    label: t("BTW Q1 aangifte", "VAT Q1 return", "اظهارنامه VAT Q1"),
+    ok: q1Filed,
+    note: !q1Filed
+      ? t("Vervalt 30 april 2026", "Due 30 April 2026", "مهلت ۳۰ آوریل ۲۰۲۶")
+      : undefined,
+  });
 
   return items;
 }
@@ -284,7 +282,7 @@ function computeHealthScore(
   }
 
   // ── Tax reserve adequacy (+10 or -8) ─────────────────────────────────────
-  if (calcResult && ["zzp", "dga"].includes(String(profile.user_type ?? ""))) {
+  if (calcResult) {
     const totalTax = calcResult.result.total_tax_due ?? 0;
     const monthlyReserve = calcResult.result.monthly_reserve_needed ?? 0;
     const currentMonth = new Date().getMonth(); // 0-indexed
@@ -537,7 +535,7 @@ function FinancialOverviewCard({
           </div>
 
           {/* Tax Buffer Estimation */}
-          {["zzp", "dga"].includes(userType) && monthlyReserve > 0 && (
+          {monthlyReserve > 0 && (
             <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--hairline)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                 <span style={{ fontSize: 11.5, color: "var(--ink-3)" }}>
@@ -1230,20 +1228,12 @@ export default function DashboardPage() {
             icon={<Percent size={16} />} iconBg="var(--blue-subtle)" iconColor="var(--blue)" />
           <SummaryCard title={L("Maandelijks reserveren", "Monthly reserve", "ذخیره ماهانه")} value={formatEur(Math.round(monthlyRsrv))} subtitle={L("Apart zetten", "Set aside", "کنار بگذارید")} loading={loadingCalc}
             icon={<PiggyBank size={16} />} iconBg="var(--blue-subtle)" iconColor="var(--blue)" />
-          {userType === "zzp" ? (
-            <SummaryCard title={L("Wet DBA risico", "Wet DBA risk", "ریسک Wet DBA")}
-              value={wetDba ? wetDba.charAt(0).toUpperCase() + wetDba.slice(1).toLowerCase() : "—"}
-              subtitle={wetDba ? undefined : L("Nog niet berekend", "Not yet calculated", "هنوز محاسبه نشده")}
-              valueColor={wetDba === "high" ? "var(--danger)" : wetDba === "medium" ? "var(--warn)" : wetDba === "low" ? "var(--ok)" : undefined}
-              loading={loadingCalc}
-              icon={<ShieldAlert size={16} />} iconBg={wetDba === "high" ? "var(--danger-subtle)" : wetDba === "medium" ? "var(--warn-subtle)" : "var(--blue-subtle)"} iconColor={wetDba === "high" ? "var(--danger)" : wetDba === "medium" ? "var(--warn)" : "var(--blue)"} />
-          ) : (
-            <SummaryCard title="Tax Health" value={loadingCalc || loadingAlerts ? "—" : String(healthScore)}
-              subtitle={healthScore >= 80 ? "Good" : healthScore >= 55 ? "Fair" : "Needs attention"}
-              valueColor={healthScore >= 80 ? "var(--ok)" : healthScore >= 55 ? "var(--warn)" : "var(--danger)"}
-              loading={loadingCalc || loadingAlerts}
-              icon={<Activity size={16} />} iconBg="var(--blue-subtle)" iconColor="var(--blue)" />
-          )}
+          <SummaryCard title={L("Wet DBA risico", "Wet DBA risk", "ریسک Wet DBA")}
+            value={wetDba ? wetDba.charAt(0).toUpperCase() + wetDba.slice(1).toLowerCase() : "—"}
+            subtitle={wetDba ? undefined : L("Nog niet berekend", "Not yet calculated", "هنوز محاسبه نشده")}
+            valueColor={wetDba === "high" ? "var(--danger)" : wetDba === "medium" ? "var(--warn)" : wetDba === "low" ? "var(--ok)" : undefined}
+            loading={loadingCalc}
+            icon={<ShieldAlert size={16} />} iconBg={wetDba === "high" ? "var(--danger-subtle)" : wetDba === "medium" ? "var(--warn-subtle)" : "var(--blue-subtle)"} iconColor={wetDba === "high" ? "var(--danger)" : wetDba === "medium" ? "var(--warn)" : "var(--blue)"} />
         </div>
       )}
 

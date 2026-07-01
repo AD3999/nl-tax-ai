@@ -75,27 +75,6 @@ def generate_accountant_actions(engagement) -> dict:
                 "fa": f"با احترام {name or 'مشتری گرامی'},\n\nبرای اظهارنامه مالیاتی {year} به عنوان فریلنسر (zzp) هنوز به مدارک زیر نیاز داریم: ثبت ساعات کار (برای کسر ۱٬۲۰۰ یورویی، حداقل ۱٬۲۲۵ ساعت)، اظهارنامه‌های BTW و صورت سود و زیان. لطفاً از طریق پورتال TaxWijs آپلود کنید.\n\nتوجه: مشارکت ZVW (۴٫۸۵٪ از سود خالص) نیز امسال باید پرداخت شود.\n\nبا احترام،\nحسابدار شما",
             },
         },
-        "employee": {
-            "request_document": {
-                "nl": f"Beste {name or 'klant'},\n\nVoor uw belastingaangifte {year} als werknemer hebben wij nog uw jaaropgave nodig van uw werkgever(s). Heeft u ook aftrekposten (hypotheekrente, alimentatie, giften)? Upload dan ook de bijbehorende documenten.\n\nMet vriendelijke groet,\nUw accountant",
-                "en": f"Dear {name or 'client'},\n\nFor your {year} employee tax return we still need your annual income statement (jaaropgave) from your employer(s). If you have deductions (mortgage interest, alimony, donations), please upload those documents too.\n\nKind regards,\nYour accountant",
-                "fa": f"با احترام {name or 'مشتری گرامی'},\n\nبرای اظهارنامه مالیاتی {year} به عنوان کارمند، هنوز به جاروپگاوه (گواهی درآمد سالانه) از کارفرمای شما نیاز داریم. اگر کسورات دارید (بهره وام مسکن، نفقه، اهدا)، اسناد مربوطه را نیز آپلود کنید.\n\nبا احترام،\nحسابدار شما",
-            },
-        },
-        "expat": {
-            "request_document": {
-                "nl": f"Beste {name or 'klant'},\n\nVoor uw aangifte als expat {year} hebben wij de volgende documenten nodig: uw 30%-ruling beschikking (indien van toepassing), jaaropgave, en indien u halverwege het jaar in Nederland bent aangekomen, de M-form gegevens. Upload alles via TaxWijs.\n\nMet vriendelijke groet,\nUw accountant",
-                "en": f"Dear {name or 'client'},\n\nFor your {year} expat tax return we need: your 30% ruling decision letter (if applicable), annual income statement (jaaropgave), and if you arrived in the Netherlands mid-year, your M-form details. Please upload via TaxWijs.\n\nKind regards,\nYour accountant",
-                "fa": f"با احترام {name or 'مشتری گرامی'},\n\nبرای اظهارنامه مالیاتی {year} به عنوان اکسپت به مدارک زیر نیاز داریم: حکم ۳۰٪ (در صورت اعمال)، جاروپگاوه و در صورتی که در میان سال وارد هلند شده‌اید، اطلاعات فرم M. لطفاً از طریق TaxWijs آپلود کنید.\n\nبا احترام،\nحسابدار شما",
-            },
-        },
-        "dga": {
-            "request_document": {
-                "nl": f"Beste {name or 'klant'},\n\nVoor uw aangifte als DGA {year} hebben wij het volgende nodig: salarisstroken (gebruikelijk loon min. €56.000), de jaarrekening van de BV, en dividendbesluiten. Upload deze documenten via TaxWijs.\n\nMet vriendelijke groet,\nUw accountant",
-                "en": f"Dear {name or 'client'},\n\nFor your {year} DGA (director-shareholder) tax return we need: your payslips (gebruikelijk loon, min. €56,000), the BV annual accounts (jaarrekening), and any dividend resolutions. Please upload via TaxWijs.\n\nKind regards,\nYour accountant",
-                "fa": f"با احترام {name or 'مشتری گرامی'},\n\nبرای اظهارنامه مالیاتی {year} به عنوان DGA به مدارک زیر نیاز داریم: فیش‌های حقوقی (حداقل ۵۶٬۰۰۰ یورو)، صورت‌های مالی سالانه BV و تصمیمات تقسیم سود. لطفاً از طریق TaxWijs آپلود کنید.\n\nبا احترام،\nحسابدار شما",
-            },
-        },
     }
 
     type_overrides = _TYPE_OVERRIDES.get(client_type, {})

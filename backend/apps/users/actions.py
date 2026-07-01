@@ -29,33 +29,25 @@ def generate_actions(
     actions: list[dict] = []
     today = date.today()
     result = calc_result.get("result", {}) if calc_result else {}
-    user_type = profile.get("user_type", "")
-    income = float(
-        profile.get("annual_revenue_zzp")
-        or profile.get("employment_income")
-        or 0
-    )
+    income = float(profile.get("annual_revenue_zzp") or 0)
 
-    _btw_filing(actions, today, user_type, lang)
+    _btw_filing(actions, today, lang)
     _ib_return(actions, today, lang)
-    _urencriterium(actions, profile, user_type, lang)
-    _voorlopige_aanslag(actions, result, user_type, lang)
-    _monthly_reserve(actions, result, user_type, lang)
+    _urencriterium(actions, profile, lang)
+    _voorlopige_aanslag(actions, result, lang)
+    _monthly_reserve(actions, result, lang)
     _toeslagen_update(actions, income, lang)
     _box3_review(actions, profile, lang)
     _pension_jaarruimte(actions, profile, lang)
     _profile_completion(actions, profile, lang)
-    if user_type == "zzp":
-        _collect_receipts(actions, today, lang)
+    _collect_receipts(actions, today, lang)
 
     return actions
 
 
 # ── Filing ──────────────────────────────────────────────────────────────────
 
-def _btw_filing(actions, today, user_type, lang):
-    if user_type not in ("zzp", "dga"):
-        return
+def _btw_filing(actions, today, lang):
     year = today.year
     quarters = [
         {"id": "file-btw-q1", "due": date(year, 4, 30), "q": 1},
@@ -124,9 +116,7 @@ def _ib_return(actions, today, lang):
 
 # ── Compliance ───────────────────────────────────────────────────────────────
 
-def _urencriterium(actions, profile, user_type, lang):
-    if user_type != "zzp":
-        return
+def _urencriterium(actions, profile, lang):
     hours = int(profile.get("hours_per_year") or 0)
     THRESHOLD = 1225
     if hours == 0:
@@ -180,9 +170,9 @@ def _urencriterium(actions, profile, user_type, lang):
 
 # ── Optimization ─────────────────────────────────────────────────────────────
 
-def _voorlopige_aanslag(actions, result, user_type, lang):
+def _voorlopige_aanslag(actions, result, lang):
     reserve = result.get("monthly_reserve_needed", 0) or 0
-    if user_type not in ("zzp", "dga") or reserve < 1500:
+    if reserve < 1500:
         return
     actions.append({
         "id": "request-voorlopige-aanslag",
@@ -208,9 +198,9 @@ def _voorlopige_aanslag(actions, result, user_type, lang):
     })
 
 
-def _monthly_reserve(actions, result, user_type, lang):
+def _monthly_reserve(actions, result, lang):
     reserve = result.get("monthly_reserve_needed", 0) or 0
-    if user_type not in ("zzp", "dga") or reserve <= 0:
+    if reserve <= 0:
         return
     actions.append({
         "id": "set-aside-reserve",
@@ -297,11 +287,10 @@ def _box3_review(actions, profile, lang):
 
 
 def _pension_jaarruimte(actions, profile, lang):
-    user_type = profile.get("user_type", "")
-    income = float(profile.get("annual_revenue_zzp") or profile.get("employment_income") or 0)
+    income = float(profile.get("annual_revenue_zzp") or 0)
     pension = float(profile.get("pension_deduction") or 0)
     BASE = 19172
-    if user_type not in ("zzp", "employee") or income <= BASE or pension > 0:
+    if income <= BASE or pension > 0:
         return
     jaarruimte = round((income - BASE) * 0.30)
     if jaarruimte < 500:
@@ -340,9 +329,8 @@ def _profile_completion(actions, profile, lang):
             "en": "Box 3 assets",
             "fa": "دارایی‌های باکس ۳",
         }.get(lang, "Box 3 assets"))
-    if profile.get("user_type") == "zzp":
-        if not profile.get("single_client_percentage") and not profile.get("single_client_pct"):
-            missing.append({
+    if not profile.get("single_client_percentage") and not profile.get("single_client_pct"):
+        missing.append({
                 "nl": "klantconcentratie (%)",
                 "en": "client concentration (%)",
                 "fa": "تمرکز مشتری (%)",

@@ -99,10 +99,7 @@ export default function AdminCalculatorPreviewPage() {
             <Select
               label="User type"
               options={[
-                { value: "zzp",      label: "ZZP (freelance)" },
-                { value: "employee", label: "Employee" },
-                { value: "expat",    label: "Expat" },
-                { value: "dga",      label: "DGA" },
+                { value: "zzp", label: "ZZP (freelance)" },
               ]}
               value={profile.user_type}
               onChange={e => update("user_type", e.target.value)}

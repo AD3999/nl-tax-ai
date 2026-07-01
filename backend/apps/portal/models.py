@@ -45,11 +45,7 @@ class Firm(models.Model):
 
 class AccountantClientProfile(models.Model):
     CLIENT_TYPE_CHOICES = [
-        ("employee", "Employee"),
-        ("zzp",      "ZZP / Freelancer"),
-        ("expat",    "Expat"),
-        ("dga",      "DGA / Director"),
-        ("other",    "Other / Unknown"),
+        ("zzp", "ZZP / Freelancer"),
     ]
     LANGUAGE_CHOICES = [
         ("nl", "Nederlands"),
@@ -79,7 +75,7 @@ class AccountantClientProfile(models.Model):
     first_name   = models.CharField(max_length=100, blank=True)
     last_name    = models.CharField(max_length=100, blank=True)
     company_name = models.CharField(max_length=200, blank=True)
-    client_type  = models.CharField(max_length=20, choices=CLIENT_TYPE_CHOICES, default="other")
+    client_type  = models.CharField(max_length=20, choices=CLIENT_TYPE_CHOICES, default="zzp")
     preferred_language = models.CharField(max_length=5, choices=LANGUAGE_CHOICES, default="nl")
     phone        = models.CharField(max_length=30, blank=True)
     status       = models.CharField(max_length=20, choices=STATUS_CHOICES, default="invited")

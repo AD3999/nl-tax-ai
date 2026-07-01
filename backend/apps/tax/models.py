@@ -108,6 +108,8 @@ class TaxRule(models.Model):
     )
     approved_at = models.DateTimeField(null=True, blank=True)
 
+    is_active = models.BooleanField(default=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.CharField(max_length=150, blank=True)

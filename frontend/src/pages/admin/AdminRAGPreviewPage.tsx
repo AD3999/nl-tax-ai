@@ -91,7 +91,7 @@ export default function AdminRAGPreviewPage() {
     "how much tax does a ZZP pay",
     "zorgtoeslag income limit",
     "VAT deadline quarterly",
-    "expat 30% ruling",
+    "wet DBA risk ZZP",
     "box 3 savings exemption",
   ];
 
@@ -151,11 +151,8 @@ export default function AdminRAGPreviewPage() {
             <Select
               label="User type filter"
               options={[
-                { value: "all",      label: "All types" },
-                { value: "zzp",      label: "ZZP" },
-                { value: "employee", label: "Employee" },
-                { value: "expat",    label: "Expat" },
-                { value: "dga",      label: "DGA" },
+                { value: "all", label: "All types" },
+                { value: "zzp", label: "ZZP" },
               ]}
               value={userTypeFilter}
               onChange={e => setUserTypeFilter(e.target.value)}

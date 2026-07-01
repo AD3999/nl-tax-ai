@@ -25,8 +25,6 @@ const CATEGORY_META: Record<string, { icon: string; color: string; label: Record
   vat:                    { icon: "🧾", color: "var(--info)",     label: { nl: "BTW / OB",           en: "BTW / VAT",       fa: "مالیات بر ارزش افزوده" } },
   toeslagen:              { icon: "🏠", color: "var(--warn)",     label: { nl: "Toeslagen",          en: "Toeslagen",       fa: "یارانه‌ها" } },
   provisional_assessment: { icon: "📊", color: "var(--purple)",   label: { nl: "Voorlopige aanslag", en: "Provisional",     fa: "ارزیابی اولیه" } },
-  expat:                  { icon: "✈️", color: "var(--warn)",     label: { nl: "Expat",              en: "Expat",           fa: "اکسپت" } },
-  dga:                    { icon: "🏢", color: "var(--purple)",   label: { nl: "DGA / BV",           en: "DGA / BV",        fa: "DGA / BV" } },
   box3:                   { icon: "💰", color: "var(--ok)",       label: { nl: "Box 3",              en: "Box 3",           fa: "جعبه ۳" } },
   zzp_admin:              { icon: "⏱️", color: "var(--blue)",     label: { nl: "ZZP Admin",          en: "ZZP Admin",       fa: "مدیریت ZZP" } },
   corporate_tax:          { icon: "🏭", color: "var(--purple)",   label: { nl: "Vpb",                en: "Corp. Tax",       fa: "مالیات شرکتی" } },

@@ -26,7 +26,7 @@ const TABS = [
 ] as const;
 type TabId = typeof TABS[number]["id"];
 
-const USER_TYPE_OPTS = ["zzp", "employee", "expat", "dga", "accountant", "all"] as const;
+const USER_TYPE_OPTS = ["zzp", "accountant", "all"] as const;
 const CATEGORY_OPTS = ["bracket","deduction","credit","contribution","exemption","rate","deadline","compliance","detection","benefit"] as const;
 const RESULT_TYPE_OPTS = ["fixed_amount","percentage","bracket","formula","cap","threshold","phase_out","boolean","date"] as const;
 const STATUS_OPTS = ["draft","pending_review","verified","expired"] as const;
