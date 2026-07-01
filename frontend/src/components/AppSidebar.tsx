@@ -132,13 +132,6 @@ function SidebarContent({ onNav }: SidebarContentProps) {
   const isAccountant = user?.role === "accountant";
   const isClient     = !!user && !isAdmin && !isAccountant;
 
-  // Polling fallback: re-fetch profile every 5 s for clients so the sidebar
-  // syncs quickly when the WebSocket is disconnected or the tab is in the background.
-  useEffect(() => {
-    if (!isClient) return;
-    const id = setInterval(() => { void refreshUser().catch(() => null); }, 5_000);
-    return () => clearInterval(id);
-  }, [isClient, refreshUser]);
   const hasAccountant = !!user?.has_accountant;
   const items        = isAdmin ? adminNav() : isAccountant ? accountantNav() : clientNav(t, hasAccountant);
   const sectionLabel = isAdmin ? "Admin" : isAccountant ? "Accountant" : "Menu";
