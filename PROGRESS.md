@@ -1,7 +1,47 @@
 # TaxWijs — Build Progress Log
 
  > This file tracks what has been built, tested, and shipped.
-> Last updated: 1 Jul 2026 — QA Audit v7 (28 issues) fully fixed and deployed ✅
+> Last updated: 1 Jul 2026 — ZZP-only pivot complete and deployed ✅
+
+---
+
+## Session — 1 Jul 2026 · ZZP-Only Pivot ✅
+
+### Branch: `zzp-only-pivot` → merged to `master` (3e96ea3 → 1387c35)
+
+Hard pivot: every user on the platform is a ZZP freelancer. All employee,
+expat, and DGA tax paths removed from the full stack (47 files, 6 migrations).
+
+**Verification:** Django check ✓ · `tsc --noEmit` 0 errors ✓
+
+| Area | Changes |
+|------|---------|
+| Backend models | `USER_TYPES` → `[("zzp","ZZP")]`, `CLIENT_TYPE_CHOICES` → ZZP only; data migrations set all existing rows |
+| Calculator engine | Removed Box 2, 30% ruling, employment_income; all ZZP deductions unconditional |
+| Calculator serializer | Removed user_type, employment_income, box2_dividend, uses_30pct_ruling, ruling_year fields |
+| TaxRule / TaxReminder | Added `is_active`; non-ZZP rows archived (is_active=False) not deleted — reversible |
+| TaxReminder categories | Narrowed to income_tax, vat, toeslagen, provisional_assessment, box3, admin, documents, zzp_admin |
+| Portal services | accountant_checklists: removed employee/expat/DGA templates; accountant_actions: removed type overrides |
+| Chat AI prompts | Intake + IB return prompts rewritten for ZZP-only; Box 2 removed |
+| Alerts / actions / tasks | Removed user_type guards; all ZZP checks unconditional |
+| seed_reminders | Removed DGA section (4 entries) and Expat section (4 entries) |
+| Frontend UserType | Narrowed to `"zzp" \| "accountant" \| "all"` in types.ts, schema.ts, retrieve.ts |
+| CalcInput API | user_type fixed `"zzp"`, removed employment_income/box2_dividend/uses_30pct_ruling/ruling_year |
+| CalculatorPage | Removed type selector; form always shows ZZP fields |
+| ChatPage | Intake greeting rewritten ZZP-only; non-ZZP quick questions removed |
+| DashboardPage | Removed `["zzp","dga"].includes()` gates; unconditional |
+| DeductionCheckerPage | Removed waitlist flow; narrowed to ZZP |
+| ExpatTaxPage | Rewritten as "ZZP for internationals in NL" (route kept for SEO) |
+| FindAccountantPage | Specializations updated to ZZP niche taxonomy |
+| IntakePage | Step 1 is now a ZZP confirmation card; no type selector |
+| simulationSteps.ts | `answersToCalcProfile` always returns `user_type:"zzp"` |
+| Admin pages | AdminUsers/RAGPreview/Calculator/Rules/RuleEditor narrowed to ZZP |
+| mock-data.ts | All non-ZZP user_types replaced with `["zzp"]` |
+
+**Outstanding (unchanged from before, strategic):**
+- WebSocket / real-time (currently polling)
+- Subscription gating
+- Dual invitation model consolidation
 
 ---
 
