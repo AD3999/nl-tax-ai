@@ -65,7 +65,9 @@ async function del(path: string): Promise<void> {
 }
 
 // ── Clients ──────────────────────────────────────────────────────────────────
-export const fetchClients      = () => get<ClientProfile[]>("/clients/");
+export const fetchClients      = () =>
+  get<{ count: number; page: number; page_size: number; results: ClientProfile[] }>("/clients/")
+    .then(r => r.results);
 export const createClient      = (data: Partial<ClientProfile>) => post<ClientProfile>("/clients/", data, true);
 export const fetchClient       = (id: number) => get<ClientProfile>(`/clients/${id}/`);
 export const updateClient      = (id: number, data: Partial<ClientProfile>) => patch<ClientProfile>(`/clients/${id}/`, data);
@@ -75,7 +77,9 @@ export const reactivateClient  = (id: number) => post<ClientProfile>(`/clients/$
 export const selfDisconnect    = () => post<{ detail: string }>("/client/disconnect/", {}, true);
 
 // ── Engagements ───────────────────────────────────────────────────────────────
-export const fetchEngagements    = () => get<TaxEngagement[]>("/engagements/");
+export const fetchEngagements    = () =>
+  get<{ count: number; page: number; page_size: number; results: TaxEngagement[] }>("/engagements/")
+    .then(r => r.results);
 export const createEngagement    = (data: Partial<TaxEngagement>) => post<TaxEngagement>("/engagements/", data, true);
 export const fetchEngagement     = (id: number) => get<TaxEngagement>(`/engagements/${id}/`);
 export const updateEngagement    = (id: number, data: Partial<TaxEngagement>) => patch<TaxEngagement>(`/engagements/${id}/`, data);

@@ -80,3 +80,19 @@ def create_notification(
         send_push_notification(user, title, body, url=action_url or "/")
     except Exception as exc:
         logger.error("create_notification push failed for user %s: %s", getattr(user, "pk", "?"), exc)
+
+    # Email delivery for critical portal events (respects email_enabled preference)
+    _EMAIL_EVENTS = {
+        "document_approved", "document_rejected", "engagement_ready",
+        "invitation_accepted", "readiness_milestone",
+    }
+    if notif_type in _EMAIL_EVENTS:
+        try:
+            from apps.portal.tasks import send_portal_email_task
+            send_portal_email_task.delay(
+                user_id=getattr(user, "pk", None),
+                subject=title,
+                body=body or title,
+            )
+        except Exception as exc:
+            logger.debug("Email task queue failed for user %s: %s", getattr(user, "pk", "?"), exc)

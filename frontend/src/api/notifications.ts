@@ -10,9 +10,11 @@ export interface AppNotification {
   created_at: string;
 }
 
-export async function getNotifications(): Promise<AppNotification[]> {
-  const r = await client.get<AppNotification[]>("/users/inapp-notifications/");
-  return r.data;
+export async function getNotifications(page = 1, pageSize = 50): Promise<AppNotification[]> {
+  const r = await client.get<{ count: number; page: number; page_size: number; results: AppNotification[] }>(
+    `/users/inapp-notifications/?page=${page}&page_size=${pageSize}`,
+  );
+  return r.data.results;
 }
 
 export async function getUnreadCount(): Promise<number> {

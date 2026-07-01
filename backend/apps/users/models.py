@@ -491,6 +491,7 @@ class Notification(models.Model):
         ("readiness_milestone", "Readiness milestone"),
         ("engagement_ready", "Engagement ready to file"),
         ("checklist_update", "Checklist update"),
+        ("invitation_declined", "Invitation declined"),
         ("system", "System notification"),
     ]
 

@@ -260,12 +260,13 @@ class ClientDocument(models.Model):
         ("other",              "Other"),
     ]
     PROCESSING_STATUS_CHOICES = [
-        ("uploaded",     "Uploaded"),
-        ("processing",   "Processing"),
-        ("extracted",    "Extracted"),
-        ("needs_review", "Needs review"),
-        ("approved",     "Approved"),
-        ("rejected",     "Rejected"),
+        ("uploaded",           "Uploaded"),
+        ("processing",         "Processing"),
+        ("extracted",          "Extracted"),
+        ("extraction_failed",  "Extraction failed"),
+        ("needs_review",       "Needs review"),
+        ("approved",           "Approved"),
+        ("rejected",           "Rejected"),
     ]
 
     ALLOWED_MIME_TYPES = [
@@ -612,6 +613,7 @@ class PortalMessage(models.Model):
     )
     body           = models.TextField()
     is_read        = models.BooleanField(default=False)
+    is_system      = models.BooleanField(default=False)
     read_at        = models.DateTimeField(null=True, blank=True)
     created_at     = models.DateTimeField(auto_now_add=True)
 

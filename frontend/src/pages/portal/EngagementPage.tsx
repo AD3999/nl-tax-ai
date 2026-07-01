@@ -381,8 +381,11 @@ const CHECKLIST_STATUS_COLOR: Record<string, string> = {
 };
 
 const REVIEW_STATUS_COLOR: Record<string, string> = {
-  candidate: "var(--warn)", approved: "var(--ok)",
-  rejected: "var(--danger)", manual: "var(--ink-3)",
+  candidate:         "var(--warn)",
+  approved:          "var(--ok)",
+  rejected:          "var(--danger)",
+  manual:            "var(--ink-3)",
+  extraction_failed: "var(--danger)",
 };
 
 const RISK_COLOR: Record<string, string> = {
@@ -750,14 +753,14 @@ export default function EngagementPage() {
     .filter(i => i.required)
     .every(i => ["uploaded", "answered", "accepted", "waived"].includes(i.status));
 
-  const TABS: { key: Tab; label: string; badge?: boolean }[] = [
+  const TABS: { key: Tab; label: string; badge?: boolean; disabled?: boolean }[] = [
     { key: "overview",  label: tx.tab_overview },
     { key: "checklist", label: `${tx.tab_checklist} (${checklist.length})` },
     { key: "documents", label: `${tx.tab_documents} (${documents.length})` },
     { key: "income",    label: `${tx.tab_income} (${income.length})` },
     { key: "expenses",  label: `${tx.tab_expenses} (${expenses.length})` },
     { key: "risks",     label: tx.tab_risks },
-    { key: "review",    label: tx.tab_review, badge: isNeedsReview },
+    { key: "review",    label: tx.tab_review, badge: isNeedsReview, disabled: !allTasksDone && !isNeedsReview },
     { key: "messages",  label: `${tx.tab_messages} (${messages.length})` },
     { key: "audit",     label: tx.tab_audit },
   ];
@@ -828,7 +831,10 @@ export default function EngagementPage() {
           {TABS.map(t => (
             <button
               key={t.key}
+              disabled={t.disabled}
+              title={t.disabled ? (lang === "nl" ? "Voltooi eerst alle vereiste taken" : lang === "fa" ? "ابتدا همه کارهای لازم را تکمیل کنید" : "Complete all required tasks first") : undefined}
               onClick={() => {
+                if (t.disabled) return;
                 setTab(t.key);
                 if (t.key === "risks") void loadRisks();
                 if (t.key === "audit") void loadAudit();
@@ -841,6 +847,8 @@ export default function EngagementPage() {
                 borderBottom: tab === t.key ? "2px solid var(--blue)" : "2px solid transparent",
                 whiteSpace: "nowrap",
                 display: "flex", alignItems: "center", gap: 5,
+                opacity: t.disabled ? 0.4 : 1,
+                cursor: t.disabled ? "not-allowed" : "pointer",
               }}
             >
               {t.label}

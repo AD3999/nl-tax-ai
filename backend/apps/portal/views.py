@@ -17,7 +17,7 @@ import logging
 import secrets as _secrets
 
 from django.core.cache import cache
-from django.db.models import F
+from django.db.models import F, Prefetch
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -125,12 +125,33 @@ class AccountantClientListView(APIView):
         elif not _is_portal_user(request.user):
             return Response({"error": "Portal access requires an accountant account."}, status=403)
         else:
-            # Exclude self-managed profiles (accountant_user == client_user)
             qs = AccountantClientProfile.objects.filter(
                 accountant_user=request.user
             ).exclude(client_user=F("accountant_user"))
-        serializer = AccountantClientProfileSerializer(qs, many=True, context={"request": request})
-        return Response(serializer.data)
+        # Prefetch latest engagement to eliminate N+1 on readiness/risk/missing_count
+        qs = qs.prefetch_related(
+            Prefetch(
+                "engagements",
+                queryset=TaxEngagement.objects.order_by("-created_at"),
+                to_attr="_prefetched_engagements",
+            )
+        )
+        # Simple offset pagination: ?page=1&page_size=25 (default 50)
+        try:
+            page      = max(1, int(request.query_params.get("page", 1)))
+            page_size = min(100, max(1, int(request.query_params.get("page_size", 50))))
+        except (ValueError, TypeError):
+            page, page_size = 1, 50
+        total  = qs.count()
+        offset = (page - 1) * page_size
+        qs     = qs[offset: offset + page_size]
+        serializer = AccountantClientProfileSerializer(list(qs), many=True, context={"request": request})
+        return Response({
+            "count":     total,
+            "page":      page,
+            "page_size": page_size,
+            "results":   serializer.data,
+        })
 
     def post(self, request):
         if not _is_portal_user(request.user):
@@ -174,6 +195,7 @@ class AccountantClientDetailView(APIView):
         if err:
             return err
         before = AccountantClientProfileSerializer(profile).data
+        old_client_type = profile.client_type
         serializer = AccountantClientProfileSerializer(
             profile, data=request.data, partial=True, context={"request": request}
         )
@@ -183,6 +205,15 @@ class AccountantClientDetailView(APIView):
         _audit(request, "client_updated", "AccountantClientProfile", profile.id,
                client_profile=profile, before=before,
                after=AccountantClientProfileSerializer(profile).data)
+        # Regenerate checklist when client_type changes so items match the new profile
+        if profile.client_type != old_client_type:
+            try:
+                from .services.accountant_checklists import create_checklist_for_engagement
+                engagement = profile.engagements.order_by("-created_at").first()
+                if engagement:
+                    create_checklist_for_engagement(engagement)
+            except Exception:
+                logger.warning("Failed to regenerate checklist after client_type change (profile=%s)", profile.id)
         return Response(AccountantClientProfileSerializer(profile, context={"request": request}).data)
 
     def delete(self, request, pk):
@@ -286,7 +317,7 @@ class AccountantClientDisconnectView(APIView):
             }
             create_notification(
                 user       = profile.client_user,
-                notif_type = "status_update",
+                notif_type = "system",
                 title      = TITLES.get(lang, TITLES["en"]),
                 body       = BODIES.get(lang, BODIES["en"]),
                 action_url = "/dashboard",
@@ -343,7 +374,7 @@ class AccountantClientReactivateView(APIView):
             }
             create_notification(
                 user       = profile.client_user,
-                notif_type = "status_update",
+                notif_type = "system",
                 title      = TITLES.get(lang, TITLES["en"]),
                 body       = BODIES.get(lang, BODIES["en"]),
                 action_url = "/client",
@@ -405,12 +436,24 @@ class EngagementListView(APIView):
         if request.user.is_staff:
             qs = TaxEngagement.objects.select_related("accountant", "client_profile").all()
         else:
-            # Exclude self-managed engagements where accountant == client
             qs = TaxEngagement.objects.select_related("accountant", "client_profile").filter(
                 accountant=request.user
             ).exclude(client_profile__client_user=request.user)
-        serializer = TaxEngagementSerializer(qs, many=True, context={"request": request})
-        return Response(serializer.data)
+        try:
+            page      = max(1, int(request.query_params.get("page", 1)))
+            page_size = min(100, max(1, int(request.query_params.get("page_size", 50))))
+        except (ValueError, TypeError):
+            page, page_size = 1, 50
+        total  = qs.count()
+        offset = (page - 1) * page_size
+        qs     = qs[offset: offset + page_size]
+        serializer = TaxEngagementSerializer(list(qs), many=True, context={"request": request})
+        return Response({
+            "count":     total,
+            "page":      page,
+            "page_size": page_size,
+            "results":   serializer.data,
+        })
 
     def post(self, request):
         serializer = TaxEngagementSerializer(data=request.data, context={"request": request})
@@ -1604,6 +1647,8 @@ class ClientPortalProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        if not _get_active_accountant_profile(request.user):
+            return Response(_PORTAL_FORBIDDEN, status=status.HTTP_403_FORBIDDEN)
         profile = _get_or_create_self_service_profile(request.user)
         return Response(AccountantClientProfileSerializer(profile, context={"request": request}).data)
 
@@ -1796,13 +1841,16 @@ class ClientPortalTaskUpdateView(APIView):
         item.save(update_fields=update_fields)
 
         # When client saves hours, sync to ZZP workspace so the hours counter reflects it
+        zzp_sync_warning = None
         if item.stable_key == "zzp_hours" and meta_value:
             try:
                 from apps.zzp.models import ZZPHoursEntry
                 import datetime as _dt
-                hours_val = float(str(meta_value).strip())
-                tax_year  = item.engagement.tax_year if item.engagement else _dt.date.today().year
-                # Replace any previous task-summary entry for this user+year
+                raw = str(meta_value).strip()
+                hours_val = float(raw)
+                if hours_val < 0:
+                    raise ValueError("hours cannot be negative")
+                tax_year = item.engagement.tax_year if item.engagement else _dt.date.today().year
                 ZZPHoursEntry.objects.filter(
                     user=request.user, year=tax_year, notes="task_checklist_summary"
                 ).delete()
@@ -1815,8 +1863,12 @@ class ClientPortalTaskUpdateView(APIView):
                     week=52,
                     notes="task_checklist_summary",
                 )
-            except Exception:
-                pass  # Never block the task save if ZZP sync fails
+            except (ValueError, TypeError) as exc:
+                logger.warning("ZZP hours sync: invalid value '%s' (item=%s): %s", meta_value, item.id, exc)
+                zzp_sync_warning = "Hours value is not a valid number."
+            except Exception as exc:
+                logger.warning("ZZP hours sync failed (item=%s): %s", item.id, exc)
+                zzp_sync_warning = "Hours saved but workspace sync failed."
 
         # Notify accountant when client marks item as done
         if new_status in ("uploaded", "answered") and old_status not in ("uploaded", "answered"):
@@ -1866,7 +1918,10 @@ class ClientPortalTaskUpdateView(APIView):
                client_profile=item.client_profile, engagement=item.engagement,
                before={"status": old_status}, after={"status": new_status})
 
-        return Response(ChecklistItemSerializer(item).data)
+        data = ChecklistItemSerializer(item).data
+        if zzp_sync_warning:
+            data["warning"] = zzp_sync_warning
+        return Response(data)
 
 
 # ── File Tax Return ───────────────────────────────────────────────────────────
@@ -2203,6 +2258,16 @@ class PortalInvitationSendView(APIView):
         if not _is_portal_user(request.user):
             return Response({"detail": "Accountant access required."}, status=403)
 
+        # Rate limit: max 20 invitations per hour per accountant
+        one_hour_ago = timezone.now() - _dt.timedelta(hours=1)
+        from .models import Invitation as _Inv
+        recent_count = _Inv.objects.filter(sent_by=request.user, created_at__gte=one_hour_ago).count()
+        if recent_count >= 20:
+            return Response(
+                {"detail": "You have reached the hourly invitation limit (20/hour). Please try again later."},
+                status=429,
+            )
+
         idempotency_key = request.headers.get("Idempotency-Key", "").strip()
         if idempotency_key:
             cache_key = f"idempotency:inv_send:{request.user.id}:{idempotency_key}"
@@ -2480,6 +2545,44 @@ class PortalInvitationCancelView(APIView):
         return Response(status=204)
 
 
+class PortalInvitationPreviewView(APIView):
+    """
+    GET /api/portal/invitations/preview/?token=...
+    Returns safe public info about an invitation without accepting it.
+    Used by AcceptInvitationPage to show accountant identity before the user decides.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        from .models import Invitation
+        token = (request.query_params.get("token", "") or "").strip()
+        if not token:
+            return Response({"detail": "token is required."}, status=400)
+
+        try:
+            inv = Invitation.objects.select_related("sent_by__accountant_profile").get(token=token)
+        except Invitation.DoesNotExist:
+            return Response({"detail": "Invalid invitation."}, status=404)
+
+        if inv.status != "pending":
+            return Response({"detail": f"This invitation has already been {inv.status}."}, status=400)
+
+        accountant = inv.sent_by
+        try:
+            firm_name = accountant.accountant_profile.firm_name or ""
+        except Exception:
+            firm_name = ""
+        accountant_name = accountant.get_full_name() or accountant.email
+
+        return Response({
+            "accountant_name": accountant_name,
+            "firm_name":       firm_name,
+            "message":         inv.message or "",
+            "expires_at":      inv.expires_at.isoformat() if inv.expires_at else None,
+            "client_name":     inv.client_name or "",
+        })
+
+
 class PortalInvitationDeclineView(APIView):
     """
     POST /api/portal/invitations/decline/
@@ -2508,43 +2611,7 @@ class PortalInvitationDeclineView(APIView):
                 status=400,
             )
 
-        inv.status = "declined"
-        inv.save(update_fields=["status"])
-
-        # ── Clean up the pre-created shell profile ────────────────────────────
-        try:
-            shell_profile = AccountantClientProfile.objects.filter(
-                accountant_user=inv.sent_by,
-                email__iexact=inv.client_email,
-                client_user__isnull=True,   # only the un-linked placeholder
-            ).first()
-            if shell_profile:
-                has_engagement = TaxEngagement.objects.filter(
-                    client_profile=shell_profile
-                ).exists()
-                if has_engagement:
-                    shell_profile.status = "archived"
-                    shell_profile.save(update_fields=["status", "updated_at"])
-                else:
-                    shell_profile.delete()
-        except Exception:
-            logger.exception("Failed to clean up shell profile on invitation decline (inv=%s)", inv.id)
-
-        # ── Notify the accountant in-app ──────────────────────────────────────
-        try:
-            create_notification(
-                user       = inv.sent_by,
-                notif_type = "status_update",
-                title      = f"{inv.client_name or inv.client_email} declined your invitation",
-                body       = (
-                    f"{inv.client_name or inv.client_email} has declined your "
-                    f"TaxWijs portal invitation."
-                ),
-                action_url = "/accountant/portal",
-                metadata   = {"invitation_id": inv.id},
-            )
-        except Exception:
-            logger.warning("Failed to send invitation_declined notification for inv %s", inv.id)
-
+        from .services.invitation_service import decline_portal_invitation
+        decline_portal_invitation(inv)
         _audit(request, "portal_invitation_declined", "Invitation", inv.id)
         return Response({"detail": "Invitation declined."})

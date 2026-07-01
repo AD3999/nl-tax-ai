@@ -383,6 +383,13 @@ ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
 # Generate: python -c "import os,base64; print(base64.b64encode(os.urandom(32)).decode())"
 BSN_ENCRYPTION_KEY = env("BSN_ENCRYPTION_KEY", default="")
 
+if not DEBUG and not BSN_ENCRYPTION_KEY:
+    from django.core.exceptions import ImproperlyConfigured
+    raise ImproperlyConfigured(
+        "BSN_ENCRYPTION_KEY is required in production. "
+        "Generate one with: python -c \"import os,base64; print(base64.b64encode(os.urandom(32)).decode())\""
+    )
+
 # ── Production security (activated when DEBUG=False) ──────────────────────────
 
 if not DEBUG:

@@ -18,8 +18,9 @@ const TYPE_ICONS: Record<string, string> = {
   readiness_milestone: "🎯",
   engagement_ready:    "🏁",
   invitation_sent:     "✉️",
-  invitation_accepted: "🤝",
-  system:              "🔔",
+  invitation_accepted:  "🤝",
+  invitation_declined:  "❌",
+  system:               "🔔",
 };
 
 function timeAgo(iso: string): string {
@@ -52,8 +53,12 @@ export default function NotificationBell() {
   const [items, setItems]     = useState<AppNotification[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const [wsConnected, setWsConnected] = useState(false);
+
   const prevCountRef    = useRef(0);
   const initializedRef  = useRef(false);
+  const reconnectDelay  = useRef(1000);
+  const reconnectTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Two refs: one for the bell button, one for the portal panel.
   // The outside-click handler must check BOTH — without this, every click
   // inside the portal looks like an "outside click" and fires before onClick.
@@ -75,67 +80,78 @@ export default function NotificationBell() {
     } catch { /* silent */ }
   }, [user, showToast]);
 
-  // ── WebSocket (primary) + polling fallback ───────────────────────
+  // ── WebSocket (primary) + polling fallback + exponential reconnect ───────────────────────
   useEffect(() => {
     if (!user) return;
 
-    // Initial count via REST so the badge is populated before WS connects
     fetchCount();
 
     const token = localStorage.getItem("access_token");
     if (!token) {
-      const id = setInterval(fetchCount, 30_000);
+      const id = setInterval(fetchCount, 15_000);
       return () => clearInterval(id);
     }
 
-    const wsProto  = window.location.protocol === "https:" ? "wss" : "ws";
-    const wsHost   = import.meta.env.VITE_API_URL
-      ? new URL(import.meta.env.VITE_API_URL as string).host
-      : window.location.host;
-    const ws = new WebSocket(`${wsProto}://${wsHost}/ws/notifications/?token=${encodeURIComponent(token)}`);
-    wsRef.current = ws;
-
     let pollingId: ReturnType<typeof setInterval> | null = null;
+    let destroyed = false;
 
-    ws.onopen = () => {
-      // WS connected — no polling needed
-    };
+    function startPolling() {
+      setWsConnected(false);
+      if (!pollingId) pollingId = setInterval(fetchCount, 15_000);
+    }
 
-    ws.onmessage = (evt: MessageEvent) => {
-      try {
-        const data = JSON.parse(evt.data as string) as { id?: number; title?: string; metadata?: { event?: string } };
-        showToast(data.title ?? "You have a new notification", "success");
-        setCount(c => c + 1);
-        prevCountRef.current += 1;
-        // Prepend new notification to open panel list (deduplicated)
-        setItems(prev => {
-          if (prev.length === 0) return prev;             // panel not yet loaded — skip
-          if (data.id && prev.some(n => n.id === data.id)) return prev; // already present
-          return [{ ...data, is_read: false } as AppNotification, ...prev];
-        });
-        // Dispatch custom events so sidebar updates in real-time
-        if (data.metadata?.event === "client_reactivated") {
-          window.dispatchEvent(new CustomEvent("portal:client_reactivated"));
-        }
-        if (data.metadata?.event === "client_deactivated") {
-          window.dispatchEvent(new CustomEvent("portal:client_deactivated"));
-        }
-      } catch { /* ignore malformed frames */ }
-    };
+    function connect() {
+      if (destroyed) return;
+      const wsProto = window.location.protocol === "https:" ? "wss" : "ws";
+      const wsHost  = import.meta.env.VITE_API_URL
+        ? new URL(import.meta.env.VITE_API_URL as string).host
+        : window.location.host;
+      const ws = new WebSocket(`${wsProto}://${wsHost}/ws/notifications/?token=${encodeURIComponent(token)}`);
+      wsRef.current = ws;
 
-    ws.onerror = () => {
-      // Fall back to polling if WS fails
-      if (!pollingId) pollingId = setInterval(fetchCount, 30_000);
-    };
+      ws.onopen = () => {
+        setWsConnected(true);
+        reconnectDelay.current = 1000;
+        if (pollingId) { clearInterval(pollingId); pollingId = null; }
+      };
 
-    ws.onclose = () => {
-      // Fall back to polling after disconnect
-      if (!pollingId) pollingId = setInterval(fetchCount, 30_000);
-    };
+      ws.onmessage = (evt: MessageEvent) => {
+        try {
+          const data = JSON.parse(evt.data as string) as { id?: number; title?: string; metadata?: { event?: string } };
+          showToast(data.title ?? "You have a new notification", "success");
+          setCount(c => c + 1);
+          prevCountRef.current += 1;
+          setItems(prev => {
+            if (prev.length === 0) return prev;
+            if (data.id && prev.some(n => n.id === data.id)) return prev;
+            return [{ ...data, is_read: false } as AppNotification, ...prev];
+          });
+          if (data.metadata?.event === "client_reactivated") {
+            window.dispatchEvent(new CustomEvent("portal:client_reactivated"));
+          }
+          if (data.metadata?.event === "client_deactivated") {
+            window.dispatchEvent(new CustomEvent("portal:client_deactivated"));
+          }
+        } catch { /* ignore malformed frames */ }
+      };
+
+      ws.onerror = () => { startPolling(); };
+
+      ws.onclose = () => {
+        startPolling();
+        // Exponential back-off reconnect: 1s → 2s → 4s → … → max 30s
+        const delay = Math.min(reconnectDelay.current, 30_000);
+        reconnectDelay.current = delay * 2;
+        reconnectTimer.current = setTimeout(connect, delay);
+      };
+    }
+
+    connect();
 
     return () => {
-      ws.close();
-      wsRef.current = null;
+      destroyed = true;
+      if (reconnectTimer.current) clearTimeout(reconnectTimer.current);
+      if (wsRef.current) { wsRef.current.onclose = null; wsRef.current.close(); wsRef.current = null; }
       if (pollingId) clearInterval(pollingId);
     };
   }, [user, fetchCount, showToast]);
@@ -217,6 +233,14 @@ export default function NotificationBell() {
         }}
       >
         <Bell size={15} />
+        {!wsConnected && localStorage.getItem("access_token") && (
+          <span title="Real-time disconnected — polling" style={{
+            position: "absolute", bottom: -2, right: -2,
+            width: 7, height: 7, borderRadius: "50%",
+            background: "var(--ink-4)",
+            border: "1px solid var(--bg)",
+          }} />
+        )}
         {count > 0 && (
           <span style={{
             position: "absolute",

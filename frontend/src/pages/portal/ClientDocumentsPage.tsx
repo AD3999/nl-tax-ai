@@ -14,29 +14,32 @@ import type { ClientDocument, TaxEngagement, ClientProfile } from "../../api/por
 import { formatDate } from "../../lib/utils";
 
 const STATUS_COLOR: Record<string, string> = {
-  uploaded:     "var(--text-3)",
-  processing:   "var(--warn-text)",
-  extracted:    "var(--ok-text)",
-  needs_review: "var(--warn-text)",
-  approved:     "var(--ok-text)",
-  rejected:     "var(--danger-text)",
+  uploaded:          "var(--text-3)",
+  processing:        "var(--warn-text)",
+  extracted:         "var(--ok-text)",
+  extraction_failed: "var(--danger-text)",
+  needs_review:      "var(--warn-text)",
+  approved:          "var(--ok-text)",
+  rejected:          "var(--danger-text)",
 };
 const STATUS_BG: Record<string, string> = {
-  uploaded:     "var(--bg-3)",
-  processing:   "var(--warn-subtle)",
-  extracted:    "var(--ok-subtle)",
-  needs_review: "var(--warn-subtle)",
-  approved:     "var(--ok-subtle)",
-  rejected:     "var(--danger-subtle)",
+  uploaded:          "var(--bg-3)",
+  processing:        "var(--warn-subtle)",
+  extracted:         "var(--ok-subtle)",
+  extraction_failed: "var(--danger-subtle)",
+  needs_review:      "var(--warn-subtle)",
+  approved:          "var(--ok-subtle)",
+  rejected:          "var(--danger-subtle)",
 };
 
 const STATUS_LABELS: Record<string, Record<"nl"|"en"|"fa", string>> = {
-  uploaded:     { nl: "Geüpload",          en: "Uploaded",      fa: "بارگذاری شده" },
-  processing:   { nl: "Verwerken…",        en: "Processing…",   fa: "در حال پردازش…" },
-  extracted:    { nl: "Verwerkt",          en: "Processed",     fa: "پردازش شده" },
-  needs_review: { nl: "Beoordeling nodig", en: "Needs review",  fa: "نیاز به بررسی" },
-  approved:     { nl: "Goedgekeurd",       en: "Approved",      fa: "تأیید شده" },
-  rejected:     { nl: "Afgewezen",         en: "Rejected",      fa: "رد شده" },
+  uploaded:          { nl: "Geüpload",                   en: "Uploaded",                         fa: "بارگذاری شده" },
+  processing:        { nl: "Verwerken…",                 en: "Processing…",                      fa: "در حال پردازش…" },
+  extracted:         { nl: "Verwerkt",                   en: "Processed",                        fa: "پردازش شده" },
+  extraction_failed: { nl: "Extractie mislukt",          en: "AI extraction failed — review manually", fa: "استخراج ناموفق — بررسی دستی" },
+  needs_review:      { nl: "Beoordeling nodig",          en: "Needs review",                     fa: "نیاز به بررسی" },
+  approved:          { nl: "Goedgekeurd",                en: "Approved",                         fa: "تأیید شده" },
+  rejected:          { nl: "Afgewezen",                  en: "Rejected",                         fa: "رد شده" },
 };
 
 const TX = {
