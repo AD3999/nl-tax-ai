@@ -106,7 +106,7 @@ export default function NotificationBell() {
       const wsHost  = import.meta.env.VITE_API_URL
         ? new URL(import.meta.env.VITE_API_URL as string).host
         : window.location.host;
-      const ws = new WebSocket(`${wsProto}://${wsHost}/ws/notifications/?token=${encodeURIComponent(token)}`);
+      const ws = new WebSocket(`${wsProto}://${wsHost}/ws/notifications/?token=${encodeURIComponent(token as string)}`);
       wsRef.current = ws;
 
       ws.onopen = () => {
