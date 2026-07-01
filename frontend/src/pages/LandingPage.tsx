@@ -345,7 +345,7 @@ export default function LandingPage() {
 
   useEffect(() => {
     if (tabPaused) return;
-    tabTimer.current = setInterval(() => setTabIdx(i => (i + 1) % 4), 4500);
+    tabTimer.current = setInterval(() => setTabIdx(i => (i + 1) % tabLabels.length), 4500);
     return () => { if (tabTimer.current) clearInterval(tabTimer.current); };
   }, [tabPaused]);
 
